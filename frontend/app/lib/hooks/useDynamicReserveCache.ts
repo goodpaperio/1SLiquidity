@@ -86,13 +86,13 @@ export const useDynamicReserveCache = ({
         dex: data.dex,
         pairAddress: data.pairAddress,
         reserves: data.reserves,
-        price: data.price, // Include price from API
+        price: data.price,
         decimals: data.decimals,
         timestamp: data.timestamp,
         token0Address: tokenA.token_address,
         token1Address: tokenB.token_address,
         totalReserves: data.totalReserves, // Include totalReserves from API
-        otherDexes: data.otherDexes, // Include otherDexes from API
+        otherDexes: data.otherDexes,
       } as ReserveData
 
       const calculator = DexCalculatorFactory.createCalculator(
