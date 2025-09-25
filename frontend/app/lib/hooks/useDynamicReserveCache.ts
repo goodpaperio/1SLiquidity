@@ -34,6 +34,7 @@ export const useDynamicReserveCache = ({
 
   // Function to create a unique pair key - direction specific
   const getPairKey = (tokenA: Token | null, tokenB: Token | null) => {
+    console.log('ivan tokens:', tokenA, tokenB) // --- IGNORE ---
     if (!tokenA?.token_address || !tokenB?.token_address) return null
     // Keep the exact order to maintain direction
     const key = `${tokenA.token_address}_${tokenB.token_address}`
@@ -85,11 +86,13 @@ export const useDynamicReserveCache = ({
         dex: data.dex,
         pairAddress: data.pairAddress,
         reserves: data.reserves,
+        price: data.price, // Include price from API
         decimals: data.decimals,
         timestamp: data.timestamp,
         token0Address: tokenA.token_address,
         token1Address: tokenB.token_address,
         totalReserves: data.totalReserves, // Include totalReserves from API
+        otherDexes: data.otherDexes, // Include otherDexes from API
       } as ReserveData
 
       const calculator = DexCalculatorFactory.createCalculator(

@@ -260,7 +260,11 @@ const DetailSection: React.FC<DetailSectionProps> = ({
         </div>
 
         <div className="w-full border-t border-borderBottom">
-          <DexSummary />
+          <DexSummary
+            reserves={reserves}
+            tokenFromSymbol={tokenFromSymbol}
+            tokenToSymbol={tokenToSymbol}
+          />
         </div>
       </div>
 
