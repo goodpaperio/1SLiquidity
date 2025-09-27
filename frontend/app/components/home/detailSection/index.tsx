@@ -21,6 +21,7 @@ interface DetailSectionProps {
   isFetchingReserves?: boolean
   slippageSavings?: number | null
   dexFee?: number | null
+  usePriceBased?: boolean
 }
 
 const DetailSection: React.FC<DetailSectionProps> = ({
@@ -38,6 +39,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   isCalculating = false,
   slippageSavings = null,
   isFetchingReserves = false,
+  usePriceBased = true,
 }) => {
   const [showDetails, setShowDetails] = useState(true)
 
@@ -264,6 +266,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             reserves={reserves}
             tokenFromSymbol={tokenFromSymbol}
             tokenToSymbol={tokenToSymbol}
+            usePriceBased={usePriceBased}
           />
         </div>
       </div>

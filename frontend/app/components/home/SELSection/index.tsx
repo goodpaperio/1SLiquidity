@@ -754,6 +754,7 @@ const SELSection = () => {
               isCalculating={isCalculating}
               isFetchingReserves={isFetchingReserves}
               slippageSavings={slippageSavings}
+              usePriceBased={tradingSettings.usePriceBased}
             />
           )}
 

@@ -13,12 +13,14 @@ interface DexSummaryProps {
   reserves?: ReserveData | null
   tokenFromSymbol?: string
   tokenToSymbol?: string
+  usePriceBased?: boolean
 }
 
 const DexSummary: React.FC<DexSummaryProps> = ({
   reserves,
   tokenFromSymbol,
   tokenToSymbol,
+  usePriceBased = true,
 }) => {
   const dexLogoConfig = useMemo(
     () => ({
@@ -34,6 +36,14 @@ const DexSummary: React.FC<DexSummaryProps> = ({
   const getDexLogo = useCallback(
     (dexName: string): string => {
       const lowercaseName = dexName.toLowerCase()
+
+      // Check for partial matches in the dex name
+      if (lowercaseName.includes('curve')) return dexLogoConfig.curve
+      if (lowercaseName.includes('uniswap')) return dexLogoConfig.uniswap
+      if (lowercaseName.includes('sushiswap')) return dexLogoConfig.sushiswap
+      if (lowercaseName.includes('balancer')) return dexLogoConfig.balancer
+
+      // Fallback to exact match or default
       return (
         dexLogoConfig[lowercaseName as keyof typeof dexLogoConfig] ||
         '/icons/default-token.svg'
@@ -42,15 +52,34 @@ const DexSummary: React.FC<DexSummaryProps> = ({
     [dexLogoConfig]
   )
 
-  // Removed version and addresses from dexs
+  // Process dex names - remove addresses but keep versions if version <= 6 chars
   const getCleanDexName = useCallback((dexIdentifier: string): string => {
-    const lowerDex = dexIdentifier.toLowerCase()
+    // Remove any 0x... address parts
+    let cleanIdentifier = dexIdentifier.replace(/0x[a-fA-F0-9]{40}/g, '').trim()
+
+    const parts = cleanIdentifier.toLowerCase().split('-')
+    if (parts.length > 1) {
+      const baseName = parts[0]
+      const version = parts[1]
+
+      // Format versions (e.g., "uniswap-v3" -> "Uniswap V3")
+      let formattedBase = ''
+      if (baseName.includes('curve')) formattedBase = 'Curve'
+      else if (baseName.includes('uniswap')) formattedBase = 'Uniswap'
+      else if (baseName.includes('sushiswap')) formattedBase = 'SushiSwap'
+      else if (baseName.includes('balancer')) formattedBase = 'Balancer'
+      else formattedBase = baseName.charAt(0).toUpperCase() + baseName.slice(1)
+
+      return `${formattedBase} ${version.toUpperCase()}`
+    }
+
+    const lowerDex = cleanIdentifier.toLowerCase()
     if (lowerDex.includes('curve')) return 'Curve'
     if (lowerDex.includes('uniswap')) return 'Uniswap'
     if (lowerDex.includes('sushiswap')) return 'SushiSwap'
     if (lowerDex.includes('balancer')) return 'Balancer'
 
-    return dexIdentifier.charAt(0).toUpperCase() + dexIdentifier.slice(1)
+    return cleanIdentifier.charAt(0).toUpperCase() + cleanIdentifier.slice(1)
   }, [])
 
   const formatReserves = useCallback(
@@ -105,7 +134,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
     }> = []
 
     if (hasValidReserves(reserves.reserves)) {
-      const mainDexPrice = reserves.price || 0
+      const mainDexPrice = reserves?.price || 0
       dexDataArray.push({
         name: getCleanDexName(reserves.dex),
         price: mainDexPrice > 0 ? `$${mainDexPrice.toFixed(6)}` : '$0.00',
@@ -143,7 +172,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
 
         if (
           !otherDexGroups[cleanName] ||
-          currentPrice > otherDexGroups[cleanName].bestPrice
+          currentPrice < otherDexGroups[cleanName].bestPrice
         ) {
           otherDexGroups[cleanName] = {
             ...dex,
@@ -168,7 +197,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
     dexDataArray.sort((a, b) => {
       if (a.isMainDex) return -1
       if (b.isMainDex) return 1
-      return b.priceValue - a.priceValue
+      return a.priceValue - b.priceValue
     })
 
     return dexDataArray.map(({ priceValue, isMainDex, ...rest }) => rest)
@@ -188,10 +217,26 @@ const DexSummary: React.FC<DexSummaryProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4 py-4">
-      <div className="grid grid-cols-[3fr_0.8fr_1.8fr] sm:grid-cols-[2fr_1.2fr_2.5fr] gap-0.5 sm:gap-2 text-white72 text-[14px] font-medium">
-        <div>DEX Sources</div>
-        <div className="text-center">Price</div>
-        <div className="text-right">Reserves</div>
+      <div className="grid grid-cols-[3fr_0.8fr_1.8fr] sm:grid-cols-[2fr_1.2fr_2.5fr] gap-0.5 sm:gap-2 text-[14px] font-medium">
+        <div className="text-white72">DEX Sources</div>
+        <div
+          className={`text-center ${
+            usePriceBased
+              ? 'bg-gradient-to-r from-[#00ff85] to-[#00ccff] bg-clip-text text-transparent'
+              : 'text-white72'
+          }`}
+        >
+          Price
+        </div>
+        <div
+          className={`text-right ${
+            !usePriceBased
+              ? 'bg-gradient-to-r from-[#00ff85] to-[#00ccff] bg-clip-text text-transparent'
+              : 'text-white72'
+          }`}
+        >
+          Reserves
+        </div>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -213,14 +258,28 @@ const DexSummary: React.FC<DexSummaryProps> = ({
                   className="rounded-full"
                 />
               </div>
-              <span className="text-white text-[14px]">{dex.name}</span>
+              <span
+                className={`text-[14px] ${
+                  dex.isBest ? 'text-[#40f798]' : 'text-white'
+                }`}
+              >
+                {dex.name}
+              </span>
             </div>
 
-            <div className="text-center text-white text-[14px]">
+            <div
+              className={`text-center text-[14px] ${
+                dex.isBest ? 'text-[#40f798]' : 'text-white'
+              }`}
+            >
               {dex.price}
             </div>
 
-            <div className="text-right text-white text-[14px] leading-tight">
+            <div
+              className={`text-right text-[14px] leading-tight ${
+                dex.isBest ? 'text-[#40f798]' : 'text-white'
+              }`}
+            >
               <div className="sm:hidden">
                 {/* Mobile: Split reserves into two lines */}
                 <div>{dex.reserves.split('/')[0]}</div>
