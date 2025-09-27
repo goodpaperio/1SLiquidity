@@ -51,6 +51,13 @@ const ConfigTrade: React.FC<Props> = ({
     </div>
   )
 
+  console.log('selectedStream ===>', selectedStream)
+  console.log('walletAddress ===>', walletAddress)
+  console.log(
+    'selectedStream.user?.toLowerCase() !== walletAddress?.toLowerCase() ===>',
+    selectedStream.user?.toLowerCase() !== walletAddress?.toLowerCase()
+  )
+
   return (
     <div
       className={cn(
@@ -135,9 +142,21 @@ const ConfigTrade: React.FC<Props> = ({
               <Button
                 text="EXECUTE INSTASETTLE"
                 className="h-[2.25rem]"
-                disabled={isLoading}
+                disabled={
+                  isLoading ||
+                  selectedStream.user?.toLowerCase() ===
+                    walletAddress?.toLowerCase() ||
+                  selectedStream.settlements.length > 0
+                }
                 loading={isLoading}
-                onClick={() => handleInstasettleClick(selectedStream)}
+                onClick={() => {
+                  if (
+                    selectedStream.user?.toLowerCase() !==
+                    walletAddress?.toLowerCase()
+                  ) {
+                    handleInstasettleClick(selectedStream)
+                  }
+                }}
               />
             </div>
           </div>

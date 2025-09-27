@@ -670,7 +670,7 @@ const SELSection = () => {
         )} */}
 
         <div className="w-full mt-[14px] mb-[20px]">
-          {isConnected && pathname === '/swaps' ? (
+          {isConnected && pathname === '/' ? (
             <Button
               text={
                 isConnected && isInsufficientBalance && !isFetchingReserves

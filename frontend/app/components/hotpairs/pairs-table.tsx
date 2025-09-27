@@ -53,7 +53,7 @@ export default function PairsTable({
       to: pair.tokenBSymbol,
     })
 
-    router.push(`/swaps?${searchParams.toString()}`)
+    router.push(`/?${searchParams.toString()}`)
   }
 
   return (

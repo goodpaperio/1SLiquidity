@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type Props = {
-  status: 'ongoing' | 'scheduled' | 'completed'
+  status: 'ongoing' | 'scheduled' | 'completed' | 'Instasettled'
   stream: {
     sell: { amount: number; token: string }
     buy: { amount: number; token: string }
@@ -14,6 +14,7 @@ type Props = {
   isInstasettle?: boolean
   timeRemaining?: string
   isLoading?: boolean
+  streamIndex?: number
 }
 
 const StreamCard: React.FC<Props> = ({
@@ -24,6 +25,7 @@ const StreamCard: React.FC<Props> = ({
   isInstasettle,
   timeRemaining,
   isLoading = false,
+  streamIndex,
 }) => {
   const renderStreams = (streams: Props['stream']) => {
     if (streams.length > 4) {
@@ -44,7 +46,8 @@ const StreamCard: React.FC<Props> = ({
   const renderStreamLine = (stream: Props['stream'][0], index: number) => (
     <div className="flex text-white" key={index}>
       <p className="text-white52">
-        Stream {index + 1}: {stream.sell.amount} {stream.sell.token}
+        Stream {index + (streamIndex || 1)}: {stream.sell.amount}{' '}
+        {stream.sell.token}
       </p>
       <Image
         src="/icons/right-arrow.svg"

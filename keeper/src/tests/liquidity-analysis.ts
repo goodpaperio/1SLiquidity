@@ -841,243 +841,19 @@ async function saveToDatabase(
 }
 
 // Transform the liquidity data from row-based format to column-based format for database
-// async function transformToColumnFormat(
-//   results: TokenLiquiditySummary[],
-//   timestamp: string
-// ): Promise<any[]> {
-//   const transformedRecords: any[] = []
-
-//   // Group by token pair (tokenA + tokenB combination)
-//   const tokenPairMap = new Map<string, any>()
-
-//   results.forEach((tokenSummary) => {
-//     tokenSummary.liquidityPairs.forEach((pair) => {
-//       // Create a unique key for each token pair
-//       // baseToken-resultToken (tokenA-tokenB)
-//       const pairKey = `${pair.baseToken}-${pair.tokenAddress}`
-
-//       if (!tokenPairMap.has(pairKey)) {
-//         // Initialize the record for this token pair
-//         tokenPairMap.set(pairKey, {
-//           timestamp: new Date(pair.timestamp),
-//           tokenAAddress: pair.baseToken, // tokenA = base token (USDT, USDC, etc.)
-//           tokenASymbol: pair.baseTokenSymbol, // tokenA symbol
-//           tokenAName: pair.baseTokenSymbol, // tokenA name
-//           tokenADecimals: pair.decimals.token0, // Assuming token0 is the base token (tokenA)
-//           tokenBAddress: pair.tokenAddress, // tokenB = result token (LINK, WBTC, etc.)
-//           tokenBSymbol: pair.tokenSymbol, // tokenB symbol
-//           tokenBDecimals: pair.decimals.token1, // Assuming token1 is the result token (tokenB)
-//           marketCap: tokenSummary.marketCap,
-//           // Initialize all DEX reserves as null
-//           reservesAUniswapV2: null,
-//           reservesBUniswapV2: null,
-//           reservesASushiswap: null,
-//           reservesBSushiswap: null,
-//           reservesACurve: null,
-//           reservesBCurve: null,
-//           reservesABalancer: null,
-//           reservesBBalancer: null,
-//           reservesAUniswapV3_500: null,
-//           reservesBUniswapV3_500: null,
-//           reservesAUniswapV3_3000: null,
-//           reservesBUniswapV3_3000: null,
-//           reservesAUniswapV3_10000: null,
-//           reservesBUniswapV3_10000: null,
-//         })
-//       }
-
-//       const record = tokenPairMap.get(pairKey)!
-
-//       // Map DEX names to column names and set the reserves
-//       switch (pair.dex) {
-//         case 'uniswap-v2':
-//           record.reservesAUniswapV2 = pair.reserves.token0
-//           record.reservesBUniswapV2 = pair.reserves.token1
-//           break
-//         case 'sushiswap':
-//           record.reservesASushiswap = pair.reserves.token0
-//           record.reservesBSushiswap = pair.reserves.token1
-//           break
-//         case 'curve':
-//           // Handle generic 'curve' format
-//           record.reservesACurve = pair.reserves.token0
-//           record.reservesBCurve = pair.reserves.token1
-//           break
-//         case 'balancer':
-//           // Handle generic 'balancer' format
-//           record.reservesABalancer = pair.reserves.token0
-//           record.reservesBBalancer = pair.reserves.token1
-//           break
-//         case 'uniswap-v3-500':
-//           record.reservesAUniswapV3_500 = pair.reserves.token0
-//           record.reservesBUniswapV3_500 = pair.reserves.token1
-//           break
-//         case 'uniswap-v3-3000':
-//           record.reservesAUniswapV3_3000 = pair.reserves.token0
-//           record.reservesBUniswapV3_3000 = pair.reserves.token1
-//           break
-//         case 'uniswap-v3-10000':
-//           record.reservesAUniswapV3_10000 = pair.reserves.token0
-//           record.reservesBUniswapV3_10000 = pair.reserves.token1
-//           break
-//         default:
-//           // Handle Curve and Balancer pools with specific addresses
-//           if (pair.dex.startsWith('curve-')) {
-//             record.reservesACurve = pair.reserves.token0
-//             record.reservesBCurve = pair.reserves.token1
-//           } else if (pair.dex.startsWith('balancer-')) {
-//             record.reservesABalancer = pair.reserves.token0
-//             record.reservesBBalancer = pair.reserves.token1
-//           } else {
-//             console.warn(`⚠️  Unknown DEX: ${pair.dex}`)
-//           }
-//       }
-//     })
-//   })
-
-//   // Convert map to array and calculate total depths
-//   for (const record of tokenPairMap.values()) {
-//     // Calculate total depth for token A
-//     const tokenATotals = calculateTotalReserves(
-//       record,
-//       true,
-//       record.tokenADecimals
-//     )
-//     record.reserveAtotaldepthWei = tokenATotals.weiTotal
-//     record.reserveAtotaldepth = tokenATotals.normalTotal
-
-//     // Calculate total depth for token B
-//     const tokenBTotals = calculateTotalReserves(
-//       record,
-//       false,
-//       record.tokenBDecimals
-//     )
-//     record.reserveBtotaldepthWei = tokenBTotals.weiTotal
-//     record.reserveBtotaldepth = tokenBTotals.normalTotal
-
-//     // Find highest liquidity reserves across all supported DEXes
-//     const reservesA = [
-//       { dex: 'uniswap-v2', reserve: record.reservesAUniswapV2 },
-//       { dex: 'sushiswap', reserve: record.reservesASushiswap },
-//       { dex: 'curve', reserve: record.reservesACurve },
-//       { dex: 'balancer', reserve: record.reservesABalancer },
-//       { dex: 'uniswap-v3-500', reserve: record.reservesAUniswapV3_500 },
-//       { dex: 'uniswap-v3-3000', reserve: record.reservesAUniswapV3_3000 },
-//       { dex: 'uniswap-v3-10000', reserve: record.reservesAUniswapV3_10000 },
-//     ].filter((r) => r.reserve !== null)
-
-//     const reservesB = [
-//       { dex: 'uniswap-v2', reserve: record.reservesBUniswapV2 },
-//       { dex: 'sushiswap', reserve: record.reservesBSushiswap },
-//       { dex: 'curve', reserve: record.reservesBCurve },
-//       { dex: 'balancer', reserve: record.reservesBBalancer },
-//       { dex: 'uniswap-v3-500', reserve: record.reservesBUniswapV3_500 },
-//       { dex: 'uniswap-v3-3000', reserve: record.reservesBUniswapV3_3000 },
-//       { dex: 'uniswap-v3-10000', reserve: record.reservesBUniswapV3_10000 },
-//     ].filter((r) => r.reserve !== null)
-
-//     // Compare using BigInt, but don't store as BigInt
-//     const highestA = reservesA.reduce((prev, curr) =>
-//       BigInt(prev.reserve!) > BigInt(curr.reserve!) ? prev : curr
-//     )
-
-//     const highestB = reservesB.reduce((prev, curr) =>
-//       BigInt(prev.reserve!) > BigInt(curr.reserve!) ? prev : curr
-//     )
-
-//     const highestLiquidityAReserve = highestA.reserve
-//     const highestLiquidityADex = highestA.dex
-//     const highestLiquidityBReserve = highestB.reserve
-//     const highestLiquidityBDex = highestB.dex
-
-//     record.highestLiquidityADex = highestLiquidityADex
-
-//     console.log('<=======>')
-//     console.log('record.tokenASymbol =====>', record.tokenASymbol)
-//     console.log('record.tokenBSymbol =====>', record.tokenBSymbol)
-//     console.log(
-//       'record.reserveAtotaldepthWei =====>',
-//       record.reserveAtotaldepthWei
-//     )
-//     console.log('highestA =====>', highestA)
-//     console.log('highestLiquidityADex =====>', highestLiquidityADex)
-//     console.log('highestLiquidityAReserve =====>', highestLiquidityAReserve)
-//     console.log('highestLiquidityBReserve =====>', highestLiquidityBReserve)
-//     console.log('<=======>')
-
-//     // ✅ Calculate sweet spot
-//     // const sweetSpot = calculateSweetSpot(
-//     //   BigInt(record.reserveAtotaldepthWei),
-//     //   highestLiquidityAReserve,
-//     //   highestLiquidityBReserve,
-//     //   record.tokenADecimals,
-//     //   record.tokenBDecimals
-//     // )
-
-//     // TODO: Sweet spot should pass in reserve A and reserve B of dex with highest liquidity instead of total reserves
-//     const sweetSpot = calculateSweetSpot(
-//       BigInt(record.reserveAtotaldepthWei),
-//       highestLiquidityAReserve,
-//       highestLiquidityBReserve,
-//       record.tokenADecimals,
-//       record.tokenBDecimals
-//     )
-
-//     console.log('sweetSpot =====>', sweetSpot)
-
-//     // Parse fee tier if it's uniswap-v3, otherwise fallback
-//     const feeTier = highestLiquidityADex.startsWith('uniswap-v3')
-//       ? parseInt(highestLiquidityADex.split('-')[2])
-//       : 3000
-
-//     console.log('feeTier =====>', feeTier)
-
-//     // ✅ Calculate slippage savings
-//     const { slippageSavings, percentageSavings } = sweetSpot
-//       ? await calculateSlippageSavings(
-//           BigInt(record.reserveAtotaldepthWei),
-//           highestLiquidityADex,
-//           feeTier,
-//           BigInt(record.reserveAtotaldepthWei),
-//           BigInt(record.reserveBtotaldepthWei),
-//           record.tokenADecimals,
-//           record.tokenBDecimals,
-//           record.tokenAAddress,
-//           record.tokenBAddress,
-//           sweetSpot
-//         )
-//       : { slippageSavings: 0, percentageSavings: 0 }
-
-//     console.log('==========')
-//     console.log('slippageSavings =====>', slippageSavings)
-//     console.log('percentageSavings =====>', percentageSavings)
-//     console.log('==========')
-
-//     // record.highestLiquidityADex = highestLiquidityADex
-//     // record.highestLiquidityBDex = highestLiquidityBDex
-//     record.slippageSavings = slippageSavings
-//     record.percentageSavings = percentageSavings
-
-//     transformedRecords.push(record)
-//   }
-
-//   console.log(
-//     `📋 Grouped ${results.reduce(
-//       (sum, r) => sum + r.liquidityPairs.length,
-//       0
-//     )} individual DEX pairs into ${
-//       transformedRecords.length
-//     } token pair records with total depth calculations`
-//   )
-
-//   return transformedRecords
-// }
-
 async function transformToColumnFormat(
   results: TokenLiquiditySummary[],
   timestamp: string
 ): Promise<any[]> {
   const transformedRecords: any[] = []
+
+  // Define stable coin addresses for filtering - ensure all are lowercase
+  const STABLE_COIN_ADDRESSES = new Set([
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+    '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+    '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599', // WBTC
+  ])
 
   // Group by token pair (tokenA + tokenB combination)
   const tokenPairMap = new Map<string, any>()
@@ -1087,6 +863,34 @@ async function transformToColumnFormat(
       // Create a unique key for each token pair
       // baseToken-resultToken (tokenA-tokenB)
       const pairKey = `${pair.baseToken}-${pair.tokenAddress}`
+
+      // Filter out stable coin pairs (USDC, USDT, WBTC, WETH)
+      const tokenAAddress = pair.baseToken.toLowerCase()
+      const tokenBAddress = pair.tokenAddress.toLowerCase()
+
+      // Debug logging
+      console.log(`Checking pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`)
+      console.log(
+        `TokenA: ${tokenAAddress} (stable: ${STABLE_COIN_ADDRESSES.has(
+          tokenAAddress
+        )})`
+      )
+      console.log(
+        `TokenB: ${tokenBAddress} (stable: ${STABLE_COIN_ADDRESSES.has(
+          tokenBAddress
+        )})`
+      )
+
+      // FIXED: Check if BOTH tokens are stable coins - if so, skip this pair
+      if (
+        STABLE_COIN_ADDRESSES.has(tokenAAddress) &&
+        STABLE_COIN_ADDRESSES.has(tokenBAddress)
+      ) {
+        console.log(
+          `🚫 Filtering out stable coin pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`
+        )
+        return // Skip this pair
+      }
 
       if (!tokenPairMap.has(pairKey)) {
         // Initialize the record for this token pair

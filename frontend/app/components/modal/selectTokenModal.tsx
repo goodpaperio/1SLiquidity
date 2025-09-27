@@ -220,7 +220,13 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
       otherFieldToken &&
       BASE_TOKENS.includes(otherFieldToken.symbol.toUpperCase())
     ) {
-      setSelectedBaseToken(otherFieldToken.symbol.toUpperCase())
+      // setSelectedBaseToken(otherFieldToken.symbol.toUpperCase())
+      // Normalize ETH/WETH to use WETH for filtering since they have the same address
+      let baseTokenSymbol = otherFieldToken.symbol.toUpperCase()
+      if (baseTokenSymbol === 'ETH') {
+        baseTokenSymbol = 'WETH'
+      }
+      setSelectedBaseToken(baseTokenSymbol)
     } else {
       // Check if any token from results is selected in the other field
       if (otherFieldToken) {
@@ -825,7 +831,18 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                     <div className="flex items-center gap-1">
                       <span className="text-sm text-gray">filtered by</span>
                       <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                        {selectedBaseToken}
+                        {/* {selectedBaseToken} */}
+                        {(() => {
+                          // Get the original token symbol for display
+                          const otherFieldToken =
+                            currentInputField === 'from'
+                              ? selectedTokenTo
+                              : selectedTokenFrom
+                          return (
+                            otherFieldToken?.symbol.toUpperCase() ||
+                            selectedBaseToken
+                          )
+                        })()}
                       </span>
                       <button
                         onClick={() => setSelectedBaseToken(null)}

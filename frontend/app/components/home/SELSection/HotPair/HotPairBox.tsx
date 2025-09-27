@@ -99,7 +99,7 @@ export default function HotPairBox() {
     error: topTokensError,
     refetch: refetchTopTokens,
   } = useEnhancedTopTokens({
-    limit: 100,
+    limit: 1000,
     metric: 'slippageSavings',
     enabled: true,
   })

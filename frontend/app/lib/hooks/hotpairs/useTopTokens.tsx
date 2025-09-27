@@ -35,7 +35,7 @@ export interface UseTopTokensParams {
 }
 
 const fetchTopTokens = async ({
-  limit = 50,
+  limit = 1000,
   metric = 'reserveAtotaldepth',
 }: UseTopTokensParams = {}): Promise<TopTokensResponse> => {
   const params = new URLSearchParams({

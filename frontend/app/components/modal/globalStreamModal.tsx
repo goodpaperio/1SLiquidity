@@ -172,6 +172,8 @@ const GlobalStreamModal: React.FC<GlobalStreamModalProps> = ({
                                 isInstasettlable: false,
                                 realisedAmountOut: '0',
                                 executions: [],
+                                settlements: [],
+                                cancellations: [],
                               }}
                               isLoading={true}
                             />

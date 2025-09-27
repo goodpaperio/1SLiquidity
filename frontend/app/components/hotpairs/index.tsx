@@ -224,7 +224,7 @@ const HotPairs = () => {
         to: activeHotPair.tokenBSymbol,
       })
 
-      router.push(`/swaps?${searchParams.toString()}`)
+      router.push(`/?${searchParams.toString()}`)
     }
   }
 

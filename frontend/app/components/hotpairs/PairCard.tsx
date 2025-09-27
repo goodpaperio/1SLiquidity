@@ -24,7 +24,7 @@ export default function PairCard({
       to: pair.token2Symbol,
     })
 
-    router.push(`/swaps?${searchParams.toString()}`)
+    router.push(`/?${searchParams.toString()}`)
   }
 
   return (

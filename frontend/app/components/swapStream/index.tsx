@@ -22,6 +22,8 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
+  settlements: any[]
+  cancellations: any[]
 }
 
 type Props = {
@@ -100,7 +102,10 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
 
   return (
     <div
-      className="w-full border border-white14 relative bg-white005 p-4 rounded-[15px] cursor-pointer hover:bg-tabsGradient transition-all duration-300"
+      className={cn(
+        'w-full border border-white14 relative bg-white005 p-4 rounded-[15px] cursor-pointer hover:bg-tabsGradient transition-all duration-300',
+        trade.cancellations.length > 0 && 'border-[#3d0e0e] hover:bg-red-700/10'
+      )}
       onClick={() => onClick?.(trade)}
     >
       <div className="flex mr-8 items-center gap-1.5 absolute top-4 left-2">
@@ -132,7 +137,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   width={2400}
                   height={2400}
                   alt={tokenIn?.symbol || 'token'}
-                  className="w-[18px] h-[18px]"
+                  className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
                   {formattedAmountIn} {tokenIn?.symbol}
@@ -164,7 +169,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   width={2400}
                   height={2400}
                   alt={tokenOut?.symbol || 'token'}
-                  className="w-[18px] h-[18px]"
+                  className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
                   {formattedMinAmountOut} {tokenOut?.symbol} (EST)
@@ -179,10 +184,19 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
             <Skeleton className="h-[3px] w-1/4 absolute top-0 left-0" />
           ) : (
             <div
-              className="h-[3px] bg-primary absolute top-0 left-0"
+              className={cn(
+                'h-[3px] bg-primary absolute top-0 left-0',
+                trade.cancellations.length > 0 && 'bg-red-700'
+              )}
               style={{
                 width: `${Math.min(
-                  (trade.executions.length / remainingStreams) * 100,
+                  ((trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
+                    : trade.executions.length) /
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
+                      : remainingStreams)) *
+                    100,
                   100
                 )}%`,
               }}
@@ -207,20 +221,30 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
           ) : (
             <>
               <p className="">
-                {/* 25/100 completed {/* Hardcoded as requested */}
-                {trade.executions.length} / {remainingStreams} completed
+                {trade.settlements.length > 0
+                  ? trade.settlements.length + trade.executions.length
+                  : trade.executions.length}{' '}
+                /{' '}
+                {trade.settlements.length > 0
+                  ? trade.settlements.length + trade.executions.length
+                  : remainingStreams}{' '}
+                completed
               </p>
               <div className="flex gap-2">
-                <div className="flex items-center">
-                  <Image
-                    src="/icons/time.svg"
-                    alt="clock"
-                    className="w-5"
-                    width={20}
-                    height={20}
-                  />
-                  <p>{estimatedTime || '..'}</p>
-                </div>
+                {trade.settlements.length > 0 ? (
+                  ''
+                ) : (
+                  <div className="flex items-center">
+                    <Image
+                      src="/icons/time.svg"
+                      alt="clock"
+                      className="w-5"
+                      width={20}
+                      height={20}
+                    />
+                    <p>{estimatedTime || '..'}</p>
+                  </div>
+                )}
                 {trade.isInstasettlable && (
                   <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none">
                     <svg
