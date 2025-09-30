@@ -8,18 +8,16 @@ export function formatNumberWithSubscript(
   value: number | string | undefined,
   maxDecimals: number = 5
 ): string | null {
-  // Handle undefined input
   if (value === undefined) return null
 
   const numValue = typeof value === 'string' ? parseFloat(value) : value
 
-  // Handle invalid numbers
-  if (isNaN(numValue)) return '0'
+  // If not the right type or NaN, return as is
+  if (isNaN(numValue)) return numValue.toString()
 
   // Handle zero
   if (numValue === 0) return '0'
 
-  // Convert to string with limited decimals
   const limitedNum = parseFloat(numValue.toFixed(maxDecimals))
   let numStr = limitedNum.toString()
 

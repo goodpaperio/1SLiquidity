@@ -101,10 +101,10 @@ const GatewaySection = () => {
       transition: {
         duration: 0.3,
         ease: 'easeOut',
-        // spring: {
-        //   damping: 10,
-        //   stiffness: 100,
-        // },
+        spring: {
+          damping: 10,
+          stiffness: 100,
+        },
       },
     },
   }

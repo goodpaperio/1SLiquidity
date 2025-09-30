@@ -104,7 +104,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const isStreamCompleted =
     (selectedStream.cancellations && selectedStream.cancellations.length > 0) ||
     (selectedStream.settlements && selectedStream.settlements.length > 0)
-  console.log('ivan isStreamCompleted ===>', isStreamCompleted)
 
   // Calculate swapped amount values
   // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
