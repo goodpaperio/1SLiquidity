@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils'
 import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import { useEffect } from 'react'
+import NetworkFee from '../shared/NetworkFee'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -41,8 +43,22 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   walletAddress,
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
-  const { placeTrade, loading, instasettle, cancelTrade } = useCoreTrading()
+  const {
+    placeTrade,
+    loading,
+    instasettle,
+    cancelTrade,
+    contractInfo,
+    getContractInfo,
+  } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
+
+  // Fetch contract info on component mount if not already available
+  useEffect(() => {
+    if (!contractInfo) {
+      getContractInfo()
+    }
+  }, [contractInfo, getContractInfo])
 
   if (!selectedStream) {
     return null
@@ -167,16 +183,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     : '0'
   const swappedAmountInUsd = tokenIn
     ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
-    : 0
-
-  const NETWORK_FEE_BPS = 5 // 5 basis points
-
-  const networkFeeInToken = tokenIn
-    ? Number(formatUnits(BigInt(selectedStream.amountIn), tokenIn.decimals)) *
-      (NETWORK_FEE_BPS / 10000)
-    : 0
-  const networkFeeUsd = tokenIn
-    ? networkFeeInToken * (tokenIn.usd_price || 0)
     : 0
 
   const handleInstasettleClick = async (item: any) => {
@@ -567,12 +573,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               titleClassName="text-white52"
               isLoading={isLoading}
             /> */}
-            <AmountTag
-              title="Network Fee"
-              amount={`5 BPS ($${networkFeeUsd.toFixed(2)})`}
-              infoDetail="Info"
+            <NetworkFee
+              buyAmount={formattedMinAmountOut}
+              tokenToUsdPrice={tokenOut?.usd_price}
+              tokenToSymbol={tokenOut?.symbol}
+              contractInfo={contractInfo}
+              isCalculating={isLoading}
               titleClassName="text-white52"
-              isLoading={isLoading}
             />
             <AmountTag
               title="Wallet Address"
