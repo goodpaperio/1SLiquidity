@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils'
 import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import { useState } from 'react'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -43,14 +46,14 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
   const { placeTrade, loading, instasettle, cancelTrade } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
+  const [showCompleted, setShowCompleted] = useState(true)
 
   if (!selectedStream) {
     return null
   }
 
-  const estimatedTime = useStreamTime(
-    Number(selectedStream?.lastSweetSpot) || 0
-  )
+  const remainingStreams = calculateRemainingStreams(selectedStream)
+  const estimatedTime = useStreamTime(remainingStreams, 5)
 
   // Find token information with ETH/WETH handling
   const findTokenForTrade = (address: string) => {
@@ -97,9 +100,18 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   const aggregates = calculateTradeAggregates(selectedStream)
 
+  // Check if stream is completed (has cancellations or settlements)
+  const isStreamCompleted =
+    (selectedStream.cancellations && selectedStream.cancellations.length > 0) ||
+    (selectedStream.settlements && selectedStream.settlements.length > 0)
+  console.log('ivan isStreamCompleted ===>', isStreamCompleted)
+
   // Calculate swapped amount values
+  // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
   const formattedSwapAmountOut = tokenOut
-    ? formatUnits(BigInt(aggregates.realisedAmountOut), tokenOut.decimals)
+    ? isStreamCompleted
+      ? formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals) // Show full expected output if instasettled
+      : formatUnits(BigInt(aggregates.realisedAmountOut), tokenOut.decimals) // Show actually realized output
     : '0'
   const swapAmountOutUsd = tokenOut
     ? Number(formattedSwapAmountOut) * (tokenOut.usd_price || 0)
@@ -162,12 +174,42 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     })) || []
 
   // Calculate actual swapped input amount (amountIn - amountRemaining)
+  // If stream is completed (instasettled), show full amount, otherwise show actually swapped amount
   const swappedAmountIn = tokenIn
-    ? formatUnits(BigInt(amountIn) - BigInt(amountRemaining), tokenIn.decimals)
+    ? isStreamCompleted
+      ? formatUnits(BigInt(amountIn), tokenIn.decimals) // Show full amount if instasettled
+      : formatUnits(
+          BigInt(amountIn) - BigInt(amountRemaining),
+          tokenIn.decimals
+        ) // Show actually swapped amount
     : '0'
   const swappedAmountInUsd = tokenIn
     ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
     : 0
+
+  // Calculate remaining amounts - set to 0 if stream is completed
+  const remainingAmountIn =
+    tokenIn && !isStreamCompleted
+      ? formatUnits(BigInt(amountRemaining), tokenIn.decimals)
+      : '0'
+  const remainingAmountInUsd =
+    tokenIn && !isStreamCompleted
+      ? Number(remainingAmountIn) * (tokenIn.usd_price || 0)
+      : 0
+
+  // Calculate remaining output (estimated based on proportion) - set to 0 if stream is completed
+  const remainingAmountOut =
+    tokenOut && amountIn > 0 && !isStreamCompleted
+      ? formatUnits(
+          (BigInt(selectedStream.minAmountOut) * BigInt(amountRemaining)) /
+            BigInt(amountIn),
+          tokenOut.decimals
+        )
+      : '0'
+  const remainingAmountOutUsd =
+    tokenOut && !isStreamCompleted
+      ? Number(remainingAmountOut) * (tokenOut.usd_price || 0)
+      : 0
 
   const NETWORK_FEE_BPS = 5 // 5 basis points
 
@@ -310,23 +352,54 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       </div>
 
       <div className="flex items-center justify-end pb-2">
-        {selectedStream.isInstasettlable && (
-          <div className="flex items-center py-1 text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-            >
-              <path
-                d="M13 2L6 14H11V22L18 10H13V2Z"
-                fill="#40f798"
-                fillOpacity="0.72"
-              />
-            </svg>
-            <span className="text-xs sm:inline-block hidden">Instasettle</span>
+        {(selectedStream.isInstasettlable ||
+          selectedStream.settlements.length > 0 ||
+          selectedStream.cancellations.length > 0 ||
+          selectedStream.executions?.some(
+            (execution: any) => execution.lastSweetSpot === '0'
+          )) && (
+          <div
+            className={cn(
+              'flex items-center py-1 text-sm gap-1 pl-1 pr-1.5 rounded-full leading-none',
+              selectedStream.cancellations.length > 0
+                ? 'bg-red-900/20 text-red-400'
+                : selectedStream.executions?.some(
+                    (execution: any) => execution.lastSweetSpot === '0'
+                  ) || selectedStream.settlements.length > 0
+                ? 'bg-green-900/20 text-green-400'
+                : 'bg-zinc-900 text-primary'
+            )}
+          >
+            {selectedStream.cancellations.length === 0 &&
+              !selectedStream.executions?.some(
+                (execution: any) => execution.lastSweetSpot === '0'
+              ) && (
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                >
+                  <path
+                    d="M13 2L6 14H11V22L18 10H13V2Z"
+                    fill="#40f798"
+                    fillOpacity="0.72"
+                  />
+                </svg>
+              )}
+            <span className="text-xs sm:inline-block hidden">
+              {selectedStream.settlements.length > 0
+                ? 'Instasettled'
+                : selectedStream.cancellations.length > 0
+                ? 'Cancelled'
+                : selectedStream.executions?.some(
+                    (execution: any) => execution.lastSweetSpot === '0'
+                  )
+                ? 'Completed'
+                : 'Instasettle'}
+            </span>
           </div>
         )}
         {/* <div className="flex bg-white005 items-center gap-2 px-2 py-1 rounded-full">
@@ -430,7 +503,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    {formattedAmountIn} {tokenIn?.symbol}
+                    {formatNumberWithSubscript(formattedAmountIn)}{' '}
+                    {tokenIn?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
                     ${amountInUsd.toFixed(2)}
@@ -447,7 +521,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    ~ {formattedMinAmountOut} {tokenOut?.symbol}
+                    ~ {formatNumberWithSubscript(formattedMinAmountOut)}{' '}
+                    {tokenOut?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
                     ${amountOutUsd.toFixed(2)}
@@ -457,9 +532,39 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-2 justify-between py-4 border-b border-borderBottom">
+          {/* Toggle for Completed/Remaining */}
+          <div className="flex items-center justify-center py-2">
+            <div className="flex items-center bg-white005 rounded-full p-0.5">
+              <button
+                onClick={() => setShowCompleted(true)}
+                className={cn(
+                  'px-2.5 py-1 text-xs rounded-full transition-all duration-200',
+                  showCompleted
+                    ? 'bg-primary text-black font-medium'
+                    : 'text-white52 hover:text-white'
+                )}
+              >
+                Completed
+              </button>
+              <button
+                onClick={() => setShowCompleted(false)}
+                className={cn(
+                  'px-2.5 py-1 text-xs rounded-full transition-all duration-200',
+                  !showCompleted
+                    ? 'bg-primary text-black font-medium'
+                    : 'text-white52 hover:text-white'
+                )}
+              >
+                Remaining
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-between py-2 border-b border-borderBottom">
             <div className="flex flex-col leading-tight gap-2 items-start">
-              <p className="text-[14px] text-white52">Swapped Input</p>
+              <p className="text-[14px] text-white52">
+                {showCompleted ? 'Swapped Input' : 'Remaining Input'}
+              </p>
               {isLoading ? (
                 <>
                   <Skeleton className="h-6 w-24" />
@@ -468,10 +573,15 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="">
-                    {swappedAmountIn} {tokenIn?.symbol}
+                    {showCompleted
+                      ? `${swappedAmountIn} ${tokenIn?.symbol}`
+                      : `${remainingAmountIn} ${tokenIn?.symbol}`}
                   </p>
                   <p className="text-white52 text-[14px]">
-                    ${swappedAmountInUsd.toFixed(2)}
+                    $
+                    {showCompleted
+                      ? swappedAmountInUsd.toFixed(2)
+                      : remainingAmountInUsd.toFixed(2)}
                   </p>
                 </>
               )}
@@ -484,7 +594,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               height={1000}
             />
             <div className="flex flex-col leading-tight gap-2 items-end">
-              <p className="text-[14px] text-white52">Output</p>
+              <p className="text-[14px] text-white52">
+                {showCompleted ? 'Output' : 'Remaining Output'}
+              </p>
               {isLoading ? (
                 <>
                   <Skeleton className="h-6 w-24" />
@@ -493,10 +605,19 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="">
-                    {formattedSwapAmountOut} {tokenOut?.symbol}
+                    {showCompleted
+                      ? `${formatNumberWithSubscript(formattedSwapAmountOut)} ${
+                          tokenOut?.symbol
+                        }`
+                      : `~ ${formatNumberWithSubscript(remainingAmountOut)} ${
+                          tokenOut?.symbol
+                        }`}
                   </p>
                   <p className="text-white52 text-[14px]">
-                    ${swapAmountOutUsd.toFixed(2)}
+                    $
+                    {showCompleted
+                      ? swapAmountOutUsd.toFixed(2)
+                      : remainingAmountOutUsd.toFixed(2)}
                   </p>
                 </>
               )}
@@ -576,7 +697,16 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             />
             <AmountTag
               title="Wallet Address"
-              amount={formatWalletAddress(selectedStream.user)}
+              amount={
+                <a
+                  href={`https://etherscan.io/address/${selectedStream.user}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80 transition-colors"
+                >
+                  {formatWalletAddress(selectedStream.user)}
+                </a>
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
