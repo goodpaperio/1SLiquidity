@@ -96,9 +96,14 @@ const StreamCard: React.FC<Props> = ({
         </div>
 
         {walletAddress && (
-          <p className={`text-primary underline text-[14px]`}>
+          <a
+            href={`https://etherscan.io/tx/${walletAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-primary underline text-[14px] hover:text-primary/80 transition-colors cursor-pointer`}
+          >
             {formatWalletAddress(walletAddress)}
-          </p>
+          </a>
         )}
       </div>
 

@@ -153,6 +153,7 @@ export interface ReserveData {
     token0: string
     token1: string
   }
+  price?: number // Price from API for main DEX
   timestamp: number
   // Token addresses
   token0Address?: string
@@ -169,6 +170,21 @@ export interface ReserveData {
     totalReserveTokenA: number
     totalReserveTokenB: number
   }
+  // Other DEXes data from API
+  otherDexes?: Array<{
+    dex: string
+    pairAddress: string
+    reserves: {
+      token0: string
+      token1: string
+    }
+    price: number
+    timestamp: number
+    decimals: {
+      token0: number
+      token1: number
+    }
+  }>
 }
 
 // DEX calculator interface following the Strategy pattern

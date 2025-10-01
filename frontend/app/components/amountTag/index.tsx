@@ -9,7 +9,7 @@ import {
 
 type Props = {
   title: string
-  amount: string | undefined
+  amount: string | React.ReactNode | undefined
   infoDetail?: string
   titleClassName?: string
   amountClassName?: string

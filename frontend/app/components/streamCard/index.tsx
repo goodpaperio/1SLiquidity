@@ -66,17 +66,20 @@ const StreamCard: React.FC<Props> = ({
           {status}
         </div>
         {walletAddress && (
-          <p
+          <a
+            href={`https://etherscan.io/address/${walletAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className={`${
               status === 'ongoing'
-                ? 'text-ongoing'
+                ? 'text-ongoing hover:text-ongoing/80'
                 : status === 'scheduled'
-                ? 'text-scheduled'
-                : 'text-primary'
-            } underline text-[14px]`}
+                ? 'text-scheduled hover:text-scheduled/80'
+                : 'text-primary hover:text-primary/80'
+            } underline text-[14px] transition-colors cursor-pointer`}
           >
             {formatWalletAddress(walletAddress)}
-          </p>
+          </a>
         )}
       </div>
 
