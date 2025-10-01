@@ -28,7 +28,7 @@ const NetworkFee: React.FC<NetworkFeeProps> = ({
       const streamBotFeeBps = Number(contractInfo.streamBotFeeBps)
       return streamProtocolFeeBps + streamBotFeeBps
     }
-    // Fallback to hardcoded value if contract info not available
+
     return 20 // 20 basis points as fallback
   }
 

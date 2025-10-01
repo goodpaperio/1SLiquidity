@@ -535,7 +535,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               amount={
                 isLoading
                   ? '0'
-                  : selectedStream.settlements.length > 0
+                  : selectedStream.settlements.length > 0 ||
+                    selectedStream.cancellations.length > 0
                   ? (Number(executionsCount) + 1).toString()
                   : executionsCount.toString()
               }
@@ -545,7 +546,16 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             />
             <AmountTag
               title="Trade Volume Executed"
-              amount={isLoading ? '0%' : `${volumeExecutedPercentage}%`}
+              amount={
+                isLoading
+                  ? '0%'
+                  : `${
+                      selectedStream.settlements.length > 0 ||
+                      selectedStream.cancellations.length > 0
+                        ? 100
+                        : volumeExecutedPercentage
+                    }%`
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
