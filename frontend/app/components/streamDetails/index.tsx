@@ -652,12 +652,17 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               title="BPS Savings"
               amount={
                 selectedStream.isInstasettlable
-                  ? `5 BPS ($${(amountInUsd * 0.05).toFixed(2)})`
+                  ? `5 BPS  ${tokenOut?.symbol} ($${(
+                      amountInUsd *
+                      (5 / 10000)
+                    ).toFixed(2)})`
                   : 'N/A'
               }
               infoDetail="Info"
               titleClassName="text-white52"
-              amountClassName="text-white52"
+              amountClassName={
+                selectedStream.isInstasettlable ? undefined : 'text-white52'
+              }
               showInstaIcon={selectedStream.isInstasettlable}
               isLoading={isLoading}
             />
