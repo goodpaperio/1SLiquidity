@@ -158,11 +158,13 @@ export const usePrefetchReserves = ({
         dex: data.dex,
         pairAddress: data.pairAddress,
         reserves: data.reserves,
+        price: data.price,
         decimals: data.decimals,
         timestamp: data.timestamp,
         token0Address: fromAddress,
         token1Address: toAddress,
         totalReserves: data.totalReserves, // Include totalReserves from API
+        otherDexes: data.otherDexes,
       } as ReserveData
 
       const calculator = DexCalculatorFactory.createCalculator(
