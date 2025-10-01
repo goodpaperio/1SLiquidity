@@ -144,26 +144,28 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   // Format execution amounts and calculate their times
   const formattedExecutions =
-    selectedStream.executions?.map((execution) => ({
-      sell: {
-        amount: Number(
-          formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
-        ),
-        token: tokenIn?.symbol || '',
-      },
-      buy: {
-        amount: Number(
-          formatUnits(
-            BigInt(execution.realisedAmountOut),
-            tokenOut?.decimals || 18
-          )
-        ),
-        token: tokenOut?.symbol || '',
-      },
-      id: execution.id,
-      timestamp: Number(execution.timestamp),
-      estimatedTime: formatRelativeTime(execution.timestamp),
-    })) || []
+    selectedStream.executions
+      ?.map((execution) => ({
+        sell: {
+          amount: Number(
+            formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
+          ),
+          token: tokenIn?.symbol || '',
+        },
+        buy: {
+          amount: Number(
+            formatUnits(
+              BigInt(execution.realisedAmountOut),
+              tokenOut?.decimals || 18
+            )
+          ),
+          token: tokenOut?.symbol || '',
+        },
+        id: execution.id,
+        timestamp: Number(execution.timestamp),
+        estimatedTime: formatRelativeTime(execution.timestamp),
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp) || []
 
   const formattedSettlements =
     selectedStream.settlements?.map((settlement) => ({
