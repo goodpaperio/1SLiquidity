@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { XIcon } from 'lucide-react'
+import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 
 type Trade = {
   id: string
@@ -37,25 +39,7 @@ type Props = {
 const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
 
-  // Calculate remainingStreams from executions array
-  const calculateRemainingStreams = () => {
-    if (!trade.executions || trade.executions.length === 0) {
-      return Number(trade?.lastSweetSpot) || 0
-    }
-
-    const lastSweetSpots = trade.executions
-      .map((execution) => Number(execution.lastSweetSpot))
-      .filter((spot) => !isNaN(spot))
-
-    if (lastSweetSpots.length === 0) {
-      return Number(trade?.lastSweetSpot) || 0
-    }
-
-    const maxSweetSpot = Math.max(...lastSweetSpots)
-    return maxSweetSpot + 1
-  }
-
-  const remainingStreams = calculateRemainingStreams()
+  const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
   // Find token information with ETH/WETH handling
@@ -141,7 +125,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedAmountIn} {tokenIn?.symbol}
+                  {formatNumberWithSubscript(formattedAmountIn)}{' '}
+                  {tokenIn?.symbol}
                 </p>
               </>
             )}
@@ -173,7 +158,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedMinAmountOut} {tokenOut?.symbol} (EST)
+                  {formatNumberWithSubscript(formattedMinAmountOut)}{' '}
+                  {tokenOut?.symbol} (EST)
                 </p>
               </>
             )}

@@ -418,8 +418,8 @@ const WalletDetailsSidebar: React.FC<WalletDetailsSidebarProps> = ({
                             </p>
                             <p className="text-[14px] uppercase text-gray p-0 leading-tight">
                               {typeof token.value === 'number'
-                                ? token.value.toFixed(6)
-                                : (
+                                ? `${token.value.toFixed(6)} ${token.symbol}`
+                                : `${(
                                     parseFloat(
                                       (token as TOKENS_TYPE)?.balance ?? '0'
                                     ) /
@@ -427,7 +427,7 @@ const WalletDetailsSidebar: React.FC<WalletDetailsSidebarProps> = ({
                                       10,
                                       (token as TOKENS_TYPE)?.decimals ?? 18
                                     )
-                                  ).toFixed(6)}
+                                  ).toFixed(6)} ${token.symbol}`}
                             </p>
                           </div>
                         </div>
@@ -436,91 +436,51 @@ const WalletDetailsSidebar: React.FC<WalletDetailsSidebarProps> = ({
                           {isShowingRealTokens &&
                           'usd_price' in token &&
                           ((token as TOKENS_TYPE)?.usd_price ?? 0) > 0 ? (
-                            <p
-                              className={`text-[16px] p-0 leading-tight ${
-                                token.status == 'increase'
-                                  ? 'text-primary'
-                                  : 'text-primaryRed'
-                              }`}
-                            >
-                              {`${token.status == 'increase' ? '+' : '-'}${(
-                                token.statusAmount || 0
-                              ).toFixed(2)}`}
-                            </p>
-                          ) : (
-                            <p className="text-[16px] p-0 leading-tight text-white text-right">
-                              {'token_address' in token &&
-                              ((token as TOKENS_TYPE)?.token_address ?? '') ===
-                                '0x0000000000000000000000000000000000000000'
-                                ? // Find WETH in tokens array if this is ETH
-                                  (() => {
-                                    const wethToken = displayTokens.find(
-                                      (t) => t.symbol === 'WETH'
-                                    ) as TOKENS_TYPE
-                                    if (
-                                      token.symbol === 'ETH' &&
-                                      wethToken?.usd_price
-                                    ) {
-                                      return `${
-                                        wethToken.status === 'increase'
-                                          ? '+'
-                                          : '-'
-                                      }${(wethToken.statusAmount || 0).toFixed(
-                                        2
-                                      )}`
-                                    }
-                                    return 'usd_price' in token &&
-                                      ((token as TOKENS_TYPE)?.usd_price ?? 0) >
-                                        0
-                                      ? `${
-                                          token.status == 'increase' ? '+' : '-'
-                                        }${(token.statusAmount || 0).toFixed(
-                                          2
-                                        )}`
-                                      : 'No price data'
-                                  })()
-                                : parseFloat(
-                                    (token as TOKENS_TYPE)?.balance ?? '0'
-                                  ) > 0
-                                ? `Balance: ${(
-                                    parseFloat(
+                            <>
+                              <p className="text-[16px] p-0 leading-tight text-white text-right">
+                                {formatCurrency(
+                                  ((token as TOKENS_TYPE)?.usd_price ?? 0) *
+                                    (parseFloat(
                                       (token as TOKENS_TYPE)?.balance ?? '0'
                                     ) /
-                                    Math.pow(
-                                      10,
-                                      (token as TOKENS_TYPE)?.decimals ?? 18
-                                    )
-                                  ).toFixed(4)}`
-                                : 'No price data'}
-                            </p>
-                          )}
-                          {isShowingRealTokens &&
-                          'usd_price' in token &&
-                          ((token as TOKENS_TYPE)?.usd_price ?? 0) > 0 ? (
-                            <div className="flex gap-1 items-center">
-                              <Image
-                                src={
-                                  token.status == 'increase'
-                                    ? '/icons/progress-up.svg'
-                                    : '/icons/progress-down.svg'
-                                }
-                                alt="progress"
-                                className="w-2"
-                                width={1000}
-                                height={1000}
-                              />
-                              <p className="text-[14px]">
-                                {`${(token.statusAmount || 0).toFixed(2)}%`}
+                                      Math.pow(
+                                        10,
+                                        (token as TOKENS_TYPE)?.decimals ?? 18
+                                      ))
+                                )}
                               </p>
-                            </div>
+                              <div className="flex gap-1 items-center">
+                                <Image
+                                  src={
+                                    token.status == 'increase'
+                                      ? '/icons/progress-up.svg'
+                                      : '/icons/progress-down.svg'
+                                  }
+                                  alt="progress"
+                                  className="w-2"
+                                  width={1000}
+                                  height={1000}
+                                />
+                                <p
+                                  className={`text-[14px] ${
+                                    token.status == 'increase'
+                                      ? 'text-primary'
+                                      : 'text-primaryRed'
+                                  }`}
+                                >
+                                  {`${(token.statusAmount || 0).toFixed(2)}%`}
+                                </p>
+                              </div>
+                            </>
                           ) : (
-                            <div className="flex gap-1 items-center">
-                              <p className="text-[14px] text-white text-right">
+                            <>
+                              <p className="text-[16px] p-0 leading-tight text-white text-right">
                                 {'token_address' in token &&
                                 ((token as TOKENS_TYPE)?.token_address ??
                                   '') ===
                                   '0x0000000000000000000000000000000000000000'
-                                  ? (() => {
+                                  ? // Find WETH in tokens array if this is ETH
+                                    (() => {
                                       const wethToken = displayTokens.find(
                                         (t) => t.symbol === 'WETH'
                                       ) as TOKENS_TYPE
@@ -528,11 +488,101 @@ const WalletDetailsSidebar: React.FC<WalletDetailsSidebarProps> = ({
                                         token.symbol === 'ETH' &&
                                         wethToken?.usd_price
                                       ) {
-                                        return (
+                                        return formatCurrency(
+                                          wethToken.usd_price *
+                                            (parseFloat(
+                                              (token as TOKENS_TYPE)?.balance ??
+                                                '0'
+                                            ) /
+                                              Math.pow(
+                                                10,
+                                                (token as TOKENS_TYPE)
+                                                  ?.decimals ?? 18
+                                              ))
+                                        )
+                                      }
+                                      return 'usd_price' in token &&
+                                        ((token as TOKENS_TYPE)?.usd_price ??
+                                          0) > 0
+                                        ? formatCurrency(
+                                            ((token as TOKENS_TYPE)
+                                              ?.usd_price ?? 0) *
+                                              (parseFloat(
+                                                (token as TOKENS_TYPE)
+                                                  ?.balance ?? '0'
+                                              ) /
+                                                Math.pow(
+                                                  10,
+                                                  (token as TOKENS_TYPE)
+                                                    ?.decimals ?? 18
+                                                ))
+                                          )
+                                        : 'No price data'
+                                    })()
+                                  : parseFloat(
+                                      (token as TOKENS_TYPE)?.balance ?? '0'
+                                    ) > 0
+                                  ? `Balance: ${(
+                                      parseFloat(
+                                        (token as TOKENS_TYPE)?.balance ?? '0'
+                                      ) /
+                                      Math.pow(
+                                        10,
+                                        (token as TOKENS_TYPE)?.decimals ?? 18
+                                      )
+                                    ).toFixed(4)}`
+                                  : 'No price data'}
+                              </p>
+                              <div className="flex gap-1 items-center">
+                                <p className="text-[14px] text-white text-right">
+                                  {'token_address' in token &&
+                                  ((token as TOKENS_TYPE)?.token_address ??
+                                    '') ===
+                                    '0x0000000000000000000000000000000000000000'
+                                    ? (() => {
+                                        const wethToken = displayTokens.find(
+                                          (t) => t.symbol === 'WETH'
+                                        ) as TOKENS_TYPE
+                                        if (
+                                          token.symbol === 'ETH' &&
+                                          wethToken?.usd_price
+                                        ) {
+                                          return (
+                                            <span className="flex gap-1 items-center">
+                                              <Image
+                                                src={
+                                                  wethToken.status ===
+                                                  'increase'
+                                                    ? '/icons/progress-up.svg'
+                                                    : '/icons/progress-down.svg'
+                                                }
+                                                alt="progress"
+                                                className="w-2"
+                                                width={1000}
+                                                height={1000}
+                                              />
+                                              <span
+                                                className={
+                                                  wethToken.status ===
+                                                  'increase'
+                                                    ? 'text-primary'
+                                                    : 'text-primaryRed'
+                                                }
+                                              >
+                                                {`${(
+                                                  wethToken.statusAmount || 0
+                                                ).toFixed(2)}%`}
+                                              </span>
+                                            </span>
+                                          )
+                                        }
+                                        return 'usd_price' in token &&
+                                          ((token as TOKENS_TYPE)?.usd_price ??
+                                            0) > 0 ? (
                                           <span className="flex gap-1 items-center">
                                             <Image
                                               src={
-                                                wethToken.status === 'increase'
+                                                token.status == 'increase'
                                                   ? '/icons/progress-up.svg'
                                                   : '/icons/progress-down.svg'
                                               }
@@ -541,46 +591,34 @@ const WalletDetailsSidebar: React.FC<WalletDetailsSidebarProps> = ({
                                               width={1000}
                                               height={1000}
                                             />
-                                            {`${(
-                                              wethToken.statusAmount || 0
-                                            ).toFixed(2)}%`}
+                                            <span
+                                              className={
+                                                token.status == 'increase'
+                                                  ? 'text-primary'
+                                                  : 'text-primaryRed'
+                                              }
+                                            >
+                                              {`${(
+                                                token.statusAmount || 0
+                                              ).toFixed(2)}%`}
+                                            </span>
                                           </span>
+                                        ) : (
+                                          'No price data'
                                         )
-                                      }
-                                      return 'usd_price' in token &&
-                                        ((token as TOKENS_TYPE)?.usd_price ??
-                                          0) > 0 ? (
-                                        <span className="flex gap-1 items-center">
-                                          <Image
-                                            src={
-                                              token.status == 'increase'
-                                                ? '/icons/progress-up.svg'
-                                                : '/icons/progress-down.svg'
-                                            }
-                                            alt="progress"
-                                            className="w-2"
-                                            width={1000}
-                                            height={1000}
-                                          />
-                                          {`${(token.statusAmount || 0).toFixed(
-                                            2
-                                          )}%`}
-                                        </span>
-                                      ) : (
-                                        'No price data'
-                                      )
-                                    })()
-                                  : token.symbol === 'ZONE'
-                                  ? 'No price data available'
-                                  : parseFloat(
-                                      (token as TOKENS_TYPE)?.balance ?? '0'
-                                    ) > 0
-                                  ? 'No price data'
-                                  : isShowingRealTokens
-                                  ? 'Insufficient liquidity'
-                                  : 'Demo data'}
-                              </p>
-                            </div>
+                                      })()
+                                    : token.symbol === 'ZONE'
+                                    ? 'No price data available'
+                                    : parseFloat(
+                                        (token as TOKENS_TYPE)?.balance ?? '0'
+                                      ) > 0
+                                    ? 'No price data'
+                                    : isShowingRealTokens
+                                    ? 'Insufficient liquidity'
+                                    : 'Demo data'}
+                                </p>
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
