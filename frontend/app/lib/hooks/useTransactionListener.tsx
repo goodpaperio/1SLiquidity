@@ -110,7 +110,7 @@ export const useTransactionListener = ({
             return
           }
 
-          console.log('🔍 Transaction data:', data)
+          // console.log('🔍 Transaction data:', data)
 
           // Handle transaction notifications (your shared data structure)
           if (data.method === 'eth_subscription' && data.params?.result) {
@@ -135,18 +135,18 @@ export const useTransactionListener = ({
                 tokenAddress: isToken ? tx.to : undefined,
               }
 
-              console.log(`🔄 ${txType} transaction detected:`, {
-                hash: tx.hash,
-                isTokenTransfer: isToken,
-                value: tx.value,
-              })
+              // console.log(`🔄 ${txType} transaction detected:`, {
+              //   hash: tx.hash,
+              //   isTokenTransfer: isToken,
+              //   value: tx.value,
+              // })
 
               onTransaction(transactionDetails)
             } else {
               // This shouldn't happen with proper subscription, but just in case
-              console.log(
-                '🔍 Ignoring transaction not involving current wallet'
-              )
+              // console.log(
+              //   '🔍 Ignoring transaction not involving current wallet'
+              // )
             }
           }
         } catch (error) {
