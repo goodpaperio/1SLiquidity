@@ -58,19 +58,6 @@ const SELSection = () => {
   const { placeTrade, loading, placeTradeDummy } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
 
-  // console.log('loading =========>', loading)
-  // console.log('isConnectedWallet =========>', isConnectedWallet)
-  // console.log('isConnected =========>', isConnected)
-  // console.log('selectedTokenFrom =========>', getSigner())
-
-  // const { prefetchedReserves, getPairKey } = usePrefetchReserves()
-  // const pairKey = getPairKey('USDC', 'WETH')
-  // const pairKey2 = getPairKey('WETH', 'USDC')
-  // const pairData = prefetchedReserves[pairKey]
-  // const pairData2 = prefetchedReserves[pairKey2]
-  // console.log('pairData =========>', pairData)
-  // console.log('pairData2 =========>', pairData2)
-
   // Get current chain from AppKit
   const stateData = useAppKitState()
   const chainIdWithPrefix = stateData?.selectedNetworkId || 'eip155:1'
@@ -270,17 +257,8 @@ const SELSection = () => {
 
   const handleRefresh = useCallback(() => {
     if (dexCalculator && reserveData) {
-      // console.log('handleRefresh called with:', {
-      //   sellAmount,
-      //   hasCalculator: !!dexCalculator,
-      //   hasReserves: !!reserveData,
-      // })
       setIsRefresh(true)
     } else {
-      // console.log('handleRefresh skipped - missing calculator or reserves:', {
-      //   hasCalculator: !!dexCalculator,
-      //   hasReserves: !!reserveData,
-      // })
     }
   }, [dexCalculator, reserveData, sellAmount])
 
@@ -328,12 +306,9 @@ const SELSection = () => {
 
   // Check for insufficient liquidity (95% threshold)
   useEffect(() => {
-    // console.log('reserveData totalReserves ===>', reserveData?.totalReserves)
     if (sellAmount > 0 && reserveData?.totalReserves?.totalReserveTokenA) {
       const totalReserveTokenA = reserveData.totalReserves.totalReserveTokenA
       const liquidityThreshold = totalReserveTokenA * 0.95
-      console.log('liquidityThreshold ===>', liquidityThreshold)
-      console.log('sellAmount ===>', sellAmount)
       setIsInsufficientLiquidity(sellAmount >= liquidityThreshold)
     } else {
       setIsInsufficientLiquidity(false)
@@ -497,14 +472,6 @@ const SELSection = () => {
       }
     }
   }
-
-  console.log('selectedTokenFrom ===>', selectedTokenFrom)
-  console.log('selectedTokenTo ===>', selectedTokenTo)
-
-  // console.log('isCalculating ===>', isCalculating)
-  // console.log('buyAmount ===>', buyAmount)
-  // console.log('sellAmount ===>', sellAmount)
-  // console.log('isInsufficientLiquidity ===>', isInsufficientLiquidity)
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
@@ -754,6 +721,7 @@ const SELSection = () => {
               isCalculating={isCalculating}
               isFetchingReserves={isFetchingReserves}
               slippageSavings={slippageSavings}
+              usePriceBased={tradingSettings.usePriceBased}
             />
           )}
 

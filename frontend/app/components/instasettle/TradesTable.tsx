@@ -85,6 +85,7 @@ interface TradesTableProps {
   onClearSelection: () => void
   selectedTokenFrom?: TOKENS_TYPE | null
   selectedTokenTo?: TOKENS_TYPE | null
+  refetchTrades?: () => void
 }
 
 const TradesTable = ({
@@ -94,6 +95,7 @@ const TradesTable = ({
   onClearSelection,
   selectedTokenFrom,
   selectedTokenTo,
+  refetchTrades,
 }: TradesTableProps) => {
   const [activeTab, setActiveTab] = useState('all')
   const timeframes = ['1D', '1W', '1M', '1Y', 'ALL']
@@ -127,7 +129,7 @@ const TradesTable = ({
   )
 
   // Use the useTrades hook for GraphQL queries
-  const { trades, isLoading, error, loadMore } = useTrades({
+  const { trades, isLoading, error, loadMore, refetch } = useTrades({
     first: LIMIT,
     skip: 0,
   })
@@ -165,8 +167,6 @@ const TradesTable = ({
     }
   }
 
-  console.log('All trades ======>', trades)
-
   // Filter and sort trades
   const displayData = useMemo((): ExtendedTrade[] => {
     if (isChartFiltered) {
@@ -175,7 +175,14 @@ const TradesTable = ({
 
     if (!trades.length) return []
 
-    let filteredTrades = [...trades].map((trade) => {
+    let filteredTrades = [
+      ...trades.filter(
+        (trade) =>
+          trade.isInstasettlable &&
+          trade.settlements.length === 0 &&
+          trade.cancellations.length === 0
+      ),
+    ].map((trade) => {
       try {
         // Find token information for this trade
         // const tokenIn = tokenList.find(
@@ -267,15 +274,10 @@ const TradesTable = ({
         const realisedAmountOut = trade.realisedAmountOut
         const instasettleBps = trade.instasettleBps
 
-        console.log('targetAmountOut ======>', targetAmountOut)
-        console.log('realisedAmountOut ======>', realisedAmountOut)
-
         const cost = BigInt(targetAmountOut) - BigInt(realisedAmountOut)
         const formatCost = tokenOut
           ? formatUnits(BigInt(cost || '0'), tokenOut.decimals || 18)
           : '0'
-
-        console.log('formatCost ======>', formatCost)
 
         let amountOut: bigint
         try {
@@ -295,20 +297,12 @@ const TradesTable = ({
         // Calculate amountIn
         const amountRemaining = trade.amountRemaining
 
-        console.log('tokenInAmountRemaining ======>', amountRemaining)
-        console.log(
-          'tokenOutAmountRemaining ======>',
-          Number(targetAmountOut) - Number(realisedAmountOut)
-        )
-
         let amountIn: bigint
         // Calculate network fee (15% of amountInUsd)
         // Calculate network fee (15 basis points = 0.15%)
         const NETWORK_FEE_BPS = BigInt(15) // 15 basis points
         const networkFee =
           (BigInt(trade.amountIn) * NETWORK_FEE_BPS) / BigInt(10000)
-
-        console.log('networkFee ======>', networkFee)
 
         try {
           amountIn =
@@ -353,15 +347,6 @@ const TradesTable = ({
           savings = 0
         }
 
-        console.log('Trade calculation:', {
-          amountOut: Number(amountOut),
-          amountIn: Number(amountIn),
-          effectivePrice,
-          volume: Number(formattedAmountRemaining),
-          savings,
-          tokenInDecimals: tokenIn?.decimals || 18,
-        })
-
         // Update trade object with calculated values
         return {
           ...trade,
@@ -403,7 +388,9 @@ const TradesTable = ({
 
     // Apply ownership filter
     if (activeTab === 'myInstasettles') {
-      filteredTrades = filteredTrades.filter((trade) => trade.isInstasettlable)
+      filteredTrades = filteredTrades.filter(
+        (trade) => trade.user?.toLowerCase() === address?.toLowerCase()
+      )
     }
 
     // Apply timeframe filter
@@ -425,7 +412,7 @@ const TradesTable = ({
       }
     })
 
-    return filteredTrades
+    return filteredTrades as ExtendedTrade[]
   }, [
     trades,
     activeTab,
@@ -454,20 +441,35 @@ const TradesTable = ({
             tokenOutObj: item.tokenOutDetails,
             tokenIn: item.tokenInDetails?.token_address || '',
             tokenOut: item.tokenOutDetails?.token_address || '',
-            amountIn: item.amountIn.toString(),
-            minAmountOut: item.amountOut.toString(),
+            amountIn: Number(
+              formatUnits(
+                BigInt(item.amountIn),
+                item.tokenInDetails?.decimals || 18
+              )
+            ).toString(),
+            minAmountOut: Number(
+              formatUnits(
+                BigInt(item.minAmountOut),
+                item.tokenOutDetails?.decimals || 18
+              )
+            ).toString(),
             isInstasettlable: true,
             usePriceBased: false,
             signer: signer,
           },
           signer
         )
+        if (res.success) {
+          // Refetch trades to update the list
+          if (refetchTrades) {
+            refetchTrades()
+          } else {
+            refetch()
+          }
+        }
       }
     }
   }
-
-  console.log('selectedTokenFrom ======>', selectedTokenFrom)
-  console.log('selectedTokenTo ======>', selectedTokenTo)
 
   // Loading skeleton
   if ((isLoading && !displayData.length) || isLoadingTokenList) {
@@ -697,7 +699,6 @@ const TradesTable = ({
                     (item.tokenOutDetails.usd_price || 0)
                   : 0
 
-                console.log('item ===>', item)
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium text-center">
@@ -763,9 +764,8 @@ const TradesTable = ({
                           item.isInstasettlable ? 'INSTASETTLE' : 'INSTASETTLE'
                         }
                         disabled={
-                          !isConnectedWallet ||
-                          address?.toLowerCase() !== item.user.toLowerCase() ||
-                          loading
+                          !isConnectedWallet || loading
+                          // address?.toLowerCase() !== item.user.toLowerCase() ||
                         }
                         className="h-[2.15rem] hover:bg-primaryGradient hover:text-black"
                         onClick={() => handleInstasettleClick(item)}

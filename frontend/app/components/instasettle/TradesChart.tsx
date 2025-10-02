@@ -83,7 +83,7 @@ export default function TradesChart({
   // Use real trades data instead of dummy API
   const limit =
     selectedTopN === 'all' ? DEFAULT_RECORDS : parseInt(selectedTopN)
-  const { trades, isLoading, error } = useTrades({
+  const { trades, isLoading, error, refetch } = useTrades({
     first: limit,
     skip: 0,
   })
@@ -97,10 +97,19 @@ export default function TradesChart({
     if (!trades || trades.length === 0) return []
 
     // Filter trades based on selected tokens
-    let filteredTrades = trades
+    let filteredTrades = trades.filter(
+      (trade) =>
+        trade.isInstasettlable &&
+        trade.settlements.length === 0 &&
+        trade.cancellations.length === 0
+    )
+
     if (selectedTokenFrom && selectedTokenTo) {
       filteredTrades = trades.filter(
         (trade) =>
+          trade.isInstasettlable &&
+          trade.settlements.length === 0 &&
+          trade.cancellations.length === 0 &&
           trade.tokenIn?.toLowerCase() ===
             selectedTokenFrom.token_address?.toLowerCase() &&
           trade.tokenOut?.toLowerCase() ===
@@ -316,12 +325,12 @@ export default function TradesChart({
     if (!isChartReady) return
     setSelectedBar(selectedBar === index ? null : index)
     if (selectedBar !== index) {
-      console.log('Selected Bar Details:', {
-        cost: data.cost,
-        volume: data.volume,
-        savings: data.savings,
-        trade: data.trade,
-      })
+      // console.log('Selected Bar Details:', {
+      //   cost: data.cost,
+      //   volume: data.volume,
+      //   savings: data.savings,
+      //   trade: data.trade,
+      // })
     }
   }
 
@@ -412,6 +421,7 @@ export default function TradesChart({
           onClearSelection={() => setSelectedBar(null)}
           selectedTokenFrom={selectedTokenFrom}
           selectedTokenTo={selectedTokenTo}
+          refetchTrades={refetch}
         />
       </div>
     )
@@ -484,6 +494,7 @@ export default function TradesChart({
           onClearSelection={() => setSelectedBar(null)}
           selectedTokenFrom={selectedTokenFrom}
           selectedTokenTo={selectedTokenTo}
+          refetchTrades={refetch}
         />
       </div>
     )
@@ -713,6 +724,7 @@ export default function TradesChart({
         onClearSelection={() => setSelectedBar(null)}
         selectedTokenFrom={selectedTokenFrom}
         selectedTokenTo={selectedTokenTo}
+        refetchTrades={refetch}
       />
     </div>
   )

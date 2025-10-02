@@ -10,6 +10,9 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
+import { XIcon } from 'lucide-react'
+import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 
 type Trade = {
   id: string
@@ -36,25 +39,7 @@ type Props = {
 const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
 
-  // Calculate remainingStreams from executions array
-  const calculateRemainingStreams = () => {
-    if (!trade.executions || trade.executions.length === 0) {
-      return Number(trade?.lastSweetSpot) || 0
-    }
-
-    const lastSweetSpots = trade.executions
-      .map((execution) => Number(execution.lastSweetSpot))
-      .filter((spot) => !isNaN(spot))
-
-    if (lastSweetSpots.length === 0) {
-      return Number(trade?.lastSweetSpot) || 0
-    }
-
-    const maxSweetSpot = Math.max(...lastSweetSpots)
-    return maxSweetSpot + 1
-  }
-
-  const remainingStreams = calculateRemainingStreams()
+  const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
   // Find token information with ETH/WETH handling
@@ -140,7 +125,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedAmountIn} {tokenIn?.symbol}
+                  {formatNumberWithSubscript(formattedAmountIn)}{' '}
+                  {tokenIn?.symbol}
                 </p>
               </>
             )}
@@ -172,7 +158,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedMinAmountOut} {tokenOut?.symbol} (EST)
+                  {formatNumberWithSubscript(formattedMinAmountOut)}{' '}
+                  {tokenOut?.symbol} (EST)
                 </p>
               </>
             )}
@@ -231,7 +218,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                 completed
               </p>
               <div className="flex gap-2">
-                {trade.settlements.length > 0 ? (
+                {trade.settlements.length > 0 ||
+                trade.cancellations.length > 0 ? (
                   ''
                 ) : (
                   <div className="flex items-center">
@@ -262,7 +250,18 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                       />
                     </svg>
                     <span className="text-xs sm:inline-block hidden">
-                      Instasettle
+                      {trade.settlements.length > 0
+                        ? 'Instasettled'
+                        : 'Instasettle'}
+                    </span>
+                  </div>
+                )}
+
+                {trade.cancellations.length > 0 && (
+                  <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none">
+                    <XIcon className="w-3.5 h-3.5" />
+                    <span className="text-xs sm:inline-block hidden">
+                      Cancelled
                     </span>
                   </div>
                 )}

@@ -111,7 +111,6 @@ const isERC20Token = (
       platformAddress.toLowerCase() === 'bnb' ||
       platformAddress.toLowerCase().includes('binance'))
   ) {
-    console.log(`BNB is not an ERC20 token on Ethereum: ${platformAddress}`)
     return false
   }
 
@@ -368,21 +367,14 @@ const fetchMarketData = async (
 
     while (retryCount <= TOKEN_CONFIG.MAX_RETRIES) {
       try {
-        console.log(`Fetching page ${page} of market data...`)
         const response = await fetch(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=${TOKEN_CONFIG.TOKENS_PER_PAGE}&page=${page}&sparkline=false&locale=en&precision=full`
         )
 
         if (response.status === 429) {
-          console.log(
-            `Rate limited, attempt ${retryCount + 1} of ${
-              TOKEN_CONFIG.MAX_RETRIES
-            }`
-          )
           retryCount++
 
           if (retryCount > TOKEN_CONFIG.MAX_RETRIES) {
-            console.log('Max retries reached for page, skipping...')
             break
           }
 
@@ -412,13 +404,9 @@ const fetchMarketData = async (
           })
 
         results.push(...filteredData)
-        console.log(
-          `Page ${page}: Found ${filteredData.length} matching tokens`
-        )
 
         // If we got less than TOKENS_PER_PAGE tokens, we've reached the end
         if (data.length < TOKEN_CONFIG.TOKENS_PER_PAGE) {
-          console.log('Reached end of available tokens')
           return results
         }
 
@@ -435,7 +423,6 @@ const fetchMarketData = async (
         retryCount++
 
         if (retryCount > TOKEN_CONFIG.MAX_RETRIES) {
-          console.log('Max retries reached for page, skipping...')
           break
         }
 
@@ -468,7 +455,6 @@ const getTokenAddressForPlatform = (
     targetPlatform === 'ethereum' &&
     (address === 'bnb' || address.includes('binance'))
   ) {
-    console.log(`Excluded BNB token on Ethereum: ${address}`)
     return ''
   }
 
@@ -482,7 +468,6 @@ const getTokenAddressForPlatform = (
     address === '0x' ||
     address.length !== 42
   ) {
-    console.log(`Excluded token with invalid or native address: ${address}`)
     return ''
   }
 

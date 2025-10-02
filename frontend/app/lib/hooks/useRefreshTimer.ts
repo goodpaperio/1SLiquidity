@@ -21,11 +21,6 @@ export const useRefreshTimer = ({
   const prevSellAmountRef = useRef(sellAmount)
   const isRefreshingRef = useRef(false)
 
-  // console.log('====== useRefreshTimer ======')
-  // console.log('isActive =========>', isActive)
-  // console.log('isCalculating =========>', isCalculating)
-  // console.log('sellAmount =========>', sellAmount)
-
   // Set timer active state based on conditions
   useEffect(() => {
     if (isActive && !isCalculating) {
@@ -57,10 +52,6 @@ export const useRefreshTimer = ({
         setTimeRemaining((prev) => {
           // If we're calculating or refreshing, pause at current time
           if (isCalculating || isRefreshingRef.current) {
-            // console.log('Timer paused:', {
-            //   isCalculating,
-            //   isRefreshing: isRefreshingRef.current,
-            // })
             return prev
           }
 
@@ -68,12 +59,10 @@ export const useRefreshTimer = ({
           if (prev <= 0) {
             // Start refresh if not already refreshing and not calculating
             if (!isRefreshingRef.current && !isCalculating) {
-              // console.log('Timer hit zero, triggering refresh')
               isRefreshingRef.current = true
               onRefresh()
               // Reset refreshing state after a delay
               setTimeout(() => {
-                // console.log('Resetting refresh state')
                 isRefreshingRef.current = false
                 if (!isCalculating) {
                   setTimeRemaining(duration)
@@ -83,7 +72,6 @@ export const useRefreshTimer = ({
             return 0
           }
 
-          // console.log('Timer tick:', prev - 1)
           return prev - 1
         })
       }, 1000)

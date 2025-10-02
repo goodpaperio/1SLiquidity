@@ -108,7 +108,6 @@ export default function TopPairsCarousel({
                     </CarouselItem>
                   ))
               : sortedPairs?.map((pair: any, index: number) => {
-                  console.log('Pair ==>', pair)
                   return (
                     <CarouselItem
                       key={index}

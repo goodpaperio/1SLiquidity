@@ -191,8 +191,6 @@ const SelectTokenWithAmountSection: React.FC<InputAmountProps> = ({
   const selectedToken =
     inputField === 'from' ? selectedTokenFrom : selectedTokenTo
 
-  console.log('SelectedToken ==>', selectedToken)
-
   // Get the token from the other section to filter it out
   const otherSectionToken =
     inputField === 'from' ? selectedTokenTo : selectedTokenFrom

@@ -24,17 +24,6 @@ export function useTrades(options: UseTradesOptions = {}) {
       notifyOnNetworkStatusChange: true, // This will help us track when polling happens
     })
 
-  // Log state changes
-  // useEffect(() => {
-  //   console.log('Trade Query State:', {
-  //     loading,
-  //     networkStatus,
-  //     dataExists: !!data?.trades,
-  //     tradeCount: data?.trades?.length,
-  //     isRefetching: loading && data?.trades && data?.trades?.length > 0,
-  //   })
-  // }, [loading, networkStatus, data])
-
   const loadMore = () => {
     if (!data?.trades?.length) return
 

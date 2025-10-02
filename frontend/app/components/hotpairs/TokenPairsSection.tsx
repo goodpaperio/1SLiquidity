@@ -320,7 +320,6 @@ function TokenIcon({
               return
             }
 
-            console.log('else called!!!!')
             setSelectedBaseToken(token)
             if (selectedOtherToken) {
               refetchSpecificPair(

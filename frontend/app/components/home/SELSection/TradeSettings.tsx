@@ -39,7 +39,7 @@ export default function TradingSettings({
   const [v2PoolsEnabled, setV2PoolsEnabled] = useState(true)
   const [tradingMode, setTradingMode] = useState<
     'PRICE_BASED' | 'RESERVE_BASED'
-  >('PRICE_BASED')
+  >('RESERVE_BASED')
   const [instasettlableValue, setInstasettlableValue] = useState<string | null>(
     null
   )
@@ -330,33 +330,10 @@ export default function TradingSettings({
                         style={{
                           width: '50%',
                           transform: `translateX(${
-                            tradingMode === 'PRICE_BASED' ? '0%' : '100%'
+                            tradingMode === 'RESERVE_BASED' ? '0%' : '100%'
                           })`,
                         }}
                       />
-                      <div
-                        onClick={() => setTradingMode('PRICE_BASED')}
-                        className={`relative z-10 ${
-                          tradingMode === 'PRICE_BASED'
-                            ? 'text-white'
-                            : 'text-gray-500'
-                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
-                      >
-                        PRICE BASED
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
-                              <p>
-                                Execute trades based on price movements and
-                                market conditions
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
                       <div
                         onClick={() => setTradingMode('RESERVE_BASED')}
                         className={`relative z-10 ${
@@ -375,6 +352,29 @@ export default function TradingSettings({
                               <p>
                                 Execute trades based on liquidity pool reserves
                                 and availability
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div
+                        onClick={() => setTradingMode('PRICE_BASED')}
+                        className={`relative z-10 ${
+                          tradingMode === 'PRICE_BASED'
+                            ? 'text-white'
+                            : 'text-gray-500'
+                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                      >
+                        PRICE BASED
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                              <p>
+                                Execute trades based on price movements and
+                                market conditions
                               </p>
                             </TooltipContent>
                           </Tooltip>

@@ -80,10 +80,7 @@ const HotPairs = () => {
     setWinAmount(pair?.percentageSavings || 0)
     // setSlippageSavingsUsd(pair?.slippageSavingsUsd)
     setSlippageSavingsUsd(pair.slippageSavings * (pair.tokenBUsdPrice || 1))
-    console.log(
-      'slippageSavingsUsd ===>',
-      pair.slippageSavings * (pair.tokenBUsdPrice || 1)
-    )
+
     setVolumeActive(true)
     setWinActive(true)
 
@@ -141,24 +138,22 @@ const HotPairs = () => {
       '1'
     )
 
-    console.log('activeHotPair ===>', activeHotPair)
-    console.log('calculator ===>', calculator)
     const tradeVolumeBN = normalizeAmount(
       amount.toString(),
       activeHotPair?.tokenADecimals
     )
 
-    console.log('tradeVolumeBN ===>', tradeVolumeBN)
-    console.log(
-      'reserveAtotaldepthWei ===>',
-      activeHotPair?.reserveAtotaldepthWei
-    )
-    console.log(
-      'reserveBtotaldepthWei ===>',
-      activeHotPair?.reserveBtotaldepthWei
-    )
-    console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
-    console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
+    // console.log('tradeVolumeBN ===>', tradeVolumeBN)
+    // console.log(
+    //   'reserveAtotaldepthWei ===>',
+    //   activeHotPair?.reserveAtotaldepthWei
+    // )
+    // console.log(
+    //   'reserveBtotaldepthWei ===>',
+    //   activeHotPair?.reserveBtotaldepthWei
+    // )
+    // console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
+    // console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
 
     const sweetSpot = calculateSweetSpot(
       tradeVolumeBN,
@@ -169,15 +164,12 @@ const HotPairs = () => {
       0
     )
 
-    console.log('sweetSpot ===>', sweetSpot)
-
     const feeTier = activeHotPair?.highestLiquidityADex
       ? activeHotPair?.highestLiquidityADex?.startsWith('uniswap-v3')
         ? parseInt(activeHotPair?.highestLiquidityADex.split('-')[2])
         : 3000
       : 3000
 
-    console.log('feeTier ===>', feeTier)
     const { savings, percentageSavings } = await calculateSlippageSavings(
       calculator.getProvider(),
       tradeVolumeBN,
@@ -192,7 +184,6 @@ const HotPairs = () => {
       sweetSpot
     )
 
-    console.log('savings ===>', savings)
     const savingsInUSD = savings * (activeHotPair?.tokenBUsdPrice || 1)
     // setWinAmount(savingsInUSD || 0)
     setWinAmount(Number(percentageSavings.toFixed(2)) || 0)
@@ -239,12 +230,12 @@ const HotPairs = () => {
   }
 
   // console.log('activeHotPair ===>', activeHotPair)
-  console.log('selectedBaseToken ===>', selectedBaseToken)
-  console.log('selectedOtherToken ===>', selectedOtherToken)
+  // console.log('selectedBaseToken ===>', selectedBaseToken)
+  // console.log('selectedOtherToken ===>', selectedOtherToken)
 
-  console.log('activeHotPair ===>', activeHotPair)
-  console.log('winAmount ===>', winAmount)
-  console.log('volumeAmount ===>', volumeAmount)
+  // console.log('activeHotPair ===>', activeHotPair)
+  // console.log('winAmount ===>', winAmount)
+  // console.log('volumeAmount ===>', volumeAmount)
 
   return (
     <>

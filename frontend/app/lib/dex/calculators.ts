@@ -70,7 +70,6 @@ export function resetProvider() {
 export function createProvider(): ethers.providers.JsonRpcProvider {
   // Return existing provider if already created
   if (sharedProvider) {
-    console.log('🔄 Reusing existing Infura provider')
     return sharedProvider
   }
 
@@ -78,7 +77,6 @@ export function createProvider(): ethers.providers.JsonRpcProvider {
   const INFURA_URL =
     'https://mainnet.infura.io/v3/47907acd16d2498d962484d4d7b513fc'
 
-  console.log('🆕 Creating new Infura provider with URL:', INFURA_URL)
   sharedProvider = new ethers.providers.JsonRpcProvider(INFURA_URL)
 
   return sharedProvider
@@ -155,6 +153,7 @@ export interface ReserveData {
     token0: string
     token1: string
   }
+  price?: number // Price from API for main DEX
   timestamp: number
   // Token addresses
   token0Address?: string
@@ -171,6 +170,21 @@ export interface ReserveData {
     totalReserveTokenA: number
     totalReserveTokenB: number
   }
+  // Other DEXes data from API
+  otherDexes?: Array<{
+    dex: string
+    pairAddress: string
+    reserves: {
+      token0: string
+      token1: string
+    }
+    price: number
+    timestamp: number
+    decimals: {
+      token0: number
+      token1: number
+    }
+  }>
 }
 
 // DEX calculator interface following the Strategy pattern
@@ -254,7 +268,6 @@ export abstract class BaseDexCalculator implements DexCalculator {
     try {
       // Format with all decimals first
       const formatted = ethers.utils.formatUnits(amount, decimals)
-      console.log('Raw formatted amount:', formatted)
 
       // Check if this is a "whole" number that should be preserved exactly
       // e.g., if someone entered 1.0, we want to return exactly 1.0, not 0.999999999
@@ -262,7 +275,6 @@ export abstract class BaseDexCalculator implements DexCalculator {
 
       // Special handling for common values that should be exact
       if (Math.abs(value - 1) < 0.000001) {
-        console.log('Preserving exact value: 1')
         return '1'
       }
 
@@ -270,14 +282,12 @@ export abstract class BaseDexCalculator implements DexCalculator {
       const niceNumbers = [0.1, 0.5, 2, 5, 10, 20, 50, 100]
       for (const nice of niceNumbers) {
         if (Math.abs(value - nice) < 0.000001) {
-          console.log(`Preserving exact nice number: ${nice}`)
           return nice.toString()
         }
       }
 
       // Check if this is a "whole" number (integer)
       if (Math.abs(Math.round(value) - value) < 0.000001) {
-        console.log('Preserving integer value:', Math.round(value))
         return Math.round(value).toString()
       }
 
@@ -285,15 +295,12 @@ export abstract class BaseDexCalculator implements DexCalculator {
       // For values < 0.1, keep more decimal places for precision
       if (value < 0.1) {
         const result = value.toFixed(8)
-        console.log('Small number formatted with 8 decimals:', result)
         return result
       } else if (value < 1) {
         const result = value.toFixed(6)
-        console.log('Medium number formatted with 6 decimals:', result)
         return result
       } else {
         const result = value.toFixed(4)
-        console.log('Larger number formatted with 4 decimals:', result)
         return result
       }
     } catch (error) {
@@ -341,7 +348,6 @@ export class UniswapV2Calculator extends BaseDexCalculator {
     const cacheKey = this.getCacheKey('out', amountIn, reserveData)
     const cachedResult = calculationCache.get(cacheKey)
     if (cachedResult) {
-      console.log('Using cached output amount calculation')
       return cachedResult
     }
 
@@ -349,9 +355,6 @@ export class UniswapV2Calculator extends BaseDexCalculator {
       // Get token decimals from reserveData or default to 18
       const token0Decimals = reserveData.decimals.token0
       const token1Decimals = reserveData.decimals.token1
-
-      console.log('token0Decimals ===>', token0Decimals)
-      console.log('token1Decimals ===>', token1Decimals)
 
       const amountInBN = ethers.utils.parseUnits(amountIn, token0Decimals)
       // const reserveInBN = ethers.utils.parseUnits(
@@ -370,12 +373,8 @@ export class UniswapV2Calculator extends BaseDexCalculator {
         reserveData.reserves.token1
       )
 
-      console.log('Uniswap V2 output amount:', amountOut.toString())
-
       // Convert back to string with proper decimals
       const result = this.formatOutput(amountOut, token1Decimals)
-
-      console.log('Uniswap V2 output result:', result)
 
       // Cache the result
       // calculationCache.set(cacheKey, result)
@@ -507,7 +506,6 @@ export class UniswapV2Calculator extends BaseDexCalculator {
     const cacheKey = this.getCacheKey('in', amountOut, reserveData)
     const cachedResult = calculationCache.get(cacheKey)
     if (cachedResult) {
-      console.log('Using cached input amount calculation')
       return cachedResult
     }
 
@@ -653,19 +651,11 @@ export class UniswapV2Calculator extends BaseDexCalculator {
       const amountInBN = ethers.utils.parseUnits(amountIn, decimalsIn)
       const path = [tokenIn, tokenOut]
 
-      console.log('Calling getAmountsOut with:', {
-        amountInBN: amountInBN.toString(),
-        path,
-      })
-
       // Get amounts out using the router contract
       const amounts = await this.router.getAmountsOut(amountInBN, path)
 
-      console.log('getAmountsOut result:', amounts[1].toString())
-
       // Convert back to string with proper decimals
       const result = this.formatOutput(amounts[1], decimalsOut)
-      console.log('Formatted result:', result)
 
       return result
     } catch (error) {
@@ -727,13 +717,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
       const token0Decimals = reserveData.decimals.token0
       const token1Decimals = reserveData.decimals.token1
 
-      console.log('SushiSwap calculation input:', {
-        amountIn,
-        token0Decimals,
-        token1Decimals,
-        reserves: reserveData.reserves,
-      })
-
       // Convert input amount to proper decimals
       const amountInBN = ethers.utils.parseUnits(amountIn, token0Decimals)
 
@@ -743,8 +726,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
         reserveData.reserves.token0,
         reserveData.reserves.token1
       )
-
-      console.log('SushiSwap raw output amount:', amountOut.toString())
 
       // Use base class's formatOutput method which has proper handling for all value ranges
       const result = super.formatOutput(amountOut, token1Decimals)
@@ -773,11 +754,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
     try {
       // Format with all decimals first
       const formatted = ethers.utils.formatUnits(amount, decimals)
-      console.log('SushiSwap formatOutput:', {
-        amount: amount.toString(),
-        decimals,
-        formatted,
-      })
 
       // Parse to float for comparison
       const value = parseFloat(formatted)
@@ -796,11 +772,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
         result = value.toFixed(8)
       }
 
-      console.log('SushiSwap final formatted result:', {
-        value,
-        result,
-      })
-
       return result
     } catch (error) {
       console.error('Error formatting output:', error)
@@ -811,8 +782,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
   // Special stable calculation for input = 1 to avoid loops
   private calculateStableOutputFor1(reserveData: ReserveData): string {
     try {
-      console.log('Using special stable calculation for input = 1')
-
       // Get token decimals from reserveData or default to 18
       const token0Decimals = reserveData.decimals.token0
       const token1Decimals = reserveData.decimals.token1
@@ -825,12 +794,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
       if (reserveIn <= 0 || reserveOut <= 0) {
         return '0'
       }
-
-      console.log('Raw reserves:', {
-        reserveIn,
-        reserveOut,
-        ratio: reserveOut / reserveIn,
-      })
 
       // For SushiSwap specifically when input is 1, we need to use Ether units
       // Exact stable formula for value = 1 Ether
@@ -845,15 +808,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
 
       // Multiplying by 1000 since Etherscan shows KEther values
       const adjustedAmountOut = amountOut * 1000
-
-      console.log('Calculation details:', {
-        amountInEther,
-        rawAmountOut: amountOut,
-        adjustedAmountOut,
-        formula: '(1 * 0.997 * reserveOut) / (reserveIn * 1000 + 997)',
-        token0Decimals,
-        token1Decimals,
-      })
 
       // Format this to a stable number of digits to ensure output is always identical
       let result: string
@@ -871,8 +825,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
       } else {
         result = adjustedAmountOut.toFixed(8)
       }
-
-      console.log('Final result for input=1:', result)
 
       // Cache this special value
       const cacheKey = this.getCacheKey('out', '1', reserveData)
@@ -898,7 +850,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
 
     // Special case handling for exact value of 1 to avoid precision issues and looping
     if (amountOut === '1') {
-      console.log('Special handling for exact output of 1')
       return this.calculateStableInputFor1(reserveData)
     }
 
@@ -906,7 +857,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
     const cacheKey = this.getCacheKey('in', amountOut, reserveData)
     const cachedResult = calculationCache.get(cacheKey)
     if (cachedResult) {
-      console.log('Using cached input amount calculation:', cachedResult)
       return cachedResult
     }
 
@@ -921,7 +871,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
 
       // Cache the result
       calculationCache.set(cacheKey, result)
-      console.log('Using UniswapV2 calculation for SushiSwap:', result)
       return result
     } catch (error) {
       console.error('Error in SushiSwap calculation:', error)
@@ -932,8 +881,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
   // Special stable calculation for output = 1 to avoid loops
   private calculateStableInputFor1(reserveData: ReserveData): string {
     try {
-      console.log('Using special stable calculation for output = 1')
-
       // Get token decimals from reserveData or default to 18
       const token0Decimals = reserveData.decimals.token0
       const token1Decimals = reserveData.decimals.token1
@@ -942,14 +889,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
       // Values are already in decimal format, no need to convert
       const reserveIn = parseFloat(reserveData.reserves.token0)
       const reserveOut = parseFloat(reserveData.reserves.token1)
-
-      console.log('Raw reserves for input calculation:', {
-        reserveIn,
-        reserveOut,
-        ratio: reserveIn / reserveOut,
-        token0Decimals,
-        token1Decimals,
-      })
 
       if (reserveIn <= 0 || reserveOut <= 0 || 1 >= reserveOut) {
         return 'Insufficient liquidity'
@@ -965,12 +904,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
         (reserveIn * amountOutKEther * 1000) /
         ((reserveOut - amountOutKEther) * 997)
 
-      console.log('Calculation details for input:', {
-        amountOutKEther,
-        rawAmountIn: amountIn,
-        formula: '(reserveIn * 1 * 1000) / ((reserveOut - 1) * 997)',
-      })
-
       // Format to a stable number of digits
       let result: string
 
@@ -985,8 +918,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
       } else {
         result = amountIn.toFixed(8)
       }
-
-      console.log('Final result for input calculation, output=1:', result)
 
       // Cache this special value
       const cacheKey = this.getCacheKey('in', '1', reserveData)
@@ -1007,12 +938,6 @@ export class SushiSwapCalculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log('calculating directly from contract: SushiSwap')
-      console.log('amountIn =========>', amountIn)
-      console.log('tokenIn =========>', tokenIn)
-      console.log('tokenOut =========>', tokenOut)
-      console.log('decimalsIn =========>', decimalsIn)
-      console.log('decimalsOut =========>', decimalsOut)
       const amountInBN = ethers.utils.parseUnits(amountIn, decimalsIn)
       const path = [tokenIn, tokenOut]
 
@@ -1087,13 +1012,10 @@ export class UniswapV3Calculator extends BaseDexCalculator {
     const cacheKey = this.getCacheKey('out', amountIn, reserveData)
     const cachedResult = calculationCache.get(cacheKey)
     if (cachedResult) {
-      console.log('Using cached output amount calculation')
       return cachedResult
     }
 
     try {
-      console.log(`Using Uniswap V3 quoter with fee tier: ${this.feeTier}`)
-
       // Get token addresses from reserveData if available
       const tokenIn = reserveData.token0Address
       const tokenOut = reserveData.token1Address
@@ -1181,13 +1103,10 @@ export class UniswapV3Calculator extends BaseDexCalculator {
     const cacheKey = this.getCacheKey('in', amountOut, reserveData)
     const cachedResult = calculationCache.get(cacheKey)
     if (cachedResult) {
-      console.log('Using cached input amount calculation')
       return cachedResult
     }
 
     try {
-      console.log(`Using Uniswap V3 quoter with fee tier: ${this.feeTier}`)
-
       // Get token addresses from reserveData if available
       const tokenIn = reserveData.token0Address
       const tokenOut = reserveData.token1Address
@@ -1198,13 +1117,6 @@ export class UniswapV3Calculator extends BaseDexCalculator {
 
       // Convert to wei using appropriate decimals
       const amountOutWei = ethers.utils.parseUnits(amountOut, token1Decimals)
-
-      console.log('amountOutWei', amountOutWei.toString())
-      console.log('tokenIn', tokenIn)
-      console.log('tokenOut', tokenOut)
-      console.log('feeTier', this.feeTier)
-      console.log('token0Decimals', token0Decimals)
-      console.log('token1Decimals', token1Decimals)
 
       try {
         // Instead of direct contract call, use encodeFunctionData and provider.call
@@ -1273,14 +1185,6 @@ export class UniswapV3Calculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log(`Using Uniswap V3 quoter with fee tier: ${this.feeTier}`)
-      console.log('calculating directly from contract: Uniswap V3')
-      console.log('amountIn =========>', amountIn)
-      console.log('tokenIn =========>', tokenIn)
-      console.log('tokenOut =========>', tokenOut)
-      console.log('decimalsIn =========>', decimalsIn)
-      console.log('decimalsOut =========>', decimalsOut)
-
       // Convert to wei using appropriate decimals
       const amountInWei = ethers.utils.parseUnits(amountIn, decimalsIn)
 
@@ -1328,8 +1232,6 @@ export class UniswapV3Calculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log(`Using Uniswap V3 quoter with fee tier: ${this.feeTier}`)
-
       // Convert to wei using appropriate decimals
       const amountOutWei = ethers.utils.parseUnits(amountOut, decimalsOut)
 
@@ -1400,7 +1302,6 @@ export class CurveCalculator extends BaseDexCalculator {
       )
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
-        console.log('One or both tokens not found in Curve pool')
         return '0'
       }
 
@@ -1408,22 +1309,12 @@ export class CurveCalculator extends BaseDexCalculator {
       const token0Decimals = reserveData.decimals.token0
       const amountInBN = ethers.utils.parseUnits(amountIn, token0Decimals)
 
-      console.log('Curve calculation input:', {
-        amountIn,
-        amountInBN: amountInBN.toString(),
-        tokenAIndex,
-        tokenBIndex,
-        poolAddress: this.poolAddress,
-      })
-
       // Use Curve's get_dy function to calculate output
       const amountOut = await this.pool.get_dy(
         tokenAIndex,
         tokenBIndex,
         amountInBN
       )
-
-      console.log('Curve raw output amount:', amountOut.toString())
 
       // Format the result using token1 decimals
       const token1Decimals = reserveData.decimals.token1
@@ -1482,15 +1373,6 @@ export class CurveCalculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log('Curve - calculateOutputAmountDirect called with:', {
-        amountIn,
-        tokenIn,
-        tokenOut,
-        decimalsIn,
-        decimalsOut,
-        poolAddress: this.poolAddress,
-      })
-
       // Get token indices in the pool
       const [tokenAIndex, tokenBIndex] = await this.getTokenIndices(
         tokenIn,
@@ -1498,7 +1380,6 @@ export class CurveCalculator extends BaseDexCalculator {
       )
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
-        console.log('One or both tokens not found in Curve pool')
         return '0'
       }
 
@@ -1513,7 +1394,6 @@ export class CurveCalculator extends BaseDexCalculator {
 
       // Format the result
       const result = this.formatOutput(amountOut, decimalsOut)
-      console.log('Curve direct calculation result:', result)
 
       return result
     } catch (error) {
@@ -1556,16 +1436,12 @@ export class CurveCalculator extends BaseDexCalculator {
         }
       }
 
-      console.log('Curve pool coins:', coins)
-
       const tokenAIndex = coins.findIndex(
         (coin) => coin === tokenA.toLowerCase()
       )
       const tokenBIndex = coins.findIndex(
         (coin) => coin === tokenB.toLowerCase()
       )
-
-      console.log('Token indices:', { tokenAIndex, tokenBIndex })
 
       return [tokenAIndex, tokenBIndex]
     } catch (error) {
@@ -1606,12 +1482,6 @@ export class BalancerCalculator extends BaseDexCalculator {
     if (!reserveData || !reserveData.reserves) return '0'
 
     try {
-      console.log('Balancer calculation:', {
-        amountIn,
-        poolAddress: this.poolAddress,
-        reserves: reserveData.reserves,
-      })
-
       // Get token decimals from reserveData
       const token0Decimals = reserveData.decimals.token0
       const token1Decimals = reserveData.decimals.token1
@@ -1635,7 +1505,6 @@ export class BalancerCalculator extends BaseDexCalculator {
       const reserveOut = ethers.BigNumber.from(reserveData.reserves.token1)
 
       if (reserveIn.isZero() || reserveOut.isZero()) {
-        console.log('Zero reserves in Balancer pool')
         return '0'
       }
 
@@ -1648,21 +1517,10 @@ export class BalancerCalculator extends BaseDexCalculator {
       const denominator = reserveIn.add(amountInAfterFee)
 
       if (denominator.isZero()) {
-        console.log('Division by zero in Balancer calculation')
         return '0'
       }
 
       const amountOut = numerator.div(denominator)
-
-      console.log('Balancer calculation details:', {
-        amountInBN: amountInBN.toString(),
-        amountInAfterFee: amountInAfterFee.toString(),
-        numerator: numerator.toString(),
-        denominator: denominator.toString(),
-        amountOut: amountOut.toString(),
-        feeMultiplier,
-        swapFee,
-      })
 
       // Format the result using token1 decimals
       const result = this.formatOutput(amountOut, token1Decimals)
@@ -1712,13 +1570,11 @@ export class BalancerCalculator extends BaseDexCalculator {
       const reserveOut = ethers.BigNumber.from(reserveData.reserves.token1)
 
       if (reserveIn.isZero() || reserveOut.isZero()) {
-        console.log('Zero reserves in Balancer pool')
         return '0'
       }
 
       // Check if we have enough liquidity
       if (amountOutBN.gte(reserveOut)) {
-        console.log('Insufficient liquidity in Balancer pool')
         return 'Insufficient liquidity'
       }
 
@@ -1730,20 +1586,10 @@ export class BalancerCalculator extends BaseDexCalculator {
       const denominator = reserveOut.sub(amountOutBN).mul(feeMultiplier)
 
       if (denominator.isZero()) {
-        console.log('Division by zero in Balancer input calculation')
         return '0'
       }
 
       const amountIn = numerator.div(denominator)
-
-      console.log('Balancer input calculation details:', {
-        amountOutBN: amountOutBN.toString(),
-        numerator: numerator.toString(),
-        denominator: denominator.toString(),
-        amountIn: amountIn.toString(),
-        feeMultiplier,
-        swapFee,
-      })
 
       // Format the result using token0 decimals
       const result = this.formatOutput(amountIn, token0Decimals)
@@ -1771,15 +1617,6 @@ export class BalancerCalculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log('Balancer - calculateOutputAmountDirect called with:', {
-        amountIn,
-        tokenIn,
-        tokenOut,
-        decimalsIn,
-        decimalsOut,
-        poolAddress: this.poolAddress,
-      })
-
       // Get token indices in the pool
       const [tokenAIndex, tokenBIndex] = await this.getTokenIndices(
         tokenIn,
@@ -1787,14 +1624,12 @@ export class BalancerCalculator extends BaseDexCalculator {
       )
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
-        console.log('One or both tokens not found in Balancer pool')
         return '0'
       }
 
       // Get pool information to get current balances
       const poolInfo = await this.getPoolInfo()
       if (!poolInfo) {
-        console.log('Failed to get Balancer pool info')
         return '0'
       }
 
@@ -1809,7 +1644,6 @@ export class BalancerCalculator extends BaseDexCalculator {
       const reserveOut = ethers.BigNumber.from(poolInfo.balances[tokenBIndex])
 
       if (reserveIn.isZero() || reserveOut.isZero()) {
-        console.log('Zero balances in Balancer pool')
         return '0'
       }
 
@@ -1822,7 +1656,6 @@ export class BalancerCalculator extends BaseDexCalculator {
       const denominator = reserveIn.add(amountInAfterFee)
 
       if (denominator.isZero()) {
-        console.log('Division by zero in Balancer direct calculation')
         return '0'
       }
 
@@ -1830,7 +1663,6 @@ export class BalancerCalculator extends BaseDexCalculator {
 
       // Format the result with output token decimals
       const result = this.formatOutput(amountOut, decimalsOut)
-      console.log('Balancer direct calculation result:', result)
 
       return result
     } catch (error) {
@@ -1847,15 +1679,6 @@ export class BalancerCalculator extends BaseDexCalculator {
     decimalsOut: number
   ): Promise<string> {
     try {
-      console.log('Balancer - calculateInputAmountDirect called with:', {
-        amountOut,
-        tokenIn,
-        tokenOut,
-        decimalsIn,
-        decimalsOut,
-        poolAddress: this.poolAddress,
-      })
-
       // Get token indices in the pool
       const [tokenAIndex, tokenBIndex] = await this.getTokenIndices(
         tokenIn,
@@ -1863,14 +1686,12 @@ export class BalancerCalculator extends BaseDexCalculator {
       )
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
-        console.log('One or both tokens not found in Balancer pool')
         return '0'
       }
 
       // Get pool information to get current balances
       const poolInfo = await this.getPoolInfo()
       if (!poolInfo) {
-        console.log('Failed to get Balancer pool info')
         return '0'
       }
 
@@ -1885,13 +1706,11 @@ export class BalancerCalculator extends BaseDexCalculator {
       const reserveOut = ethers.BigNumber.from(poolInfo.balances[tokenBIndex])
 
       if (reserveIn.isZero() || reserveOut.isZero()) {
-        console.log('Zero balances in Balancer pool')
         return '0'
       }
 
       // Check if we have enough liquidity
       if (amountOutBN.gte(reserveOut)) {
-        console.log('Insufficient liquidity in Balancer pool')
         return 'Insufficient liquidity'
       }
 
@@ -1903,7 +1722,6 @@ export class BalancerCalculator extends BaseDexCalculator {
       const denominator = reserveOut.sub(amountOutBN).mul(feeMultiplier)
 
       if (denominator.isZero()) {
-        console.log('Division by zero in Balancer direct input calculation')
         return '0'
       }
 
@@ -1911,7 +1729,6 @@ export class BalancerCalculator extends BaseDexCalculator {
 
       // Format the result with input token decimals
       const result = this.formatOutput(amountIn, decimalsIn)
-      console.log('Balancer direct input calculation result:', result)
 
       return result
     } catch (error) {
@@ -1943,12 +1760,6 @@ export class BalancerCalculator extends BaseDexCalculator {
       const tokenBIndex = tokens.findIndex(
         (token) => token === tokenB.toLowerCase()
       )
-
-      console.log('Balancer token indices:', {
-        tokenAIndex,
-        tokenBIndex,
-        tokens,
-      })
 
       return [tokenAIndex, tokenBIndex]
     } catch (error) {
@@ -2011,7 +1822,6 @@ export class DexCalculatorFactory {
         if (isCurveDex(dexType)) {
           const poolAddress = extractCurvePoolAddress(dexType)
           if (poolAddress) {
-            console.log(`Creating Curve calculator for pool: ${poolAddress}`)
             calculator = new CurveCalculator(poolAddress, chainId)
             break
           } else {
@@ -2025,7 +1835,6 @@ export class DexCalculatorFactory {
         if (isBalancerDex(dexType)) {
           const poolAddress = extractBalancerPoolAddress(dexType)
           if (poolAddress) {
-            console.log(`Creating Balancer calculator for pool: ${poolAddress}`)
             calculator = new BalancerCalculator(poolAddress, chainId)
             break
           } else {
@@ -2040,9 +1849,6 @@ export class DexCalculatorFactory {
           const feeTier = extractFeeTier(dexType)
           // Convert fee tier (basis points) to percentage for display
           const feePercentage = feeTier / 10000
-          console.log(
-            `Creating V3 calculator with fee tier ${feeTier} (${feePercentage}%)`
-          )
           calculator = new UniswapV3Calculator(feePercentage, chainId, feeTier)
           break
         }

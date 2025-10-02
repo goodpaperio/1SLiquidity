@@ -85,7 +85,8 @@ const NotifiSwapStream: React.FC<Props> = ({
               className="w-[18px] h-[18px]"
             />
             <p className="text-white uppercase">
-              {amountOut} {tokenOutObj.symbol} (Est)
+              {amountOut} {tokenOutObj.symbol}{' '}
+              {amountOut.includes('Required:') ? '' : '(Est)'}
             </p>
           </div>
         </div>

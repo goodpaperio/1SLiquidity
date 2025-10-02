@@ -28,6 +28,8 @@ type Props = {
   handleInstasettleClick: (selectedStream: any) => void
   handleCancelClick: (selectedStream: any) => void
   isCancellable: boolean
+  tokenIn?: any
+  formattedAmountIn?: string
 }
 
 const ConfigTrade: React.FC<Props> = ({
@@ -41,6 +43,8 @@ const ConfigTrade: React.FC<Props> = ({
   handleInstasettleClick,
   handleCancelClick,
   isCancellable,
+  tokenIn,
+  formattedAmountIn,
 }) => {
   const [showDetails, setShowDetails] = useState(false)
   const toggleDetails = () => setShowDetails(!showDetails)
@@ -49,13 +53,6 @@ const ConfigTrade: React.FC<Props> = ({
     <div className="flex items-center space-x-2">
       <Skeleton className="h-4 w-24 bg-white/10" />
     </div>
-  )
-
-  console.log('selectedStream ===>', selectedStream)
-  console.log('walletAddress ===>', walletAddress)
-  console.log(
-    'selectedStream.user?.toLowerCase() !== walletAddress?.toLowerCase() ===>',
-    selectedStream.user?.toLowerCase() !== walletAddress?.toLowerCase()
   )
 
   return (
@@ -82,9 +79,13 @@ const ConfigTrade: React.FC<Props> = ({
             : 'max-h-0'
         }`}
       >
-        {selectedStream?.user?.toLowerCase() !==
-        walletAddress?.toLowerCase() ? (
-          <div className="w-full flex flex-col gap-2 py-4 border-b border-borderBottom border-white12">
+        {selectedStream.isInstasettlable ? (
+          <div
+            className={cn(
+              'w-full flex flex-col gap-2 py-4 border-b border-borderBottom border-white12',
+              !isUser && 'border-b-0'
+            )}
+          >
             {/* <AmountTag
               title="Instasettleable"
               amount="20 BPS ($190.54)"
@@ -131,6 +132,7 @@ const ConfigTrade: React.FC<Props> = ({
                   defaultValue="100"
                   step="0.1"
                   min="0.1"
+                  disabled={true}
                   className="pr-12 border-zinc-700 text-white rounded-full text-right"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -138,34 +140,129 @@ const ConfigTrade: React.FC<Props> = ({
                 </span>
               </div>
             </div>
+
+            {!isUser && tokenIn && formattedAmountIn && (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-[14px]')}>Amount Received</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src="/icons/info.svg"
+                        alt="info"
+                        className="w-4 h-4 cursor-pointer"
+                        width={20}
+                        height={20}
+                        priority // Add priority to load the image faster
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                      {/* <p>{infoDetail || 'Additional information'}</p> */}
+                      <p>
+                        Lorem Ipsum is simply dummy text of the printing and
+                        typesetting industry. Lorem Ipsum has been the
+                        industry's standard dummy text ever since the 1500
+                        &nbsp;{' '}
+                        <a
+                          href="https://www.lipsum.com/"
+                          target="_blank"
+                          className="text-[#aeabab] underline"
+                        >
+                          Learn more
+                        </a>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-1">
+                  <p className="text-[14px]">
+                    {Number(formattedAmountIn)} {tokenIn.symbol}
+                  </p>
+                  <Image
+                    src={
+                      (tokenIn?.symbol.toLowerCase() === 'usdt'
+                        ? '/tokens/usdt.svg'
+                        : tokenIn?.icon) || '/icons/default-token.svg'
+                    }
+                    alt={tokenIn?.symbol || 'token'}
+                    width={40}
+                    height={40}
+                    className="border-[1.5px] border-black w-[20px] rounded-full"
+                  />
+                </div>
+              </div>
+            )}
             <div className="mt-0">
               <Button
                 text="EXECUTE INSTASETTLE"
                 className="h-[2.25rem]"
                 disabled={
                   isLoading ||
-                  selectedStream.user?.toLowerCase() ===
-                    walletAddress?.toLowerCase() ||
-                  selectedStream.settlements.length > 0
+                  selectedStream.settlements.length > 0 ||
+                  !walletAddress
                 }
                 loading={isLoading}
-                onClick={() => {
-                  if (
-                    selectedStream.user?.toLowerCase() !==
-                    walletAddress?.toLowerCase()
-                  ) {
-                    handleInstasettleClick(selectedStream)
-                  }
-                }}
+                onClick={() => handleInstasettleClick(selectedStream)}
               />
             </div>
           </div>
         ) : (
           ''
         )}
-        <div className="w-full flex flex-col gap-2 py-4">
-          {isUser && <h4 className="text-lg">Cancel Swap</h4>}
-          {amountReceived && (
+
+        {isUser && tokenIn && formattedAmountIn && (
+          <div className="w-full flex flex-col gap-2 py-4">
+            {/* {isUser && <h4 className="text-lg">Cancel Swap</h4>} */}
+
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1">
+                <p className={cn('text-[14px]')}>Amount Received</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Image
+                      src="/icons/info.svg"
+                      alt="info"
+                      className="w-4 h-4 cursor-pointer"
+                      width={20}
+                      height={20}
+                      priority // Add priority to load the image faster
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                    {/* <p>{infoDetail || 'Additional information'}</p> */}
+                    <p>
+                      Lorem Ipsum is simply dummy text of the printing and
+                      typesetting industry. Lorem Ipsum has been the industry's
+                      standard dummy text ever since the 1500 &nbsp;{' '}
+                      <a
+                        href="https://www.lipsum.com/"
+                        target="_blank"
+                        className="text-[#aeabab] underline"
+                      >
+                        Learn more
+                      </a>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-1">
+                <p className="text-[14px]">
+                  {Number(formattedAmountIn)} {tokenIn.symbol}
+                </p>
+                <Image
+                  src={
+                    (tokenIn?.symbol.toLowerCase() === 'usdt'
+                      ? '/tokens/usdt.svg'
+                      : tokenIn?.icon) || '/icons/default-token.svg'
+                  }
+                  alt={tokenIn?.symbol || 'token'}
+                  width={40}
+                  height={40}
+                  className="border-[1.5px] border-black w-[20px] rounded-full"
+                />
+              </div>
+            </div>
+            {/* {!isUser && amountReceived && (
             <AmountTag
               title="Amount Received"
               amount="20 BPS ($190.54)"
@@ -173,15 +270,16 @@ const ConfigTrade: React.FC<Props> = ({
               isLoading={false}
             />
           )}
-          {fee && (
+          {!isUser && fee && (
             <AmountTag
               title="Fee"
               amount="20 BPS ($190.54)"
               infoDetail="Estimated"
               isLoading={false}
             />
-          )}
-        </div>
+          )} */}
+          </div>
+        )}
 
         <div className="mt-0">
           {isUser ? (
@@ -189,7 +287,7 @@ const ConfigTrade: React.FC<Props> = ({
               text="CANCEL TRADE"
               theme="destructive"
               className="h-[2.25rem]"
-              disabled={isLoading || !isCancellable}
+              disabled={isLoading || !isCancellable || !walletAddress}
               loading={isLoading}
               onClick={() => handleCancelClick(selectedStream)}
             />

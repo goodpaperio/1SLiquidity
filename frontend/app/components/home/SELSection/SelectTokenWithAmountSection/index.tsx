@@ -246,7 +246,7 @@ const SelectTokenWithAmountSection: React.FC<InputAmountProps> = ({
   const matchingWalletToken = useMemo(() => {
     if (!selectedToken || !walletTokens.length) return null
 
-    // Case 1: ETH special handling - look for native ETH token
+    // Case 1: ETH special handling - look for WETH token (since ETH uses WETH address for trading)
     if (selectedToken.symbol.toLowerCase() === 'eth') {
       return walletTokens.find(
         (token) =>
@@ -336,8 +336,21 @@ const SelectTokenWithAmountSection: React.FC<InputAmountProps> = ({
 
   // Calculate token balance value in USD
   const getTokenBalanceUSD = () => {
-    if (!selectedToken || !selectedToken.usd_price) return 0
+    if (!selectedToken) return 0
+
     const balance = parseFloat(tokenBalance)
+
+    // For ETH, use WETH price since they have the same value
+    if (selectedToken.symbol.toLowerCase() === 'eth') {
+      const wethToken = allTokens.find(
+        (token: TOKENS_TYPE) => token.symbol.toLowerCase() === 'weth'
+      )
+      if (wethToken && wethToken.usd_price) {
+        return (balance * wethToken.usd_price).toFixed(2)
+      }
+    }
+
+    if (!selectedToken.usd_price) return 0
     return (balance * selectedToken.usd_price).toFixed(2)
   }
 
@@ -469,8 +482,23 @@ const SelectTokenWithAmountSection: React.FC<InputAmountProps> = ({
                 inValidAmount ? 'text-primaryRed' : 'text-primary'
               }`}
             >
-              {selectedToken && selectedToken.usd_price
-                ? `$${(amount * selectedToken.usd_price).toFixed(2)}`
+              {selectedToken
+                ? (() => {
+                    // For ETH, use WETH price since they have the same value
+                    if (selectedToken.symbol.toLowerCase() === 'eth') {
+                      const wethToken = allTokens.find(
+                        (token: TOKENS_TYPE) =>
+                          token.symbol.toLowerCase() === 'weth'
+                      )
+                      if (wethToken && wethToken.usd_price) {
+                        return `$${(amount * wethToken.usd_price).toFixed(2)}`
+                      }
+                    }
+
+                    return selectedToken.usd_price
+                      ? `$${(amount * selectedToken.usd_price).toFixed(2)}`
+                      : `$${amount}`
+                  })()
                 : `$${amount}`}
             </p>
           </>

@@ -104,8 +104,6 @@ export default function HotPairBox() {
     enabled: true,
   })
 
-  // console.log('topTokensData ==>', topTokensData)
-
   const sortedPairs = topTokensData?.data.sort((a: any, b: any) => {
     const valueA = a.slippageSavings * (a.tokenBUsdPrice || 1)
     const valueB = b.slippageSavings * (b.tokenBUsdPrice || 1)
@@ -145,10 +143,6 @@ export default function HotPairBox() {
       )
 
       if (tokenA && tokenB) {
-        // console.log('Setting default tokens:', {
-        //   from: tokenA.symbol,
-        //   to: tokenB.symbol,
-        // })
         setSelectedTokenFrom(tokenA)
         setSelectedTokenTo(tokenB)
       }

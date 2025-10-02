@@ -5,6 +5,7 @@ import { ReserveData } from '@/app/lib/dex/calculators'
 import { formatEther } from 'ethers/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import DexSummary from './DexSummary'
+import { formatNumberWithSubscript } from '@/app/lib/utils/number'
 
 interface DetailSectionProps {
   sellAmount?: string
@@ -21,6 +22,7 @@ interface DetailSectionProps {
   isFetchingReserves?: boolean
   slippageSavings?: number | null
   dexFee?: number | null
+  usePriceBased?: boolean
 }
 
 const DetailSection: React.FC<DetailSectionProps> = ({
@@ -38,6 +40,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   isCalculating = false,
   slippageSavings = null,
   isFetchingReserves = false,
+  usePriceBased = true,
 }) => {
   const [showDetails, setShowDetails] = useState(true)
 
@@ -134,7 +137,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             />
           )}
           <p>
-            {sellAmount} {tokenFromSymbol}
+            {formatNumberWithSubscript(sellAmount)} {tokenFromSymbol}
           </p>
           {inValidAmount ? (
             <Image
@@ -157,7 +160,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             {isCalculating ? (
               <LoadingSkeleton />
             ) : (
-              `${buyAmount} ${tokenToSymbol} (Est)`
+              `${formatNumberWithSubscript(buyAmount)} ${tokenToSymbol} (Est)`
             )}
           </p>
         </div>
@@ -260,7 +263,12 @@ const DetailSection: React.FC<DetailSectionProps> = ({
         </div>
 
         <div className="w-full border-t border-borderBottom">
-          <DexSummary />
+          <DexSummary
+            reserves={reserves}
+            tokenFromSymbol={tokenFromSymbol}
+            tokenToSymbol={tokenToSymbol}
+            usePriceBased={usePriceBased}
+          />
         </div>
       </div>
 

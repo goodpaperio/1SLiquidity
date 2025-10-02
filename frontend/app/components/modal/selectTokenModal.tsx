@@ -171,8 +171,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  console.log('SelectTokenModal rendered')
-
   const [searchValue, setSearchValue] = useState('')
   const [tokenFilter, setTokenFilter] = useState<'all' | 'my'>('all')
   const [selectedBaseToken, setSelectedBaseToken] = useState<string | null>(
@@ -195,9 +193,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   const chainId = chainIdWithPrefix.split(':')[1]
   const chainName = CHAIN_NAMES[chainId] || 'Unknown Chain'
 
-  console.log('Modal - Chain ID:', chainId)
-  console.log('Modal - Chain Name:', chainName)
-
   const { addToast } = useToast()
 
   // Get wallet tokens for the current chain
@@ -207,8 +202,8 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   // Use token list from our enhanced hook that fetches from CoinGecko API with caching
   const { tokens: availableTokens, isLoading, error, refetch } = useTokenList()
 
-  console.log('Modal - Available Tokens:', availableTokens)
-  console.log('Modal - Wallet Tokens:', walletTokens)
+  // console.log('Modal - Available Tokens:', availableTokens)
+  // console.log('Modal - Wallet Tokens:', walletTokens)
 
   // Determine which base token to filter by
   useEffect(() => {
@@ -284,24 +279,24 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
 
   const displayTokens = createDisplayTokens()
 
-  console.log('Modal - Display Tokens:', displayTokens)
-  console.log('Number of Display Tokens:', displayTokens.length)
-  console.log('Selected Base Token:', selectedBaseToken)
+  // console.log('Modal - Display Tokens:', displayTokens)
+  // console.log('Number of Display Tokens:', displayTokens.length)
+  // console.log('Selected Base Token:', selectedBaseToken)
   // Log available tokens to check WETH price
-  console.log(
-    'Available Tokens:',
-    availableTokens.filter(
-      (t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth'
-    )
-  )
-  console.log(
-    'Wallet Tokens:',
-    walletTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
-  )
-  console.log(
-    'Display Tokens:',
-    displayTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
-  )
+  // console.log(
+  //   'Available Tokens:',
+  //   availableTokens.filter(
+  //     (t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth'
+  //   )
+  // )
+  // console.log(
+  //   'Wallet Tokens:',
+  //   walletTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
+  // )
+  // console.log(
+  //   'Display Tokens:',
+  //   displayTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
+  // )
 
   // Function to format balance based on decimals
   const formatTokenBalance = (balance: string, decimals: number) => {
@@ -403,7 +398,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   // Filter tokens based on search and make sure we don't show the already selected token in the other field
   const getFilteredTokens = () => {
     let filteredTokens = displayTokens
-    console.log('Initial tokens count:', displayTokens.length)
 
     // Remove duplicate tokens (keep the one with higher balance)
     filteredTokens = Object.values(
@@ -411,7 +405,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
         (acc: { [key: string]: TOKENS_TYPE }, token: TOKENS_TYPE) => {
           const lowerAddress = token.token_address?.toLowerCase() || ''
           if (!lowerAddress) {
-            console.log('Token with no address:', token)
             return acc
           }
           if (
@@ -425,7 +418,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
         {}
       )
     )
-    console.log('After deduplication tokens count:', filteredTokens.length)
 
     // Apply search filter if search value exists
     if (debouncedSearchValue) {
@@ -436,17 +428,12 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
           token.symbol.toLowerCase().includes(searchLower) ||
           token.token_address.toLowerCase() === searchLower
       )
-      console.log('After search filter tokens count:', filteredTokens.length)
     }
 
     // Filter by "My tokens" if selected and wallet is connected
     if (tokenFilter === 'my' && address) {
       filteredTokens = filteredTokens.filter(
         (token: TOKENS_TYPE) => parseFloat(token.balance) > 0
-      )
-      console.log(
-        'After "my tokens" filter tokens count:',
-        filteredTokens.length
       )
     }
 
@@ -462,7 +449,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
           token.token_address !== selectedTokenFrom.token_address
       )
     }
-    console.log('Final filtered tokens count:', filteredTokens.length)
 
     // Sort tokens by market value (usd_price * balance) and popularity
     return filteredTokens.sort((a: TOKENS_TYPE, b: TOKENS_TYPE) => {

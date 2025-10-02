@@ -67,7 +67,6 @@ export const useSwapCalculator = ({
           let calculatedBuyAmount: string
 
           if (isRefresh && reserves.token0Address && reserves.token1Address) {
-            console.log('Using direct calculation during refresh')
             // Use direct calculation during refresh
             calculatedBuyAmount = await calculator.calculateOutputAmountDirect(
               amount.toString(),
@@ -77,7 +76,6 @@ export const useSwapCalculator = ({
               reserves.token1Decimals || 18
             )
           } else {
-            console.log('Using reserve-based calculation')
             // Use reserve-based calculation for initial and non-refresh calculations
             calculatedBuyAmount = await calculator.calculateOutputAmount(
               amount.toString(),
@@ -203,7 +201,6 @@ export const useSwapCalculator = ({
 
       // Trigger debounced calculation
       if (isRefresh && reserveData.token0Address && reserveData.token1Address) {
-        console.log('Using direct calculation during refresh')
         try {
           const calculatedBuyAmount =
             await dexCalculator.calculateOutputAmountDirect(
@@ -225,7 +222,6 @@ export const useSwapCalculator = ({
           console.error('Error in direct calculation:', error)
           if (currentCalculationId === latestCalculationId.current) {
             // Fallback to normal calculation
-            console.log('Falling back to normal calculation')
             debouncedCalculation(
               sellAmount,
               dexCalculator,

@@ -37,25 +37,12 @@ export const useDynamicReserveCache = ({
     if (!tokenA?.token_address || !tokenB?.token_address) return null
     // Keep the exact order to maintain direction
     const key = `${tokenA.token_address}_${tokenB.token_address}`
-    // console.log('Dynamic - Creating cache key:', {
-    //   fromSymbol: tokenA.symbol,
-    //   toSymbol: tokenB.symbol,
-    //   fromAddress: tokenA.token_address,
-    //   toAddress: tokenB.token_address,
-    //   key,
-    // })
+
     return key
   }
 
   // Function to fetch reserves for a token pair
   const fetchReserves = async (tokenA: Token, tokenB: Token) => {
-    // console.log('Dynamic - Fetching reserves:', {
-    //   fromSymbol: tokenA.symbol,
-    //   toSymbol: tokenB.symbol,
-    //   fromAddress: tokenA.token_address,
-    //   toAddress: tokenB.token_address,
-    // })
-
     try {
       if (!tokenA.token_address || !tokenB.token_address) {
         throw new Error('Invalid token addresses')
@@ -85,11 +72,13 @@ export const useDynamicReserveCache = ({
         dex: data.dex,
         pairAddress: data.pairAddress,
         reserves: data.reserves,
+        price: data.price,
         decimals: data.decimals,
         timestamp: data.timestamp,
         token0Address: tokenA.token_address,
         token1Address: tokenB.token_address,
         totalReserves: data.totalReserves, // Include totalReserves from API
+        otherDexes: data.otherDexes,
       } as ReserveData
 
       const calculator = DexCalculatorFactory.createCalculator(
@@ -97,15 +86,6 @@ export const useDynamicReserveCache = ({
         undefined,
         chainId
       )
-
-      // console.log('Dynamic - Successfully fetched reserves:', {
-      //   fromSymbol: tokenA.symbol,
-      //   toSymbol: tokenB.symbol,
-      //   token0Address: tokenA.token_address,
-      //   token1Address: tokenB.token_address,
-      //   reserves: data.reserves,
-      //   decimals: data.decimals,
-      // })
 
       return {
         reserveData: reserveDataWithDecimals,
@@ -185,11 +165,6 @@ export const useDynamicReserveCache = ({
       ]) as DynamicReservesCache[string]
 
       if (!cachedData) {
-        console.log('Dynamic - Cache miss:', {
-          fromSymbol: tokenA?.symbol,
-          toSymbol: tokenB?.symbol,
-          key: pairKey,
-        })
         return null
       }
 
