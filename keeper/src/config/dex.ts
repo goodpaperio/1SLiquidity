@@ -77,23 +77,33 @@ export const CONTRACT_ABIS = {
   CURVE: {
     POOL: [
       'function get_dy(int128 i, int128 j, uint256 dx) external view returns (uint256)',
+      'function get_dy_underlying(int128 i, int128 j, uint256 dx) external view returns (uint256)',
       'function balances(uint256 arg0) external view returns (uint256)',
       'function coins(uint256 i) external view returns (address)',
-      'function coins(uint256 i) external view returns (address)',
+      'function underlying_coins(uint256 i) external view returns (address)',
       'function A() external view returns (uint256)',
-      'function fee() external view returns (uint256)'
+      'function fee() external view returns (uint256)',
+      'function admin_fee() external view returns (uint256)',
+      'function get_virtual_price() external view returns (uint256)',
+      'function is_meta() external view returns (bool)',
+      'function calc_token_amount(uint256[2] memory amounts, bool deposit) external view returns (uint256)',
+      'function calc_token_amount(uint256[3] memory amounts, bool deposit) external view returns (uint256)',
+      'function calc_token_amount(uint256[4] memory amounts, bool deposit) external view returns (uint256)'
     ],
     REGISTRY: [
       'function get_pool_from_lp_token(address lp_token) external view returns (address)',
       'function get_lp_token(address pool) external view returns (address)',
       'function get_coins(address pool) external view returns (address[8] memory)',
-      'function get_underlying_coins(address pool) external view returns (address[8] memory)'
+      'function get_underlying_coins(address pool) external view returns (address[8] memory)',
+      'function get_n_coins(address pool) external view returns (uint256)',
+      'function is_meta(address pool) external view returns (bool)'
     ]
   },
   BALANCER: {
     VAULT: [
       'function getPoolTokens(bytes32 poolId) external view returns (address[] memory tokens, uint256[] memory balances, uint256 lastChangeBlock)',
-      'function getPool(bytes32 poolId) external view returns (address, uint8)'
+      'function getPool(bytes32 poolId) external view returns (address, uint8)',
+      'function queryBatchSwap(uint8 kind, tuple(bytes32 poolId, uint256 assetInIndex, uint256 assetOutIndex, uint256 amount, bytes userData)[] swaps, address[] assets, tuple(address sender, bool fromInternalBalance, address payable recipient, bool toInternalBalance) funds) external returns (int256[] assetDeltas)'
     ],
     POOL: [
       'function getPoolId() external view returns (bytes32)',

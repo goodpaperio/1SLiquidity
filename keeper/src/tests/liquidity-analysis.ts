@@ -255,6 +255,7 @@ interface LiquidityResult {
     token1: number
   }
   timestamp: number
+  pairAddress?: string
 }
 
 interface TokenLiquiditySummary {
@@ -723,10 +724,11 @@ async function getAllReservesForPair(
           reserves: reserves.reserves,
           decimals: reserves.decimals,
           timestamp: reserves.timestamp,
+          pairAddress: reserves.pairAddress,
         }
 
         results.push(liquidityResult)
-        console.log(`      Found ${dex.name} liquidity`)
+        console.log(`      Found ${dex.name} liquidity${reserves.pairAddress ? ` (Pool Address: ${reserves.pairAddress})` : ''}`)
       }
     } catch (error) {
       console.warn(`      Error getting reserves from ${dex.name}:`, error)
@@ -918,6 +920,7 @@ async function transformToColumnFormat(
           reservesBUniswapV3_3000: null,
           reservesAUniswapV3_10000: null,
           reservesBUniswapV3_10000: null,
+          pairAddress: null,
         })
       }
 
@@ -928,41 +931,50 @@ async function transformToColumnFormat(
         case 'uniswap-v2':
           record.reservesAUniswapV2 = pair.reserves.token0
           record.reservesBUniswapV2 = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'sushiswap':
           record.reservesASushiswap = pair.reserves.token0
           record.reservesBSushiswap = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'curve':
           // Handle generic 'curve' format
           record.reservesACurve = pair.reserves.token0
           record.reservesBCurve = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'balancer':
           // Handle generic 'balancer' format
           record.reservesABalancer = pair.reserves.token0
           record.reservesBBalancer = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'uniswap-v3-500':
           record.reservesAUniswapV3_500 = pair.reserves.token0
           record.reservesBUniswapV3_500 = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'uniswap-v3-3000':
           record.reservesAUniswapV3_3000 = pair.reserves.token0
           record.reservesBUniswapV3_3000 = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         case 'uniswap-v3-10000':
           record.reservesAUniswapV3_10000 = pair.reserves.token0
           record.reservesBUniswapV3_10000 = pair.reserves.token1
+          record.pairAddress = pair.pairAddress
           break
         default:
           // Handle Curve and Balancer pools with specific addresses
           if (pair.dex.startsWith('curve-')) {
             record.reservesACurve = pair.reserves.token0
             record.reservesBCurve = pair.reserves.token1
+            record.pairAddress = pair.pairAddress
           } else if (pair.dex.startsWith('balancer-')) {
             record.reservesABalancer = pair.reserves.token0
             record.reservesBBalancer = pair.reserves.token1
+            record.pairAddress = pair.pairAddress
           } else {
             console.warn(`⚠️  Unknown DEX: ${pair.dex}`)
           }
@@ -1032,36 +1044,43 @@ async function transformToColumnFormat(
         dex: 'uniswap-v2',
         reserveA: record.reservesAUniswapV2,
         reserveB: record.reservesBUniswapV2,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'sushiswap',
         reserveA: record.reservesASushiswap,
         reserveB: record.reservesBSushiswap,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'curve',
         reserveA: record.reservesACurve,
         reserveB: record.reservesBCurve,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'balancer',
         reserveA: record.reservesABalancer,
         reserveB: record.reservesBBalancer,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'uniswap-v3-500',
         reserveA: record.reservesAUniswapV3_500,
         reserveB: record.reservesBUniswapV3_500,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'uniswap-v3-3000',
         reserveA: record.reservesAUniswapV3_3000,
         reserveB: record.reservesBUniswapV3_3000,
+        pairAddress: record.pairAddress,
       },
       {
         dex: 'uniswap-v3-10000',
         reserveA: record.reservesAUniswapV3_10000,
         reserveB: record.reservesBUniswapV3_10000,
+        pairAddress: record.pairAddress,
       },
     ].filter((pair) => pair.reserveA !== null && pair.reserveB !== null)
 
@@ -1081,6 +1100,7 @@ async function transformToColumnFormat(
     const highestLiquidityADex = bestDex.dex
     const highestLiquidityAReserve = bestDex.reserveA // Individual DEX reserve A
     const highestLiquidityBReserve = bestDex.reserveB // Individual DEX reserve B
+    const bestDexPairAddress = bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
 
     console.log('<=======>')
     console.log('record.tokenASymbol =====>', record.tokenASymbol)
@@ -1148,7 +1168,8 @@ async function transformToColumnFormat(
         record.tokenBDecimals,
         record.tokenAAddress,
         record.tokenBAddress,
-        sweetSpot
+        sweetSpot,
+        bestDexPairAddress
       )
       : { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
 
@@ -1255,7 +1276,8 @@ export async function calculateSlippageSavings(
   decimalsB: number,
   tokenIn: string,
   tokenOut: string,
-  sweetSpot: number
+  sweetSpot: number,
+  pairAddress?: string
 ): Promise<{
   slippageSavings: number;
   percentageSavings: number;
@@ -1340,11 +1362,11 @@ export async function calculateSlippageSavings(
       console.log('slippageSavings =====>', slippageSavings)
       console.log('percentageSavings =====>', percentageSavings)
 
-      // Get effective price (NODECA)
+      // Get effective price (NODECA): tokenOutNODECA / LiqT
       const realisedPriceNODECA = amountOutInETH / scaledTradeVolume
       console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
-      // Get effective price (DECA)
+      // Get effective price (DECA): tokenOutDECA / LiqT
       const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
       console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
@@ -1515,48 +1537,105 @@ export async function calculateSlippageSavings(
     }
 
     if (dex.startsWith('balancer-') || dex === 'balancer') {
-      console.log('Calculating slippage for Balancer pool...')
 
       try {
-        // Balancer uses weighted constant product formula
-        // For simplification, we'll use the constant product approximation
-        // amountOut = reserveB * amountIn / (reserveA + amountIn) * (1 - fee)
+        const vault = new ethers.Contract(
+          CONTRACT_ADDRESSES.BALANCER.VAULT,
+          CONTRACT_ABIS.BALANCER.VAULT,
+          provider
+        )
 
-        // Balancer typically has 0.3% fee (similar to Uniswap V2)
-        const fee = 0.003 // 0.3%
+        // Helper to build swap query
+        async function getQuote(amountIn: bigint) {
+          if (!pairAddress) {
+            throw new Error('Pool ID is required for Balancer swaps')
+          }
 
-        // Calculate amount out for full trade using constant product formula
-        const numerator = reserveB * tradeVolume
-        const denominator = reserveA + tradeVolume
-        const amountOutBeforeFee = numerator / denominator
-        const amountOut =
-          (amountOutBeforeFee * BigInt(Math.floor((1 - fee) * 1000000))) /
-          BigInt(1000000)
+          console.log('BALANCER PAIR ADDRESS', pairAddress)
 
+          // Get pool tokens to find correct indices
+          const [tokens, balances, lastChangeBlock] = await vault.getPoolTokens(pairAddress)
+
+          // Find token indices in the pool
+          const tokenInIndex = tokens.findIndex(
+            (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
+          )
+          const tokenOutIndex = tokens.findIndex(
+            (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
+          )
+
+          if (tokenInIndex === -1 || tokenOutIndex === -1) {
+            throw new Error(`Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`)
+          }
+
+          console.log('Token indices:', { tokenInIndex, tokenOutIndex, tokens })
+
+          const swaps = [
+            {
+              poolId: pairAddress, // This is now the actual poolId from Balancer
+              assetInIndex: tokenInIndex,
+              assetOutIndex: tokenOutIndex,
+              amount: amountIn.toString(),
+              userData: "0x"
+            }
+          ]
+
+          const assets = [tokenIn, tokenOut]
+
+          const funds = {
+            sender: ethers.ZeroAddress,
+            fromInternalBalance: false,
+            recipient: ethers.ZeroAddress,
+            toInternalBalance: false
+          }
+
+          // Encode the function call data
+          const data = vault.interface.encodeFunctionData(
+            'queryBatchSwap',
+            [0, swaps, assets, funds] // 0 = GIVEN_IN
+          )
+
+          // Use provider.call() instead of direct contract call
+          const result = await provider.call({
+            to: CONTRACT_ADDRESSES.BALANCER.VAULT,
+            data,
+          })
+
+          // Decode the result
+          const deltas = vault.interface.decodeFunctionResult(
+            'queryBatchSwap',
+            result
+          )[0]
+
+          // deltas[0] = +amountIn, deltas[1] = -amountOut
+          return BigInt(deltas[1]) * BigInt(-1)
+        }
+
+        // Get quote for full amount (tokenOutNODECA)
+        const amountOut = await getQuote(tradeVolume)
         const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
-        console.log('Balancer amountOut =====>', amountOut)
-        console.log('Balancer amountOutInETH =====>', amountOutInETH)
-
-        // Calculate amount out for sweet spot trade
-        const sweetSpotTradeAmount = tradeVolume / BigInt(sweetSpot)
-        const sweetSpotNumerator = reserveB * sweetSpotTradeAmount
-        const sweetSpotDenominator = reserveA + sweetSpotTradeAmount
-        const sweetSpotAmountOutBeforeFee =
-          sweetSpotNumerator / sweetSpotDenominator
-        const sweetSpotAmountOut =
-          (sweetSpotAmountOutBeforeFee *
-            BigInt(Math.floor((1 - fee) * 1000000))) /
-          BigInt(1000000)
-
-        const sweetSpotAmountOutInETH =
-          Number(sweetSpotAmountOut) / 10 ** decimalsB
-        const scaledSweetSpotAmountOutInETH =
-          sweetSpotAmountOutInETH * sweetSpot
-
-        console.log('Balancer sweetSpotAmountOut =====>', sweetSpotAmountOut)
+        console.log('amountOut =====>', amountOut)
         console.log(
-          'Balancer scaledSweetSpotAmountOutInETH =====>',
+          'amountOutInETH (tokenOutNODECA) =====>',
+          amountOutInETH
+        )
+
+        console.log(
+          'tradeVolume / sweetSpot =====>',
+          tradeVolume / BigInt(sweetSpot)
+        )
+
+        // Get quote for (tradeVolume / sweetSpot)
+        const sweetSpotAmountOut = await getQuote(tradeVolume / BigInt(sweetSpot))
+        const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+        // Scale up the sweet spot quote (tokenOutDECA)
+        const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
+
+        console.log('sweetSpotAmountOut =====>', sweetSpotAmountOut)
+        console.log('sweetSpotAmountOutInETH =====>', sweetSpotAmountOutInETH)
+        console.log(
+          'scaledSweetSpotAmountOutInETH (tokenOutDECA) =====>',
           scaledSweetSpotAmountOutInETH
         )
 
@@ -1567,19 +1646,26 @@ export async function calculateSlippageSavings(
         percentageSavings = Math.max(0, Math.min(percentageSavings, 100))
         percentageSavings = Number(percentageSavings.toFixed(3))
 
-        console.log('Balancer slippageSavings =====>', slippageSavings)
-        console.log('Balancer percentageSavings =====>', percentageSavings)
+        console.log('slippageSavings =====>', slippageSavings)
+        console.log('percentageSavings =====>', percentageSavings)
 
-        // Calculate price accuracy for Balancer
+        // Get effective price (NODECA): tokenOutNODECA / LiqT
         const realisedPriceNODECA = amountOutInETH / scaledTradeVolume
+        console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
+
+        // Get effective price (DECA): tokenOutDECA / LiqT
         const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+        console.log('realisedPriceDECA =====>', realisedPriceDECA)
+
         const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
         const priceAccuracyDECA = realisedPriceDECA / observedPrice
 
-        console.log('Balancer priceAccuracyNODECA =====>', priceAccuracyNODECA)
-        console.log('Balancer priceAccuracyDECA =====>', priceAccuracyDECA)
+        console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
+        console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
         return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
+
+
       } catch (error) {
         console.error('Error in Balancer calculation:', error)
         return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
@@ -1590,62 +1676,115 @@ export async function calculateSlippageSavings(
       console.log('Calculating slippage for Curve pool...')
 
       try {
-        // Curve uses StableSwap invariant for stablecoin pairs
-        // For simplification, we'll use a modified constant product approach
-        // Curve has very low slippage for similar-valued assets but higher for dissimilar ones
+        if (!pairAddress) {
+          throw new Error('Pool address is required for Curve swaps')
+        }
 
-        // Curve typically has 0.04% fee
-        const fee = 0.0004 // 0.04%
+        console.log('CURVE POOL ADDRESS', pairAddress)
 
-        // For Curve, we need to consider the amplification factor (A)
-        // Higher A means lower slippage for similar-priced assets
-        // We'll use a simplified approach assuming moderate amplification
+        // Create Curve pool contract instance
+        const poolContract = new ethers.Contract(
+          pairAddress,
+          CONTRACT_ABIS.CURVE.POOL,
+          provider
+        )
 
-        const A = 100n // Typical amplification factor for Curve pools
+        // Helper to get quote from Curve pool
+        async function getCurveQuote(amountIn: bigint) {
+          // Get pool information
+          const [coins, balances, isMeta] = await Promise.all([
+            poolContract.coins(0).then(() => poolContract.coins(1)).then(() =>
+              Promise.all([poolContract.coins(0), poolContract.coins(1)])
+            ).catch(() => null),
+            poolContract.balances(0).then(() => poolContract.balances(1)).then(() =>
+              Promise.all([poolContract.balances(0), poolContract.balances(1)])
+            ).catch(() => null),
+            // Try to call is_meta, fallback to false if not available
+            poolContract.is_meta().catch(() => false)
+          ])
 
-        // Simplified StableSwap calculation (approximation)
-        // For small trades, it behaves similarly to constant sum
-        // For large trades, it behaves more like constant product
+          if (!coins || !balances) {
+            throw new Error('Could not fetch pool data from Curve contract')
+          }
 
-        const reserveANormal = Number(reserveA) / 10 ** decimalsA
-        const reserveBNormal = Number(reserveB) / 10 ** decimalsB
-        const tradeVolumeNormal = Number(tradeVolume) / 10 ** decimalsA
+          console.log('Curve pool coins:', coins)
+          console.log('Curve pool balances:', balances)
+          console.log('Curve is meta pool:', isMeta)
 
-        // Calculate price impact using a hybrid approach
-        const totalReserves = reserveANormal + reserveBNormal
-        const tradeRatio = tradeVolumeNormal / reserveANormal
+          // Find token indices in the pool
+          const tokenInIndex = coins.findIndex(
+            (coin: string) => coin.toLowerCase() === tokenIn.toLowerCase()
+          )
+          const tokenOutIndex = coins.findIndex(
+            (coin: string) => coin.toLowerCase() === tokenOut.toLowerCase()
+          )
 
-        // For Curve, smaller trades have minimal slippage, larger trades have increasing slippage
-        let priceImpact = tradeRatio * tradeRatio * 0.1 // Quadratic price impact
-        priceImpact = Math.min(priceImpact, 0.05) // Cap at 5% impact
+          if (tokenInIndex === -1 || tokenOutIndex === -1) {
+            throw new Error(`Tokens not found in Curve pool: ${tokenIn}, ${tokenOut}`)
+          }
 
-        // Calculate amount out with price impact and fees
-        const basePrice = reserveBNormal / reserveANormal
-        const effectivePrice = basePrice * (1 - priceImpact) * (1 - fee)
-        const amountOutInETH = tradeVolumeNormal * effectivePrice
+          console.log('Curve token indices:', { tokenInIndex, tokenOutIndex })
 
-        console.log('Curve basePrice =====>', basePrice)
-        console.log('Curve priceImpact =====>', priceImpact)
-        console.log('Curve amountOutInETH =====>', amountOutInETH)
+          // Use appropriate function based on pool type
+          let amountOut: bigint
+          try {
+            if (isMeta) {
+              // For meta pools, try get_dy_underlying first, fallback to get_dy
+              try {
+                amountOut = await poolContract.get_dy_underlying(
+                  tokenInIndex,
+                  tokenOutIndex,
+                  amountIn
+                )
+              } catch (error) {
+                console.log('get_dy_underlying failed, trying get_dy:', error)
+                amountOut = await poolContract.get_dy(
+                  tokenInIndex,
+                  tokenOutIndex,
+                  amountIn
+                )
+              }
+            } else {
+              // For regular pools, use get_dy
+              amountOut = await poolContract.get_dy(
+                tokenInIndex,
+                tokenOutIndex,
+                amountIn
+              )
+            }
+          } catch (error) {
+            console.error('Error getting Curve quote:', error)
+            throw new Error(`Failed to get quote from Curve pool: ${error}`)
+          }
 
-        // Calculate for sweet spot
-        const sweetSpotTradeVolumeNormal = tradeVolumeNormal / sweetSpot
-        const sweetSpotTradeRatio = sweetSpotTradeVolumeNormal / reserveANormal
+          return amountOut
+        }
 
-        let sweetSpotPriceImpact =
-          sweetSpotTradeRatio * sweetSpotTradeRatio * 0.1
-        sweetSpotPriceImpact = Math.min(sweetSpotPriceImpact, 0.05)
+        // Get quote for full amount (tokenOutNODECA)
+        const amountOut = await getCurveQuote(tradeVolume)
+        const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
-        const sweetSpotEffectivePrice =
-          basePrice * (1 - sweetSpotPriceImpact) * (1 - fee)
-        const sweetSpotAmountOutInETH =
-          sweetSpotTradeVolumeNormal * sweetSpotEffectivePrice
-        const scaledSweetSpotAmountOutInETH =
-          sweetSpotAmountOutInETH * sweetSpot
-
-        console.log('Curve sweetSpotPriceImpact =====>', sweetSpotPriceImpact)
+        console.log('amountOut =====>', amountOut)
         console.log(
-          'Curve scaledSweetSpotAmountOutInETH =====>',
+          'amountOutInETH (tokenOutNODECA) =====>',
+          amountOutInETH
+        )
+
+        console.log(
+          'tradeVolume / sweetSpot =====>',
+          tradeVolume / BigInt(sweetSpot)
+        )
+
+        // Get quote for (tradeVolume / sweetSpot)
+        const sweetSpotAmountOut = await getCurveQuote(tradeVolume / BigInt(sweetSpot))
+        const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+        // Scale up the sweet spot quote (tokenOutDECA)
+        const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
+
+        console.log('sweetSpotAmountOut =====>', sweetSpotAmountOut)
+        console.log('sweetSpotAmountOutInETH =====>', sweetSpotAmountOutInETH)
+        console.log(
+          'scaledSweetSpotAmountOutInETH (tokenOutDECA) =====>',
           scaledSweetSpotAmountOutInETH
         )
 
@@ -1656,19 +1795,25 @@ export async function calculateSlippageSavings(
         percentageSavings = Math.max(0, Math.min(percentageSavings, 100))
         percentageSavings = Number(percentageSavings.toFixed(3))
 
-        console.log('Curve slippageSavings =====>', slippageSavings)
-        console.log('Curve percentageSavings =====>', percentageSavings)
+        console.log('slippageSavings =====>', slippageSavings)
+        console.log('percentageSavings =====>', percentageSavings)
 
-        // Calculate price accuracy for Curve
+        // Get effective price (NODECA): tokenOutNODECA / LiqT
         const realisedPriceNODECA = amountOutInETH / scaledTradeVolume
+        console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
+
+        // Get effective price (DECA): tokenOutDECA / LiqT
         const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+        console.log('realisedPriceDECA =====>', realisedPriceDECA)
+
         const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
         const priceAccuracyDECA = realisedPriceDECA / observedPrice
 
-        console.log('Curve priceAccuracyNODECA =====>', priceAccuracyNODECA)
-        console.log('Curve priceAccuracyDECA =====>', priceAccuracyDECA)
+        console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
+        console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
         return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
+
       } catch (error) {
         console.error('Error in Curve calculation:', error)
         return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
@@ -2039,6 +2184,7 @@ export async function analyzeTokenPairLiquidityComprehensive(
         tokenB: number
       }
       totalLiquidity: number
+      pairAddress?: string
     }>
     totalReserves: {
       tokenA: string
@@ -2141,6 +2287,7 @@ export async function analyzeTokenPairLiquidityComprehensive(
       totalLiquidity:
         weiToNormal(reserve.reserves.token0, reserve.decimals.token0) +
         weiToNormal(reserve.reserves.token1, reserve.decimals.token1),
+      pairAddress: reserve.pairAddress, // Pool address for Curve, Pool ID for Balancer
     }))
 
     // Calculate total reserves using existing logic
@@ -2207,7 +2354,8 @@ export async function analyzeTokenPairLiquidityComprehensive(
         tokenBInfo.decimals,
         tokenAAddress,
         tokenBAddress,
-        sweetSpot
+        sweetSpot,
+        bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
       )
 
     // Calculate summary statistics

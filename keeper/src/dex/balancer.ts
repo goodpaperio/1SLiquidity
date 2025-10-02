@@ -37,10 +37,21 @@ export class BalancerService {
   }
 
   /**
-   * Derive pool ID from pool address (pool address + 12 zero bytes)
+   * Get pool ID from the pool contract
+   * Balancer pool IDs are 32-byte identifiers that must be obtained from the contract
    */
-  private derivePoolId(): string {
-    return this.poolAddress.toLowerCase() + '000000000000000000000000'
+  private async getPoolIdFromContract(): Promise<string | null> {
+    try {
+      const pool = new ethers.Contract(
+        this.poolAddress,
+        CONTRACT_ABIS.BALANCER.POOL,
+        this.provider
+      )
+      return await pool.getPoolId()
+    } catch (error) {
+      console.error(`Error getting pool ID from contract ${this.poolAddress}:`, error)
+      return null
+    }
   }
 
   /**
@@ -59,13 +70,11 @@ export class BalancerService {
         this.provider
       )
 
-      // Try to get pool ID from the pool contract first
-      let poolId: string
-      try {
-        poolId = await pool.getPoolId()
-      } catch (e) {
-        // If getPoolId() fails, derive pool ID from pool address
-        poolId = this.derivePoolId()
+      // Get pool ID from the pool contract
+      const poolId = await this.getPoolIdFromContract()
+      if (!poolId) {
+        console.error(`Could not get pool ID for pool ${this.poolAddress}`)
+        return null
       }
 
       // Get pool tokens and balances
@@ -173,7 +182,7 @@ export class BalancerService {
         },
         price: price,
         dex: `balancer-${this.poolAddress}`,
-        pairAddress: this.poolAddress,
+        pairAddress: poolInfo.poolId, // Use poolId instead of poolAddress for Balancer
         timestamp: Date.now(),
       }
     } catch (error) {

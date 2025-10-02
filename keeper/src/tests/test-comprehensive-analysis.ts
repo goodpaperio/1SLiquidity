@@ -6,8 +6,8 @@ async function testComprehensiveAnalysis() {
   // Example
   console.log('=== Testing Pair ===')
   const result1 = await analyzeTokenPairLiquidityComprehensive(
-    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // WETH
-    '0x4d224452801aced8b2f0aebe155379bb5d594381' // AAVE
+    '0x853d955aCEf822Db058eb8505911ED77F175b99e', // FRAX
+    '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' // USDC
   )
 
   if (result1.success) {

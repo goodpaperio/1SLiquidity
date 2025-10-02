@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { ReservesAggregator, DexType } from '../../services/reserves-aggregator'
 import { getCache, setCache, generateCacheKey } from '../../utils/redis'
 import { createProvider } from '../../utils/provider'
-import { initializeCurveFiltering } from '../../services/curve-initializer'
 import { CURVE_POOL_METADATA, BALANCER_POOL_METADATA } from '../../config/dex'
 
 // Create provider with better throttling and retry settings
@@ -205,8 +204,7 @@ export const main = async (
 
       // If data is stale but usable, return it and refresh in background
       console.log(
-        `🟡 Stale cache hit for ${tokenA}-${tokenB}, ${
-          shouldRefresh ? 'refreshing in background' : 'still valid'
+        `🟡 Stale cache hit for ${tokenA}-${tokenB}, ${shouldRefresh ? 'refreshing in background' : 'still valid'
         }`
       )
 
@@ -227,8 +225,7 @@ export const main = async (
 
     // No cache or cache too old - need fresh data
     console.log(
-      `Cache miss for reserves of ${tokenA}-${tokenB}${
-        dex ? ` from ${dex}` : ''
+      `Cache miss for reserves of ${tokenA}-${tokenB}${dex ? ` from ${dex}` : ''
       }, fetching from API...`
     )
 

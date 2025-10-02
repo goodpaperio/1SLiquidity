@@ -1,9 +1,9 @@
 // Generated Balancer pool metadata from subgraph
-// Total pools: 1687
-// Generated at: 2025-09-19T11:39:06.428Z
+// Total pools: 1688
+// Generated at: 2025-09-29T12:26:14.776Z
 
 export const BALANCER_POOL_METADATA: Record<string, any> = {
-  // 2-token pools (1320 pools)
+  // 2-token pools (1321 pools)
   '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8': {
     poolId: '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019',
     symbol: 'B-50USDC-50WETH',
@@ -774,28 +774,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc1': {
-    poolId: '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc10002000000000000000005de',
-    symbol: 'ECLP-wstETH-wETH',
-    name: 'Gyroscope ECLP wstETH/wETH',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x3f7c10701b14197e2695dec6428a2ca4cf7fc3b8': {
     poolId: '0x3f7c10701b14197e2695dec6428a2ca4cf7fc3b800020000000000000000023c',
     symbol: '50DFX-50WETH',
@@ -814,6 +792,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'DFX',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc1': {
+    poolId: '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc10002000000000000000005de',
+    symbol: 'ECLP-wstETH-wETH',
+    name: 'Gyroscope ECLP wstETH/wETH',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'wstETH',
       'WETH',
     ],
     isActive: true
@@ -1082,25 +1082,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x798b112420ad6391a4129ac25ef59663a44c88bb': {
-    poolId: '0x798b112420ad6391a4129ac25ef59663a44c88bb0002000000000000000003f4',
-    symbol: 'wstETH-ACX',
-    name: 'Balancer 50wstETH-50ACX Pool',
+  '0x441b8a1980f2f2e43a9397099d15cc2fe6d36250': {
+    poolId: '0x441b8a1980f2f2e43a9397099d15cc2fe6d3625000020000000000000000035f',
+    symbol: '50INV-50DOLA',
+    name: '50INV-50DOLA',
     tokens: [
-      '0x44108f0223a3c3028f5fe7aec7f9bb2e66bef82f',
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68',
+      '0x865377367054516e17014ccded1e7d814edc9ce4',
     ],
     tokenDecimals: [
       18,
       18,
     ],
     tokenNames: [
-      'Across Protocol Token',
-      'Wrapped liquid staked Ether 2.0',
+      'Inverse DAO',
+      'Dola USD Stablecoin',
     ],
     tokenSymbols: [
-      'ACX',
-      'wstETH',
+      'INV',
+      'DOLA',
     ],
     isActive: true
   },
@@ -1126,25 +1126,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x441b8a1980f2f2e43a9397099d15cc2fe6d36250': {
-    poolId: '0x441b8a1980f2f2e43a9397099d15cc2fe6d3625000020000000000000000035f',
-    symbol: '50INV-50DOLA',
-    name: '50INV-50DOLA',
+  '0x798b112420ad6391a4129ac25ef59663a44c88bb': {
+    poolId: '0x798b112420ad6391a4129ac25ef59663a44c88bb0002000000000000000003f4',
+    symbol: 'wstETH-ACX',
+    name: 'Balancer 50wstETH-50ACX Pool',
     tokens: [
-      '0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68',
-      '0x865377367054516e17014ccded1e7d814edc9ce4',
+      '0x44108f0223a3c3028f5fe7aec7f9bb2e66bef82f',
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
     ],
     tokenDecimals: [
       18,
       18,
     ],
     tokenNames: [
-      'Inverse DAO',
-      'Dola USD Stablecoin',
+      'Across Protocol Token',
+      'Wrapped liquid staked Ether 2.0',
     ],
     tokenSymbols: [
-      'INV',
-      'DOLA',
+      'ACX',
+      'wstETH',
     ],
     isActive: true
   },
@@ -1214,28 +1214,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x6228f64d5ba8376652bfe7e36569d595347cf6fb': {
-    poolId: '0x6228f64d5ba8376652bfe7e36569d595347cf6fb0002000000000000000005df',
-    symbol: '80T-20TBTC',
-    name: '80T-20TBTC',
-    tokens: [
-      '0x18084fba666a33d37592fa2633fd49a74dd93a88',
-      '0xcdf7028ceab81fa0c6971208e83fa7872994bee5',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'tBTC v2',
-      'Threshold Network Token',
-    ],
-    tokenSymbols: [
-      'tBTC',
-      'T',
-    ],
-    isActive: true
-  },
   '0x29d7a7e0d781c957696697b94d4bc18c651e358e': {
     poolId: '0x29d7a7e0d781c957696697b94d4bc18c651e358e000200000000000000000049',
     symbol: 'PAR50-WETH50',
@@ -1255,6 +1233,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'PAR',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x6228f64d5ba8376652bfe7e36569d595347cf6fb': {
+    poolId: '0x6228f64d5ba8376652bfe7e36569d595347cf6fb0002000000000000000005df',
+    symbol: '80T-20TBTC',
+    name: '80T-20TBTC',
+    tokens: [
+      '0x18084fba666a33d37592fa2633fd49a74dd93a88',
+      '0xcdf7028ceab81fa0c6971208e83fa7872994bee5',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'tBTC v2',
+      'Threshold Network Token',
+    ],
+    tokenSymbols: [
+      'tBTC',
+      'T',
     ],
     isActive: true
   },
@@ -1412,28 +1412,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xdda942bacbe6bd0c12e3ed2db45f0349e8c43101': {
-    poolId: '0xdda942bacbe6bd0c12e3ed2db45f0349e8c43101000200000000000000000131',
-    symbol: 'SYNR_TLA',
-    name: 'SYNR Copper Launch',
-    tokens: [
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xbc6e06778708177a18210181b073da747c88490a',
-    ],
-    tokenDecimals: [
-      6,
-      18,
-    ],
-    tokenNames: [
-      'USD Coin',
-      'Syndicate Token',
-    ],
-    tokenSymbols: [
-      'USDC',
-      'SYNR',
-    ],
-    isActive: true
-  },
   '0x9137f3a026fa419a7a9a0ba8df6601d4b0abfd26': {
     poolId: '0x9137f3a026fa419a7a9a0ba8df6601d4b0abfd260002000000000000000001ab',
     symbol: 'BBPT',
@@ -1453,6 +1431,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'WETH',
       'BICO',
+    ],
+    isActive: true
+  },
+  '0xdda942bacbe6bd0c12e3ed2db45f0349e8c43101': {
+    poolId: '0xdda942bacbe6bd0c12e3ed2db45f0349e8c43101000200000000000000000131',
+    symbol: 'SYNR_TLA',
+    name: 'SYNR Copper Launch',
+    tokens: [
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xbc6e06778708177a18210181b073da747c88490a',
+    ],
+    tokenDecimals: [
+      6,
+      18,
+    ],
+    tokenNames: [
+      'USD Coin',
+      'Syndicate Token',
+    ],
+    tokenSymbols: [
+      'USDC',
+      'SYNR',
     ],
     isActive: true
   },
@@ -1522,28 +1522,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x99a14324cfd525a34bbc93ac7e348929909d57fd': {
-    poolId: '0x99a14324cfd525a34bbc93ac7e348929909d57fd00020000000000000000030e',
-    symbol: '50WETH-50FOLD',
-    name: '50WETH-50FOLD',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xd084944d3c05cd115c09d072b9f44ba3e0e45921',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Manifold Finance',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'FOLD',
-    ],
-    isActive: true
-  },
   '0x41fdbea2e52790c0a1dc374f07b628741f2e062d': {
     poolId: '0x41fdbea2e52790c0a1dc374f07b628741f2e062d0002000000000000000006be',
     symbol: 'ECLP-stdeUSD-deUSD',
@@ -1563,6 +1541,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'deUSD',
       'sdeUSD',
+    ],
+    isActive: true
+  },
+  '0x99a14324cfd525a34bbc93ac7e348929909d57fd': {
+    poolId: '0x99a14324cfd525a34bbc93ac7e348929909d57fd00020000000000000000030e',
+    symbol: '50WETH-50FOLD',
+    name: '50WETH-50FOLD',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xd084944d3c05cd115c09d072b9f44ba3e0e45921',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Manifold Finance',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'FOLD',
     ],
     isActive: true
   },
@@ -1654,6 +1654,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x5b1c06c4923dbba4b27cfa270ffb2e60aa286159': {
+    poolId: '0x5b1c06c4923dbba4b27cfa270ffb2e60aa28615900020000000000000000004a',
+    symbol: 'PAR75-MIMO25',
+    name: 'PAR 75 - MIMO 25 Balancer Pool',
+    tokens: [
+      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
+      '0x90b831fa3bebf58e9744a14d638e25b4ee06f9bc',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'PAR Stablecoin',
+      'MIMO Parallel Governance Token',
+    ],
+    tokenSymbols: [
+      'PAR',
+      'MIMO',
+    ],
+    isActive: true
+  },
   '0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c9': {
     poolId: '0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2',
     symbol: '50OHM-50DAI',
@@ -1695,28 +1717,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'rETH',
       'RPL',
-    ],
-    isActive: true
-  },
-  '0x5b1c06c4923dbba4b27cfa270ffb2e60aa286159': {
-    poolId: '0x5b1c06c4923dbba4b27cfa270ffb2e60aa28615900020000000000000000004a',
-    symbol: 'PAR75-MIMO25',
-    name: 'PAR 75 - MIMO 25 Balancer Pool',
-    tokens: [
-      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
-      '0x90b831fa3bebf58e9744a14d638e25b4ee06f9bc',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'PAR Stablecoin',
-      'MIMO Parallel Governance Token',
-    ],
-    tokenSymbols: [
-      'PAR',
-      'MIMO',
     ],
     isActive: true
   },
@@ -1764,28 +1764,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xd153e1de63b478213b7b62bf47dcc4099608b1ae': {
-    poolId: '0xd153e1de63b478213b7b62bf47dcc4099608b1ae0002000000000000000000d8',
-    symbol: 'PATH_TLA',
-    name: 'PATH Copper Launch',
-    tokens: [
-      '0x2a2550e0a75acec6d811ae3930732f7f3ad67588',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'PathDao',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'PATH',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0xf5aaf7ee8c39b651cebf5f1f50c10631e78e0ef9': {
     poolId: '0xf5aaf7ee8c39b651cebf5f1f50c10631e78e0ef9000200000000000000000069',
     symbol: 'BPTUMAUSDC',
@@ -1804,6 +1782,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'UMA',
+      'USDC',
+    ],
+    isActive: true
+  },
+  '0xd153e1de63b478213b7b62bf47dcc4099608b1ae': {
+    poolId: '0xd153e1de63b478213b7b62bf47dcc4099608b1ae0002000000000000000000d8',
+    symbol: 'PATH_TLA',
+    name: 'PATH Copper Launch',
+    tokens: [
+      '0x2a2550e0a75acec6d811ae3930732f7f3ad67588',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'PathDao',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'PATH',
       'USDC',
     ],
     isActive: true
@@ -1830,28 +1830,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xb12f3144f75569b1959f9a9dd8c046a5b7ca7581': {
-    poolId: '0xb12f3144f75569b1959f9a9dd8c046a5b7ca75810002000000000000000001a0',
-    symbol: 'KOO_LBP',
-    name: 'KOO Copper LBP',
-    tokens: [
-      '0x5e9f7e92e742f73b990dca63c88325ed24666e84',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Morning Always Comes',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'KOO',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0x5f1f4e50ba51d723f12385a8a9606afc3a0555f5': {
     poolId: '0x5f1f4e50ba51d723f12385a8a9606afc3a0555f5000200000000000000000465',
     symbol: '50wstETH-50LDO',
@@ -1871,6 +1849,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'LDO',
       'wstETH',
+    ],
+    isActive: true
+  },
+  '0xb12f3144f75569b1959f9a9dd8c046a5b7ca7581': {
+    poolId: '0xb12f3144f75569b1959f9a9dd8c046a5b7ca75810002000000000000000001a0',
+    symbol: 'KOO_LBP',
+    name: 'KOO Copper LBP',
+    tokens: [
+      '0x5e9f7e92e742f73b990dca63c88325ed24666e84',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Morning Always Comes',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'KOO',
+      'USDC',
     ],
     isActive: true
   },
@@ -1918,6 +1918,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xa5533a44d06800eaf2daad5aad3f9aa9e1dc3614': {
+    poolId: '0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8',
+    symbol: '20PAR-80MIMO',
+    name: '20PAR-80MIMO',
+    tokens: [
+      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
+      '0x90b831fa3bebf58e9744a14d638e25b4ee06f9bc',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'PAR Stablecoin',
+      'MIMO Parallel Governance Token',
+    ],
+    tokenSymbols: [
+      'PAR',
+      'MIMO',
+    ],
+    isActive: true
+  },
   '0x6a5ead5433a50472642cd268e584dafa5a394490': {
     poolId: '0x6a5ead5433a50472642cd268e584dafa5a394490000200000000000000000366',
     symbol: '50WSTETH-50LDO',
@@ -1962,28 +1984,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xa5533a44d06800eaf2daad5aad3f9aa9e1dc3614': {
-    poolId: '0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8',
-    symbol: '20PAR-80MIMO',
-    name: '20PAR-80MIMO',
-    tokens: [
-      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
-      '0x90b831fa3bebf58e9744a14d638e25b4ee06f9bc',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'PAR Stablecoin',
-      'MIMO Parallel Governance Token',
-    ],
-    tokenSymbols: [
-      'PAR',
-      'MIMO',
-    ],
-    isActive: true
-  },
   '0x093254005743b7af89e24f645730ba2dd8441333': {
     poolId: '0x093254005743b7af89e24f645730ba2dd84413330002000000000000000006a4',
     symbol: '50APW-50WETH',
@@ -2006,28 +2006,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x702605f43471183158938c1a3e5f5a359d7b31ba': {
-    poolId: '0x702605f43471183158938c1a3e5f5a359d7b31ba00020000000000000000009f',
-    symbol: 'B-80BAL-20WETH',
-    name: 'Balancer 80 GRO 20 WETH',
-    tokens: [
-      '0x3ec8798b81485a254928b70cda1cf0a2bb0b74d7',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Gro DAO Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'GRO',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x350196326aeaa9b98f1903fb5e8fc2686f85318c': {
     poolId: '0x350196326aeaa9b98f1903fb5e8fc2686f85318c000200000000000000000084',
     symbol: 'VBPT',
@@ -2046,6 +2024,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'VITA',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0x702605f43471183158938c1a3e5f5a359d7b31ba': {
+    poolId: '0x702605f43471183158938c1a3e5f5a359d7b31ba00020000000000000000009f',
+    symbol: 'B-80BAL-20WETH',
+    name: 'Balancer 80 GRO 20 WETH',
+    tokens: [
+      '0x3ec8798b81485a254928b70cda1cf0a2bb0b74d7',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Gro DAO Token',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'GRO',
       'WETH',
     ],
     isActive: true
@@ -2754,28 +2754,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x334c96d792e4b26b841d28f53235281cec1be1f2': {
-    poolId: '0x334c96d792e4b26b841d28f53235281cec1be1f200020000000000000000038a',
-    symbol: '50rETH-50bb-a-USD',
-    name: 'Balancer 50rETH-50bb-a-USD',
-    tokens: [
-      '0xa13a9247ea42d743238089903570127dda72fe44',
-      '0xae78736cd615f374d3085123a210448e74fc6393',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer Aave Boosted StablePool',
-      'Rocket Pool ETH',
-    ],
-    tokenSymbols: [
-      'bb-a-USD',
-      'rETH',
-    ],
-    isActive: true
-  },
   '0xa8210885430aaa333c9f0d66ab5d0c312bed5e43': {
     poolId: '0xa8210885430aaa333c9f0d66ab5d0c312bed5e43000200000000000000000692',
     symbol: '50wstETH-50sUSDe',
@@ -2795,6 +2773,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'wstETH',
       'sUSDe',
+    ],
+    isActive: true
+  },
+  '0x334c96d792e4b26b841d28f53235281cec1be1f2': {
+    poolId: '0x334c96d792e4b26b841d28f53235281cec1be1f200020000000000000000038a',
+    symbol: '50rETH-50bb-a-USD',
+    name: 'Balancer 50rETH-50bb-a-USD',
+    tokens: [
+      '0xa13a9247ea42d743238089903570127dda72fe44',
+      '0xae78736cd615f374d3085123a210448e74fc6393',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer Aave Boosted StablePool',
+      'Rocket Pool ETH',
+    ],
+    tokenSymbols: [
+      'bb-a-USD',
+      'rETH',
     ],
     isActive: true
   },
@@ -3128,28 +3128,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x9c6d47ff73e0f5e51be5fd53236e3f595c5793f2': {
-    poolId: '0x9c6d47ff73e0f5e51be5fd53236e3f595c5793f200020000000000000000042c',
-    symbol: 'B-cbETH-wstETH-Stable',
-    name: 'Balancer cbETH-wstETH Stable Pool',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xbe9895146f7af43049ca1c1ae358b0541ea49704',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'Coinbase Wrapped Staked ETH',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'cbETH',
-    ],
-    isActive: true
-  },
   '0x8fe054748fc5c8ee50ab8860409a4e9e760e13f4': {
     poolId: '0x8fe054748fc5c8ee50ab8860409a4e9e760e13f4000200000000000000000328',
     symbol: '50WETH-50EUL',
@@ -3169,6 +3147,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'WETH',
       'EUL',
+    ],
+    isActive: true
+  },
+  '0x9c6d47ff73e0f5e51be5fd53236e3f595c5793f2': {
+    poolId: '0x9c6d47ff73e0f5e51be5fd53236e3f595c5793f200020000000000000000042c',
+    symbol: 'B-cbETH-wstETH-Stable',
+    name: 'Balancer cbETH-wstETH Stable Pool',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xbe9895146f7af43049ca1c1ae358b0541ea49704',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'Coinbase Wrapped Staked ETH',
+    ],
+    tokenSymbols: [
+      'wstETH',
+      'cbETH',
     ],
     isActive: true
   },
@@ -3216,28 +3216,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x54caa1859a519dc937462c7f5e0a4b8c836bda05': {
-    poolId: '0x54caa1859a519dc937462c7f5e0a4b8c836bda05000200000000000000000647',
-    symbol: 'ORDS_LBP',
-    name: 'ORDS Fjord Foundry LBP',
-    tokens: [
-      '0x5521f39a12a48daa9f88086f893fd481fd63daa0',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Ordiswap',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'ORDS',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0xd590931466cdd6d488a25da1e89dd0539723800c': {
     poolId: '0xd590931466cdd6d488a25da1e89dd0539723800c00020000000000000000042b',
     symbol: '50RBN-50USDC',
@@ -3256,6 +3234,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'RBN',
+      'USDC',
+    ],
+    isActive: true
+  },
+  '0x54caa1859a519dc937462c7f5e0a4b8c836bda05': {
+    poolId: '0x54caa1859a519dc937462c7f5e0a4b8c836bda05000200000000000000000647',
+    symbol: 'ORDS_LBP',
+    name: 'ORDS Fjord Foundry LBP',
+    tokens: [
+      '0x5521f39a12a48daa9f88086f893fd481fd63daa0',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Ordiswap',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'ORDS',
       'USDC',
     ],
     isActive: true
@@ -3326,6 +3326,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x2044afef1268100918f88de66a3532eab3d8f3ef': {
+    poolId: '0x2044afef1268100918f88de66a3532eab3d8f3ef00020000000000000000068a',
+    symbol: 'ECLP-PAR-EURA',
+    name: 'Gyroscope ECLP PAR/EURA',
+    tokens: [
+      '0x1a7e4e63778b4f12a199c062f3efdd288afcbce8',
+      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'EURA (previously agEUR)',
+      'PAR Stablecoin',
+    ],
+    tokenSymbols: [
+      'EURA',
+      'PAR',
+    ],
+    isActive: true
+  },
   '0x7d98f308db99fdd04bbf4217a4be8809f38faa64': {
     poolId: '0x7d98f308db99fdd04bbf4217a4be8809f38faa6400020000000000000000059b',
     symbol: '80wstETH/20GHO',
@@ -3345,28 +3367,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'GHO',
       'wstETH',
-    ],
-    isActive: true
-  },
-  '0x1b65fe4881800b91d4277ba738b567cbb200a60d': {
-    poolId: '0x1b65fe4881800b91d4277ba738b567cbb200a60d0002000000000000000002cc',
-    symbol: '80TEMPLE-20DAI',
-    name: '80TEMPLE-20DAI',
-    tokens: [
-      '0x470ebf5f030ed85fc1ed4c2d36b9dd02e77cf1b7',
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Temple',
-      'Dai Stablecoin',
-    ],
-    tokenSymbols: [
-      'TEMPLE',
-      'DAI',
     ],
     isActive: true
   },
@@ -3392,25 +3392,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x2044afef1268100918f88de66a3532eab3d8f3ef': {
-    poolId: '0x2044afef1268100918f88de66a3532eab3d8f3ef00020000000000000000068a',
-    symbol: 'ECLP-PAR-EURA',
-    name: 'Gyroscope ECLP PAR/EURA',
+  '0x1b65fe4881800b91d4277ba738b567cbb200a60d': {
+    poolId: '0x1b65fe4881800b91d4277ba738b567cbb200a60d0002000000000000000002cc',
+    symbol: '80TEMPLE-20DAI',
+    name: '80TEMPLE-20DAI',
     tokens: [
-      '0x1a7e4e63778b4f12a199c062f3efdd288afcbce8',
-      '0x68037790a0229e9ce6eaa8a99ea92964106c4703',
+      '0x470ebf5f030ed85fc1ed4c2d36b9dd02e77cf1b7',
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
     ],
     tokenDecimals: [
       18,
       18,
     ],
     tokenNames: [
-      'EURA (previously agEUR)',
-      'PAR Stablecoin',
+      'Temple',
+      'Dai Stablecoin',
     ],
     tokenSymbols: [
-      'EURA',
-      'PAR',
+      'TEMPLE',
+      'DAI',
     ],
     isActive: true
   },
@@ -3565,6 +3565,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'WETH',
       'FDT',
+    ],
+    isActive: true
+  },
+  '0x4446d101e91d042b5d08b62fde126e307f1acd57': {
+    poolId: '0x4446d101e91d042b5d08b62fde126e307f1acd570002000000000000000006f9',
+    symbol: '80VLR/20WETH',
+    name: '80VLR/20WETH',
+    tokens: [
+      '0x4e107a0000db66f0e9fd2039288bf811dd1f9c74',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Velora',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'VLR',
+      'WETH',
     ],
     isActive: true
   },
@@ -3810,6 +3832,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x4f883b5c0c01fe13cedd05c684f00266b0626e23': {
+    poolId: '0x4f883b5c0c01fe13cedd05c684f00266b0626e230002000000000000000006ad',
+    symbol: '80wDAG-20USDC',
+    name: '80wDAG-20USDC',
+    tokens: [
+      '0x2e3cfe45e3ee7c017277f22e35d2f29edc99d570',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      8,
+      6,
+    ],
+    tokenNames: [
+      'Wrapped DAG',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'wDAG',
+      'USDC',
+    ],
+    isActive: true
+  },
   '0x639883476960a23b38579acfd7d71561a0f408cf': {
     poolId: '0x639883476960a23b38579acfd7d71561a0f408cf000200000000000000000505',
     symbol: '50STG-50bbaUSD',
@@ -3854,28 +3898,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x51735bdfbfe3fc13dea8dc6502e2e95898942961': {
-    poolId: '0x51735bdfbfe3fc13dea8dc6502e2e958989429610002000000000000000000a0',
-    symbol: 'B-80UNN-20WETH',
-    name: 'Balancer 80 UNN 20 WETH',
-    tokens: [
-      '0x226f7b842e0f0120b7e194d05432b3fd14773a9d',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'UNION Protocol Governance Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'UNN',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xccf5575570fac94cec733a58ff91bb3d073085c7': {
     poolId: '0xccf5575570fac94cec733a58ff91bb3d073085c70002000000000000000000af',
     symbol: 'iROBOT',
@@ -3898,25 +3920,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x4f883b5c0c01fe13cedd05c684f00266b0626e23': {
-    poolId: '0x4f883b5c0c01fe13cedd05c684f00266b0626e230002000000000000000006ad',
-    symbol: '80wDAG-20USDC',
-    name: '80wDAG-20USDC',
+  '0x51735bdfbfe3fc13dea8dc6502e2e95898942961': {
+    poolId: '0x51735bdfbfe3fc13dea8dc6502e2e958989429610002000000000000000000a0',
+    symbol: 'B-80UNN-20WETH',
+    name: 'Balancer 80 UNN 20 WETH',
     tokens: [
-      '0x2e3cfe45e3ee7c017277f22e35d2f29edc99d570',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0x226f7b842e0f0120b7e194d05432b3fd14773a9d',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     ],
     tokenDecimals: [
-      8,
-      6,
+      18,
+      18,
     ],
     tokenNames: [
-      'Wrapped DAG',
-      'USD Coin',
+      'UNION Protocol Governance Token',
+      'Wrapped Ether',
     ],
     tokenSymbols: [
-      'wDAG',
-      'USDC',
+      'UNN',
+      'WETH',
     ],
     isActive: true
   },
@@ -3964,12 +3986,12 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xc88c76dd8b92408fe9bea1a54922a31e232d873c': {
-    poolId: '0xc88c76dd8b92408fe9bea1a54922a31e232d873c0002000000000000000005b2',
-    symbol: '80ASX-20WETH',
-    name: '80ASX-20WETH',
+  '0xc5c91aea7551095c3e1ff0f94f682c45b347ad73': {
+    poolId: '0xc5c91aea7551095c3e1ff0f94f682c45b347ad730002000000000000000006c0',
+    symbol: '80BAL20wETH/wETH',
+    name: 'Balancer 80BAL20wETH/wETH',
     tokens: [
-      '0x67d85a291fcdc862a78812a3c26d55e28ffb2701',
+      '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
       '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     ],
     tokenDecimals: [
@@ -3977,11 +3999,11 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       18,
     ],
     tokenNames: [
-      'Asymetrix Governance Token',
+      'Balancer 80 BAL 20 WETH',
       'Wrapped Ether',
     ],
     tokenSymbols: [
-      'ASX',
+      'B-80BAL-20WETH',
       'WETH',
     ],
     isActive: true
@@ -4008,12 +4030,12 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xc5c91aea7551095c3e1ff0f94f682c45b347ad73': {
-    poolId: '0xc5c91aea7551095c3e1ff0f94f682c45b347ad730002000000000000000006c0',
-    symbol: '80BAL20wETH/wETH',
-    name: 'Balancer 80BAL20wETH/wETH',
+  '0xc88c76dd8b92408fe9bea1a54922a31e232d873c': {
+    poolId: '0xc88c76dd8b92408fe9bea1a54922a31e232d873c0002000000000000000005b2',
+    symbol: '80ASX-20WETH',
+    name: '80ASX-20WETH',
     tokens: [
-      '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
+      '0x67d85a291fcdc862a78812a3c26d55e28ffb2701',
       '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     ],
     tokenDecimals: [
@@ -4021,11 +4043,11 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       18,
     ],
     tokenNames: [
-      'Balancer 80 BAL 20 WETH',
+      'Asymetrix Governance Token',
       'Wrapped Ether',
     ],
     tokenSymbols: [
-      'B-80BAL-20WETH',
+      'ASX',
       'WETH',
     ],
     isActive: true
@@ -4052,28 +4074,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x053f3c35d557a76e9cb6c13a4842d9cfcddac833': {
-    poolId: '0x053f3c35d557a76e9cb6c13a4842d9cfcddac8330002000000000000000000cd',
-    symbol: '3DOG_TLA',
-    name: '3DOG Copper Launch',
-    tokens: [
-      '0x8a14897ea5f668f36671678593fae44ae23b39fb',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      9,
-      18,
-    ],
-    tokenNames: [
-      'Cerberus',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      '3DOG',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xaa7a70070e7495fe86c67225329dbd39baa2f63b': {
     poolId: '0xaa7a70070e7495fe86c67225329dbd39baa2f63b000200000000000000000663',
     symbol: 'ECLP-GHO-GYD',
@@ -4096,6 +4096,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x053f3c35d557a76e9cb6c13a4842d9cfcddac833': {
+    poolId: '0x053f3c35d557a76e9cb6c13a4842d9cfcddac8330002000000000000000000cd',
+    symbol: '3DOG_TLA',
+    name: '3DOG Copper Launch',
+    tokens: [
+      '0x8a14897ea5f668f36671678593fae44ae23b39fb',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      9,
+      18,
+    ],
+    tokenNames: [
+      'Cerberus',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      '3DOG',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x6559ca190214f0a7e5927ecd5e2a8711050d8b82': {
     poolId: '0x6559ca190214f0a7e5927ecd5e2a8711050d8b820002000000000000000001b5',
     symbol: 'HOOTY_LBP',
@@ -4115,6 +4137,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'HOOTY',
       'USDC',
+    ],
+    isActive: true
+  },
+  '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb': {
+    poolId: '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb00020000000000000000058a',
+    symbol: 'ECLP-wstETH-swETH',
+    name: 'Gyroscope ECLP wstETH/swETH',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xf951e335afb289353dc249e82926178eac7ded78',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'swETH',
+    ],
+    tokenSymbols: [
+      'wstETH',
+      'swETH',
     ],
     isActive: true
   },
@@ -4162,28 +4206,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb': {
-    poolId: '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb00020000000000000000058a',
-    symbol: 'ECLP-wstETH-swETH',
-    name: 'Gyroscope ECLP wstETH/swETH',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xf951e335afb289353dc249e82926178eac7ded78',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'swETH',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'swETH',
-    ],
-    isActive: true
-  },
   '0x8a34b5ad76f528bfec06c80d85ef3b53da7fc300': {
     poolId: '0x8a34b5ad76f528bfec06c80d85ef3b53da7fc30000020000000000000000043e',
     symbol: 'B-ankrETH-WETH-Stable',
@@ -4228,28 +4250,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x494b26d4aee801cb1fabf498ee24f0af20238743': {
-    poolId: '0x494b26d4aee801cb1fabf498ee24f0af20238743000200000000000000000083',
-    symbol: 'FOURWP',
-    name: 'FOUR Weighted Pool',
-    tokens: [
-      '0x4730fb1463a6f1f44aeb45f6c5c422427f37f4d0',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'The 4th Pillar Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'FOUR',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73': {
     poolId: '0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73000200000000000000000004',
     symbol: 'B-60WETH-40DAI',
@@ -4268,6 +4268,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'DAI',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0x494b26d4aee801cb1fabf498ee24f0af20238743': {
+    poolId: '0x494b26d4aee801cb1fabf498ee24f0af20238743000200000000000000000083',
+    symbol: 'FOURWP',
+    name: 'FOUR Weighted Pool',
+    tokens: [
+      '0x4730fb1463a6f1f44aeb45f6c5c422427f37f4d0',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'The 4th Pillar Token',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'FOUR',
       'WETH',
     ],
     isActive: true
@@ -4294,6 +4316,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x127ecc2318d002664cc4515c9f2b22b09b6aea85': {
+    poolId: '0x127ecc2318d002664cc4515c9f2b22b09b6aea85000200000000000000000602',
+    symbol: 'ECLP-swETH-wstETH',
+    name: 'Gyroscope ECLP swETH/wstETH',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xf951e335afb289353dc249e82926178eac7ded78',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'swETH',
+    ],
+    tokenSymbols: [
+      'wstETH',
+      'swETH',
+    ],
+    isActive: true
+  },
   '0x42fbd9f666aacc0026ca1b88c94259519e03dd67': {
     poolId: '0x42fbd9f666aacc0026ca1b88c94259519e03dd67000200000000000000000507',
     symbol: '50COIL-50USDC',
@@ -4316,28 +4360,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x402f60ccf1e53cad42ded9cf139941174f54e3b2': {
-    poolId: '0x402f60ccf1e53cad42ded9cf139941174f54e3b200020000000000000000044e',
-    symbol: 'RBT_LBP',
-    name: 'RBT Fjord Foundry LBP',
-    tokens: [
-      '0x39653e7ac574a362000a1dc86d1d39d78a985e61',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'White Rabbit',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'RBT',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x380aabe019ed2a9c2d632b51eddd30fd804d0fad': {
     poolId: '0x380aabe019ed2a9c2d632b51eddd30fd804d0fad000200000000000000000554',
     symbol: '50R-50wstETH',
@@ -4357,6 +4379,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'R',
       'wstETH',
+    ],
+    isActive: true
+  },
+  '0x402f60ccf1e53cad42ded9cf139941174f54e3b2': {
+    poolId: '0x402f60ccf1e53cad42ded9cf139941174f54e3b200020000000000000000044e',
+    symbol: 'RBT_LBP',
+    name: 'RBT Fjord Foundry LBP',
+    tokens: [
+      '0x39653e7ac574a362000a1dc86d1d39d78a985e61',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'White Rabbit',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'RBT',
+      'WETH',
     ],
     isActive: true
   },
@@ -4426,28 +4470,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x127ecc2318d002664cc4515c9f2b22b09b6aea85': {
-    poolId: '0x127ecc2318d002664cc4515c9f2b22b09b6aea85000200000000000000000602',
-    symbol: 'ECLP-swETH-wstETH',
-    name: 'Gyroscope ECLP swETH/wstETH',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xf951e335afb289353dc249e82926178eac7ded78',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'swETH',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'swETH',
-    ],
-    isActive: true
-  },
   '0x80a8ea2f9ebfc2db9a093bd46e01471267914e49': {
     poolId: '0x80a8ea2f9ebfc2db9a093bd46e01471267914e490002000000000000000002a2',
     symbol: 'B-98aCRV-2CTR',
@@ -4492,28 +4514,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x6fc874b151a43d6a54fabfb6ff50f85fec4a5086': {
-    poolId: '0x6fc874b151a43d6a54fabfb6ff50f85fec4a5086000200000000000000000463',
-    symbol: 'oBTC_LBP',
-    name: 'oBTC Fjord Foundry LBP',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xff770e4c68e35db85c6e0e89a43750ec02bdb2ac',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Ordinal BTC ',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'oBTC',
-    ],
-    isActive: true
-  },
   '0x7cb1756e25c41eb921b2c9039f1f368f85e46995': {
     poolId: '0x7cb1756e25c41eb921b2c9039f1f368f85e469950002000000000000000006e8',
     symbol: 'NETETH',
@@ -4533,6 +4533,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'NET',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x6fc874b151a43d6a54fabfb6ff50f85fec4a5086': {
+    poolId: '0x6fc874b151a43d6a54fabfb6ff50f85fec4a5086000200000000000000000463',
+    symbol: 'oBTC_LBP',
+    name: 'oBTC Fjord Foundry LBP',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xff770e4c68e35db85c6e0e89a43750ec02bdb2ac',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Ordinal BTC ',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'oBTC',
     ],
     isActive: true
   },
@@ -4558,28 +4580,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x99e7b15df044e1b62e2e1774fd4469d54d9409ac': {
-    poolId: '0x99e7b15df044e1b62e2e1774fd4469d54d9409ac00020000000000000000065a',
-    symbol: 'ECLP-GHO-USDC',
-    name: 'Gyroscope ECLP GHO/USDC',
-    tokens: [
-      '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Gho Token',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'GHO',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0x2d011adf89f0576c9b722c28269fcb5d50c2d179': {
     poolId: '0x2d011adf89f0576c9b722c28269fcb5d50c2d17900020000000000000000024d',
     symbol: 'B-sdBAL-STABLE',
@@ -4602,6 +4602,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x99e7b15df044e1b62e2e1774fd4469d54d9409ac': {
+    poolId: '0x99e7b15df044e1b62e2e1774fd4469d54d9409ac00020000000000000000065a',
+    symbol: 'ECLP-GHO-USDC',
+    name: 'Gyroscope ECLP GHO/USDC',
+    tokens: [
+      '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Gho Token',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'GHO',
+      'USDC',
+    ],
+    isActive: true
+  },
   '0x0a336d1a947dc92855a228f653f71f6905729b27': {
     poolId: '0x0a336d1a947dc92855a228f653f71f6905729b27000200000000000000000618',
     symbol: 'MAI_LBP',
@@ -4620,28 +4642,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'MAI',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0x4446d101e91d042b5d08b62fde126e307f1acd57': {
-    poolId: '0x4446d101e91d042b5d08b62fde126e307f1acd570002000000000000000006f9',
-    symbol: '80VLR/20WETH',
-    name: '80VLR/20WETH',
-    tokens: [
-      '0x4e107a0000db66f0e9fd2039288bf811dd1f9c74',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Velora',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'VLR',
       'WETH',
     ],
     isActive: true
@@ -4844,6 +4844,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x87cf784ee055d0260ad3ab7ee40888d4a0a5d364': {
+    poolId: '0x87cf784ee055d0260ad3ab7ee40888d4a0a5d364000200000000000000000691',
+    symbol: '50ZRS-50WETH-BPT',
+    name: 'Balancer 50ZRS-50WETH',
+    tokens: [
+      '0x75e88b8c2d34a52a6d36deada664d7dc9116e4ef',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Zaros Finance',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'ZRS',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x065e51b8786d8031645e8871aac0e1386f50ea38': {
     poolId: '0x065e51b8786d8031645e8871aac0e1386f50ea38000200000000000000000139',
     symbol: '80DSLA-20WETH',
@@ -4907,28 +4929,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'R',
       'RAFT',
-    ],
-    isActive: true
-  },
-  '0x87cf784ee055d0260ad3ab7ee40888d4a0a5d364': {
-    poolId: '0x87cf784ee055d0260ad3ab7ee40888d4a0a5d364000200000000000000000691',
-    symbol: '50ZRS-50WETH-BPT',
-    name: 'Balancer 50ZRS-50WETH',
-    tokens: [
-      '0x75e88b8c2d34a52a6d36deada664d7dc9116e4ef',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Zaros Finance',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'ZRS',
-      'WETH',
     ],
     isActive: true
   },
@@ -5196,28 +5196,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xde148e6cc3f6047eed6e97238d341a2b8589e19e': {
-    poolId: '0xde148e6cc3f6047eed6e97238d341a2b8589e19e000200000000000000000017',
-    symbol: 'B-60WETH-40BAT',
-    name: 'Balancer 60 WETH 40 BAT',
-    tokens: [
-      '0x0d8775f648430679a709e98d2b0cb6250d2887ef',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Basic Attention Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'BAT',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x68e3266c9c8bbd44ad9dca5afbfe629022aee9fe': {
     poolId: '0x68e3266c9c8bbd44ad9dca5afbfe629022aee9fe000200000000000000000512',
     symbol: 'B-wjAura-wETH',
@@ -5240,25 +5218,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x9690a83806c905aee1c59c2788cd272de728d169': {
-    poolId: '0x9690a83806c905aee1c59c2788cd272de728d169000200000000000000000212',
-    symbol: 'OTHR_LBP',
-    name: 'OTHR Copper LBP',
+  '0xde148e6cc3f6047eed6e97238d341a2b8589e19e': {
+    poolId: '0xde148e6cc3f6047eed6e97238d341a2b8589e19e000200000000000000000017',
+    symbol: 'B-60WETH-40BAT',
+    name: 'Balancer 60 WETH 40 BAT',
     tokens: [
-      '0x407a3e019c655b779ccd098ff50377e4c5f1c334',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0x0d8775f648430679a709e98d2b0cb6250d2887ef',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     ],
     tokenDecimals: [
-      9,
-      6,
+      18,
+      18,
     ],
     tokenNames: [
-      'OtherDAO',
-      'USD Coin',
+      'Basic Attention Token',
+      'Wrapped Ether',
     ],
     tokenSymbols: [
-      'OTHR',
-      'USDC',
+      'BAT',
+      'WETH',
     ],
     isActive: true
   },
@@ -5281,6 +5259,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'wstETH',
       'BETS',
+    ],
+    isActive: true
+  },
+  '0x9690a83806c905aee1c59c2788cd272de728d169': {
+    poolId: '0x9690a83806c905aee1c59c2788cd272de728d169000200000000000000000212',
+    symbol: 'OTHR_LBP',
+    name: 'OTHR Copper LBP',
+    tokens: [
+      '0x407a3e019c655b779ccd098ff50377e4c5f1c334',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      9,
+      6,
+    ],
+    tokenNames: [
+      'OtherDAO',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'OTHR',
+      'USDC',
     ],
     isActive: true
   },
@@ -5702,6 +5702,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x851523a36690bf267bbfec389c823072d82921a9': {
+    poolId: '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed',
+    symbol: 'B-wstETH-STABLE-C',
+    name: 'Balancer wstETH Stable Concentrated Pool',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'wstETH',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x8caaae21478bd1e9a230b483cb4e0c01205c1637': {
     poolId: '0x8caaae21478bd1e9a230b483cb4e0c01205c16370002000000000000000002eb',
     symbol: 'BUCEPHALUS_LBP',
@@ -5787,28 +5809,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'unshETH',
       'USH',
-    ],
-    isActive: true
-  },
-  '0x851523a36690bf267bbfec389c823072d82921a9': {
-    poolId: '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed',
-    symbol: 'B-wstETH-STABLE-C',
-    name: 'Balancer wstETH Stable Concentrated Pool',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'WETH',
     ],
     isActive: true
   },
@@ -6076,6 +6076,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x8e9690e135005e415bd050b11768615de43fe5f8': {
+    poolId: '0x8e9690e135005e415bd050b11768615de43fe5f8000200000000000000000043',
+    symbol: '50STR-50WETH',
+    name: 'STR-WETH Pool',
+    tokens: [
+      '0x11c1a6b3ed6bb362954b29d3183cfa97a0c806aa',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Starwire',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'STR',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x7bb9c67f6f459dce19f5d2f838aa1ea5bf373359': {
     poolId: '0x7bb9c67f6f459dce19f5d2f838aa1ea5bf373359000200000000000000000339',
     symbol: 'MYC',
@@ -6117,28 +6139,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'TEMPLE',
       'DAI',
-    ],
-    isActive: true
-  },
-  '0x8e9690e135005e415bd050b11768615de43fe5f8': {
-    poolId: '0x8e9690e135005e415bd050b11768615de43fe5f8000200000000000000000043',
-    symbol: '50STR-50WETH',
-    name: 'STR-WETH Pool',
-    tokens: [
-      '0x11c1a6b3ed6bb362954b29d3183cfa97a0c806aa',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Starwire',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'STR',
-      'WETH',
     ],
     isActive: true
   },
@@ -6560,28 +6560,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x959216bb492b2efa72b15b7aacea5b5c984c3cca': {
-    poolId: '0x959216bb492b2efa72b15b7aacea5b5c984c3cca000200000000000000000472',
-    symbol: '50wstETH-50stk-APE',
-    name: 'Balancer 50wstETH-50Tessera-Boosted-APE',
-    tokens: [
-      '0x126e7643235ec0ab9c103c507642dc3f4ca23c66',
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer Tessera Boosted APE Pool',
-      'Wrapped liquid staked Ether 2.0',
-    ],
-    tokenSymbols: [
-      'bb-t-stkAPE',
-      'wstETH',
-    ],
-    isActive: true
-  },
   '0x60b4601cdddc4467f31b1f770cb93c51dc7dc728': {
     poolId: '0x60b4601cdddc4467f31b1f770cb93c51dc7dc728000200000000000000000042',
     symbol: '50PIXEL-50WETH',
@@ -6601,6 +6579,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'PIXEL',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x959216bb492b2efa72b15b7aacea5b5c984c3cca': {
+    poolId: '0x959216bb492b2efa72b15b7aacea5b5c984c3cca000200000000000000000472',
+    symbol: '50wstETH-50stk-APE',
+    name: 'Balancer 50wstETH-50Tessera-Boosted-APE',
+    tokens: [
+      '0x126e7643235ec0ab9c103c507642dc3f4ca23c66',
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer Tessera Boosted APE Pool',
+      'Wrapped liquid staked Ether 2.0',
+    ],
+    tokenSymbols: [
+      'bb-t-stkAPE',
+      'wstETH',
     ],
     isActive: true
   },
@@ -6648,28 +6648,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x8d93b853849b9884e2bb413444ec23eb5366ee91': {
-    poolId: '0x8d93b853849b9884e2bb413444ec23eb5366ee910002000000000000000006b3',
-    symbol: 'ECLP-sUSDe-GYD',
-    name: 'Gyroscope ECLP sUSDe/GYD',
-    tokens: [
-      '0x9d39a5de30e57443bff2a8307a4256c8797a3497',
-      '0xe07f9d810a48ab5c3c914ba3ca53af14e4491e8a',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Staked USDe',
-      'Gyro Dollar',
-    ],
-    tokenSymbols: [
-      'sUSDe',
-      'GYD',
-    ],
-    isActive: true
-  },
   '0x7173b184525fead2ffbde5fbe6fcb65ea8246ee7': {
     poolId: '0x7173b184525fead2ffbde5fbe6fcb65ea8246ee70002000000000000000000c7',
     symbol: 'LPeYyvUSDC-29APR22',
@@ -6689,6 +6667,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'eYyvUSDC-29APR22',
       'USDC',
+    ],
+    isActive: true
+  },
+  '0x8d93b853849b9884e2bb413444ec23eb5366ee91': {
+    poolId: '0x8d93b853849b9884e2bb413444ec23eb5366ee910002000000000000000006b3',
+    symbol: 'ECLP-sUSDe-GYD',
+    name: 'Gyroscope ECLP sUSDe/GYD',
+    tokens: [
+      '0x9d39a5de30e57443bff2a8307a4256c8797a3497',
+      '0xe07f9d810a48ab5c3c914ba3ca53af14e4491e8a',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Staked USDe',
+      'Gyro Dollar',
+    ],
+    tokenSymbols: [
+      'sUSDe',
+      'GYD',
     ],
     isActive: true
   },
@@ -6824,6 +6824,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x19df5bb37380186bc8efc5ad91516373a2c5459f': {
+    poolId: '0x19df5bb37380186bc8efc5ad91516373a2c5459f000200000000000000000698',
+    symbol: '20B-baoETH-ETH-BPT-80BAO',
+    name: '20B-baoETH-ETH-BPT-80BAO',
+    tokens: [
+      '0x1a44e35d5451e0b78621a1b3e7a53dfaa306b1d0',
+      '0xce391315b414d4c7555956120461d21808a69f3a',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'baoETH-ETH StablePool',
+      'Bao Token V2',
+    ],
+    tokenSymbols: [
+      'B-baoETH-ETH-BPT',
+      'BAO',
+    ],
+    isActive: true
+  },
   '0xcc4a90d97407eb72a17e767003e89b9c6d89f13f': {
     poolId: '0xcc4a90d97407eb72a17e767003e89b9c6d89f13f00020000000000000000036f',
     symbol: 'ASC9',
@@ -6934,6 +6956,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xf8a0623ab66f985effc1c69d05f1af4badb01b00': {
+    poolId: '0xf8a0623ab66f985effc1c69d05f1af4badb01b0000020000000000000000001d',
+    symbol: 'B-80UMA-20WETH',
+    name: 'Balancer 80 UMA 20 WETH',
+    tokens: [
+      '0x04fa0d235c4abf4bcf4787af4cf447de572ef828',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'UMA Voting Token v1',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'UMA',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x1b6e13673f29688e27311b332af1527f1ebf1d28': {
     poolId: '0x1b6e13673f29688e27311b332af1527f1ebf1d28000200000000000000000546',
     symbol: '80PSDN-20WETH',
@@ -6956,24 +7000,24 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xf8a0623ab66f985effc1c69d05f1af4badb01b00': {
-    poolId: '0xf8a0623ab66f985effc1c69d05f1af4badb01b0000020000000000000000001d',
-    symbol: 'B-80UMA-20WETH',
-    name: 'Balancer 80 UMA 20 WETH',
+  '0x0297e37f1873d2dab4487aa67cd56b58e2f27875': {
+    poolId: '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000200000000000000000003',
+    symbol: 'B-50WBTC-50WETH',
+    name: 'Balancer 50 WBTC 50 WETH',
     tokens: [
-      '0x04fa0d235c4abf4bcf4787af4cf447de572ef828',
+      '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
       '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     ],
     tokenDecimals: [
-      18,
+      8,
       18,
     ],
     tokenNames: [
-      'UMA Voting Token v1',
+      'Wrapped BTC',
       'Wrapped Ether',
     ],
     tokenSymbols: [
-      'UMA',
+      'WBTC',
       'WETH',
     ],
     isActive: true
@@ -6997,28 +7041,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'SD',
       'USDC',
-    ],
-    isActive: true
-  },
-  '0x19df5bb37380186bc8efc5ad91516373a2c5459f': {
-    poolId: '0x19df5bb37380186bc8efc5ad91516373a2c5459f000200000000000000000698',
-    symbol: '20B-baoETH-ETH-BPT-80BAO',
-    name: '20B-baoETH-ETH-BPT-80BAO',
-    tokens: [
-      '0x1a44e35d5451e0b78621a1b3e7a53dfaa306b1d0',
-      '0xce391315b414d4c7555956120461d21808a69f3a',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'baoETH-ETH StablePool',
-      'Bao Token V2',
-    ],
-    tokenSymbols: [
-      'B-baoETH-ETH-BPT',
-      'BAO',
     ],
     isActive: true
   },
@@ -7062,28 +7084,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'DOLA',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0x0297e37f1873d2dab4487aa67cd56b58e2f27875': {
-    poolId: '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000200000000000000000003',
-    symbol: 'B-50WBTC-50WETH',
-    name: 'Balancer 50 WBTC 50 WETH',
-    tokens: [
-      '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      8,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped BTC',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'WBTC',
       'WETH',
     ],
     isActive: true
@@ -7154,28 +7154,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x9ed2dbe178f5720ed6085630d3a0b76ee2cd3ab2': {
-    poolId: '0x9ed2dbe178f5720ed6085630d3a0b76ee2cd3ab20002000000000000000006aa',
-    symbol: 'ECLP-GHO-USD0',
-    name: 'Gyroscope ECLP GHO/USD0',
-    tokens: [
-      '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
-      '0x73a15fed60bf67631dc6cd7bc5b6e8da8190acf5',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Gho Token',
-      'Usual USD',
-    ],
-    tokenSymbols: [
-      'GHO',
-      'USD0',
-    ],
-    isActive: true
-  },
   '0x9f2b223da9f3911698c9b90ecdf3ffee37dd54a8': {
     poolId: '0x9f2b223da9f3911698c9b90ecdf3ffee37dd54a8000200000000000000000041',
     symbol: '50YFU-50WETH',
@@ -7195,6 +7173,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'YFU',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x9ed2dbe178f5720ed6085630d3a0b76ee2cd3ab2': {
+    poolId: '0x9ed2dbe178f5720ed6085630d3a0b76ee2cd3ab20002000000000000000006aa',
+    symbol: 'ECLP-GHO-USD0',
+    name: 'Gyroscope ECLP GHO/USD0',
+    tokens: [
+      '0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f',
+      '0x73a15fed60bf67631dc6cd7bc5b6e8da8190acf5',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Gho Token',
+      'Usual USD',
+    ],
+    tokenSymbols: [
+      'GHO',
+      'USD0',
     ],
     isActive: true
   },
@@ -7330,28 +7330,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xefdec913b82e55287fb83df3c058891b724dba28': {
-    poolId: '0xefdec913b82e55287fb83df3c058891b724dba28000200000000000000000186',
-    symbol: 'DXP_LBP',
-    name: 'DXP Copper LBP',
-    tokens: [
-      '0x88aa4a6c5050b9a1b2aa7e34d0582025ca6ab745',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Dexpools Token',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'DXP',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0xe96a45f66bdda121b24f0a861372a72e8889523d': {
     poolId: '0xe96a45f66bdda121b24f0a861372a72e8889523d00020000000000000000069b',
     symbol: '80TRUF/20LINK',
@@ -7371,6 +7349,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'TRUF',
       'LINK',
+    ],
+    isActive: true
+  },
+  '0xefdec913b82e55287fb83df3c058891b724dba28': {
+    poolId: '0xefdec913b82e55287fb83df3c058891b724dba28000200000000000000000186',
+    symbol: 'DXP_LBP',
+    name: 'DXP Copper LBP',
+    tokens: [
+      '0x88aa4a6c5050b9a1b2aa7e34d0582025ca6ab745',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Dexpools Token',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'DXP',
+      'USDC',
     ],
     isActive: true
   },
@@ -7506,6 +7506,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x08cc92fedc1ce2d8525176a63fcff404450f2998': {
+    poolId: '0x08cc92fedc1ce2d8525176a63fcff404450f2998000200000000000000000542',
+    symbol: '50B-baoUSD-LUSD-BPT-50BAO',
+    name: '50B-baoUSD-LUSD-BPT-50BAO',
+    tokens: [
+      '0x7e9afd25f5ec0eb24d7d4b089ae7ecb9651c8b1f',
+      '0xce391315b414d4c7555956120461d21808a69f3a',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'baoUSD-LUSD StablePool',
+      'Bao Token V2',
+    ],
+    tokenSymbols: [
+      'B-baoUSD-LUSD-BPT',
+      'BAO',
+    ],
+    isActive: true
+  },
   '0xda724fa0da9c7a17bdfb5e970ba26b75588c5e4a': {
     poolId: '0xda724fa0da9c7a17bdfb5e970ba26b75588c5e4a00020000000000000000012d',
     symbol: 'PIF_TLA',
@@ -7572,25 +7594,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x08cc92fedc1ce2d8525176a63fcff404450f2998': {
-    poolId: '0x08cc92fedc1ce2d8525176a63fcff404450f2998000200000000000000000542',
-    symbol: '50B-baoUSD-LUSD-BPT-50BAO',
-    name: '50B-baoUSD-LUSD-BPT-50BAO',
+  '0x158e0fbc2271e1dcebadd365a22e2b4dd173c0db': {
+    poolId: '0x158e0fbc2271e1dcebadd365a22e2b4dd173c0db0002000000000000000005a5',
+    symbol: '80IDLE-20USDC',
+    name: '80IDLE-20USDC',
     tokens: [
-      '0x7e9afd25f5ec0eb24d7d4b089ae7ecb9651c8b1f',
-      '0xce391315b414d4c7555956120461d21808a69f3a',
+      '0x875773784af8135ea0ef43b5a374aad105c5d39e',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
     ],
     tokenDecimals: [
       18,
-      18,
+      6,
     ],
     tokenNames: [
-      'baoUSD-LUSD StablePool',
-      'Bao Token V2',
+      'Idle',
+      'USD Coin',
     ],
     tokenSymbols: [
-      'B-baoUSD-LUSD-BPT',
-      'BAO',
+      'IDLE',
+      'USDC',
     ],
     isActive: true
   },
@@ -7613,28 +7635,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'USDC',
       'eYyvUSDC-28JAN22',
-    ],
-    isActive: true
-  },
-  '0x158e0fbc2271e1dcebadd365a22e2b4dd173c0db': {
-    poolId: '0x158e0fbc2271e1dcebadd365a22e2b4dd173c0db0002000000000000000005a5',
-    symbol: '80IDLE-20USDC',
-    name: '80IDLE-20USDC',
-    tokens: [
-      '0x875773784af8135ea0ef43b5a374aad105c5d39e',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Idle',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'IDLE',
-      'USDC',
     ],
     isActive: true
   },
@@ -7792,28 +7792,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x81a84fe4263b8ffe1166c1b389c20f150815cb07': {
-    poolId: '0x81a84fe4263b8ffe1166c1b389c20f150815cb070002000000000000000002ad',
-    symbol: 'SFMOON_LBP',
-    name: 'SFMOON Copper LBP',
-    tokens: [
-      '0x3ab7b76d98f1f68893c88167c6492f1a2602bd77',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'SuperFullMoon',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'SFMOON',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0x3f725ed5791b72554e9bedf461eb76fc72db8834': {
     poolId: '0x3f725ed5791b72554e9bedf461eb76fc72db883400020000000000000000017a',
     symbol: '50QUA-50USDT',
@@ -7833,6 +7811,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'QUA',
       'USDT',
+    ],
+    isActive: true
+  },
+  '0x81a84fe4263b8ffe1166c1b389c20f150815cb07': {
+    poolId: '0x81a84fe4263b8ffe1166c1b389c20f150815cb070002000000000000000002ad',
+    symbol: 'SFMOON_LBP',
+    name: 'SFMOON Copper LBP',
+    tokens: [
+      '0x3ab7b76d98f1f68893c88167c6492f1a2602bd77',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'SuperFullMoon',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'SFMOON',
+      'USDC',
     ],
     isActive: true
   },
@@ -7924,6 +7924,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x8405dc5ed3789fdbec5a7f9366b977cb0b023f9f': {
+    poolId: '0x8405dc5ed3789fdbec5a7f9366b977cb0b023f9f0002000000000000000002b7',
+    symbol: '20USDC-80FLOAT',
+    name: '20USDC-80FLOAT',
+    tokens: [
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xb05097849bca421a3f51b249ba6cca4af4b97cb9',
+    ],
+    tokenDecimals: [
+      6,
+      18,
+    ],
+    tokenNames: [
+      'USD Coin',
+      'Float Protocol: FLOAT',
+    ],
+    tokenSymbols: [
+      'USDC',
+      'FLOAT',
+    ],
+    isActive: true
+  },
   '0xf3a605da753e9de545841de10ea8bffbd1da9c75': {
     poolId: '0xf3a605da753e9de545841de10ea8bffbd1da9c75000200000000000000000035',
     symbol: 'sdveCRV90-CRV10',
@@ -7943,6 +7965,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'sdveCRV-DAO',
       'CRV',
+    ],
+    isActive: true
+  },
+  '0x9412206f58cc72b9b4e340422a95354372a3ec3d': {
+    poolId: '0x9412206f58cc72b9b4e340422a95354372a3ec3d00020000000000000000069a',
+    symbol: '20B-baoUSD-LUSD-BPT-80BAO',
+    name: '20B-baoUSD-LUSD-BPT-80BAO',
+    tokens: [
+      '0x7e9afd25f5ec0eb24d7d4b089ae7ecb9651c8b1f',
+      '0xce391315b414d4c7555956120461d21808a69f3a',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'baoUSD-LUSD StablePool',
+      'Bao Token V2',
+    ],
+    tokenSymbols: [
+      'B-baoUSD-LUSD-BPT',
+      'BAO',
     ],
     isActive: true
   },
@@ -8009,28 +8053,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'USDC',
       'METE',
-    ],
-    isActive: true
-  },
-  '0x8405dc5ed3789fdbec5a7f9366b977cb0b023f9f': {
-    poolId: '0x8405dc5ed3789fdbec5a7f9366b977cb0b023f9f0002000000000000000002b7',
-    symbol: '20USDC-80FLOAT',
-    name: '20USDC-80FLOAT',
-    tokens: [
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xb05097849bca421a3f51b249ba6cca4af4b97cb9',
-    ],
-    tokenDecimals: [
-      6,
-      18,
-    ],
-    tokenNames: [
-      'USD Coin',
-      'Float Protocol: FLOAT',
-    ],
-    tokenSymbols: [
-      'USDC',
-      'FLOAT',
     ],
     isActive: true
   },
@@ -8207,28 +8229,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'xSNXa',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0x9412206f58cc72b9b4e340422a95354372a3ec3d': {
-    poolId: '0x9412206f58cc72b9b4e340422a95354372a3ec3d00020000000000000000069a',
-    symbol: '20B-baoUSD-LUSD-BPT-80BAO',
-    name: '20B-baoUSD-LUSD-BPT-80BAO',
-    tokens: [
-      '0x7e9afd25f5ec0eb24d7d4b089ae7ecb9651c8b1f',
-      '0xce391315b414d4c7555956120461d21808a69f3a',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'baoUSD-LUSD StablePool',
-      'Bao Token V2',
-    ],
-    tokenSymbols: [
-      'B-baoUSD-LUSD-BPT',
-      'BAO',
     ],
     isActive: true
   },
@@ -8430,28 +8430,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x929a9b6d40e4723f690db77a7ebb65d3254be1e0': {
-    poolId: '0x929a9b6d40e4723f690db77a7ebb65d3254be1e00002000000000000000004d0',
-    symbol: 'bVault_LBP',
-    name: 'bVault Fjord Foundry LBP',
-    tokens: [
-      '0x677d4fbbcdd9093d725b0042081ab0b67c63d121',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Bitcoin Vault',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'bVault',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x6f4906c181e6acb096908238c5ffd088cca6ba9f': {
     poolId: '0x6f4906c181e6acb096908238c5ffd088cca6ba9f00020000000000000000053a',
     symbol: 'CPEPE',
@@ -8492,6 +8470,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'RPL',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0x929a9b6d40e4723f690db77a7ebb65d3254be1e0': {
+    poolId: '0x929a9b6d40e4723f690db77a7ebb65d3254be1e00002000000000000000004d0',
+    symbol: 'bVault_LBP',
+    name: 'bVault Fjord Foundry LBP',
+    tokens: [
+      '0x677d4fbbcdd9093d725b0042081ab0b67c63d121',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Bitcoin Vault',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'bVault',
       'WETH',
     ],
     isActive: true
@@ -8826,6 +8826,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x67b532d47a31ce1ed0800e6913dbf5f6e9c48a18': {
+    poolId: '0x67b532d47a31ce1ed0800e6913dbf5f6e9c48a180002000000000000000000c5',
+    symbol: '⚗️_WEIGHTED',
+    name: '⚗️ Weighted Pool',
+    tokens: [
+      '0x88acdd2a6425c3faae4bc9650fd7e27e0bebb7ab',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Alchemist',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      '⚗️',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x06d72d1bca801bc04e5ade19e4a44068a2f72920': {
     poolId: '0x06d72d1bca801bc04e5ade19e4a44068a2f729200002000000000000000002e0',
     symbol: 'RYSUKA_LBP',
@@ -8954,28 +8976,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'LIES',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0x67b532d47a31ce1ed0800e6913dbf5f6e9c48a18': {
-    poolId: '0x67b532d47a31ce1ed0800e6913dbf5f6e9c48a180002000000000000000000c5',
-    symbol: '⚗️_WEIGHTED',
-    name: '⚗️ Weighted Pool',
-    tokens: [
-      '0x88acdd2a6425c3faae4bc9650fd7e27e0bebb7ab',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Alchemist',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      '⚗️',
       'WETH',
     ],
     isActive: true
@@ -9200,6 +9200,50 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x240273a118a67bb878ca5fc3c3d645d60622f6f4': {
+    poolId: '0x240273a118a67bb878ca5fc3c3d645d60622f6f400020000000000000000017b',
+    symbol: 'PAL-WETH',
+    name: 'PAL-WETH',
+    tokens: [
+      '0xab846fb6c81370327e784ae7cbb6d6a6af6ff4bf',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Paladin Token',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'PAL',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0x0947592314bf2bd0f86a74299bc8e534e3c7313f': {
+    poolId: '0x0947592314bf2bd0f86a74299bc8e534e3c7313f000200000000000000000312',
+    symbol: '20WETH-80JELLY',
+    name: '20WETH-80JELLY',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xf5f06ffa53ad7f5914f493f16e57b56c8dd2ea80',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Jelly Token',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'JELLY',
+    ],
+    isActive: true
+  },
   '0xcc92ed2d1de9268a7e2048b8a56bd8433abe3acf': {
     poolId: '0xcc92ed2d1de9268a7e2048b8a56bd8433abe3acf0002000000000000000005a9',
     symbol: 'SNW_LBP',
@@ -9244,28 +9288,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x240273a118a67bb878ca5fc3c3d645d60622f6f4': {
-    poolId: '0x240273a118a67bb878ca5fc3c3d645d60622f6f400020000000000000000017b',
-    symbol: 'PAL-WETH',
-    name: 'PAL-WETH',
-    tokens: [
-      '0xab846fb6c81370327e784ae7cbb6d6a6af6ff4bf',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Paladin Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'PAL',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x025b4d11c3602452da59d8f8c270697dbe199370': {
     poolId: '0x025b4d11c3602452da59d8f8c270697dbe199370000200000000000000000276',
     symbol: 'CRUNGUS_LBP',
@@ -9285,28 +9307,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'CRUNGUS',
       'USDC',
-    ],
-    isActive: true
-  },
-  '0x0947592314bf2bd0f86a74299bc8e534e3c7313f': {
-    poolId: '0x0947592314bf2bd0f86a74299bc8e534e3c7313f000200000000000000000312',
-    symbol: '20WETH-80JELLY',
-    name: '20WETH-80JELLY',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xf5f06ffa53ad7f5914f493f16e57b56c8dd2ea80',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Jelly Token',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'JELLY',
     ],
     isActive: true
   },
@@ -9420,28 +9420,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x0fb07bd0bd6b25c0f33d7ebe6eae29d6718c850f': {
-    poolId: '0x0fb07bd0bd6b25c0f33d7ebe6eae29d6718c850f0002000000000000000002b6',
-    symbol: 'LARP_LBP',
-    name: 'LARP Copper LBP',
-    tokens: [
-      '0xb7b186d6301080bcbb977d186200b1c649b28089',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      9,
-      18,
-    ],
-    tokenNames: [
-      'Larp Finance',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'LARP',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xb8e2cbb2455e80ad0eb536ae30a5290bdd7baa91': {
     poolId: '0xb8e2cbb2455e80ad0eb536ae30a5290bdd7baa9100020000000000000000055f',
     symbol: '80BREWSKI-20WETH',
@@ -9460,6 +9438,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'BREWSKI',
+      'WETH',
+    ],
+    isActive: true
+  },
+  '0x0fb07bd0bd6b25c0f33d7ebe6eae29d6718c850f': {
+    poolId: '0x0fb07bd0bd6b25c0f33d7ebe6eae29d6718c850f0002000000000000000002b6',
+    symbol: 'LARP_LBP',
+    name: 'LARP Copper LBP',
+    tokens: [
+      '0xb7b186d6301080bcbb977d186200b1c649b28089',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      9,
+      18,
+    ],
+    tokenNames: [
+      'Larp Finance',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'LARP',
       'WETH',
     ],
     isActive: true
@@ -9772,28 +9772,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xee79524edbf8c2f6cb3791a8a5756a27830a4ef4': {
-    poolId: '0xee79524edbf8c2f6cb3791a8a5756a27830a4ef4000200000000000000000255',
-    symbol: '50DPI-50DAI',
-    name: '50DPI-50DAI',
-    tokens: [
-      '0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b',
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'DefiPulse Index',
-      'Dai Stablecoin',
-    ],
-    tokenSymbols: [
-      'DPI',
-      'DAI',
-    ],
-    isActive: true
-  },
   '0x517390b2b806cb62f20ad340de6d98b2a8f17f2b': {
     poolId: '0x517390b2b806cb62f20ad340de6d98b2a8f17f2b0002000000000000000001ba',
     symbol: '20WETH-80ELIMU',
@@ -9816,6 +9794,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xee79524edbf8c2f6cb3791a8a5756a27830a4ef4': {
+    poolId: '0xee79524edbf8c2f6cb3791a8a5756a27830a4ef4000200000000000000000255',
+    symbol: '50DPI-50DAI',
+    name: '50DPI-50DAI',
+    tokens: [
+      '0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b',
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'DefiPulse Index',
+      'Dai Stablecoin',
+    ],
+    tokenSymbols: [
+      'DPI',
+      'DAI',
+    ],
+    isActive: true
+  },
   '0x2bab1710709496affa3c74e43fbcdae52ba3df0c': {
     poolId: '0x2bab1710709496affa3c74e43fbcdae52ba3df0c00020000000000000000032e',
     symbol: 'ENOS_LBP',
@@ -9835,6 +9835,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'USDC',
       'ENOS',
+    ],
+    isActive: true
+  },
+  '0x6803c821dac9b61026b3f4af0fcf46229361d551': {
+    poolId: '0x6803c821dac9b61026b3f4af0fcf46229361d5510002000000000000000003ad',
+    symbol: '25CLV-75stETH',
+    name: '25CLV-75stETH',
+    tokens: [
+      '0x80c62fe4487e1351b47ba49809ebd60ed085bf52',
+      '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Clover',
+      'Liquid staked Ether 2.0',
+    ],
+    tokenSymbols: [
+      'CLV',
+      'stETH',
     ],
     isActive: true
   },
@@ -9904,25 +9926,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x6803c821dac9b61026b3f4af0fcf46229361d551': {
-    poolId: '0x6803c821dac9b61026b3f4af0fcf46229361d5510002000000000000000003ad',
-    symbol: '25CLV-75stETH',
-    name: '25CLV-75stETH',
+  '0x5d563ca1e2daaae3402c36097b934630ab53702c': {
+    poolId: '0x5d563ca1e2daaae3402c36097b934630ab53702c000200000000000000000024',
+    symbol: 'B-50WETH-50mUSD',
+    name: 'Balancer 50 WETH 50 mUSD',
     tokens: [
-      '0x80c62fe4487e1351b47ba49809ebd60ed085bf52',
-      '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xe2f2a5c287993345a840db3b0845fbc70f5935a5',
     ],
     tokenDecimals: [
       18,
       18,
     ],
     tokenNames: [
-      'Clover',
-      'Liquid staked Ether 2.0',
+      'Wrapped Ether',
+      'mStable USD',
     ],
     tokenSymbols: [
-      'CLV',
-      'stETH',
+      'WETH',
+      'mUSD',
     ],
     isActive: true
   },
@@ -10124,28 +10146,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x5d563ca1e2daaae3402c36097b934630ab53702c': {
-    poolId: '0x5d563ca1e2daaae3402c36097b934630ab53702c000200000000000000000024',
-    symbol: 'B-50WETH-50mUSD',
-    name: 'Balancer 50 WETH 50 mUSD',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xe2f2a5c287993345a840db3b0845fbc70f5935a5',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'mStable USD',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'mUSD',
-    ],
-    isActive: true
-  },
   '0x54b7d8cbb8057c5990ed5a7a94febee61d6b5837': {
     poolId: '0x54b7d8cbb8057c5990ed5a7a94febee61d6b583700020000000000000000016f',
     symbol: 'lPAL - WETH LBP',
@@ -10344,6 +10344,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x14bf727f67aa294ec36347bd95aba1a2c136fe7a': {
+    poolId: '0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c',
+    symbol: 'B-50WETH-50USDT',
+    name: 'Balancer 50 WETH 50 USDT',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Tether USD',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'USDT',
+    ],
+    isActive: true
+  },
   '0xf1f6004398e29437801257ecc2b0a852717430b7': {
     poolId: '0xf1f6004398e29437801257ecc2b0a852717430b70002000000000000000005b1',
     symbol: '50ASX-50WETH',
@@ -10407,28 +10429,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'HEDGY',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0x14bf727f67aa294ec36347bd95aba1a2c136fe7a': {
-    poolId: '0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c',
-    symbol: 'B-50WETH-50USDT',
-    name: 'Balancer 50 WETH 50 USDT',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Tether USD',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'USDT',
     ],
     isActive: true
   },
@@ -10564,6 +10564,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xe805c864992e6a6cbf46e7e81c7154b78155d0ac': {
+    poolId: '0xe805c864992e6a6cbf46e7e81c7154b78155d0ac000200000000000000000210',
+    symbol: '50SMT-50WETH',
+    name: '50SMT-50WETH',
+    tokens: [
+      '0xb17548c7b510427baac4e267bea62e800b247173',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Swarm Markets',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'SMT',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0xd1e18b0e5b61c1f529260eb88c49f944cc7060e4': {
     poolId: '0xd1e18b0e5b61c1f529260eb88c49f944cc7060e40002000000000000000001bb',
     symbol: 'π_LBP',
@@ -10652,28 +10674,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xe805c864992e6a6cbf46e7e81c7154b78155d0ac': {
-    poolId: '0xe805c864992e6a6cbf46e7e81c7154b78155d0ac000200000000000000000210',
-    symbol: '50SMT-50WETH',
-    name: '50SMT-50WETH',
-    tokens: [
-      '0xb17548c7b510427baac4e267bea62e800b247173',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Swarm Markets',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'SMT',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xa718042e5622099e5f0ace4e7122058ab39e1bbe': {
     poolId: '0xa718042e5622099e5f0ace4e7122058ab39e1bbe000200000000000000000475',
     symbol: '50TEMPLE-50bb-euler-USD',
@@ -10740,6 +10740,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x271d57ce059780462f89800141a089008ca78d4a': {
+    poolId: '0x271d57ce059780462f89800141a089008ca78d4a000200000000000000000616',
+    symbol: '80PRTC-20WETH',
+    name: '80PRTC-20WETH',
+    tokens: [
+      '0xb9098d3669a78e9afe8b94a97290407400d9da31',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Protectorate',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'PRTC',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0xf130c71d492bdb7a664cee0e8e81e1a1486707e7': {
     poolId: '0xf130c71d492bdb7a664cee0e8e81e1a1486707e70002000000000000000005d4',
     symbol: 'MONK_LBP',
@@ -10781,28 +10803,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'MYSTO',
       'USDC',
-    ],
-    isActive: true
-  },
-  '0x271d57ce059780462f89800141a089008ca78d4a': {
-    poolId: '0x271d57ce059780462f89800141a089008ca78d4a000200000000000000000616',
-    symbol: '80PRTC-20WETH',
-    name: '80PRTC-20WETH',
-    tokens: [
-      '0xb9098d3669a78e9afe8b94a97290407400d9da31',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Protectorate',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'PRTC',
-      'WETH',
     ],
     isActive: true
   },
@@ -10960,6 +10960,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x4a17ba69a7e8e901d2f4e94c2ea4badd32d0336e': {
+    poolId: '0x4a17ba69a7e8e901d2f4e94c2ea4badd32d0336e0002000000000000000005ff',
+    symbol: '4IR_LBP',
+    name: '4IR Fjord Foundry LBP',
+    tokens: [
+      '0x220e4201aa472262df2c24dd8069243cf4b76c12',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      8,
+      6,
+    ],
+    tokenNames: [
+      'BlockchainValley',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      '4IR',
+      'USDC',
+    ],
+    isActive: true
+  },
   '0xb8631c4abc3de0b546f721a9debc5e780985df77': {
     poolId: '0xb8631c4abc3de0b546f721a9debc5e780985df770002000000000000000001ad',
     symbol: 'GGF_LBP',
@@ -11048,6 +11070,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x6cd0c0e378fe120cf733ac1431bd1d308c5b6df0': {
+    poolId: '0x6cd0c0e378fe120cf733ac1431bd1d308c5b6df0000200000000000000000144',
+    symbol: '50CoreDAO-50WETH',
+    name: 'MyPool',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xf66cd2f8755a21d3c8683a10269f795c0532dd58',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'CORE DAO',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'CoreDAO',
+    ],
+    isActive: true
+  },
   '0x398901c7a1a05a93499a40f88fca6381de912de8': {
     poolId: '0x398901c7a1a05a93499a40f88fca6381de912de80002000000000000000006c1',
     symbol: 'ECLP-ynETH-wstETH',
@@ -11089,28 +11133,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'BLOOM',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0x6cd0c0e378fe120cf733ac1431bd1d308c5b6df0': {
-    poolId: '0x6cd0c0e378fe120cf733ac1431bd1d308c5b6df0000200000000000000000144',
-    symbol: '50CoreDAO-50WETH',
-    name: 'MyPool',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xf66cd2f8755a21d3c8683a10269f795c0532dd58',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'CORE DAO',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'CoreDAO',
     ],
     isActive: true
   },
@@ -11221,28 +11243,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'wstETH',
       'cbETH',
-    ],
-    isActive: true
-  },
-  '0x4a17ba69a7e8e901d2f4e94c2ea4badd32d0336e': {
-    poolId: '0x4a17ba69a7e8e901d2f4e94c2ea4badd32d0336e0002000000000000000005ff',
-    symbol: '4IR_LBP',
-    name: '4IR Fjord Foundry LBP',
-    tokens: [
-      '0x220e4201aa472262df2c24dd8069243cf4b76c12',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      8,
-      6,
-    ],
-    tokenNames: [
-      'BlockchainValley',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      '4IR',
-      'USDC',
     ],
     isActive: true
   },
@@ -11950,6 +11950,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a': {
+    poolId: '0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a0002000000000000000003ed',
+    symbol: '50WETH-50CRV',
+    name: '50WETH-50CRV',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xd533a949740bb3306d119cc777fa900ba034cd52',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Curve DAO Token',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'CRV',
+    ],
+    isActive: true
+  },
   '0x67f8fcb9d3c463da05de1392efdbb2a87f8599ea': {
     poolId: '0x67f8fcb9d3c463da05de1392efdbb2a87f8599ea000200000000000000000060',
     symbol: 'LPeYyvCurveLUSD-27DEC21',
@@ -12038,25 +12060,25 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a': {
-    poolId: '0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a0002000000000000000003ed',
-    symbol: '50WETH-50CRV',
-    name: '50WETH-50CRV',
+  '0xa660ba113f9aabaeb4bcd28a4a1705f4997d5432': {
+    poolId: '0xa660ba113f9aabaeb4bcd28a4a1705f4997d5432000200000000000000000022',
+    symbol: 'B-80AMP-20USDC',
+    name: 'Balancer 80 AMP 20 USDC',
     tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xd533a949740bb3306d119cc777fa900ba034cd52',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xff20817765cb7f73d4bde2e66e067e58d11095c2',
     ],
     tokenDecimals: [
-      18,
+      6,
       18,
     ],
     tokenNames: [
-      'Wrapped Ether',
-      'Curve DAO Token',
+      'USD Coin',
+      'Amp',
     ],
     tokenSymbols: [
-      'WETH',
-      'CRV',
+      'USDC',
+      'AMP',
     ],
     isActive: true
   },
@@ -12101,28 +12123,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'GLCH',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0xa660ba113f9aabaeb4bcd28a4a1705f4997d5432': {
-    poolId: '0xa660ba113f9aabaeb4bcd28a4a1705f4997d5432000200000000000000000022',
-    symbol: 'B-80AMP-20USDC',
-    name: 'Balancer 80 AMP 20 USDC',
-    tokens: [
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xff20817765cb7f73d4bde2e66e067e58d11095c2',
-    ],
-    tokenDecimals: [
-      6,
-      18,
-    ],
-    tokenNames: [
-      'USD Coin',
-      'Amp',
-    ],
-    tokenSymbols: [
-      'USDC',
-      'AMP',
     ],
     isActive: true
   },
@@ -12211,6 +12211,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'Attack',
       'USDC',
+    ],
+    isActive: true
+  },
+  '0x23a07596cf915cccdfd5ea8ec7e0268ba5488478': {
+    poolId: '0x23a07596cf915cccdfd5ea8ec7e0268ba548847800020000000000000000037d',
+    symbol: '50GUILD-50MC',
+    name: '50GUILD-50MC',
+    tokens: [
+      '0x83e9f223e1edb3486f876ee888d76bfba26c475a',
+      '0x949d48eca67b17269629c7194f4b727d4ef9e5d6',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'BlockchainSpace',
+      'Merit Circle',
+    ],
+    tokenSymbols: [
+      'GUILD',
+      'MC',
     ],
     isActive: true
   },
@@ -12321,28 +12343,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'BRBIT',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0x23a07596cf915cccdfd5ea8ec7e0268ba5488478': {
-    poolId: '0x23a07596cf915cccdfd5ea8ec7e0268ba548847800020000000000000000037d',
-    symbol: '50GUILD-50MC',
-    name: '50GUILD-50MC',
-    tokens: [
-      '0x83e9f223e1edb3486f876ee888d76bfba26c475a',
-      '0x949d48eca67b17269629c7194f4b727d4ef9e5d6',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'BlockchainSpace',
-      'Merit Circle',
-    ],
-    tokenSymbols: [
-      'GUILD',
-      'MC',
     ],
     isActive: true
   },
@@ -12786,6 +12786,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x1d310a6238e11c8be91d83193c88a99eb66279be': {
+    poolId: '0x1d310a6238e11c8be91d83193c88a99eb66279be0002000000000000000000a2',
+    symbol: 'LPeYyvCurve-MIM-11FEB22',
+    name: 'LP Element Yield Token yvCurve-MIM-11FEB22',
+    tokens: [
+      '0x5a6a4d54456819380173272a5e8e9b9904bdf41b',
+      '0x8c981f68015d8eb13883bfd25aaf4b7c05ec7df5',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Curve.fi Factory USD Metapool: Magic Internet Money 3Pool',
+      'Element Yield Token yvCurve-MIM-11FEB22',
+    ],
+    tokenSymbols: [
+      'MIM-3LP3CRV-f',
+      'eYyvCurve-MIM-11FEB22',
+    ],
+    isActive: true
+  },
   '0xf28015579f2106b0b5db32a713df8093a94e8635': {
     poolId: '0xf28015579f2106b0b5db32a713df8093a94e8635000200000000000000000246',
     symbol: 'VAULT_LBP',
@@ -12981,28 +13003,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'WETH',
       'SATORI',
-    ],
-    isActive: true
-  },
-  '0x1d310a6238e11c8be91d83193c88a99eb66279be': {
-    poolId: '0x1d310a6238e11c8be91d83193c88a99eb66279be0002000000000000000000a2',
-    symbol: 'LPeYyvCurve-MIM-11FEB22',
-    name: 'LP Element Yield Token yvCurve-MIM-11FEB22',
-    tokens: [
-      '0x5a6a4d54456819380173272a5e8e9b9904bdf41b',
-      '0x8c981f68015d8eb13883bfd25aaf4b7c05ec7df5',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Curve.fi Factory USD Metapool: Magic Internet Money 3Pool',
-      'Element Yield Token yvCurve-MIM-11FEB22',
-    ],
-    tokenSymbols: [
-      'MIM-3LP3CRV-f',
-      'eYyvCurve-MIM-11FEB22',
     ],
     isActive: true
   },
@@ -13292,28 +13292,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x0fa982bde66629772f0d9137429679904051de90': {
-    poolId: '0x0fa982bde66629772f0d9137429679904051de90000200000000000000000127',
-    symbol: 'XB_TLA',
-    name: 'XB Copper Launch',
-    tokens: [
-      '0x67b0928f8025d8548a4475a80c5444aa8087fdbe',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      2,
-      6,
-    ],
-    tokenNames: [
-      'XBANKING',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'XB',
-      'USDC',
-    ],
-    isActive: true
-  },
   '0x503717b3dc137e230afc7c772520d7974474fb70': {
     poolId: '0x503717b3dc137e230afc7c772520d7974474fb70000200000000000000000081',
     symbol: 'HEDGUSDT',
@@ -13333,6 +13311,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'USDT',
       '',
+    ],
+    isActive: true
+  },
+  '0x0fa982bde66629772f0d9137429679904051de90': {
+    poolId: '0x0fa982bde66629772f0d9137429679904051de90000200000000000000000127',
+    symbol: 'XB_TLA',
+    name: 'XB Copper Launch',
+    tokens: [
+      '0x67b0928f8025d8548a4475a80c5444aa8087fdbe',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      2,
+      6,
+    ],
+    tokenNames: [
+      'XBANKING',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'XB',
+      'USDC',
     ],
     isActive: true
   },
@@ -13622,6 +13622,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x1bccaac02bae336c6352acc3b772059ef1142fa7': {
+    poolId: '0x1bccaac02bae336c6352acc3b772059ef1142fa70002000000000000000001f0',
+    symbol: '50XNS-50WETH',
+    name: '50XNS-50WETH',
+    tokens: [
+      '0x79c71d3436f39ce382d0f58f1b011d88100b9d91',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Xeonbit Token',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'XNS',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x1087164ff5351bb86d38da3c204567097b6b09ec': {
     poolId: '0x1087164ff5351bb86d38da3c204567097b6b09ec0002000000000000000004aa',
     symbol: 'ORDI_LBP',
@@ -13794,28 +13816,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'ELFI',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0x1bccaac02bae336c6352acc3b772059ef1142fa7': {
-    poolId: '0x1bccaac02bae336c6352acc3b772059ef1142fa70002000000000000000001f0',
-    symbol: '50XNS-50WETH',
-    name: '50XNS-50WETH',
-    tokens: [
-      '0x79c71d3436f39ce382d0f58f1b011d88100b9d91',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Xeonbit Token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'XNS',
       'WETH',
     ],
     isActive: true
@@ -14436,6 +14436,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xa5ae45bfee323684ee4ba045c44b0aa85e2c6e9d': {
+    poolId: '0xa5ae45bfee323684ee4ba045c44b0aa85e2c6e9d0002000000000000000002c9',
+    symbol: '50UNBNK-50WETH',
+    name: '50UNBNK-50WETH',
+    tokens: [
+      '0x06b884e60794ce02aafab13791b59a2e6a07442f',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Unbanked',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'UNBNK',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x603588f77dc1d72468c5267cd3a6cd3261384850': {
     poolId: '0x603588f77dc1d72468c5267cd3a6cd3261384850000200000000000000000354',
     symbol: '50WETH-50BTCBR',
@@ -14498,28 +14520,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'REMIO',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0xa5ae45bfee323684ee4ba045c44b0aa85e2c6e9d': {
-    poolId: '0xa5ae45bfee323684ee4ba045c44b0aa85e2c6e9d0002000000000000000002c9',
-    symbol: '50UNBNK-50WETH',
-    name: '50UNBNK-50WETH',
-    tokens: [
-      '0x06b884e60794ce02aafab13791b59a2e6a07442f',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Unbanked',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'UNBNK',
       'WETH',
     ],
     isActive: true
@@ -15096,6 +15096,50 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xa0cf2478a7a9fadd53ce24665399aa80c7eb5075': {
+    poolId: '0xa0cf2478a7a9fadd53ce24665399aa80c7eb50750002000000000000000003ea',
+    symbol: '50UNI-50USDC',
+    name: '50UNI-50USDC',
+    tokens: [
+      '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Uniswap',
+      'USD Coin',
+    ],
+    tokenSymbols: [
+      'UNI',
+      'USDC',
+    ],
+    isActive: true
+  },
+  '0x62e57e37e3185871c13a422a363293780d17305b': {
+    poolId: '0x62e57e37e3185871c13a422a363293780d17305b0002000000000000000006d3',
+    symbol: 'B-kaiAURA-AURA-WEIGHTED',
+    name: 'Balancer kaiAURA-AURA Weighted Pool',
+    tokens: [
+      '0xc0c293ce456ff0ed870add98a0828dd4d2903dbf',
+      '0xffd9c960bc303b8d3aaed58229ce8a7310bcc5b8',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Aura',
+      'Kai Aura',
+    ],
+    tokenSymbols: [
+      'AURA',
+      'kaiAURA',
+    ],
+    isActive: true
+  },
   '0x5fd91419f1cf299a57d1e92b9d9b9b59523ba128': {
     poolId: '0x5fd91419f1cf299a57d1e92b9d9b9b59523ba128000200000000000000000682',
     symbol: 'Rokky _F9_LBP',
@@ -15228,28 +15272,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x62e57e37e3185871c13a422a363293780d17305b': {
-    poolId: '0x62e57e37e3185871c13a422a363293780d17305b0002000000000000000006d3',
-    symbol: 'B-kaiAURA-AURA-WEIGHTED',
-    name: 'Balancer kaiAURA-AURA Weighted Pool',
-    tokens: [
-      '0xc0c293ce456ff0ed870add98a0828dd4d2903dbf',
-      '0xffd9c960bc303b8d3aaed58229ce8a7310bcc5b8',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Aura',
-      'Kai Aura',
-    ],
-    tokenSymbols: [
-      'AURA',
-      'kaiAURA',
-    ],
-    isActive: true
-  },
   '0x3548b8221c79c12b7f521231fe61635ff8fcdf9b': {
     poolId: '0x3548b8221c79c12b7f521231fe61635ff8fcdf9b000200000000000000000571',
     symbol: 'D2R_F9_LBP',
@@ -15334,28 +15356,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     tokenSymbols: [
       'DAI',
-      'USDC',
-    ],
-    isActive: true
-  },
-  '0xa0cf2478a7a9fadd53ce24665399aa80c7eb5075': {
-    poolId: '0xa0cf2478a7a9fadd53ce24665399aa80c7eb50750002000000000000000003ea',
-    symbol: '50UNI-50USDC',
-    name: '50UNI-50USDC',
-    tokens: [
-      '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Uniswap',
-      'USD Coin',
-    ],
-    tokenSymbols: [
-      'UNI',
       'USDC',
     ],
     isActive: true
@@ -15756,6 +15756,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x5002eb99f569405987d56e53cec01fbb5da28968': {
+    poolId: '0x5002eb99f569405987d56e53cec01fbb5da28968000200000000000000000696',
+    symbol: '50WAR-50WETH',
+    name: '50WAR-50WETH',
+    tokens: [
+      '0xa8258dee2a677874a48f5320670a869d74f0cbc1',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Warlord token',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'WAR',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0x4ed3afbe44eea1a548380625f423c3a8fa4c5810': {
     poolId: '0x4ed3afbe44eea1a548380625f423c3a8fa4c5810000200000000000000000535',
     symbol: 'CMIND_LBP',
@@ -15866,6 +15888,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xdac7ef49161bdbf0e8f0b4c8e2d38df19d972874': {
+    poolId: '0xdac7ef49161bdbf0e8f0b4c8e2d38df19d9728740002000000000000000004f5',
+    symbol: 'B-jAura-wETH',
+    name: 'Balancer jAURA wETH Pool',
+    tokens: [
+      '0x9a62fb1cafea99f8f0441f80af7f7ccf0d46847d',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Jones AURA',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'jAURA',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0xd16847480d6bc218048cd31ad98b63cc34e5c2bf': {
     poolId: '0xd16847480d6bc218048cd31ad98b63cc34e5c2bf00020000000000000000007d',
     symbol: 'LPeYyvcrv3crypto-12NOV21',
@@ -15929,28 +15973,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'B-80BAL-20WETH',
       'sdBal',
-    ],
-    isActive: true
-  },
-  '0x5002eb99f569405987d56e53cec01fbb5da28968': {
-    poolId: '0x5002eb99f569405987d56e53cec01fbb5da28968000200000000000000000696',
-    symbol: '50WAR-50WETH',
-    name: '50WAR-50WETH',
-    tokens: [
-      '0xa8258dee2a677874a48f5320670a869d74f0cbc1',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Warlord token',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'WAR',
-      'WETH',
     ],
     isActive: true
   },
@@ -16240,6 +16262,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xbeb2b7e43fa38d176795682ae61fe66f01452bd7': {
+    poolId: '0xbeb2b7e43fa38d176795682ae61fe66f01452bd70002000000000000000006fa',
+    symbol: 'ECLP-RLP-GYD',
+    name: 'Gyroscope ECLP RLP/GYD',
+    tokens: [
+      '0x4956b52ae2ff65d74ca2d61207523288e4528f96',
+      '0xe07f9d810a48ab5c3c914ba3ca53af14e4491e8a',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Resolv Liquidity Provider Token',
+      'Gyro Dollar',
+    ],
+    tokenSymbols: [
+      'RLP',
+      'GYD',
+    ],
+    isActive: true
+  },
   '0x6641a8c1d33bd3dec8dd85e69c63cafb5bf36388': {
     poolId: '0x6641a8c1d33bd3dec8dd85e69c63cafb5bf36388000200000000000000000234',
     symbol: 'B-auraBAL-STABLE',
@@ -16460,6 +16504,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xbcae92a7ef7ff3feec11eb3354990640f6e5842f': {
+    poolId: '0xbcae92a7ef7ff3feec11eb3354990640f6e5842f0002000000000000000003d1',
+    symbol: '50DAI-50AAVE',
+    name: '50DAI-50AAVE',
+    tokens: [
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
+      '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Dai Stablecoin',
+      'Aave Token',
+    ],
+    tokenSymbols: [
+      'DAI',
+      'AAVE',
+    ],
+    isActive: true
+  },
   '0xbb41e62ba1a743376119fa83ec6dd575ea796613': {
     poolId: '0xbb41e62ba1a743376119fa83ec6dd575ea796613000200000000000000000649',
     symbol: '50dETH-50WETH',
@@ -16545,6 +16611,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'GBPT',
       'USDC',
+    ],
+    isActive: true
+  },
+  '0x6e13fb316613e6b73dbf83a74f4aa08154abd533': {
+    poolId: '0x6e13fb316613e6b73dbf83a74f4aa08154abd5330002000000000000000003d0',
+    symbol: '50LINK-50COMP',
+    name: '50LINK-50COMP',
+    tokens: [
+      '0x514910771af9ca656af840dff83e8264ecf986ca',
+      '0xc00e94cb662c3520282e6f5717214004a7f26888',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'ChainLink Token',
+      'Compound',
+    ],
+    tokenSymbols: [
+      'LINK',
+      'COMP',
     ],
     isActive: true
   },
@@ -16724,50 +16812,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xdac7ef49161bdbf0e8f0b4c8e2d38df19d972874': {
-    poolId: '0xdac7ef49161bdbf0e8f0b4c8e2d38df19d9728740002000000000000000004f5',
-    symbol: 'B-jAura-wETH',
-    name: 'Balancer jAURA wETH Pool',
-    tokens: [
-      '0x9a62fb1cafea99f8f0441f80af7f7ccf0d46847d',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Jones AURA',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'jAURA',
-      'WETH',
-    ],
-    isActive: true
-  },
-  '0xbcae92a7ef7ff3feec11eb3354990640f6e5842f': {
-    poolId: '0xbcae92a7ef7ff3feec11eb3354990640f6e5842f0002000000000000000003d1',
-    symbol: '50DAI-50AAVE',
-    name: '50DAI-50AAVE',
-    tokens: [
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-      '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Dai Stablecoin',
-      'Aave Token',
-    ],
-    tokenSymbols: [
-      'DAI',
-      'AAVE',
-    ],
-    isActive: true
-  },
   '0x99d79238457cfa3a9e86856b05d9814c00926d04': {
     poolId: '0x99d79238457cfa3a9e86856b05d9814c00926d04000200000000000000000395',
     symbol: 'USDC-TYPE-SWAP',
@@ -16831,28 +16875,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'DOGETTE',
       'USDC',
-    ],
-    isActive: true
-  },
-  '0x6e13fb316613e6b73dbf83a74f4aa08154abd533': {
-    poolId: '0x6e13fb316613e6b73dbf83a74f4aa08154abd5330002000000000000000003d0',
-    symbol: '50LINK-50COMP',
-    name: '50LINK-50COMP',
-    tokens: [
-      '0x514910771af9ca656af840dff83e8264ecf986ca',
-      '0xc00e94cb662c3520282e6f5717214004a7f26888',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'ChainLink Token',
-      'Compound',
-    ],
-    tokenSymbols: [
-      'LINK',
-      'COMP',
     ],
     isActive: true
   },
@@ -16941,6 +16963,72 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'Chienoki',
       'USDC',
+    ],
+    isActive: true
+  },
+  '0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb': {
+    poolId: '0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb000200000000000000000405',
+    symbol: '50stETH-50SNX',
+    name: '50stETH-50SNX',
+    tokens: [
+      '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
+      '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Synthetix Network Token',
+      'Tether USD',
+    ],
+    tokenSymbols: [
+      'SNX',
+      'USDT',
+    ],
+    isActive: true
+  },
+  '0xe2e01a8b901de83156e51bc6f87309e64c9bd39a': {
+    poolId: '0xe2e01a8b901de83156e51bc6f87309e64c9bd39a0002000000000000000003d5',
+    symbol: '50WETH-50USDT',
+    name: '50WETH-50USDT',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Tether USD',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'USDT',
+    ],
+    isActive: true
+  },
+  '0xd5a44704befd1cfcca67f7bc498a7654cc092959': {
+    poolId: '0xd5a44704befd1cfcca67f7bc498a7654cc092959000200000000000000000609',
+    symbol: 'BAL-20WETH-80POP',
+    name: 'Balancer 20 WETH 80 POP',
+    tokens: [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      '0xd0cd466b34a24fcb2f87676278af2005ca8a78c4',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped Ether',
+      'Popcorn',
+    ],
+    tokenSymbols: [
+      'WETH',
+      'POP',
     ],
     isActive: true
   },
@@ -17186,50 +17274,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb': {
-    poolId: '0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb000200000000000000000405',
-    symbol: '50stETH-50SNX',
-    name: '50stETH-50SNX',
-    tokens: [
-      '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
-      '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Synthetix Network Token',
-      'Tether USD',
-    ],
-    tokenSymbols: [
-      'SNX',
-      'USDT',
-    ],
-    isActive: true
-  },
-  '0xe2e01a8b901de83156e51bc6f87309e64c9bd39a': {
-    poolId: '0xe2e01a8b901de83156e51bc6f87309e64c9bd39a0002000000000000000003d5',
-    symbol: '50WETH-50USDT',
-    name: '50WETH-50USDT',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Tether USD',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'USDT',
-    ],
-    isActive: true
-  },
   '0xdeb569aa3fc0b0439158a4f2f3b5da6cb1edc37e': {
     poolId: '0xdeb569aa3fc0b0439158a4f2f3b5da6cb1edc37e000200000000000000000577',
     symbol: 'BUSY_F9_LBP',
@@ -17293,6 +17337,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'EVE',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x7320d680ca9bce8048a286f00a79a2c9f8dcd7b3': {
+    poolId: '0x7320d680ca9bce8048a286f00a79a2c9f8dcd7b3000200000000000000000085',
+    symbol: 'LPeYyvWBTC-26NOV21',
+    name: 'LP Element Yield Token yvWBTC-26NOV21',
+    tokens: [
+      '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
+      '0x3b32f63c1e0fb810f0a06814ead1d4431b237560',
+    ],
+    tokenDecimals: [
+      8,
+      8,
+    ],
+    tokenNames: [
+      'Wrapped BTC',
+      'Element Yield Token yvWBTC-26NOV21',
+    ],
+    tokenSymbols: [
+      'WBTC',
+      'eYyvWBTC-26NOV21',
     ],
     isActive: true
   },
@@ -17491,28 +17557,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'DAI',
       'RICH',
-    ],
-    isActive: true
-  },
-  '0xd5a44704befd1cfcca67f7bc498a7654cc092959': {
-    poolId: '0xd5a44704befd1cfcca67f7bc498a7654cc092959000200000000000000000609',
-    symbol: 'BAL-20WETH-80POP',
-    name: 'Balancer 20 WETH 80 POP',
-    tokens: [
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      '0xd0cd466b34a24fcb2f87676278af2005ca8a78c4',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped Ether',
-      'Popcorn',
-    ],
-    tokenSymbols: [
-      'WETH',
-      'POP',
     ],
     isActive: true
   },
@@ -17865,28 +17909,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'CAWK',
       'WETH',
-    ],
-    isActive: true
-  },
-  '0x7320d680ca9bce8048a286f00a79a2c9f8dcd7b3': {
-    poolId: '0x7320d680ca9bce8048a286f00a79a2c9f8dcd7b3000200000000000000000085',
-    symbol: 'LPeYyvWBTC-26NOV21',
-    name: 'LP Element Yield Token yvWBTC-26NOV21',
-    tokens: [
-      '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-      '0x3b32f63c1e0fb810f0a06814ead1d4431b237560',
-    ],
-    tokenDecimals: [
-      8,
-      8,
-    ],
-    tokenNames: [
-      'Wrapped BTC',
-      'Element Yield Token yvWBTC-26NOV21',
-    ],
-    tokenSymbols: [
-      'WBTC',
-      'eYyvWBTC-26NOV21',
     ],
     isActive: true
   },
@@ -18748,6 +18770,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x9c00362427f263ebc02a6f5229132f39335fe963': {
+    poolId: '0x9c00362427f263ebc02a6f5229132f39335fe963000200000000000000000381',
+    symbol: '50bSTBL-50BaoUSD',
+    name: '50bSTBL-50BaoUSD',
+    tokens: [
+      '0x5ee08f40b637417bcc9d2c51b62f4820ec9cf5d8',
+      '0x7945b0a6674b175695e5d1d08ae1e6f13744abb0',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Bao Stable Basket',
+      'BaoUSD',
+    ],
+    tokenSymbols: [
+      'bSTBL',
+      'BaoUSD',
+    ],
+    isActive: true
+  },
   '0x968024662b9566b42d78af23a0f441bc8723fa83': {
     poolId: '0x968024662b9566b42d78af23a0f441bc8723fa83000200000000000000000418',
     symbol: '50TRYB-50bb-a-USD',
@@ -18811,6 +18855,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'babyWoof',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x0a9e96988e21c9a03b8dc011826a00259e02c46e': {
+    poolId: '0x0a9e96988e21c9a03b8dc011826a00259e02c46e000200000000000000000055',
+    symbol: 'LpElement Yield Token yvDAI-27JUN21',
+    name: 'Lp Element Yield Token yvDAI-27JUN21',
+    tokens: [
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
+      '0xe7f4294033d0fde6eecb94bef7da22fde68a61ec',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Dai Stablecoin',
+      'Element Yield Token yvDAI-27JUN21',
+    ],
+    tokenSymbols: [
+      'DAI',
+      'eYyvDAI-27JUN21',
     ],
     isActive: true
   },
@@ -19141,6 +19207,28 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'MIM-3LP3CRV-f',
       'eYyvCurve-MIM-29APR22',
+    ],
+    isActive: true
+  },
+  '0x6aa6d7542310cdc75d1179b8729e1e6ec8d42bf1': {
+    poolId: '0x6aa6d7542310cdc75d1179b8729e1e6ec8d42bf100020000000000000000064b',
+    symbol: '50wstETH/50sDAI',
+    name: 'Balancer 50wstETH/50sDAI',
+    tokens: [
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0x83f20f44975d03b1b09e64809b757c47f942beea',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Wrapped liquid staked Ether 2.0',
+      'Savings Dai',
+    ],
+    tokenSymbols: [
+      'wstETH',
+      'sDAI',
     ],
     isActive: true
   },
@@ -19496,28 +19584,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x6aa6d7542310cdc75d1179b8729e1e6ec8d42bf1': {
-    poolId: '0x6aa6d7542310cdc75d1179b8729e1e6ec8d42bf100020000000000000000064b',
-    symbol: '50wstETH/50sDAI',
-    name: 'Balancer 50wstETH/50sDAI',
-    tokens: [
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0x83f20f44975d03b1b09e64809b757c47f942beea',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Wrapped liquid staked Ether 2.0',
-      'Savings Dai',
-    ],
-    tokenSymbols: [
-      'wstETH',
-      'sDAI',
-    ],
-    isActive: true
-  },
   '0x68e4b5f5927e3e3412413f0bd16dcf580ea69742': {
     poolId: '0x68e4b5f5927e3e3412413f0bd16dcf580ea697420002000000000000000002d0',
     symbol: 'PS_LBP',
@@ -19691,28 +19757,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'WUKONG',
       'USDC',
-    ],
-    isActive: true
-  },
-  '0x0a9e96988e21c9a03b8dc011826a00259e02c46e': {
-    poolId: '0x0a9e96988e21c9a03b8dc011826a00259e02c46e000200000000000000000055',
-    symbol: 'LpElement Yield Token yvDAI-27JUN21',
-    name: 'Lp Element Yield Token yvDAI-27JUN21',
-    tokens: [
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-      '0xe7f4294033d0fde6eecb94bef7da22fde68a61ec',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Dai Stablecoin',
-      'Element Yield Token yvDAI-27JUN21',
-    ],
-    tokenSymbols: [
-      'DAI',
-      'eYyvDAI-27JUN21',
     ],
     isActive: true
   },
@@ -20373,28 +20417,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     tokenSymbols: [
       'VEC',
       'pSVEC',
-    ],
-    isActive: true
-  },
-  '0x9c00362427f263ebc02a6f5229132f39335fe963': {
-    poolId: '0x9c00362427f263ebc02a6f5229132f39335fe963000200000000000000000381',
-    symbol: '50bSTBL-50BaoUSD',
-    name: '50bSTBL-50BaoUSD',
-    tokens: [
-      '0x5ee08f40b637417bcc9d2c51b62f4820ec9cf5d8',
-      '0x7945b0a6674b175695e5d1d08ae1e6f13744abb0',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Bao Stable Basket',
-      'BaoUSD',
-    ],
-    tokenSymbols: [
-      'bSTBL',
-      'BaoUSD',
     ],
     isActive: true
   },
@@ -29202,32 +29224,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83': {
-    poolId: '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336',
-    symbol: 'bb-a-USDC',
-    name: 'Balancer Aave Boosted Pool (USDC)',
-    tokens: [
-      '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-      6,
-    ],
-    tokenNames: [
-      'Balancer Aave Boosted Pool (USDC)',
-      'USD Coin',
-      'Wrapped aUSDC',
-    ],
-    tokenSymbols: [
-      'bb-a-USDC',
-      'USDC',
-      'aUSDC',
-    ],
-    isActive: true
-  },
   '0x1d13531bf6344c102280ce4c458781fbf14dad14': {
     poolId: '0x1d13531bf6344c102280ce4c458781fbf14dad140000000000000000000006df',
     symbol: 'tETH/wstETH',
@@ -29251,6 +29247,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'tETH/wstETH',
       'wstETH',
       'tETH',
+    ],
+    isActive: true
+  },
+  '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83': {
+    poolId: '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336',
+    symbol: 'bb-a-USDC',
+    name: 'Balancer Aave Boosted Pool (USDC)',
+    tokens: [
+      '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+      6,
+    ],
+    tokenNames: [
+      'Balancer Aave Boosted Pool (USDC)',
+      'USD Coin',
+      'Wrapped aUSDC',
+    ],
+    tokenSymbols: [
+      'bb-a-USDC',
+      'USDC',
+      'aUSDC',
     ],
     isActive: true
   },
@@ -29956,32 +29978,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xbb6881874825e60e1160416d6c426eae65f2459e': {
-    poolId: '0xbb6881874825e60e1160416d6c426eae65f2459e000000000000000000000592',
-    symbol: 'bb-a-WETH',
-    name: 'Balancer Aave v3 Boosted Pool (WETH)',
-    tokens: [
-      '0x03928473f25bb2da6bc880b07ecbadc636822264',
-      '0xbb6881874825e60e1160416d6c426eae65f2459e',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Static Aave Ethereum WETH',
-      'Balancer Aave v3 Boosted Pool (WETH)',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'stataEthWETH',
-      'bb-a-WETH',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xb91159aa527d4769cb9faf3e4adb760c7e8c8ea7': {
     poolId: '0xb91159aa527d4769cb9faf3e4adb760c7e8c8ea700000000000000000000067c',
     symbol: 'ETHx/wstETH',
@@ -30005,6 +30001,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'wstETH',
       'ETHx',
       'ETHx/wstETH',
+    ],
+    isActive: true
+  },
+  '0xbb6881874825e60e1160416d6c426eae65f2459e': {
+    poolId: '0xbb6881874825e60e1160416d6c426eae65f2459e000000000000000000000592',
+    symbol: 'bb-a-WETH',
+    name: 'Balancer Aave v3 Boosted Pool (WETH)',
+    tokens: [
+      '0x03928473f25bb2da6bc880b07ecbadc636822264',
+      '0xbb6881874825e60e1160416d6c426eae65f2459e',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Static Aave Ethereum WETH',
+      'Balancer Aave v3 Boosted Pool (WETH)',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'stataEthWETH',
+      'bb-a-WETH',
+      'WETH',
     ],
     isActive: true
   },
@@ -30086,32 +30108,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x37b18b10ce5635a84834b26095a0ae5639dcb752': {
-    poolId: '0x37b18b10ce5635a84834b26095a0ae5639dcb7520000000000000000000005cb',
-    symbol: 'ETHx-WETH-BPT',
-    name: 'Balancer ETHx-WETH Stable Pool',
-    tokens: [
-      '0x37b18b10ce5635a84834b26095a0ae5639dcb752',
-      '0xa35b1b31ce002fbf2058d22f30f95d405200a15b',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer ETHx-WETH Stable Pool',
-      'ETHx',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'ETHx-WETH-BPT',
-      'ETHx',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xb704aa724e69601ffdc9b748137491bffa1b858d': {
     poolId: '0xb704aa724e69601ffdc9b748137491bffa1b858d0001000000000000000004a1',
     symbol: '33QOM-33O-33CAW',
@@ -30135,6 +30131,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'QOM',
       'O',
       'CAW',
+    ],
+    isActive: true
+  },
+  '0x37b18b10ce5635a84834b26095a0ae5639dcb752': {
+    poolId: '0x37b18b10ce5635a84834b26095a0ae5639dcb7520000000000000000000005cb',
+    symbol: 'ETHx-WETH-BPT',
+    name: 'Balancer ETHx-WETH Stable Pool',
+    tokens: [
+      '0x37b18b10ce5635a84834b26095a0ae5639dcb752',
+      '0xa35b1b31ce002fbf2058d22f30f95d405200a15b',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer ETHx-WETH Stable Pool',
+      'ETHx',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'ETHx-WETH-BPT',
+      'ETHx',
+      'WETH',
     ],
     isActive: true
   },
@@ -30944,32 +30966,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x383e7859271b2d0589b013b6d944572a0a8be3cb': {
-    poolId: '0x383e7859271b2d0589b013b6d944572a0a8be3cb000000000000000000000657',
-    symbol: 'DOLA-mkUSD BSP',
-    name: 'DOLA mkUSD Stable Pool',
-    tokens: [
-      '0x383e7859271b2d0589b013b6d944572a0a8be3cb',
-      '0x4591dbff62656e7859afe5e45f6f47d3669fbb28',
-      '0x865377367054516e17014ccded1e7d814edc9ce4',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'DOLA mkUSD Stable Pool',
-      'Prisma mkUSD',
-      'Dola USD Stablecoin',
-    ],
-    tokenSymbols: [
-      'DOLA-mkUSD BSP',
-      'mkUSD',
-      'DOLA',
-    ],
-    isActive: true
-  },
   '0x0ec120ed63212a4cb018795b43c0b03c59190424': {
     poolId: '0x0ec120ed63212a4cb018795b43c0b03c5919042400010000000000000000068f',
     symbol: '33GOLD-33USDC-33WETH',
@@ -30993,6 +30989,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'GOLD',
       'USDC',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0x383e7859271b2d0589b013b6d944572a0a8be3cb': {
+    poolId: '0x383e7859271b2d0589b013b6d944572a0a8be3cb000000000000000000000657',
+    symbol: 'DOLA-mkUSD BSP',
+    name: 'DOLA mkUSD Stable Pool',
+    tokens: [
+      '0x383e7859271b2d0589b013b6d944572a0a8be3cb',
+      '0x4591dbff62656e7859afe5e45f6f47d3669fbb28',
+      '0x865377367054516e17014ccded1e7d814edc9ce4',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'DOLA mkUSD Stable Pool',
+      'Prisma mkUSD',
+      'Dola USD Stablecoin',
+    ],
+    tokenSymbols: [
+      'DOLA-mkUSD BSP',
+      'mkUSD',
+      'DOLA',
     ],
     isActive: true
   },
@@ -31204,32 +31226,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x2b218683178d029bab6c9789b1073aa6c96e5176': {
-    poolId: '0x2b218683178d029bab6c9789b1073aa6c96e517600000000000000000000058c',
-    symbol: 'bb-s-DAI',
-    name: 'Balancer Savings DAI Boosted Pool',
-    tokens: [
-      '0x2b218683178d029bab6c9789b1073aa6c96e5176',
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-      '0x83f20f44975d03b1b09e64809b757c47f942beea',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer Savings DAI Boosted Pool',
-      'Dai Stablecoin',
-      'Savings Dai',
-    ],
-    tokenSymbols: [
-      'bb-s-DAI',
-      'DAI',
-      'sDAI',
-    ],
-    isActive: true
-  },
   '0x740a691bd31c4176bcb6b8a7a40f1a723537d99d': {
     poolId: '0x740a691bd31c4176bcb6b8a7a40f1a723537d99d0000000000000000000006b6',
     symbol: 'cdcETH/wstETH',
@@ -31253,6 +31249,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'cdcETH/wstETH',
       'wstETH',
       'CDCETH',
+    ],
+    isActive: true
+  },
+  '0x2b218683178d029bab6c9789b1073aa6c96e5176': {
+    poolId: '0x2b218683178d029bab6c9789b1073aa6c96e517600000000000000000000058c',
+    symbol: 'bb-s-DAI',
+    name: 'Balancer Savings DAI Boosted Pool',
+    tokens: [
+      '0x2b218683178d029bab6c9789b1073aa6c96e5176',
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
+      '0x83f20f44975d03b1b09e64809b757c47f942beea',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer Savings DAI Boosted Pool',
+      'Dai Stablecoin',
+      'Savings Dai',
+    ],
+    tokenSymbols: [
+      'bb-s-DAI',
+      'DAI',
+      'sDAI',
     ],
     isActive: true
   },
@@ -31542,32 +31564,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d': {
-    poolId: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d0000000000000000000004f8',
-    symbol: 'B-vETH-STABLE',
-    name: 'Balancer vETH StablePool',
-    tokens: [
-      '0x4bc3263eb5bb2ef7ad9ab6fb68be80e43b43801f',
-      '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Voucher Ethereum 2.0',
-      'Balancer vETH StablePool',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'vETH',
-      'B-vETH-STABLE',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xa0b7be8336eaa4ba1c7bbc23a694de3c0ff83a10': {
     poolId: '0xa0b7be8336eaa4ba1c7bbc23a694de3c0ff83a1000010000000000000000026f',
     symbol: '40WBTC-40BADGER-20graviAURA',
@@ -31591,6 +31587,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'WBTC',
       'BADGER',
       'graviAURA',
+    ],
+    isActive: true
+  },
+  '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d': {
+    poolId: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d0000000000000000000004f8',
+    symbol: 'B-vETH-STABLE',
+    name: 'Balancer vETH StablePool',
+    tokens: [
+      '0x4bc3263eb5bb2ef7ad9ab6fb68be80e43b43801f',
+      '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Voucher Ethereum 2.0',
+      'Balancer vETH StablePool',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'vETH',
+      'B-vETH-STABLE',
+      'WETH',
     ],
     isActive: true
   },
@@ -32400,6 +32422,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0x7fd800d3ecd9e83322cfcb8d416eb93f56edb781': {
+    poolId: '0x7fd800d3ecd9e83322cfcb8d416eb93f56edb78100010000000000000000065b',
+    symbol: '50PAXG-25USDC-25WETH',
+    name: '50PAXG-25USDC-25WETH',
+    tokens: [
+      '0x45804880de22913dafe09f4980848ece6ecbaf78',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+      18,
+    ],
+    tokenNames: [
+      'Paxos Gold',
+      'USD Coin',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'PAXG',
+      'USDC',
+      'WETH',
+    ],
+    isActive: true
+  },
   '0xc5dc1316ab670a2eed5716d7f19ced321191f382': {
     poolId: '0xc5dc1316ab670a2eed5716d7f19ced321191f38200000000000000000000056e',
     symbol: 'B-wstETH/bb-ma3-weth',
@@ -32478,32 +32526,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x7fd800d3ecd9e83322cfcb8d416eb93f56edb781': {
-    poolId: '0x7fd800d3ecd9e83322cfcb8d416eb93f56edb78100010000000000000000065b',
-    symbol: '50PAXG-25USDC-25WETH',
-    name: '50PAXG-25USDC-25WETH',
-    tokens: [
-      '0x45804880de22913dafe09f4980848ece6ecbaf78',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-      18,
-    ],
-    tokenNames: [
-      'Paxos Gold',
-      'USD Coin',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'PAXG',
-      'USDC',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0xdd378a2a1dd89a90ee1de05aff195a4f2e476c49': {
     poolId: '0xdd378a2a1dd89a90ee1de05aff195a4f2e476c490001000000000000000005d8',
     symbol: 'KNC/WETH/USDC',
@@ -32527,6 +32549,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'USDC',
       'WETH',
       'KNC',
+    ],
+    isActive: true
+  },
+  '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c': {
+    poolId: '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c00000000000000000000060d',
+    symbol: 'DUSD/sDAI',
+    name: 'Balancer DUSD/sDAI StablePool',
+    tokens: [
+      '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c',
+      '0x83f20f44975d03b1b09e64809b757c47f942beea',
+      '0xa48f322f8b3edff967629af79e027628b9dd1298',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer DUSD/sDAI StablePool',
+      'Savings Dai',
+      'Davos.xyz USD',
+    ],
+    tokenSymbols: [
+      'DUSD/sDAI',
+      'sDAI',
+      'DUSD',
     ],
     isActive: true
   },
@@ -32605,32 +32653,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'bb-ma2-USDC',
       'USDC',
       'maUSDC',
-    ],
-    isActive: true
-  },
-  '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c': {
-    poolId: '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c00000000000000000000060d',
-    symbol: 'DUSD/sDAI',
-    name: 'Balancer DUSD/sDAI StablePool',
-    tokens: [
-      '0x35c5c8c7b77942f9d44b535fa590d8b503b2b00c',
-      '0x83f20f44975d03b1b09e64809b757c47f942beea',
-      '0xa48f322f8b3edff967629af79e027628b9dd1298',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer DUSD/sDAI StablePool',
-      'Savings Dai',
-      'Davos.xyz USD',
-    ],
-    tokenSymbols: [
-      'DUSD/sDAI',
-      'sDAI',
-      'DUSD',
     ],
     isActive: true
   },
@@ -32764,32 +32786,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d': {
-    poolId: '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d0000000000000000000005dd',
-    symbol: 'TBY-feb1924-USDC-BPT',
-    name: 'Balancer TBY-feb1924 USDC Stable Pool',
-    tokens: [
-      '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d',
-      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-      '0xc4cafefbc3dfea629c589728d648cb6111db3136',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-      6,
-    ],
-    tokenNames: [
-      'Balancer TBY-feb1924 USDC Stable Pool',
-      'USD Coin',
-      'Term Bound Yield 6 month 2024-2-19',
-    ],
-    tokenSymbols: [
-      'TBY-feb1924-USDC-BPT',
-      'USDC',
-      'TBY-feb1924',
-    ],
-    isActive: true
-  },
   '0xdb3b48f27332c171869f2ae4160bc93a8eed347c': {
     poolId: '0xdb3b48f27332c171869f2ae4160bc93a8eed347c00000000000000000000049b',
     symbol: 'baoUSD-STABLE',
@@ -32813,6 +32809,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'BaoUSD',
       'USDC',
       'baoUSD-STABLE',
+    ],
+    isActive: true
+  },
+  '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d': {
+    poolId: '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d0000000000000000000005dd',
+    symbol: 'TBY-feb1924-USDC-BPT',
+    name: 'Balancer TBY-feb1924 USDC Stable Pool',
+    tokens: [
+      '0x6ae5a7857aad26722cb02cc168e38c52e0e4e45d',
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+      '0xc4cafefbc3dfea629c589728d648cb6111db3136',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+      6,
+    ],
+    tokenNames: [
+      'Balancer TBY-feb1924 USDC Stable Pool',
+      'USD Coin',
+      'Term Bound Yield 6 month 2024-2-19',
+    ],
+    tokenSymbols: [
+      'TBY-feb1924-USDC-BPT',
+      'USDC',
+      'TBY-feb1924',
     ],
     isActive: true
   },
@@ -33284,6 +33306,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xea912e1afa137c15f1638142e32f978e92fbce39': {
+    poolId: '0xea912e1afa137c15f1638142e32f978e92fbce390000000000000000000003b4',
+    symbol: 'B-DAI-USDT-FIXED-RATE',
+    name: 'Balancer DAI-USDT Fixed Rate Pool',
+    tokens: [
+      '0x6b175474e89094c44da98b954eedeac495271d0f',
+      '0xdac17f958d2ee523a2206206994597c13d831ec7',
+      '0xea912e1afa137c15f1638142e32f978e92fbce39',
+    ],
+    tokenDecimals: [
+      18,
+      6,
+      18,
+    ],
+    tokenNames: [
+      'Dai Stablecoin',
+      'Tether USD',
+      'Balancer DAI-USDT Fixed Rate Pool',
+    ],
+    tokenSymbols: [
+      'DAI',
+      'USDT',
+      'B-DAI-USDT-FIXED-RATE',
+    ],
+    isActive: true
+  },
   '0xb0f75e97a114a4eb4a425edc48990e6760726709': {
     poolId: '0xb0f75e97a114a4eb4a425edc48990e6760726709000000000000000000000198',
     symbol: 'bb-f-LUSD',
@@ -33463,32 +33511,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'WBTC',
       'WETH',
       'USDT',
-    ],
-    isActive: true
-  },
-  '0xea912e1afa137c15f1638142e32f978e92fbce39': {
-    poolId: '0xea912e1afa137c15f1638142e32f978e92fbce390000000000000000000003b4',
-    symbol: 'B-DAI-USDT-FIXED-RATE',
-    name: 'Balancer DAI-USDT Fixed Rate Pool',
-    tokens: [
-      '0x6b175474e89094c44da98b954eedeac495271d0f',
-      '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      '0xea912e1afa137c15f1638142e32f978e92fbce39',
-    ],
-    tokenDecimals: [
-      18,
-      6,
-      18,
-    ],
-    tokenNames: [
-      'Dai Stablecoin',
-      'Tether USD',
-      'Balancer DAI-USDT Fixed Rate Pool',
-    ],
-    tokenSymbols: [
-      'DAI',
-      'USDT',
-      'B-DAI-USDT-FIXED-RATE',
     ],
     isActive: true
   },
@@ -33726,6 +33748,32 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
+  '0xa34bd98e54411494c55f6b12626204350d2d447f': {
+    poolId: '0xa34bd98e54411494c55f6b12626204350d2d447f0000000000000000000006dc',
+    symbol: 'hETH/wstETH',
+    name: 'Balancer hETH/wstETH',
+    tokens: [
+      '0x270b7748cdf8243bfe68face7230ef0fce695389',
+      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+      '0xa34bd98e54411494c55f6b12626204350d2d447f',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Hinkal ETH',
+      'Wrapped liquid staked Ether 2.0',
+      'Balancer hETH/wstETH',
+    ],
+    tokenSymbols: [
+      'hETH',
+      'wstETH',
+      'hETH/wstETH',
+    ],
+    isActive: true
+  },
   '0x8f4063446f5011bc1c9f79a819efe87776f23704': {
     poolId: '0x8f4063446f5011bc1c9f79a819efe87776f23704000000000000000000000197',
     symbol: 'bb-f-DAI',
@@ -33853,32 +33901,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'DAI',
       'sDAI',
       'bb-s-DAI',
-    ],
-    isActive: true
-  },
-  '0xa34bd98e54411494c55f6b12626204350d2d447f': {
-    poolId: '0xa34bd98e54411494c55f6b12626204350d2d447f0000000000000000000006dc',
-    symbol: 'hETH/wstETH',
-    name: 'Balancer hETH/wstETH',
-    tokens: [
-      '0x270b7748cdf8243bfe68face7230ef0fce695389',
-      '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-      '0xa34bd98e54411494c55f6b12626204350d2d447f',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Hinkal ETH',
-      'Wrapped liquid staked Ether 2.0',
-      'Balancer hETH/wstETH',
-    ],
-    tokenSymbols: [
-      'hETH',
-      'wstETH',
-      'hETH/wstETH',
     ],
     isActive: true
   },
@@ -35996,36 +36018,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016': {
-    poolId: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502',
-    symbol: 'bb-a-USD',
-    name: 'Balancer Aave v3 Boosted StablePool',
-    tokens: [
-      '0x6667c6fa9f2b3fc1cc8d85320b62703d938e4385',
-      '0xa1697f9af0875b63ddc472d6eebada8c1fab8568',
-      '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f792692',
-      '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Balancer Aave v3 Boosted Pool (DAI)',
-      'Balancer Aave v3 Boosted Pool (USDT)',
-      'Balancer Aave v3 Boosted Pool (USDC)',
-      'Balancer Aave v3 Boosted StablePool',
-    ],
-    tokenSymbols: [
-      'bb-a-DAI',
-      'bb-a-USDT',
-      'bb-a-USDC',
-      'bb-a-USD',
-    ],
-    isActive: true
-  },
   '0x4e1325ff075a387e3d337f5f12638d6d72b12780': {
     poolId: '0x4e1325ff075a387e3d337f5f12638d6d72b127800001000000000000000006d7',
     symbol: '25OLAS-25WBTC-25DAI-25WETH',
@@ -36053,6 +36045,36 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'WBTC',
       'DAI',
       'WETH',
+    ],
+    isActive: true
+  },
+  '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016': {
+    poolId: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502',
+    symbol: 'bb-a-USD',
+    name: 'Balancer Aave v3 Boosted StablePool',
+    tokens: [
+      '0x6667c6fa9f2b3fc1cc8d85320b62703d938e4385',
+      '0xa1697f9af0875b63ddc472d6eebada8c1fab8568',
+      '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f792692',
+      '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Balancer Aave v3 Boosted Pool (DAI)',
+      'Balancer Aave v3 Boosted Pool (USDT)',
+      'Balancer Aave v3 Boosted Pool (USDC)',
+      'Balancer Aave v3 Boosted StablePool',
+    ],
+    tokenSymbols: [
+      'bb-a-DAI',
+      'bb-a-USDT',
+      'bb-a-USDC',
+      'bb-a-USD',
     ],
     isActive: true
   },
@@ -38744,52 +38766,6 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
     ],
     isActive: true
   },
-  '0x39cd55ff7e7d7c66d7d2736f1d5d4791cdab895b': {
-    poolId: '0x39cd55ff7e7d7c66d7d2736f1d5d4791cdab895b000100000000000000000071',
-    symbol: 'SSv0',
-    name: 'Solarcurve Special v0',
-    tokens: [
-      '0x18aaa7115705e8be94bffebde57af9bfc265b998',
-      '0x3845badade8e6dff049820680d1f14bd3903a5d0',
-      '0x72e364f2abdc788b7e918bc238b21f109cd634d7',
-      '0x87d73e916d7057945c9bcd8cdd94e42a6f47f776',
-      '0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81',
-      '0xbb0e17ef65f82ab018d8edd776e8dd940327b28b',
-      '0xc00e94cb662c3520282e6f5717214004a7f26888',
-      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    ],
-    tokenDecimals: [
-      18,
-      18,
-      18,
-      18,
-      18,
-      18,
-      18,
-      18,
-    ],
-    tokenNames: [
-      'Audius',
-      'SAND',
-      'Metaverse Index',
-      'NFTX',
-      'Muse',
-      'Axie Infinity Shard',
-      'Compound',
-      'Wrapped Ether',
-    ],
-    tokenSymbols: [
-      'AUDIO',
-      'SAND',
-      'MVI',
-      'NFTX',
-      'MUSE',
-      'AXS',
-      'COMP',
-      'WETH',
-    ],
-    isActive: true
-  },
   '0x3b40d7d5ae25df2561944dd68b252016c4c7b280': {
     poolId: '0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2',
     symbol: 'WSB-DEFI',
@@ -38833,6 +38809,52 @@ export const BALANCER_POOL_METADATA: Record<string, any> = {
       'SNX',
       'GRT',
       'CRV',
+    ],
+    isActive: true
+  },
+  '0x39cd55ff7e7d7c66d7d2736f1d5d4791cdab895b': {
+    poolId: '0x39cd55ff7e7d7c66d7d2736f1d5d4791cdab895b000100000000000000000071',
+    symbol: 'SSv0',
+    name: 'Solarcurve Special v0',
+    tokens: [
+      '0x18aaa7115705e8be94bffebde57af9bfc265b998',
+      '0x3845badade8e6dff049820680d1f14bd3903a5d0',
+      '0x72e364f2abdc788b7e918bc238b21f109cd634d7',
+      '0x87d73e916d7057945c9bcd8cdd94e42a6f47f776',
+      '0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81',
+      '0xbb0e17ef65f82ab018d8edd776e8dd940327b28b',
+      '0xc00e94cb662c3520282e6f5717214004a7f26888',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    ],
+    tokenDecimals: [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+    ],
+    tokenNames: [
+      'Audius',
+      'SAND',
+      'Metaverse Index',
+      'NFTX',
+      'Muse',
+      'Axie Infinity Shard',
+      'Compound',
+      'Wrapped Ether',
+    ],
+    tokenSymbols: [
+      'AUDIO',
+      'SAND',
+      'MVI',
+      'NFTX',
+      'MUSE',
+      'AXS',
+      'COMP',
+      'WETH',
     ],
     isActive: true
   },
