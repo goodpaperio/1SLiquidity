@@ -714,7 +714,7 @@ const TradesTable = ({
                             }
                             width={32}
                             height={32}
-                            className="w-6 h-6"
+                            className="w-6 h-6 rounded-full"
                             alt={item.tokenInDetails?.symbol || 'eth'}
                           />
                           {/* <div>
@@ -745,7 +745,7 @@ const TradesTable = ({
                             width={32}
                             height={32}
                             alt={item.tokenOutDetails?.symbol || 'usdc'}
-                            className="w-6 h-6"
+                            className="w-6 h-6 rounded-full"
                           />
                           {/* <div>
                             <p className="text-white">
@@ -768,7 +768,8 @@ const TradesTable = ({
                           // address?.toLowerCase() !== item.user.toLowerCase() ||
                         }
                         className="h-[2.15rem] hover:bg-primaryGradient hover:text-black"
-                        onClick={() => handleInstasettleClick(item)}
+                        // onClick={() => handleInstasettleClick(item)}
+                        onClick={() => handleStreamClick(item)}
                       />
                     </TableCell>
                     <TableCell className="text-center">

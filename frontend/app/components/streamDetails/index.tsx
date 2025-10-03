@@ -737,6 +737,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               walletAddress={walletAddress}
               isCancellable={selectedStream.cancellations.length === 0}
               tokenIn={tokenIn}
+              tokenOut={tokenOut}
               formattedAmountIn={formattedAmountIn}
             />
           )}

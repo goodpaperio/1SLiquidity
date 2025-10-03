@@ -11,7 +11,7 @@ import { useAppKitAccount, useAppKitState } from '@reown/appkit/react'
 import { useToast } from '@/app/lib/context/toastProvider'
 import { formatWalletAddress } from '@/app/lib/helper'
 import { useWalletTokens } from '@/app/lib/hooks/useWalletTokens'
-import { ChevronDown } from 'lucide-react'
+import { CheckIcon, ChevronDown, CopyIcon } from 'lucide-react'
 import tokensListData from '@/app/lib/utils/tokens-list-04-09-2025.json'
 
 // Types for JSON data
@@ -192,8 +192,20 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   const chainIdWithPrefix = stateData?.selectedNetworkId || 'eip155:1'
   const chainId = chainIdWithPrefix.split(':')[1]
   const chainName = CHAIN_NAMES[chainId] || 'Unknown Chain'
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
 
   const { addToast } = useToast()
+
+  const handleCopy = (
+    e: React.MouseEvent<HTMLDivElement | SVGSVGElement>,
+    address: string
+  ) => {
+    e.stopPropagation()
+    if (!address) return
+    navigator.clipboard.writeText(address)
+    setCopiedAddress(address)
+    setTimeout(() => setCopiedAddress(null), 1000) // show check for 2s
+  }
 
   // Get wallet tokens for the current chain
   const { tokens: walletTokens, isLoading: isLoadingWalletTokens } =
@@ -711,9 +723,21 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                             {token.symbol}
                           </p>
                           {token.token_address && (
-                            <p className="text-[14px] uppercase text-gray p-0 leading-tight">
-                              {formatWalletAddress(token.token_address)}
-                            </p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[14px] uppercase text-gray p-0 leading-tight">
+                                {formatWalletAddress(token.token_address)}
+                              </p>
+                              {copiedAddress === token.token_address ? (
+                                <CheckIcon className="w-3.5 h-3.5 text-green-500" />
+                              ) : (
+                                <CopyIcon
+                                  className="w-3.5 h-3.5 cursor-pointer hover:text-gray-400"
+                                  onClick={(e) =>
+                                    handleCopy(e, token.token_address)
+                                  }
+                                />
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -945,9 +969,21 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                               {token.symbol}
                             </p>
                             {token.token_address && (
-                              <p className="text-[14px] uppercase text-gray p-0 leading-tight">
-                                {formatWalletAddress(token.token_address)}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[14px] uppercase text-gray p-0 leading-tight">
+                                  {formatWalletAddress(token.token_address)}
+                                </p>
+                                {copiedAddress === token.token_address ? (
+                                  <CheckIcon className="w-3.5 h-3.5 text-green-500" />
+                                ) : (
+                                  <CopyIcon
+                                    className="w-3.5 h-3.5 cursor-pointer hover:text-gray"
+                                    onClick={(e) =>
+                                      handleCopy(e, token.token_address)
+                                    }
+                                  />
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
