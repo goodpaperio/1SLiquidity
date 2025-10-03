@@ -63,7 +63,7 @@ const NotifiSwapStream: React.FC<Props> = ({
               width={2400}
               height={2400}
               alt="swapStream"
-              className="w-[18px] h-[18px]"
+              className="w-[18px] h-[18px] rounded-full"
             />
             <p className="text-white uppercase">
               {amountIn} {tokenInObj.symbol}
@@ -82,7 +82,7 @@ const NotifiSwapStream: React.FC<Props> = ({
               width={2400}
               height={2400}
               alt="swapStream"
-              className="w-[18px] h-[18px]"
+              className="w-[18px] h-[18px] rounded-full"
             />
             <p className="text-white uppercase">
               {amountOut} {tokenOutObj.symbol}{' '}

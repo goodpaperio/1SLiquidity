@@ -597,7 +597,8 @@ export default function TradesChart({
                 }}
               >
                 {/* Background gradient */}
-                <div
+                {/* TODO: add background gradient */}
+                {/* <div
                   className="w-full h-64 bg-gradient-to-br from-[#114532] to-[#22432e] absolute bottom-[35px] left-0"
                   style={{
                     WebkitMaskImage:
@@ -609,7 +610,7 @@ export default function TradesChart({
                     maskRepeat: 'no-repeat',
                     maskSize: '100% 100%',
                   }}
-                />
+                /> */}
 
                 <ChartContainer
                   config={chartConfig}
@@ -665,7 +666,8 @@ export default function TradesChart({
                     <Bar
                       dataKey="savings"
                       radius={8}
-                      // maxBarSize={20}
+                      maxBarSize={sortedChartData.length <= 10 ? 60 : undefined}
+                      minPointSize={5}
                       activeIndex={(selectedBar || activeBar) ?? undefined}
                     >
                       {sortedChartData.map((entry, index) => (
