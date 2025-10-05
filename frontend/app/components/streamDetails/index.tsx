@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
-import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 import { useState } from 'react'
 
@@ -502,8 +502,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    {formatNumberWithSubscript(formattedAmountIn)}{' '}
-                    {tokenIn?.symbol}
+                    {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
                     ${amountInUsd.toFixed(2)}
@@ -520,7 +519,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    ~ {formatNumberWithSubscript(formattedMinAmountOut)}{' '}
+                    ~ {formatNumberSmart(formattedMinAmountOut)}{' '}
                     {tokenOut?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
@@ -605,10 +604,10 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 <>
                   <p className="">
                     {showCompleted
-                      ? `${formatNumberWithSubscript(formattedSwapAmountOut)} ${
+                      ? `${formatNumberSmart(formattedSwapAmountOut)} ${
                           tokenOut?.symbol
                         }`
-                      : `~ ${formatNumberWithSubscript(remainingAmountOut)} ${
+                      : `~ ${formatNumberSmart(remainingAmountOut)} ${
                           tokenOut?.symbol
                         }`}
                   </p>

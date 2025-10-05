@@ -5,7 +5,7 @@ import { ReserveData } from '@/app/lib/dex/calculators'
 import { formatEther } from 'ethers/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import DexSummary from './DexSummary'
-import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 
 interface DetailSectionProps {
   sellAmount?: string
@@ -137,7 +137,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             />
           )}
           <p>
-            {formatNumberWithSubscript(sellAmount)} {tokenFromSymbol}
+            {formatNumberSmart(sellAmount)} {tokenFromSymbol}
           </p>
           {inValidAmount ? (
             <Image
@@ -160,7 +160,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             {isCalculating ? (
               <LoadingSkeleton />
             ) : (
-              `${formatNumberWithSubscript(buyAmount)} ${tokenToSymbol} (Est)`
+              `${formatNumberSmart(buyAmount)} ${tokenToSymbol} (Est)`
             )}
           </p>
         </div>

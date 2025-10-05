@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { XIcon } from 'lucide-react'
-import { formatNumberWithSubscript } from '@/app/lib/utils/number'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 
 type Trade = {
@@ -125,8 +125,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formatNumberWithSubscript(formattedAmountIn)}{' '}
-                  {tokenIn?.symbol}
+                  {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol}
                 </p>
               </>
             )}
@@ -158,8 +157,8 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formatNumberWithSubscript(formattedMinAmountOut)}{' '}
-                  {tokenOut?.symbol} (EST)
+                  {formatNumberSmart(formattedMinAmountOut)} {tokenOut?.symbol}{' '}
+                  (EST)
                 </p>
               </>
             )}
@@ -193,7 +192,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
 
         <div
           className={cn(
-            'flex justify-between items-center gap-2 text-white52',
+            'flex flex-wrap items-center gap-x-2 gap-y-1 text-white52',
             isLoading ? 'mt-3.5' : 'mt-1.5'
           )}
         >
@@ -207,7 +206,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
             </>
           ) : (
             <>
-              <p className="">
+              <p className="whitespace-nowrap">
                 {trade.settlements.length > 0
                   ? trade.settlements.length + trade.executions.length
                   : trade.executions.length}{' '}
@@ -217,55 +216,53 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   : remainingStreams}{' '}
                 completed
               </p>
-              <div className="flex gap-2">
-                {trade.settlements.length > 0 ||
-                trade.cancellations.length > 0 ? (
-                  ''
-                ) : (
-                  <div className="flex items-center">
-                    <Image
-                      src="/icons/time.svg"
-                      alt="clock"
-                      className="w-5"
-                      width={20}
-                      height={20}
+              {trade.settlements.length > 0 ||
+              trade.cancellations.length > 0 ? (
+                ''
+              ) : (
+                <div className="flex items-center whitespace-nowrap ml-auto">
+                  <Image
+                    src="/icons/time.svg"
+                    alt="clock"
+                    className="w-5"
+                    width={20}
+                    height={20}
+                  />
+                  <p>{estimatedTime || '..'}</p>
+                </div>
+              )}
+              {trade.isInstasettlable && (
+                <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none whitespace-nowrap ml-auto">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                  >
+                    <path
+                      d="M13 2L6 14H11V22L18 10H13V2Z"
+                      fill="#40f798"
+                      fillOpacity="0.72"
                     />
-                    <p>{estimatedTime || '..'}</p>
-                  </div>
-                )}
-                {trade.isInstasettlable && (
-                  <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                    >
-                      <path
-                        d="M13 2L6 14H11V22L18 10H13V2Z"
-                        fill="#40f798"
-                        fillOpacity="0.72"
-                      />
-                    </svg>
-                    <span className="text-xs sm:inline-block hidden">
-                      {trade.settlements.length > 0
-                        ? 'Instasettled'
-                        : 'Instasettle'}
-                    </span>
-                  </div>
-                )}
+                  </svg>
+                  <span className="text-xs sm:inline-block hidden">
+                    {trade.settlements.length > 0
+                      ? 'Instasettled'
+                      : 'Instasettle'}
+                  </span>
+                </div>
+              )}
 
-                {trade.cancellations.length > 0 && (
-                  <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none">
-                    <XIcon className="w-3.5 h-3.5" />
-                    <span className="text-xs sm:inline-block hidden">
-                      Cancelled
-                    </span>
-                  </div>
-                )}
-              </div>
+              {trade.cancellations.length > 0 && (
+                <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none whitespace-nowrap ml-auto">
+                  <XIcon className="w-3.5 h-3.5" />
+                  <span className="text-xs sm:inline-block hidden">
+                    Cancelled
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>
