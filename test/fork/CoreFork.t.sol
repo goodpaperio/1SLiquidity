@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.30;
 
-import {Fork_Test} from "test/fork/Fork.t.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Config} from "../../config/Config.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IUniversalDexInterface} from "src/interfaces/IUniversalDexInterface.sol";
+import { Fork_Test } from "test/fork/Fork.t.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Config } from "../../config/Config.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IUniversalDexInterface } from "src/interfaces/IUniversalDexInterface.sol";
 
 import "forge-std/console.sol";
 
@@ -122,19 +123,54 @@ contract CoreForkTest is Fork_Test {
     // ===== UTILITY FUNCTIONS FOR TESTING =====
 
     /**
+     * @dev Execute a specific trade using the same logic as test_TradeSpecificPair_forked
+     */
+    function _executeSpecificTrade(
+        address fromToken,
+        address toToken,
+        uint256 amountIn,
+        address whaleAddress
+    )
+        internal
+        returns (bool, string memory)
+    {
+        require(fromToken != address(0), "From token address is zero");
+        require(toToken != address(0), "To token address is zero");
+        require(amountIn > 0, "Amount in must be greater than 0");
+
+        vm.startPrank(whaleAddress);
+        SafeERC20.forceApprove(IERC20(fromToken), address(core), amountIn);
+
+        try core.placeTrade(abi.encode(fromToken, toToken, amountIn, 0, false, false)) {
+            vm.stopPrank();
+            return (true, "");
+        } catch Error(string memory reason) {
+            vm.stopPrank();
+            return (false, reason);
+        } catch (bytes memory lowLevelData) {
+            vm.stopPrank();
+            string memory errorMsg = _bytesToString(lowLevelData);
+            return (false, errorMsg);
+        }
+    }
+
+    /**
      * @dev Generic function to test trades for any token
      */
     function _testTradesForToken(
         string memory tokenSymbol,
         address[] memory pairAddresses,
         address baseToken,
-        address whaleAddress
-    ) internal {
+        address whaleAddress,
+        uint256 amountIn
+    )
+        internal
+    {
         console.log("Test with", tokenSymbol, "pair tokens");
 
-        uint8 maxTestCount = 50;
-
+        uint8 maxTestCount = 10; // Réduire encore plus pour éviter les problèmes de gas
         uint256 testCount = pairAddresses.length > maxTestCount ? maxTestCount : pairAddresses.length;
+
         string[] memory successfulTrades = new string[](testCount);
         string[] memory failedTrades = new string[](testCount);
         string[] memory failureReasons = new string[](testCount);
@@ -147,37 +183,40 @@ contract CoreForkTest is Fork_Test {
 
             console.log("================================");
             console.log("Testing token", i, ":", tokenName);
+            // if (!_compareStrings(tokenName, "pepe")) {
+            //     continue;
+            // }
 
             if (tokenAddress != address(0)) {
-                uint256 amountIn = getAggreateTokenInAmount(baseToken, tokenAddress);
                 console.log("Amount in for token", tokenSymbol, ":", amountIn);
 
-                bytes memory tradeData = abi.encode(baseToken, tokenAddress, amountIn, 0, false, 0.0005 ether);
-                vm.startPrank(whaleAddress);
-                SafeERC20.forceApprove(IERC20(baseToken), address(core), amountIn);
+                // Skip tokens with no liquidity
+                if (amountIn == 0) {
+                    console.log("[SKIPPED]", tokenName, "- No liquidity");
+                    continue;
+                }
 
-                try core.placeTrade(tradeData) {
+                // Use the same logic as test_TradeSpecificPair_forked
+                (bool success, string memory failureReason) =
+                    _executeSpecificTrade(baseToken, tokenAddress, amountIn, whaleAddress);
+
+                if (success) {
                     successfulTrades[successCount] = tokenName;
                     successCount++;
-                    // Emit success event
+                    console.log("[SUCCESS]", tokenName);
                     emit TokenTestResult(tokenSymbol, tokenName, tokenAddress, true, "");
-                } catch Error(string memory reason) {
+                } else {
                     failedTrades[failureCount] = tokenName;
-                    failureReasons[failureCount] = reason;
+                    failureReasons[failureCount] = failureReason;
                     failureCount++;
-                    // Emit failure event
-                    emit TokenTestResult(tokenSymbol, tokenName, tokenAddress, false, reason);
-                } catch (bytes memory lowLevelData) {
-                    string memory errorMsg = _bytesToString(lowLevelData);
-                    failedTrades[failureCount] = tokenName;
-                    failureReasons[failureCount] = errorMsg;
-                    failureCount++;
-                    // Emit failure event
-                    emit TokenTestResult(tokenSymbol, tokenName, tokenAddress, false, errorMsg);
+                    console.log("[FAILED]", tokenName);
+                    console.log("Reason:", failureReason);
+                    emit TokenTestResult(tokenSymbol, tokenName, tokenAddress, false, failureReason);
                 }
-                vm.stopPrank();
             } else {
-                // Emit event for zero token address
+                failedTrades[failureCount] = tokenName;
+                failureReasons[failureCount] = "Token address is zero";
+                failureCount++;
                 emit TokenTestResult(tokenSymbol, tokenName, tokenAddress, false, "Token address is zero");
             }
         }
@@ -190,53 +229,16 @@ contract CoreForkTest is Fork_Test {
         emit TestSummary(tokenSymbol, testCount, successCount, failureCount);
 
         // Alternative option: Structured logging for simple extraction
-        console.log("JSON_RESULT_START");
-        console.log("{");
-        console.log('  "baseToken": "%s",', tokenSymbol);
-        console.log('  "totalTests": %s,', vm.toString(testCount));
-        console.log('  "successCount": %s,', vm.toString(successCount));
-        console.log('  "failureCount": %s,', vm.toString(failureCount));
-        console.log('  "results": [');
-
-        // Log individual results in JSON format
-        for (uint256 i = 0; i < testCount; i++) {
-            address tokenAddress = pairAddresses[i];
-            string memory tokenName = config.getTokenName(tokenAddress);
-            bool isSuccess = false;
-            string memory reason = "";
-
-            // Determine token status
-            for (uint256 j = 0; j < successCount; j++) {
-                if (_compareStrings(successfulTrades[j], tokenName)) {
-                    isSuccess = true;
-                    break;
-                }
-            }
-
-            if (!isSuccess) {
-                for (uint256 j = 0; j < failureCount; j++) {
-                    if (_compareStrings(failedTrades[j], tokenName)) {
-                        reason = failureReasons[j];
-                        break;
-                    }
-                }
-            }
-
-            console.log("    {");
-            console.log('      "tokenName": "%s",', tokenName);
-            console.log('      "tokenAddress": "%s",', vm.toString(tokenAddress));
-            console.log('      "success": %s,', isSuccess ? "true" : "false");
-            console.log('      "failureReason": "%s"', reason);
-            if (i < testCount - 1) {
-                console.log("    },");
-            } else {
-                console.log("    }");
-            }
-        }
-
-        console.log("  ]");
-        console.log("}");
-        console.log("JSON_RESULT_END");
+        _logJsonResults(
+            tokenSymbol,
+            testCount,
+            successCount,
+            failureCount,
+            successfulTrades,
+            failedTrades,
+            failureReasons,
+            pairAddresses
+        );
     }
 
     /**
@@ -298,6 +300,88 @@ contract CoreForkTest is Fork_Test {
         return result;
     }
 
+    function _logJsonResults(
+        string memory tokenSymbol,
+        uint256 testCount,
+        uint256 successCount,
+        uint256 failureCount,
+        string[] memory successfulTrades,
+        string[] memory failedTrades,
+        string[] memory failureReasons,
+        address[] memory pairAddresses
+    )
+        internal
+        view
+    {
+        // Alternative option: Structured logging for simple extraction
+        console.log("JSON_RESULT_START");
+        console.log("{");
+        console.log('  "baseToken": "%s",', tokenSymbol);
+        console.log('  "totalTests": %s,', vm.toString(testCount));
+        console.log('  "successCount": %s,', vm.toString(successCount));
+        console.log('  "failureCount": %s,', vm.toString(failureCount));
+        console.log('  "results": [');
+
+        // Log individual results in JSON format
+        for (uint256 i = 0; i < testCount; i++) {
+            address tokenAddress = pairAddresses[i];
+            string memory tokenName = config.getTokenName(tokenAddress);
+            bool isSuccess = false;
+            string memory reason = "";
+
+            // Determine token status
+            for (uint256 j = 0; j < successCount; j++) {
+                if (_compareStrings(successfulTrades[j], tokenName)) {
+                    isSuccess = true;
+                    break;
+                }
+            }
+
+            if (!isSuccess) {
+                for (uint256 j = 0; j < failureCount; j++) {
+                    if (_compareStrings(failedTrades[j], tokenName)) {
+                        reason = failureReasons[j];
+                        break;
+                    }
+                }
+            }
+
+            console.log("    {");
+            console.log('      "tokenName": "%s",', tokenName);
+            console.log('      "tokenAddress": "%s",', vm.toString(tokenAddress));
+
+            // Get token decimals safely
+            uint8 tokenDecimals = 18; // Default to 18
+            try IERC20Metadata(tokenAddress).decimals() returns (uint8 decimals) {
+                tokenDecimals = decimals;
+            } catch {
+                // Use default if decimals() call fails
+            }
+            console.log('      "tokenDecimals": %s,', vm.toString(tokenDecimals));
+
+            // Get token symbol safely
+            string memory tokenSymbolValue = "UNKNOWN";
+            try IERC20Metadata(tokenAddress).symbol() returns (string memory symbol) {
+                tokenSymbolValue = symbol;
+            } catch {
+                // Use default if symbol() call fails
+            }
+            console.log('      "tokenSymbol": "%s",', tokenSymbolValue);
+
+            console.log('      "success": %s,', isSuccess ? "true" : "false");
+            console.log('      "failureReason": "%s"', reason);
+            if (i < testCount - 1) {
+                console.log("    },");
+            } else {
+                console.log("    }");
+            }
+        }
+
+        console.log("  ]");
+        console.log("}");
+        console.log("JSON_RESULT_END");
+    }
+
     /**
      * @dev Log trade summary
      */
@@ -309,7 +393,10 @@ contract CoreForkTest is Fork_Test {
         string[] memory successfulTrades,
         string[] memory failedTrades,
         string[] memory failureReasons
-    ) internal view {
+    )
+        internal
+        view
+    {
         if (successCount > 0) {
             console.log("\n--- SUCCESSFUL TRADES ---");
             for (uint256 i = 0; i < successCount; i++) {
@@ -368,33 +455,37 @@ contract CoreForkTest is Fork_Test {
 
     function test_PlaceTradeWithUSDCTokens() public {
         address usdc = getTokenByName("usdc");
-        _testTradesForToken("USDC", usdcPairAddresses, usdc, USDC_WHALE);
+        _testTradesForToken("USDC", usdcPairAddresses, usdc, USDC_WHALE, formatTokenAmount(usdc, 1000));
     }
 
     function test_PlaceTradeWithUSDTTokens() public {
         address usdt = getTokenByName("usdt");
-        _testTradesForToken("USDT", usdtPairAddresses, usdt, USDT_WHALE);
+        _testTradesForToken("USDT", usdtPairAddresses, usdt, USDT_WHALE, formatTokenAmount(usdt, 1000));
     }
 
     function test_PlaceTradeWithWETHTokens() public {
         address weth = getTokenByName("weth");
-        _testTradesForToken("WETH", wethPairAddresses, weth, WETH_WHALE);
+        _testTradesForToken("WETH", wethPairAddresses, weth, WETH_WHALE, 5 * 10 ** 17);
     }
 
     function test_PlaceTradeWithWBTCTokens() public {
         address wbtc = getTokenByName("wbtc");
-        _testTradesForToken("WBTC", wbtcPairAddresses, wbtc, WBTC_WHALE);
+        _testTradesForToken("WBTC", wbtcPairAddresses, wbtc, WBTC_WHALE, 1 * 10 ** 6);
     }
 
     /**
      * @dev Test a specific trade between two tokens
      * Usage: test_TradeSpecificPair("usdc", "uni", 1000)
      */
-    function test_TradeSpecificPair(string memory fromToken, string memory toToken, uint256 readableTokenInAmount)
-        public
-    {
+    function test_TradeSpecificPair_forked(string memory fromToken, string memory toToken) public {
+        fromToken = "weth";
+        toToken = "link";
+        // readableTokenInAmount = 1_000_000_000;
         address fromAddress = getTokenByName(fromToken);
         address toAddress = getTokenByName(toToken);
+
+        uint256 amountIn = formatTokenAmount(fromAddress, 1);
+        console.log("Amount in for token", fromToken, ":", amountIn);
 
         require(fromAddress != address(0), string.concat("From token not found: ", fromToken));
         require(toAddress != address(0), string.concat("To token not found: ", toToken));
@@ -406,24 +497,19 @@ contract CoreForkTest is Fork_Test {
 
         // Determine which whale to use based on fromToken
         address whale = _getWhaleForToken(fromToken);
-        uint256 amountIn = formatTokenAmount(fromAddress, readableTokenInAmount);
+        // uint256 amountIn = formatTokenAmount(fromAddress, readableTokenInAmount);
 
         console.log("Amount in:", amountIn);
         console.log("Using whale:", whale);
 
         // Execute the trade
-        bytes memory tradeData = abi.encode(fromAddress, toAddress, amountIn, 0, false, 0.0005 ether);
-        vm.startPrank(whale);
-        SafeERC20.forceApprove(IERC20(fromAddress), address(core), amountIn);
+        (bool success, string memory reason) = _executeSpecificTrade(fromAddress, toAddress, amountIn, whale);
 
-        try core.placeTrade(tradeData) {
+        if (success) {
             console.log("[SUCCESS] Trade executed successfully!");
-        } catch Error(string memory reason) {
+        } else {
             console.log("[FAILED] Trade failed");
             console.log("Reason:", reason);
-        } catch (bytes memory lowLevelData) {
-            console.log("[FAILED] Trade failed");
-            console.log("Reason:", _bytesToString(lowLevelData));
         }
 
         vm.stopPrank();
@@ -450,7 +536,10 @@ contract CoreForkTest is Fork_Test {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
-    function getAggreateTokenInAmount(address tokenIn, address tokenOut)
+    function getAggreateTokenInAmount(
+        address tokenIn,
+        address tokenOut
+    )
         public
         view
         returns (uint256 aggregateTokenInAmount)
@@ -467,6 +556,213 @@ contract CoreForkTest is Fork_Test {
                 continue;
             }
         }
+    }
+
+    /**
+     * @dev Test a single token trade
+     */
+    function _testSingleToken(
+        string memory tokenSymbol,
+        address tokenAddress,
+        address baseToken,
+        address whaleAddress
+    )
+        internal
+        returns (bool success, string memory failureReason)
+    {
+        string memory tokenName = config.getTokenName(tokenAddress);
+
+        console.log("================================");
+        console.log("Testing token:", tokenName);
+
+        if (tokenAddress != address(0)) {
+            uint256 amountIn = getAggreateTokenInAmount(baseToken, tokenAddress);
+            console.log("Amount in for token", tokenSymbol, ":", amountIn);
+
+            // Skip tokens with no liquidity
+            if (amountIn == 0) {
+                console.log("[SKIPPED]", tokenName, "- No liquidity");
+                return (false, "No liquidity");
+            }
+
+            // Use the same logic as test_TradeSpecificPair_forked
+            (success, failureReason) = _executeSpecificTrade(baseToken, tokenAddress, amountIn, whaleAddress);
+
+            if (success) {
+                console.log("[SUCCESS]", tokenName);
+            } else {
+                console.log("[FAILED]", tokenName);
+                console.log("Reason:", failureReason);
+            }
+        } else {
+            failureReason = "Token address is zero";
+            console.log("[FAILED]", tokenName);
+            console.log("Reason:", failureReason);
+        }
+
+        return (success, failureReason);
+    }
+
+    /**
+     * @dev Test all tokens one by one with console output
+     */
+    function test_AllTokensIndividually() public {
+        address baseToken = getTokenByName("weth"); // Default to WETH
+        address whale = WETH_WHALE;
+
+        console.log("=== TESTING ALL TOKENS INDIVIDUALLY ===");
+        console.log("Base token: WETH");
+        console.log("Whale:", whale);
+        console.log("================================");
+
+        uint256 totalTokens = wethPairAddresses.length;
+        uint256 successCount = 0;
+        uint256 failureCount = 0;
+        uint256 skipCount = 0;
+
+        string[] memory successfulTokens = new string[](totalTokens);
+        string[] memory failedTokens = new string[](totalTokens);
+        string[] memory skippedTokens = new string[](totalTokens);
+
+        for (uint256 i = 0; i < totalTokens; i++) {
+            address tokenAddress = wethPairAddresses[i];
+            string memory tokenName = config.getTokenName(tokenAddress);
+
+            console.log(
+                string.concat(
+                    "\n--- Testing token ", vm.toString(i + 1), "/", vm.toString(totalTokens), ": ", tokenName, " ---"
+                )
+            );
+
+            if (tokenAddress != address(0)) {
+                uint256 amountIn = getAggreateTokenInAmount(baseToken, tokenAddress);
+
+                if (amountIn == 0) {
+                    console.log("SKIPPED - No liquidity");
+                    skippedTokens[skipCount] = tokenName;
+                    skipCount++;
+                    continue;
+                }
+
+                (bool success, string memory reason) = _executeSpecificTrade(baseToken, tokenAddress, amountIn, whale);
+
+                if (success) {
+                    console.log("SUCCESS");
+                    successfulTokens[successCount] = tokenName;
+                    successCount++;
+                } else {
+                    console.log("FAILED -", reason);
+                    failedTokens[failureCount] = tokenName;
+                    failureCount++;
+                }
+            } else {
+                console.log("FAILED - Token address is zero");
+                failedTokens[failureCount] = tokenName;
+                failureCount++;
+            }
+        }
+
+        // Final summary
+        console.log("\n==================================================");
+        console.log("FINAL SUMMARY");
+        console.log("==================================================");
+        console.log("Total tokens tested:", totalTokens);
+        console.log("Successful:", successCount);
+        console.log("Failed:", failureCount);
+        console.log("Skipped:", skipCount);
+
+        if (successCount > 0) {
+            console.log("\nSUCCESSFUL TOKENS:");
+            for (uint256 i = 0; i < successCount; i++) {
+                console.log("  -", successfulTokens[i]);
+            }
+        }
+
+        if (failureCount > 0) {
+            console.log("\nFAILED TOKENS:");
+            for (uint256 i = 0; i < failureCount; i++) {
+                console.log("  -", failedTokens[i]);
+            }
+        }
+
+        if (skipCount > 0) {
+            console.log("\nSKIPPED TOKENS:");
+            for (uint256 i = 0; i < skipCount; i++) {
+                console.log("  -", skippedTokens[i]);
+            }
+        }
+
+        console.log("==================================================");
+    }
+
+    /**
+     * @dev Fuzz test for WETH -> random tokens
+     */
+    function test_FuzzWETHtoRandomTokens(uint256 seed, uint8 maxTests) public {
+        // Limit the number of tests to avoid gas issues
+        maxTests = maxTests > 20 ? 20 : maxTests;
+
+        console.log("=== FUZZ TESTING WETH -> RANDOM TOKENS ===");
+        console.log("Base token: WETH");
+        console.log("Seed:", seed);
+        console.log("Max tests:", maxTests);
+        console.log("================================");
+
+        // WETH is always the source token
+        address baseToken = getTokenByName("weth");
+        address whale = WETH_WHALE;
+
+        // Use seed to generate pseudo-random but deterministic tests
+        uint256 successCount = 0;
+        uint256 failureCount = 0;
+        uint256 skipCount = 0;
+
+        for (uint8 i = 0; i < maxTests; i++) {
+            // Generate pseudo-random index for destination token
+            uint256 randomIndex = uint256(keccak256(abi.encodePacked(seed, i, "random"))) % wethPairAddresses.length;
+
+            address destinationToken = wethPairAddresses[randomIndex];
+            string memory destinationTokenName = config.getTokenName(destinationToken);
+
+            console.log(string.concat("\n--- Fuzz Test ", vm.toString(i + 1), "/", vm.toString(maxTests), " ---"));
+            console.log("Testing: WETH ->", destinationTokenName);
+            console.log("Destination token:", destinationToken);
+
+            if (destinationToken != address(0) && destinationToken != baseToken) {
+                uint256 amountIn = getAggreateTokenInAmount(baseToken, destinationToken);
+
+                if (amountIn == 0) {
+                    console.log("SKIPPED - No liquidity");
+                    skipCount++;
+                    continue;
+                }
+
+                (bool success, string memory reason) =
+                    _executeSpecificTrade(baseToken, destinationToken, amountIn, whale);
+
+                if (success) {
+                    console.log("SUCCESS");
+                    successCount++;
+                } else {
+                    console.log("FAILED -", reason);
+                    failureCount++;
+                }
+            } else {
+                console.log("SKIPPED - Invalid token address or same as base");
+                skipCount++;
+            }
+        }
+
+        // Final summary
+        console.log("\n==================================================");
+        console.log("FUZZ TEST SUMMARY (WETH -> Random)");
+        console.log("==================================================");
+        console.log("Base token: WETH");
+        console.log("Total tests:", maxTests);
+        console.log("Successful:", successCount);
+        console.log("Failed:", failureCount);
+        console.log("Skipped:", skipCount);
+        console.log("==================================================");
     }
 }
 
