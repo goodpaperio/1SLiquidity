@@ -241,124 +241,76 @@ const TradesTable = ({
             )
           : '0'
 
-        // Calculate sum of realisedAmountOut from executions
-        const realisedAmountOutSum = (trade.executions || []).reduce(
-          (sum, execution) => {
-            try {
-              return sum + BigInt(execution.realisedAmountOut || '0')
-            } catch {
-              return sum
-            }
-          },
-          BigInt(0)
-        )
-
-        // Safely convert values to BigInt with fallbacks
-        const safeConvertToBigInt = (
-          value: string | null | undefined,
-          fallback: string = '0'
-        ): bigint => {
-          try {
-            return BigInt(value || fallback)
-          } catch {
-            return BigInt(fallback)
-          }
-        }
-
-        // amountOut: ((targetAmountOut - realisedAmountOut) * (10000 - trade.instasettleBps)) / 10000
-        // amountIn: (amountRemaining * (10000 - NETWORK_FEE) / 1000
-        // effective price = amountOut / amountIn
-
-        // Calculate amountOut
-        const targetAmountOut = trade.minAmountOut
-        const realisedAmountOut = trade.realisedAmountOut
-        const instasettleBps = trade.instasettleBps
-
-        const cost = BigInt(targetAmountOut) - BigInt(realisedAmountOut)
-        const formatCost = tokenOut
-          ? formatUnits(BigInt(cost || '0'), tokenOut.decimals || 18)
+        // Calculate remaining amount out in tokens (what instasettler needs to provide)
+        const remainingAmountOut =
+          BigInt(trade.minAmountOut) - BigInt(trade.realisedAmountOut)
+        const formattedRemainingAmountOut = tokenOut
+          ? formatUnits(remainingAmountOut, tokenOut.decimals || 18)
           : '0'
 
-        let amountOut: bigint
-        try {
-          amountOut =
-            ((BigInt(targetAmountOut) - BigInt(realisedAmountOut)) *
-              (BigInt(10000) - BigInt(instasettleBps))) /
-            BigInt(10000)
+        // Calculate cost in USD (what instasettler needs to pay in tokenOut)
+        const costInUsd =
+          tokenOut && !isNaN(Number(formattedRemainingAmountOut))
+            ? Number(formattedRemainingAmountOut) * (tokenOut.usd_price || 0)
+            : 0
 
-          // Use minAmountOut directly for effective price calculation
-          // amountOut =
-          //   (minAmountOutBN * (BigInt(10000) - instasettleBpsBN)) /
-          //   BigInt(10000)
-        } catch {
-          amountOut = BigInt(0)
-        }
-
-        // Calculate amountIn
-        const amountRemaining = trade.amountRemaining
-
-        let amountIn: bigint
-        // Calculate network fee (15% of amountInUsd)
         // Calculate network fee (15 basis points = 0.15%)
-        const NETWORK_FEE_BPS = BigInt(15) // 15 basis points
+        const NETWORK_FEE_BPS = BigInt(15)
         const networkFee =
           (BigInt(trade.amountIn) * NETWORK_FEE_BPS) / BigInt(10000)
 
+        // Calculate effective price (tokens out per token in ratio)
+        let effectivePriceRatio = 0
         try {
-          amountIn =
-            (BigInt(amountRemaining) * (BigInt(10000) - NETWORK_FEE_BPS)) /
+          const amountInAfterFee =
+            (BigInt(trade.amountRemaining) *
+              (BigInt(10000) - NETWORK_FEE_BPS)) /
             BigInt(10000)
-        } catch {
-          amountIn = BigInt(1) // Use 1 to avoid division by zero
-        }
 
-        // Calculate effective price - convert to proper decimals before division
-        let effectivePrice = 0
-        try {
-          if (amountIn > BigInt(0)) {
-            // Convert amounts to proper decimal representation before division
-            const tokenOutDecimals = tokenOut?.decimals || 6 // Default to 6 for USDC
-            const tokenInDecimals = tokenIn?.decimals || 18 // Default to 18 for ETH
+          const amountOutAfterDiscount =
+            (remainingAmountOut *
+              (BigInt(10000) - BigInt(trade.instasettleBps))) /
+            BigInt(10000)
+
+          if (amountInAfterFee > BigInt(0)) {
+            const tokenOutDecimals = tokenOut?.decimals || 18
+            const tokenInDecimals = tokenIn?.decimals || 18
 
             const amountOutFloat =
-              Number(amountOut) / Math.pow(10, tokenOutDecimals)
+              Number(amountOutAfterDiscount) / Math.pow(10, tokenOutDecimals)
             const amountInFloat =
-              Number(amountIn) / Math.pow(10, tokenInDecimals)
+              Number(amountInAfterFee) / Math.pow(10, tokenInDecimals)
 
-            effectivePrice = amountOutFloat / amountInFloat
+            effectivePriceRatio = amountOutFloat / amountInFloat
           }
         } catch {
-          effectivePrice = 0
+          effectivePriceRatio = 0
         }
 
-        // Calculate savings
-        let savings = 0
-        try {
-          // Convert formattedAmountRemaining to the same decimal basis as effectivePrice
-          const volume = Number(formattedAmountRemaining)
+        // Calculate what instasettler receives in USD (tokenIn amount)
+        const receivesInUsd =
+          tokenIn && !isNaN(Number(formattedAmountRemaining))
+            ? Number(formattedAmountRemaining) * (tokenIn.usd_price || 0)
+            : 0
 
-          // Both effectivePrice and volume are now in the same decimal basis
-          savings = effectivePrice - volume
-
-          // Ensure savings is not negative and is finite
-          savings = isFinite(savings) ? Math.max(0, savings) : 0
-        } catch (error) {
-          console.error('Error calculating savings:', error)
-          savings = 0
-        }
+        // Calculate savings in USD (discount from instasettleBps)
+        const savingsInUsd =
+          (receivesInUsd * Number(trade.instasettleBps)) / 10000
 
         // Update trade object with calculated values
         return {
           ...trade,
-          amountOut: Number(amountOut),
-          effectivePrice: isFinite(effectivePrice) ? effectivePrice : 0,
+          amountOut: Number(remainingAmountOut),
+          effectivePrice: isFinite(effectivePriceRatio)
+            ? effectivePriceRatio
+            : 0,
           networkFee: isFinite(Number(networkFee)) ? Number(networkFee) : 0,
           amountInUsd: isFinite(amountInUsd) ? amountInUsd : 0,
           tokenInDetails: tokenIn || null,
           tokenOutDetails: tokenOut || null,
           formattedAmountRemaining: formattedAmountRemaining,
-          cost: Number(formatCost),
-          savings: isFinite(savings) ? savings : 0,
+          cost: isFinite(costInUsd) ? costInUsd : 0,
+          savings: isFinite(savingsInUsd) ? savingsInUsd : 0,
         }
       } catch (error) {
         console.error('Error processing trade:', error)
@@ -598,15 +550,19 @@ const TradesTable = ({
       </div>
 
       <ScrollArea className="w-full whitespace-nowrap">
-        <Table className="">
+        <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">Token Pair</TableHead>
-              <TableHead></TableHead>
-              <TableHead className="text-center">Cost</TableHead>
-              <TableHead className="text-center">Volume</TableHead>
+              <TableHead className="text-center min-w-[120px]">
+                Token Pair
+              </TableHead>
+              <TableHead className="min-w-[110px]"></TableHead>
+              <TableHead className="text-center min-w-[120px]">Cost</TableHead>
+              <TableHead className="text-center min-w-[120px]">
+                Volume
+              </TableHead>
               <TableHead
-                className="text-center cursor-pointer group"
+                className="text-center cursor-pointer group min-w-[140px]"
                 // onClick={() => handleSort('output')}
               >
                 <div className="flex items-center justify-center">
@@ -618,7 +574,7 @@ const TradesTable = ({
                 </div>
               </TableHead>
               <TableHead
-                className="text-center cursor-pointer group"
+                className="text-center cursor-pointer group min-w-[120px]"
                 // onClick={() => handleSort('streams')}
               >
                 <div className="flex items-center justify-center">
@@ -630,7 +586,7 @@ const TradesTable = ({
                 </div>
               </TableHead>
               <TableHead
-                className="text-center cursor-pointer group"
+                className="text-center cursor-pointer group min-w-[70px]"
                 // onClick={() => handleSort('volume')}
               >
                 <div className="flex items-center justify-center">
@@ -642,7 +598,7 @@ const TradesTable = ({
                 </div>
               </TableHead>
               <TableHead
-                className="text-center cursor-pointer group"
+                className="text-center cursor-pointer group min-w-[90px]"
                 // onClick={() => handleSort('timestamp')}
               >
                 <div className="flex items-center justify-center">
@@ -653,7 +609,7 @@ const TradesTable = ({
                   />
                 </div>
               </TableHead>
-              <TableHead className="text-center"></TableHead>
+              <TableHead className="text-center min-w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -701,8 +657,8 @@ const TradesTable = ({
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium text-center">
-                      <div className="flex items-center justify-between">
+                    <TableCell className="font-medium text-center min-w-[120px]">
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <ImageFallback
                             src={
@@ -731,7 +687,7 @@ const TradesTable = ({
                           width={24}
                           height={24}
                           alt="to"
-                          className="w-4 h-4 mx-2"
+                          className="w-4 h-4 flex-shrink-0"
                         />
                         <div className="flex items-center gap-2">
                           <ImageFallback
@@ -773,16 +729,62 @@ const TradesTable = ({
                       />
                     </TableCell>
                     <TableCell className="text-center">
-                      ${item.cost.toFixed(2)}
+                      <div className="flex flex-col items-center">
+                        <span>
+                          {Number(
+                            formatUnits(
+                              BigInt(item.minAmountOut) -
+                                BigInt(item.realisedAmountOut),
+                              item.tokenOutDetails?.decimals || 18
+                            )
+                          ).toFixed(4)}{' '}
+                          {item.tokenOutDetails?.symbol || 'N/A'}
+                        </span>
+                        <span className="text-white52 text-xs">
+                          (${item.cost.toFixed(2)})
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {item.formattedAmountRemaining}
+                      <div className="flex flex-col items-center">
+                        <span>
+                          {Number(item.formattedAmountRemaining).toFixed(4)}{' '}
+                          {item.tokenInDetails?.symbol || 'N/A'}
+                        </span>
+                        <span className="text-white52 text-xs">
+                          ($
+                          {(
+                            Number(item.formattedAmountRemaining) *
+                            (item.tokenInDetails?.usd_price || 0)
+                          ).toFixed(2)}
+                          )
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      ${item.effectivePrice?.toFixed(2)}
+                      <div className="flex flex-col items-center">
+                        <span>
+                          {item.effectivePrice?.toFixed(2)}{' '}
+                          {item.tokenOutDetails?.symbol || 'N/A'}
+                        </span>
+                        <span className="text-white52 text-xs">(Ratio)</span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      ${item.savings?.toFixed(2)}
+                      <div className="flex flex-col items-center">
+                        <span>
+                          {(
+                            (Number(item.formattedAmountRemaining) *
+                              (item.tokenInDetails?.usd_price || 0) *
+                              Number(item.instasettleBps)) /
+                            10000
+                          ).toFixed(4)}{' '}
+                          {item.tokenInDetails?.symbol || 'N/A'}
+                        </span>
+                        <span className="text-white52 text-xs">
+                          (${item.savings?.toFixed(2)})
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       {item.instasettleBps || '0'}
