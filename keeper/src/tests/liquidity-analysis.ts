@@ -96,23 +96,23 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-      'reservesAUniswapV2',
-      'reservesASushiswap',
-      'reservesACurve',
-      'reservesABalancer',
-      'reservesAUniswapV3_500',
-      'reservesAUniswapV3_3000',
-      'reservesAUniswapV3_10000',
-    ]
+        'reservesAUniswapV2',
+        'reservesASushiswap',
+        'reservesACurve',
+        'reservesABalancer',
+        'reservesAUniswapV3_500',
+        'reservesAUniswapV3_3000',
+        'reservesAUniswapV3_10000',
+      ]
     : [
-      'reservesBUniswapV2',
-      'reservesBSushiswap',
-      'reservesBCurve',
-      'reservesBBalancer',
-      'reservesBUniswapV3_500',
-      'reservesBUniswapV3_3000',
-      'reservesBUniswapV3_10000',
-    ]
+        'reservesBUniswapV2',
+        'reservesBSushiswap',
+        'reservesBCurve',
+        'reservesBBalancer',
+        'reservesBUniswapV3_500',
+        'reservesBUniswapV3_3000',
+        'reservesBUniswapV3_10000',
+      ]
 
   let totalWei = BigInt(0)
 
@@ -515,7 +515,8 @@ async function fetchTopTokensByMarketCap(
     })
 
     console.log(
-      `Filtered ${enrichedTokens.length - erc20Tokens.length
+      `Filtered ${
+        enrichedTokens.length - erc20Tokens.length
       } non-ERC20 tokens out of ${enrichedTokens.length} total tokens`
     )
 
@@ -728,7 +729,13 @@ async function getAllReservesForPair(
         }
 
         results.push(liquidityResult)
-        console.log(`      Found ${dex.name} liquidity${reserves.pairAddress ? ` (Pool Address: ${reserves.pairAddress})` : ''}`)
+        console.log(
+          `      Found ${dex.name} liquidity${
+            reserves.pairAddress
+              ? ` (Pool Address: ${reserves.pairAddress})`
+              : ''
+          }`
+        )
       }
     } catch (error) {
       console.warn(`      Error getting reserves from ${dex.name}:`, error)
@@ -788,58 +795,58 @@ async function saveTokenToJson(
 }
 
 // Database saving function - transforms row-based data to column-based format with upsert functionality
-// async function saveToDatabase(
-//   results: TokenLiquiditySummary[],
-//   timestamp: string
-// ): Promise<void> {
-//   console.log('\nSaving liquidity data to database...')
+async function saveToDatabase(
+  results: TokenLiquiditySummary[],
+  timestamp: string
+): Promise<void> {
+  console.log('\nSaving liquidity data to database...')
 
-//   const dbService = DatabaseService.getInstance()
+  const dbService = DatabaseService.getInstance()
 
-//   try {
-//     await dbService.connect()
+  try {
+    await dbService.connect()
 
-//     // Transform data from row-based (one row per DEX) to column-based (one row per token pair)
-//     const transformedData = await transformToColumnFormat(results, timestamp)
+    // Transform data from row-based (one row per DEX) to column-based (one row per token pair)
+    const transformedData = await transformToColumnFormat(results, timestamp)
 
-//     console.log('transformedData =====>', transformedData)
-//     console.log(
-//       `📊 Transformed ${results.length} token summaries into ${transformedData.length} database records`
-//     )
+    console.log('transformedData =====>', transformedData)
+    console.log(
+      `📊 Transformed ${results.length} token summaries into ${transformedData.length} database records`
+    )
 
-//     // Save data in batches with upsert functionality
-//     const batchSize = 50
-//     let saved = 0
+    // Save data in batches with upsert functionality
+    const batchSize = 50
+    let saved = 0
 
-//     for (let i = 0; i < transformedData.length; i += batchSize) {
-//       const batch = transformedData.slice(i, i + batchSize)
+    for (let i = 0; i < transformedData.length; i += batchSize) {
+      const batch = transformedData.slice(i, i + batchSize)
 
-//       console.log(
-//         `💾 Saving batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
-//           transformedData.length / batchSize
-//         )} (${batch.length} records)`
-//       )
+      console.log(
+        `💾 Saving batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+          transformedData.length / batchSize
+        )} (${batch.length} records)`
+      )
 
-//       // Use upsert functionality to update existing records or create new ones
-//       await dbService.upsertBatchLiquidityData(batch)
-//       saved += batch.length
+      // Use upsert functionality to update existing records or create new ones
+      await dbService.upsertBatchLiquidityData(batch)
+      saved += batch.length
 
-//       // Small delay between batches
-//       if (i + batchSize < transformedData.length) {
-//         await new Promise((resolve) => setTimeout(resolve, 100))
-//       }
-//     }
+      // Small delay between batches
+      if (i + batchSize < transformedData.length) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+    }
 
-//     console.log(
-//       `✅ Successfully upserted ${saved} liquidity records to database`
-//     )
-//   } catch (error) {
-//     console.error('❌ Error saving to database:', error)
-//     throw error
-//   } finally {
-//     await dbService.disconnect()
-//   }
-// }
+    console.log(
+      `✅ Successfully upserted ${saved} liquidity records to database`
+    )
+  } catch (error) {
+    console.error('❌ Error saving to database:', error)
+    throw error
+  } finally {
+    await dbService.disconnect()
+  }
+}
 
 // Transform the liquidity data from row-based format to column-based format for database
 async function transformToColumnFormat(
@@ -1157,21 +1164,31 @@ async function transformToColumnFormat(
     record.highestLiquidityADex = highestLiquidityADex
 
     // Calculate slippage savings
-    const { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA } = sweetSpot
+    const {
+      slippageSavings,
+      percentageSavings,
+      priceAccuracyNODECA,
+      priceAccuracyDECA,
+    } = sweetSpot
       ? await calculateSlippageSavings(
-        BigInt(record.reserveAtotaldepthWei), // Total reserves A
-        highestLiquidityADex, // Best DEX name
-        feeTier, // Fee tier
-        BigInt(highestLiquidityAReserve), // BEST DEX reserves A
-        BigInt(highestLiquidityBReserve), // BEST DEX reserves B
-        record.tokenADecimals,
-        record.tokenBDecimals,
-        record.tokenAAddress,
-        record.tokenBAddress,
-        sweetSpot,
-        bestDexPairAddress
-      )
-      : { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
+          BigInt(record.reserveAtotaldepthWei), // Total reserves A
+          highestLiquidityADex, // Best DEX name
+          feeTier, // Fee tier
+          BigInt(highestLiquidityAReserve), // BEST DEX reserves A
+          BigInt(highestLiquidityBReserve), // BEST DEX reserves B
+          record.tokenADecimals,
+          record.tokenBDecimals,
+          record.tokenAAddress,
+          record.tokenBAddress,
+          sweetSpot,
+          bestDexPairAddress
+        )
+      : {
+          slippageSavings: 0,
+          percentageSavings: 0,
+          priceAccuracyNODECA: 0,
+          priceAccuracyDECA: 0,
+        }
 
     console.log('==========')
     console.log('slippageSavings =====>', slippageSavings)
@@ -1192,7 +1209,8 @@ async function transformToColumnFormat(
     `📋 Grouped ${results.reduce(
       (sum, r) => sum + r.liquidityPairs.length,
       0
-    )} individual DEX pairs into ${transformedRecords.length
+    )} individual DEX pairs into ${
+      transformedRecords.length
     } token pair records with total depth calculations`
   )
 
@@ -1279,10 +1297,10 @@ export async function calculateSlippageSavings(
   sweetSpot: number,
   pairAddress?: string
 ): Promise<{
-  slippageSavings: number;
-  percentageSavings: number;
-  priceAccuracyNODECA: number;
-  priceAccuracyDECA: number;
+  slippageSavings: number
+  percentageSavings: number
+  priceAccuracyNODECA: number
+  priceAccuracyDECA: number
 }> {
   try {
     console.log('==========Calculating Slippage Savings==========')
@@ -1325,10 +1343,7 @@ export async function calculateSlippageSavings(
       const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
       console.log('amountOut =====>', amountOut)
-      console.log(
-        'amountOutInETH (tokenOutNODECA) =====>',
-        amountOutInETH
-      )
+      console.log('amountOutInETH (tokenOutNODECA) =====>', amountOutInETH)
 
       console.log(
         'tradeVolume / sweetSpot =====>',
@@ -1341,7 +1356,8 @@ export async function calculateSlippageSavings(
         reserveA,
         reserveB
       )
-      const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+      const sweetSpotAmountOutInETH =
+        Number(sweetSpotAmountOut) / 10 ** decimalsB
       // Scale up the sweet spot quote (tokenOutDECA)
       const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
 
@@ -1367,7 +1383,8 @@ export async function calculateSlippageSavings(
       console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
       // Get effective price (DECA): tokenOutDECA / LiqT
-      const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+      const realisedPriceDECA =
+        scaledSweetSpotAmountOutInETH / scaledTradeVolume
       console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
       const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
@@ -1376,7 +1393,12 @@ export async function calculateSlippageSavings(
       console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
       console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
-      return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
+      return {
+        slippageSavings,
+        percentageSavings,
+        priceAccuracyNODECA,
+        priceAccuracyDECA,
+      }
     }
 
     if (dex === 'sushiswap') {
@@ -1395,10 +1417,7 @@ export async function calculateSlippageSavings(
       const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
       console.log('amountOut =====>', amountOut)
-      console.log(
-        'amountOutInETH (tokenOutNODECA) =====>',
-        amountOutInETH
-      )
+      console.log('amountOutInETH (tokenOutNODECA) =====>', amountOutInETH)
 
       console.log(
         'tradeVolume / sweetSpot =====>',
@@ -1411,7 +1430,8 @@ export async function calculateSlippageSavings(
         reserveA,
         reserveB
       )
-      const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+      const sweetSpotAmountOutInETH =
+        Number(sweetSpotAmountOut) / 10 ** decimalsB
       // Scale up the sweet spot quote (tokenOutDECA)
       const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
 
@@ -1437,7 +1457,8 @@ export async function calculateSlippageSavings(
       console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
       // Get effective price (DECA)
-      const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+      const realisedPriceDECA =
+        scaledSweetSpotAmountOutInETH / scaledTradeVolume
       console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
       const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
@@ -1446,7 +1467,12 @@ export async function calculateSlippageSavings(
       console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
       console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
-      return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
+      return {
+        slippageSavings,
+        percentageSavings,
+        priceAccuracyNODECA,
+        priceAccuracyDECA,
+      }
     }
 
     if (dex.startsWith('uniswap-v3')) {
@@ -1474,10 +1500,7 @@ export async function calculateSlippageSavings(
       const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
       console.log('amountOut =====>', amountOut)
-      console.log(
-        'amountOutInETH (tokenOutNODECA) =====>',
-        amountOutInETH
-      )
+      console.log('amountOutInETH (tokenOutNODECA) =====>', amountOutInETH)
 
       console.log(
         'tradeVolume / sweetSpot =====>',
@@ -1499,7 +1522,8 @@ export async function calculateSlippageSavings(
         'quoteExactInputSingle',
         sweetSpotResult
       )[0]
-      const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+      const sweetSpotAmountOutInETH =
+        Number(sweetSpotAmountOut) / 10 ** decimalsB
       const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
 
       console.log('sweetSpotAmountOut =====>', sweetSpotAmountOut)
@@ -1524,7 +1548,8 @@ export async function calculateSlippageSavings(
       console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
       // Get effective price (DECA)
-      const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+      const realisedPriceDECA =
+        scaledSweetSpotAmountOutInETH / scaledTradeVolume
       console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
       const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
@@ -1533,11 +1558,15 @@ export async function calculateSlippageSavings(
       console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
       console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
-      return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
+      return {
+        slippageSavings,
+        percentageSavings,
+        priceAccuracyNODECA,
+        priceAccuracyDECA,
+      }
     }
 
     if (dex.startsWith('balancer-') || dex === 'balancer') {
-
       try {
         const vault = new ethers.Contract(
           CONTRACT_ADDRESSES.BALANCER.VAULT,
@@ -1554,7 +1583,9 @@ export async function calculateSlippageSavings(
           console.log('BALANCER PAIR ADDRESS', pairAddress)
 
           // Get pool tokens to find correct indices
-          const [tokens, balances, lastChangeBlock] = await vault.getPoolTokens(pairAddress)
+          const [tokens, balances, lastChangeBlock] = await vault.getPoolTokens(
+            pairAddress
+          )
 
           // Find token indices in the pool
           const tokenInIndex = tokens.findIndex(
@@ -1565,7 +1596,9 @@ export async function calculateSlippageSavings(
           )
 
           if (tokenInIndex === -1 || tokenOutIndex === -1) {
-            throw new Error(`Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`)
+            throw new Error(
+              `Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`
+            )
           }
 
           console.log('Token indices:', { tokenInIndex, tokenOutIndex, tokens })
@@ -1576,8 +1609,8 @@ export async function calculateSlippageSavings(
               assetInIndex: tokenInIndex,
               assetOutIndex: tokenOutIndex,
               amount: amountIn.toString(),
-              userData: "0x"
-            }
+              userData: '0x',
+            },
           ]
 
           const assets = [tokenIn, tokenOut]
@@ -1586,7 +1619,7 @@ export async function calculateSlippageSavings(
             sender: ethers.ZeroAddress,
             fromInternalBalance: false,
             recipient: ethers.ZeroAddress,
-            toInternalBalance: false
+            toInternalBalance: false,
           }
 
           // Encode the function call data
@@ -1616,10 +1649,7 @@ export async function calculateSlippageSavings(
         const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
         console.log('amountOut =====>', amountOut)
-        console.log(
-          'amountOutInETH (tokenOutNODECA) =====>',
-          amountOutInETH
-        )
+        console.log('amountOutInETH (tokenOutNODECA) =====>', amountOutInETH)
 
         console.log(
           'tradeVolume / sweetSpot =====>',
@@ -1627,10 +1657,14 @@ export async function calculateSlippageSavings(
         )
 
         // Get quote for (tradeVolume / sweetSpot)
-        const sweetSpotAmountOut = await getQuote(tradeVolume / BigInt(sweetSpot))
-        const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+        const sweetSpotAmountOut = await getQuote(
+          tradeVolume / BigInt(sweetSpot)
+        )
+        const sweetSpotAmountOutInETH =
+          Number(sweetSpotAmountOut) / 10 ** decimalsB
         // Scale up the sweet spot quote (tokenOutDECA)
-        const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
+        const scaledSweetSpotAmountOutInETH =
+          sweetSpotAmountOutInETH * sweetSpot
 
         console.log('sweetSpotAmountOut =====>', sweetSpotAmountOut)
         console.log('sweetSpotAmountOutInETH =====>', sweetSpotAmountOutInETH)
@@ -1654,7 +1688,8 @@ export async function calculateSlippageSavings(
         console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
         // Get effective price (DECA): tokenOutDECA / LiqT
-        const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+        const realisedPriceDECA =
+          scaledSweetSpotAmountOutInETH / scaledTradeVolume
         console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
         const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
@@ -1663,12 +1698,20 @@ export async function calculateSlippageSavings(
         console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
         console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
-        return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
-
-
+        return {
+          slippageSavings,
+          percentageSavings,
+          priceAccuracyNODECA,
+          priceAccuracyDECA,
+        }
       } catch (error) {
         console.error('Error in Balancer calculation:', error)
-        return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
+        return {
+          slippageSavings: 0,
+          percentageSavings: 0,
+          priceAccuracyNODECA: 0,
+          priceAccuracyDECA: 0,
+        }
       }
     }
 
@@ -1693,14 +1736,25 @@ export async function calculateSlippageSavings(
         async function getCurveQuote(amountIn: bigint) {
           // Get pool information
           const [coins, balances, isMeta] = await Promise.all([
-            poolContract.coins(0).then(() => poolContract.coins(1)).then(() =>
-              Promise.all([poolContract.coins(0), poolContract.coins(1)])
-            ).catch(() => null),
-            poolContract.balances(0).then(() => poolContract.balances(1)).then(() =>
-              Promise.all([poolContract.balances(0), poolContract.balances(1)])
-            ).catch(() => null),
+            poolContract
+              .coins(0)
+              .then(() => poolContract.coins(1))
+              .then(() =>
+                Promise.all([poolContract.coins(0), poolContract.coins(1)])
+              )
+              .catch(() => null),
+            poolContract
+              .balances(0)
+              .then(() => poolContract.balances(1))
+              .then(() =>
+                Promise.all([
+                  poolContract.balances(0),
+                  poolContract.balances(1),
+                ])
+              )
+              .catch(() => null),
             // Try to call is_meta, fallback to false if not available
-            poolContract.is_meta().catch(() => false)
+            poolContract.is_meta().catch(() => false),
           ])
 
           if (!coins || !balances) {
@@ -1720,7 +1774,9 @@ export async function calculateSlippageSavings(
           )
 
           if (tokenInIndex === -1 || tokenOutIndex === -1) {
-            throw new Error(`Tokens not found in Curve pool: ${tokenIn}, ${tokenOut}`)
+            throw new Error(
+              `Tokens not found in Curve pool: ${tokenIn}, ${tokenOut}`
+            )
           }
 
           console.log('Curve token indices:', { tokenInIndex, tokenOutIndex })
@@ -1765,10 +1821,7 @@ export async function calculateSlippageSavings(
         const amountOutInETH = Number(amountOut) / 10 ** decimalsB
 
         console.log('amountOut =====>', amountOut)
-        console.log(
-          'amountOutInETH (tokenOutNODECA) =====>',
-          amountOutInETH
-        )
+        console.log('amountOutInETH (tokenOutNODECA) =====>', amountOutInETH)
 
         console.log(
           'tradeVolume / sweetSpot =====>',
@@ -1776,10 +1829,14 @@ export async function calculateSlippageSavings(
         )
 
         // Get quote for (tradeVolume / sweetSpot)
-        const sweetSpotAmountOut = await getCurveQuote(tradeVolume / BigInt(sweetSpot))
-        const sweetSpotAmountOutInETH = Number(sweetSpotAmountOut) / 10 ** decimalsB
+        const sweetSpotAmountOut = await getCurveQuote(
+          tradeVolume / BigInt(sweetSpot)
+        )
+        const sweetSpotAmountOutInETH =
+          Number(sweetSpotAmountOut) / 10 ** decimalsB
         // Scale up the sweet spot quote (tokenOutDECA)
-        const scaledSweetSpotAmountOutInETH = sweetSpotAmountOutInETH * sweetSpot
+        const scaledSweetSpotAmountOutInETH =
+          sweetSpotAmountOutInETH * sweetSpot
 
         console.log('sweetSpotAmountOut =====>', sweetSpotAmountOut)
         console.log('sweetSpotAmountOutInETH =====>', sweetSpotAmountOutInETH)
@@ -1803,7 +1860,8 @@ export async function calculateSlippageSavings(
         console.log('realisedPriceNODECA =====>', realisedPriceNODECA)
 
         // Get effective price (DECA): tokenOutDECA / LiqT
-        const realisedPriceDECA = scaledSweetSpotAmountOutInETH / scaledTradeVolume
+        const realisedPriceDECA =
+          scaledSweetSpotAmountOutInETH / scaledTradeVolume
         console.log('realisedPriceDECA =====>', realisedPriceDECA)
 
         const priceAccuracyNODECA = realisedPriceNODECA / observedPrice
@@ -1812,19 +1870,38 @@ export async function calculateSlippageSavings(
         console.log('priceAccuracyNODECA =====>', priceAccuracyNODECA)
         console.log('priceAccuracyDECA =====>', priceAccuracyDECA)
 
-        return { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA }
-
+        return {
+          slippageSavings,
+          percentageSavings,
+          priceAccuracyNODECA,
+          priceAccuracyDECA,
+        }
       } catch (error) {
         console.error('Error in Curve calculation:', error)
-        return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
+        return {
+          slippageSavings: 0,
+          percentageSavings: 0,
+          priceAccuracyNODECA: 0,
+          priceAccuracyDECA: 0,
+        }
       }
     }
 
     console.log(`Slippage calculation not implemented for DEX: ${dex}`)
-    return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
+    return {
+      slippageSavings: 0,
+      percentageSavings: 0,
+      priceAccuracyNODECA: 0,
+      priceAccuracyDECA: 0,
+    }
   } catch (error) {
     console.error('Error calculating slippage savings:', error)
-    return { slippageSavings: 0, percentageSavings: 0, priceAccuracyNODECA: 0, priceAccuracyDECA: 0 }
+    return {
+      slippageSavings: 0,
+      percentageSavings: 0,
+      priceAccuracyNODECA: 0,
+      priceAccuracyDECA: 0,
+    }
   }
 }
 
@@ -1870,7 +1947,8 @@ async function runLiquidityAnalysisFromJson(
     for (let i = 0; i < totalPairs; i++) {
       const pair = tokenPairs[i]
       console.log(
-        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${pair.tokenSymbol
+        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${
+          pair.tokenSymbol
         }...`
       )
 
@@ -1902,19 +1980,19 @@ async function runLiquidityAnalysisFromJson(
     )
 
     // // Save data to database
-    // if (process.env.DATABASE_URL) {
-    //   try {
-    //     await saveToDatabase(existingData, timestamp)
-    //   } catch (error) {
-    //     console.error(
-    //       '⚠️  Failed to save to database, but analysis completed:',
-    //       error
-    //     )
-    //     // Don't throw error to avoid failing the entire analysis
-    //   }
-    // } else {
-    //   console.log('💡 DATABASE_URL not configured, skipping database save')
-    // }
+    if (process.env.DATABASE_URL) {
+      try {
+        await saveToDatabase(existingData, timestamp)
+      } catch (error) {
+        console.error(
+          '⚠️  Failed to save to database, but analysis completed:',
+          error
+        )
+        // Don't throw error to avoid failing the entire analysis
+      }
+    } else {
+      console.log('💡 DATABASE_URL not configured, skipping database save')
+    }
 
     // Print summary
     console.log('\n=== SUMMARY ===')
@@ -2055,7 +2133,8 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
     for (let i = 0; i < actualTokensToProcess; i++) {
       const token = tokensToProcess[i]
       console.log(
-        `\n[${i + 1}/${actualTokensToProcess}] Processing ${token.symbol
+        `\n[${i + 1}/${actualTokensToProcess}] Processing ${
+          token.symbol
         } (Market Cap: $${token.market_cap.toLocaleString()})...`
       )
 
@@ -2081,19 +2160,19 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
     )
 
     // // Save data to database
-    // if (process.env.DATABASE_URL) {
-    //   try {
-    //     await saveToDatabase(existingData, timestamp)
-    //   } catch (error) {
-    //     console.error(
-    //       '⚠️  Failed to save to database, but analysis completed:',
-    //       error
-    //     )
-    //     // Don't throw error to avoid failing the entire analysis
-    //   }
-    // } else {
-    //   console.log('💡 DATABASE_URL not configured, skipping database save')
-    // }
+    if (process.env.DATABASE_URL) {
+      try {
+        await saveToDatabase(existingData, timestamp)
+      } catch (error) {
+        console.error(
+          '⚠️  Failed to save to database, but analysis completed:',
+          error
+        )
+        // Don't throw error to avoid failing the entire analysis
+      }
+    } else {
+      console.log('💡 DATABASE_URL not configured, skipping database save')
+    }
 
     // Print summary
     console.log('\n=== SUMMARY ===')
@@ -2343,20 +2422,24 @@ export async function analyzeTokenPairLiquidityComprehensive(
     )
 
     console.log(`Sweet spot: ${sweetSpot} streams`)
-    const { slippageSavings, percentageSavings, priceAccuracyNODECA, priceAccuracyDECA } =
-      await calculateSlippageSavings(
-        totalReservesA,
-        bestDex.name,
-        feeTier,
-        BigInt(bestDex.reserves.tokenA),
-        BigInt(bestDex.reserves.tokenB),
-        tokenAInfo.decimals,
-        tokenBInfo.decimals,
-        tokenAAddress,
-        tokenBAddress,
-        sweetSpot,
-        bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
-      )
+    const {
+      slippageSavings,
+      percentageSavings,
+      priceAccuracyNODECA,
+      priceAccuracyDECA,
+    } = await calculateSlippageSavings(
+      totalReservesA,
+      bestDex.name,
+      feeTier,
+      BigInt(bestDex.reserves.tokenA),
+      BigInt(bestDex.reserves.tokenB),
+      tokenAInfo.decimals,
+      tokenBInfo.decimals,
+      tokenAAddress,
+      tokenBAddress,
+      sweetSpot,
+      bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
+    )
 
     // Calculate summary statistics
     const totalLiquidityUSD = dexResults.reduce(
@@ -2417,8 +2500,10 @@ export async function analyzeTokenPairLiquidityComprehensive(
     console.log(`\nDEX Analysis:`)
     dexResults.forEach((dex) => {
       console.log(
-        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${tokenAInfo.symbol
-        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${tokenBInfo.symbol
+        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${
+          tokenAInfo.symbol
+        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${
+          tokenBInfo.symbol
         } (Total: ${dex.totalLiquidity.toFixed(6)})`
       )
     })
