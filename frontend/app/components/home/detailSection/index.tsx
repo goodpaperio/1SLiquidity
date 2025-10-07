@@ -6,6 +6,8 @@ import { formatEther } from 'ethers/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import DexSummary from './DexSummary'
 import { formatNumberSmart } from '@/app/lib/utils/number'
+import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import NetworkFee from '../../shared/NetworkFee'
 
 interface DetailSectionProps {
   sellAmount?: string
@@ -43,6 +45,14 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   usePriceBased = true,
 }) => {
   const [showDetails, setShowDetails] = useState(true)
+  const { contractInfo, getContractInfo } = useCoreTrading()
+
+  // Fetch contract info on component mount if not already available
+  useEffect(() => {
+    if (!contractInfo) {
+      getContractInfo()
+    }
+  }, [contractInfo, getContractInfo])
 
   const toggleDetails = () => setShowDetails(!showDetails)
 
@@ -225,6 +235,13 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             amount={isCalculating ? undefined : formatSlippageSavings()}
             infoDetail="Estimated"
             isLoading={isCalculating}
+          />
+          <NetworkFee
+            buyAmount={buyAmount}
+            tokenToUsdPrice={tokenToUsdPrice}
+            tokenToSymbol={tokenToSymbol}
+            contractInfo={contractInfo}
+            isCalculating={isCalculating}
           />
           {/* <AmountTag
             title="Price Impact"

@@ -52,7 +52,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
 
   // Fetch trades data with Apollo's 30s polling
   const { trades, isLoading, error, isRefetching } = useTrades({
-    first: 10,
+    first: 100,
     skip: 0,
   })
 

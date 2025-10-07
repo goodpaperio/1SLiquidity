@@ -946,6 +946,41 @@ export const useCoreTrading = () => {
     [getContract, getTrade]
   )
 
+  const getTradeInfo = useCallback(
+    async (tradeId: number): Promise<TradeData | null> => {
+      try {
+        const contract = getContract()
+        const trade = await contract.getTrade(tradeId)
+
+        const remainingAmountOut = trade.targetAmountOut.sub(
+          trade.realisedAmountOut
+        )
+        const settlerPayment = remainingAmountOut
+          .mul(10000 - trade.instasettleBps)
+          .div(10000)
+
+        const instasettleProtocolFeeBps =
+          await contract.instasettleProtocolFeeBps()
+        const protocolFee = settlerPayment
+          .mul(instasettleProtocolFeeBps)
+          .div(10000)
+
+        return {
+          ...trade,
+          settlerPayment: settlerPayment,
+          protocolFee: protocolFee,
+        }
+      } catch (error: any) {
+        console.error('Error getting trade info:', error)
+        toast.error(
+          `Failed to get trade info: ${error.reason || error.message}`
+        )
+        return null
+      }
+    },
+    [getContract]
+  )
+
   return {
     // State
     loading,
@@ -960,6 +995,7 @@ export const useCoreTrading = () => {
     instasettle,
     getTradesByPair,
     placeTradeDummy,
+    getTradeInfo,
 
     // Helper functions (exported in case needed)
     getTokenDecimals,

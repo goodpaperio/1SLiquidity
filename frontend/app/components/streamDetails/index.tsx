@@ -19,8 +19,9 @@ import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { formatNumberSmart } from '@/app/lib/utils/number'
+import { useEffect, useState } from 'react'
+import NetworkFee from '../shared/NetworkFee'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
-import { useState } from 'react'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -44,9 +45,23 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   walletAddress,
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
-  const { placeTrade, loading, instasettle, cancelTrade } = useCoreTrading()
+  const {
+    placeTrade,
+    loading,
+    instasettle,
+    cancelTrade,
+    contractInfo,
+    getContractInfo,
+  } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
   const [showCompleted, setShowCompleted] = useState(true)
+
+  // Fetch contract info on component mount if not already available
+  useEffect(() => {
+    if (!contractInfo) {
+      getContractInfo()
+    }
+  }, [contractInfo, getContractInfo])
 
   if (!selectedStream) {
     return null
@@ -129,26 +144,28 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   // Format execution amounts and calculate their times
   const formattedExecutions =
-    selectedStream.executions?.map((execution) => ({
-      sell: {
-        amount: Number(
-          formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
-        ),
-        token: tokenIn?.symbol || '',
-      },
-      buy: {
-        amount: Number(
-          formatUnits(
-            BigInt(execution.realisedAmountOut),
-            tokenOut?.decimals || 18
-          )
-        ),
-        token: tokenOut?.symbol || '',
-      },
-      id: execution.id,
-      timestamp: Number(execution.timestamp),
-      estimatedTime: formatRelativeTime(execution.timestamp),
-    })) || []
+    selectedStream.executions
+      ?.map((execution) => ({
+        sell: {
+          amount: Number(
+            formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
+          ),
+          token: tokenIn?.symbol || '',
+        },
+        buy: {
+          amount: Number(
+            formatUnits(
+              BigInt(execution.realisedAmountOut),
+              tokenOut?.decimals || 18
+            )
+          ),
+          token: tokenOut?.symbol || '',
+        },
+        id: execution.id,
+        timestamp: Number(execution.timestamp),
+        estimatedTime: formatRelativeTime(execution.timestamp),
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp) || []
 
   const formattedSettlements =
     selectedStream.settlements?.map((settlement) => ({
@@ -634,12 +651,17 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               title="BPS Savings"
               amount={
                 selectedStream.isInstasettlable
-                  ? `5 BPS ($${(amountInUsd * 0.05).toFixed(2)})`
+                  ? `5 BPS  ${tokenOut?.symbol} ($${(
+                      amountInUsd *
+                      (5 / 10000)
+                    ).toFixed(2)})`
                   : 'N/A'
               }
               infoDetail="Info"
               titleClassName="text-white52"
-              amountClassName="text-white52"
+              amountClassName={
+                selectedStream.isInstasettlable ? undefined : 'text-white52'
+              }
               showInstaIcon={selectedStream.isInstasettlable}
               isLoading={isLoading}
             />
@@ -648,7 +670,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               amount={
                 isLoading
                   ? '0'
-                  : selectedStream.settlements.length > 0
+                  : selectedStream.settlements.length > 0 ||
+                    selectedStream.cancellations.length > 0
                   ? (Number(executionsCount) + 1).toString()
                   : executionsCount.toString()
               }
@@ -658,7 +681,16 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             />
             <AmountTag
               title="Trade Volume Executed"
-              amount={isLoading ? '0%' : `${volumeExecutedPercentage}%`}
+              amount={
+                isLoading
+                  ? '0%'
+                  : `${
+                      selectedStream.settlements.length > 0 ||
+                      selectedStream.cancellations.length > 0
+                        ? 100
+                        : volumeExecutedPercentage
+                    }%`
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
@@ -686,12 +718,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               titleClassName="text-white52"
               isLoading={isLoading}
             /> */}
-            <AmountTag
-              title="Network Fee"
-              amount={`5 BPS ($${networkFeeUsd.toFixed(2)})`}
-              infoDetail="Info"
+            <NetworkFee
+              buyAmount={formattedMinAmountOut}
+              tokenToUsdPrice={tokenOut?.usd_price}
+              tokenToSymbol={tokenOut?.symbol}
+              contractInfo={contractInfo}
+              isCalculating={isLoading}
               titleClassName="text-white52"
-              isLoading={isLoading}
             />
             <AmountTag
               title="Wallet Address"
@@ -736,6 +769,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               walletAddress={walletAddress}
               isCancellable={selectedStream.cancellations.length === 0}
               tokenIn={tokenIn}
+              tokenOut={tokenOut}
               formattedAmountIn={formattedAmountIn}
             />
           )}
