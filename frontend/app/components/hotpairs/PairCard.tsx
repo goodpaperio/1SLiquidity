@@ -20,8 +20,8 @@ export default function PairCard({
   const handleStreamClick = () => {
     // Navigate to swaps page with token symbols as query parameters
     const searchParams = new URLSearchParams({
-      from: pair.token1Symbol,
-      to: pair.token2Symbol,
+      from: pair.tokenASymbol,
+      to: pair.tokenBSymbol,
     })
 
     router.push(`/?${searchParams.toString()}`)
