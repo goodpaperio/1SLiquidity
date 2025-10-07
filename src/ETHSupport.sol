@@ -231,4 +231,58 @@ contract ETHSupport is Ownable, ReentrancyGuard {
     function getETHBalance() external view returns (uint256) {
         return address(this).balance;
     }
+
+    /**
+     * @notice Unwrap WETH to ETH for the caller
+     * @param amount The amount of WETH to unwrap
+     */
+    function unwrap(uint256 amount) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to this contract
+        weth.transferFrom(msg.sender, address(this), amount);
+        
+        // Unwrap WETH to ETH
+        weth.withdraw(amount);
+        
+        // Transfer ETH to caller
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "ETH transfer failed");
+    }
+
+    /**
+     * @notice Unwrap WETH to ETH and route to specified address
+     * @param amount The amount of WETH to unwrap
+     * @param to The address to receive the ETH
+     */
+    function unwrapAndRoute(uint256 amount, address to) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(to != address(0), "Invalid recipient address");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to this contract
+        weth.transferFrom(msg.sender, address(this), amount);
+        
+        // Unwrap WETH to ETH
+        weth.withdraw(amount);
+        
+        // Transfer ETH to specified address
+        (bool success, ) = payable(to).call{value: amount}("");
+        require(success, "ETH transfer failed");
+    }
+
+    /**
+     * @notice Route WETH to specified address
+     * @param amount The amount of WETH to transfer
+     * @param to The address to receive the WETH
+     */
+    function route(uint256 amount, address to) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(to != address(0), "Invalid recipient address");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to specified address
+        weth.transferFrom(msg.sender, to, amount);
+    }
 }
