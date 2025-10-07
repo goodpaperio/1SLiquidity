@@ -287,15 +287,16 @@ const TradesTable = ({
           effectivePriceRatio = 0
         }
 
-        // Calculate what instasettler receives in USD (tokenIn amount)
-        const receivesInUsd =
-          tokenIn && !isNaN(Number(formattedAmountRemaining))
-            ? Number(formattedAmountRemaining) * (tokenIn.usd_price || 0)
-            : 0
+        // Calculate savings in tokenOut (discount on amountOut)
+        const savingsInTokenOut =
+          (Number(formattedRemainingAmountOut) * Number(trade.instasettleBps)) /
+          10000
 
-        // Calculate savings in USD (discount from instasettleBps)
+        // Calculate savings in USD
         const savingsInUsd =
-          (receivesInUsd * Number(trade.instasettleBps)) / 10000
+          tokenOut && !isNaN(savingsInTokenOut)
+            ? savingsInTokenOut * (tokenOut.usd_price || 0)
+            : 0
 
         // Update trade object with calculated values
         return {
@@ -765,7 +766,8 @@ const TradesTable = ({
                       <div className="flex flex-col items-center">
                         <span>
                           {item.effectivePrice?.toFixed(2)}{' '}
-                          {item.tokenOutDetails?.symbol || 'N/A'}
+                          {item.tokenOutDetails?.symbol || 'N/A'} /{' '}
+                          {item.tokenInDetails?.symbol || 'N/A'}
                         </span>
                         <span className="text-white52 text-xs">(Ratio)</span>
                       </div>
@@ -774,12 +776,17 @@ const TradesTable = ({
                       <div className="flex flex-col items-center">
                         <span>
                           {(
-                            (Number(item.formattedAmountRemaining) *
-                              (item.tokenInDetails?.usd_price || 0) *
+                            (Number(
+                              formatUnits(
+                                BigInt(item.minAmountOut) -
+                                  BigInt(item.realisedAmountOut),
+                                item.tokenOutDetails?.decimals || 18
+                              )
+                            ) *
                               Number(item.instasettleBps)) /
                             10000
                           ).toFixed(4)}{' '}
-                          {item.tokenInDetails?.symbol || 'N/A'}
+                          {item.tokenOutDetails?.symbol || 'N/A'}
                         </span>
                         <span className="text-white52 text-xs">
                           (${item.savings?.toFixed(2)})

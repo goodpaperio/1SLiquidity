@@ -222,15 +222,16 @@ export default function TradesChart({
           effectivePriceRatio = 0
         }
 
-        // Calculate what instasettler receives in USD (tokenIn amount)
-        const receivesInUsd =
-          tokenIn && !isNaN(Number(formattedAmountRemaining))
-            ? Number(formattedAmountRemaining) * (tokenIn.usd_price || 0)
-            : 0
+        // Calculate savings in tokenOut (discount on amountOut)
+        const savingsInTokenOut =
+          (Number(formattedRemainingAmountOut) * Number(trade.instasettleBps)) /
+          10000
 
-        // Calculate savings in USD (discount from instasettleBps)
+        // Calculate savings in USD
         const savingsInUsd =
-          (receivesInUsd * Number(trade.instasettleBps)) / 10000
+          tokenOut && !isNaN(savingsInTokenOut)
+            ? savingsInTokenOut * (tokenOut.usd_price || 0)
+            : 0
 
         // Create ExtendedTrade object
         const extendedTrade: ExtendedTrade = {
