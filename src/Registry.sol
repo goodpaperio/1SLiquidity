@@ -117,6 +117,7 @@ contract Registry is IRegistry, Ownable {
         // Get DEX type from the fetcher
         IUniversalDexInterface fetcher = IUniversalDexInterface(dex);
         string memory dexType = fetcher.getDexType();
+        // ! probably here we need to get the fee if its uniswapV3
 
         // Get router for this DEX type
         address router = dexRouters[dexType];
@@ -169,6 +170,7 @@ contract Registry is IRegistry, Ownable {
             params = abi.encode(tokenIn, tokenOut, amount, minOut, recipient, router);
         } else if (parameterEncoder == _getUniswapV3ParameterEncoder()) {
             // UniswapV3-style DEXes
+            //! here probably failing on some uniswapV3 trades because the fee is hardcoded to 0.3%
             params =
                 abi.encode(tokenIn, tokenOut, amount, minOut, recipient, UNISWAP_V3_FEE, SQRT_PRICE_LIMIT_X96, router);
         } else if (parameterEncoder == _getBalancerParameterEncoder()) {
