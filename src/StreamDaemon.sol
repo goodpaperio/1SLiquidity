@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {IUniversalDexInterface} from "./interfaces/IUniversalDexInterface.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "forge-std/console.sol";
 
 contract StreamDaemon is Ownable {
     IUniversalDexInterface public universalDexInterface;
@@ -75,7 +76,7 @@ contract StreamDaemon is Ownable {
         uint256 volume,
         uint256 effectiveGas,
         bool usePriceBased
-    ) public view returns (uint256 sweetSpot, address bestFetcher, address router) {
+    ) public returns (uint256 sweetSpot, address bestFetcher, address router) {
         address identifiedFetcher;
         uint256 maxReserveIn;
         uint256 maxReserveOut;
@@ -97,12 +98,12 @@ contract StreamDaemon is Ownable {
             effectiveGas = MIN_EFFECTIVE_GAS_DOLLARS;
         }
 
-        sweetSpot = _sweetSpotAlgo(tokenIn, tokenOut, volume, maxReserveIn, maxReserveOut, effectiveGas);
+        // Use sweetSpotAlgo_v3 for slippage-based optimization
+        sweetSpot = _sweetSpotAlgo_v3(tokenIn, tokenOut, volume, bestFetcher);
     }
 
     function findBestPriceForTokenPair(address tokenIn, address tokenOut, uint256 volume)
         public
-        view
         returns (address bestFetcher, uint256 maxReserveIn, uint256 maxReserveOut)
     {
         uint256 bestPrice = type(uint256).max;
@@ -215,5 +216,470 @@ contract StreamDaemon is Ownable {
 
     function _sweetSpotAlgo_v2(uint256 scaledVolume, uint256 scaledReserveIn) public pure returns (uint256 sweetSpot) {
         sweetSpot = (scaledVolume) / sqrt(scaledReserveIn) / 1e8;
+    }
+
+    /**
+     * @dev SweetSpotAlgo v3 with polynomial interpolation for slippage-based volume optimization
+     * Uses mathematical interpolation to find optimal volume with 1% slippage instead of brute force halving
+     */
+    function _sweetSpotAlgo_v3(
+        address tokenIn,
+        address tokenOut,
+        uint256 volume,
+        address bestFetcher
+    ) public returns (uint256 sweetSpot) {
+        // Step 1: Get observed price from reserves
+        uint256 observedPrice = _calculateObservedPrice(tokenIn, tokenOut, bestFetcher);
+        
+        if (observedPrice == 0) {
+            return 1; // Fallback to minimum sweet spot
+        }
+        
+        // Step 2: Sample slippage at two strategic points
+        uint256 volume1 = volume; // Full volume
+        uint256 volume2 = volume / 4; // Quarter volume
+        
+        uint256 predictedPrice1 = _calculatePredictedPrice(tokenIn, tokenOut, volume1, bestFetcher);
+        uint256 predictedPrice2 = _calculatePredictedPrice(tokenIn, tokenOut, volume2, bestFetcher);
+        uint256 slippage1 = _calculateSlippage(observedPrice, predictedPrice1);
+        uint256 slippage2 = _calculateSlippage(observedPrice, predictedPrice2);
+        
+        // Step 3: Interpolate to find volume where slippage = 100 bps (1%)
+        uint256 targetSlippage = 100; // 1% in basis points
+        uint256 optimalVolume = _interpolateOptimalVolume(volume1, volume2, slippage1, slippage2, targetSlippage);
+        
+        // Step 4: Verify the interpolation with actual quote
+        uint256 actualSlippage = _calculateSlippage(observedPrice, _calculatePredictedPrice(tokenIn, tokenOut, optimalVolume, bestFetcher));
+        
+        // Step 5: If interpolation is off, do one refinement
+        if (actualSlippage > targetSlippage * 110 / 100) { // 10% tolerance
+            optimalVolume = _refineVolume(optimalVolume, actualSlippage, targetSlippage, tokenIn, tokenOut, bestFetcher, observedPrice);
+        }
+        
+        // Step 6: Calculate sweet spot based on volume reduction
+        sweetSpot = _calculateSweetSpotFromVolume(optimalVolume, volume);
+        
+        // Debug logging
+        console.log("DEBUG: Original volume:", volume);
+        console.log("DEBUG: Optimal volume:", optimalVolume);
+        console.log("DEBUG: Volume ratio:", (volume * 1e18) / optimalVolume);
+        console.log("DEBUG: Observed Price:", observedPrice);
+        console.log("DEBUG: Predicted Price1:", predictedPrice1);
+        console.log("DEBUG: Predicted Price2:", predictedPrice2);
+        console.log("DEBUG: Slippage1:", slippage1);
+        console.log("DEBUG: Slippage2:", slippage2);
+        console.log("DEBUG: Actual slippage:", actualSlippage);
+        console.log("DEBUG: Sweet spot:", sweetSpot);
+        
+        return sweetSpot;
+    }
+
+    /**
+     * @dev Sweet Spot Algorithm v4 - Using constant product formula (x*y=k)
+     * Simple iterative approach: double sweet spot until slippage < 10 BPS
+     */
+    function _sweetSpotAlgo_v4(
+        address tokenIn,
+        address tokenOut,
+        uint256 volume,
+        address bestFetcher
+    ) public view returns (uint256 sweetSpot) {
+        // Step 1: Read reserves from the DEX
+        (uint256 reserveIn, uint256 reserveOut) = IUniversalDexInterface(bestFetcher).getReserves(tokenIn, tokenOut);
+        
+        if (reserveIn == 0 || reserveOut == 0) {
+            return 1; // Fallback to minimum sweet spot
+        }
+        
+        // Step 1.5: Get token decimals and convert reserves to actual token amounts
+        uint8 decimalsIn = IERC20Metadata(tokenIn).decimals();
+        uint8 decimalsOut = IERC20Metadata(tokenOut).decimals();
+        
+        // Convert raw reserves to actual token amounts by dividing by decimal factors
+        uint256 actualReserveIn = reserveIn / (10 ** decimalsIn);
+        uint256 actualReserveOut = reserveOut / (10 ** decimalsOut);
+        
+        // Step 2: Convert input volume to actual token amount
+        uint256 actualVolume = volume / (10 ** decimalsIn);
+        
+        // Step 3: Start with sweet spot = 1 (no volume reduction)
+        sweetSpot = 1;
+        
+        // Step 4: Calculate effective volume (original volume / sweet spot)
+        uint256 effectiveVolume = actualVolume / sweetSpot;
+        
+        // Step 5: Calculate slippage for this volume using actual reserves
+        uint256 slippage = _calculateSlippageV4(effectiveVolume, actualReserveIn, actualReserveOut);
+        
+        // Step 5: If slippage is already within target (≤10 BPS), return sweet spot = 1
+        if (slippage <= 10) {
+            return 1;
+        }
+        
+        // Step 6: Iteratively double sweet spot until slippage < 10 BPS
+        while (slippage > 10 && sweetSpot < 1000) { // Cap at 1000 to prevent infinite loops
+            sweetSpot = sweetSpot * 2; // Double the sweet spot
+            effectiveVolume = actualVolume / sweetSpot; // Recalculate effective volume using actual volume
+            
+            // Ensure we don't divide by zero or have volume too small
+            if (effectiveVolume == 0) {
+                break;
+            }
+            
+            slippage = _calculateSlippageV4(effectiveVolume, actualReserveIn, actualReserveOut);
+        }
+        
+        return sweetSpot;
+    }
+
+    /**
+     * @dev Calculate observed price from reserves (tokenOut/tokenIn)
+     */
+    function _calculateObservedPrice(
+        address tokenIn,
+        address tokenOut,
+        address fetcher
+    ) internal returns (uint256) {
+        try IUniversalDexInterface(fetcher).getReserves(tokenIn, tokenOut) returns (uint256 reserveIn, uint256 reserveOut) {
+            if (reserveIn == 0 || reserveOut == 0) return 0;
+            
+            // Handle decimal scaling
+            uint8 decimalsIn = IERC20Metadata(tokenIn).decimals();
+            uint8 decimalsOut = IERC20Metadata(tokenOut).decimals();
+            
+            // Scale to 18 decimals for consistent comparison
+            uint256 scaledReserveIn = reserveIn * (10 ** (18 - decimalsIn));
+            uint256 scaledReserveOut = reserveOut * (10 ** (18 - decimalsOut));
+            
+            return (scaledReserveOut * 1e18) / scaledReserveIn;
+        } catch {
+            return 0;
+        }
+    }
+
+    /**
+     * @dev Calculate predicted price from DEX quote (amountOut/amountIn)
+     */
+    function _calculatePredictedPrice(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        address fetcher
+    ) internal returns (uint256) {
+        try IUniversalDexInterface(fetcher).getPrice(tokenIn, tokenOut, amountIn) returns (uint256 amountOut) {
+            if (amountOut == 0) return 0;
+            
+            // Handle decimal scaling
+            uint8 decimalsIn = IERC20Metadata(tokenIn).decimals();
+            uint8 decimalsOut = IERC20Metadata(tokenOut).decimals();
+            
+            // Scale to 18 decimals for consistent comparison
+            uint256 scaledAmountIn = amountIn * (10 ** (18 - decimalsIn));
+            uint256 scaledAmountOut = amountOut * (10 ** (18 - decimalsOut));
+            
+            return (scaledAmountOut * 1e18) / scaledAmountIn;
+        } catch {
+            return 0;
+        }
+    }
+
+    /**
+     * @dev Calculate slippage in basis points
+     */
+    function _calculateSlippage(
+        uint256 observedPrice,
+        uint256 predictedPrice
+    ) internal pure returns (uint256) {
+        if (observedPrice == 0) return type(uint256).max;
+        
+        // Calculate slippage in basis points
+        // slippage = |predictedPrice - observedPrice| / observedPrice * 10000
+        uint256 priceDifference = predictedPrice > observedPrice 
+            ? predictedPrice - observedPrice 
+            : observedPrice - predictedPrice;
+        
+        return (priceDifference * 10000) / observedPrice;
+    }
+
+    /**
+     * @dev Interpolate optimal volume using logarithmic interpolation
+     * Assumes slippage ~ volume^n relationship
+     */
+    function _interpolateOptimalVolume(
+        uint256 volume1,
+        uint256 volume2, 
+        uint256 slippage1,
+        uint256 slippage2,
+        uint256 targetSlippage
+    ) internal pure returns (uint256) {
+        
+        if (slippage1 == slippage2) {
+            return volume2; // No interpolation needed
+        }
+        
+        // Always try to find the optimal volume, even if current slippage is acceptable
+        // This ensures we find the maximum volume that stays within the target slippage
+        
+        if (slippage2 >= targetSlippage) {
+            return volume2; // Even quarter volume is too high
+        }
+        
+        // Logarithmic interpolation
+        // Using fixed-point arithmetic for precision
+        uint256 logV1 = _log2(volume1);
+        uint256 logV2 = _log2(volume2);
+        uint256 logS1 = _log2(slippage1);
+        uint256 logS2 = _log2(slippage2);
+        uint256 logTarget = _log2(targetSlippage);
+        
+        // Linear interpolation in log space
+        // logV_target = logV1 + (logV2 - logV1) * (logTarget - logS1) / (logS2 - logS1)
+        uint256 logVTarget;
+        if (logS2 > logS1) {
+            logVTarget = logV1 + ((logV2 - logV1) * (logTarget - logS1)) / (logS2 - logS1);
+        } else {
+            // If slippage values are too close, use simple linear interpolation
+            logVTarget = logV1 + (logV2 - logV1) / 2;
+        }
+        
+        return _exp2(logVTarget);
+    }
+
+    /**
+     * @dev Refine volume using binary search if interpolation is inaccurate
+     */
+    function _refineVolume(
+        uint256 currentVolume,
+        uint256 /* currentSlippage */,
+        uint256 targetSlippage,
+        address tokenIn,
+        address tokenOut,
+        address bestFetcher,
+        uint256 observedPrice
+    ) internal returns (uint256) {
+        
+        // Simple binary search refinement
+        uint256 low = currentVolume / 2;
+        uint256 high = currentVolume;
+        uint256 mid;
+        
+        for (uint256 i = 0; i < 5; i++) { // Max 5 iterations
+            mid = (low + high) / 2;
+            uint256 midSlippage = _calculateSlippage(observedPrice, _calculatePredictedPrice(tokenIn, tokenOut, mid, bestFetcher));
+            
+            if (midSlippage > targetSlippage) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+            
+            if (high - low <= high / 100) break; // 1% precision
+        }
+        
+        return mid;
+    }
+
+    /**
+     * @dev Calculate sweet spot based on volume reduction factor
+     */
+    function _calculateSweetSpotFromVolume(
+        uint256 optimizedVolume,
+        uint256 originalVolume
+    ) internal pure returns (uint256) {
+        if (originalVolume == 0) return 1;
+        
+        // Calculate sweet spot based on volume reduction
+        // If volume was reduced by factor N, sweet spot should be approximately N
+        uint256 volumeRatio = (originalVolume * 1e18) / optimizedVolume;
+        
+        // For debugging: return the actual ratio as sweet spot to see what's happening
+        // This will help us understand the actual volume reduction
+        if (volumeRatio <= 1e18) return 1; // No reduction
+        if (volumeRatio <= 2e18) return 2; // Halved
+        if (volumeRatio <= 4e18) return 4; // Quartered
+        if (volumeRatio <= 8e18) return 8; // 1/8th
+        if (volumeRatio <= 16e18) return 16; // 1/16th
+        if (volumeRatio <= 32e18) return 32; // 1/32nd
+        if (volumeRatio <= 64e18) return 64; // 1/64th
+        if (volumeRatio <= 128e18) return 128; // 1/128th
+        if (volumeRatio <= 256e18) return 256; // 1/256th
+        if (volumeRatio <= 512e18) return 512; // 1/512th
+        
+        return 500; // Maximum sweet spot
+    }
+
+    /**
+     * @dev Calculate log2 using bit manipulation for efficiency
+     */
+    function _log2(uint256 x) internal pure returns (uint256) {
+        if (x == 0) return 0;
+        
+        uint256 result = 0;
+        if (x >= 0x100000000000000000000000000000000) {
+            x >>= 128;
+            result += 128;
+        }
+        if (x >= 0x10000000000000000) {
+            x >>= 64;
+            result += 64;
+        }
+        if (x >= 0x100000000000000) {
+            x >>= 32;
+            result += 32;
+        }
+        if (x >= 0x1000000000000) {
+            x >>= 16;
+            result += 16;
+        }
+        if (x >= 0x10000000000) {
+            x >>= 8;
+            result += 8;
+        }
+        if (x >= 0x100000000) {
+            x >>= 4;
+            result += 4;
+        }
+        if (x >= 0x1000000) {
+            x >>= 2;
+            result += 2;
+        }
+        if (x >= 0x10000) {
+            x >>= 1;
+            result += 1;
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Calculate 2^x using bit manipulation
+     */
+    function _exp2(uint256 x) internal pure returns (uint256) {
+        if (x == 0) return 1;
+        if (x >= 256) return type(uint256).max; // Prevent overflow
+        
+        uint256 result = 1;
+        uint256 base = 2;
+        
+        while (x > 0) {
+            if (x & 1 == 1) {
+                result = result * base;
+            }
+            base = base * base;
+            x >>= 1;
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Calculate slippage using constant product formula (x*y=k) for v4
+     */
+    function _calculateSlippageV4(
+        uint256 volumeIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) internal pure returns (uint256 slippageBps) {
+        // All values are now actual token amounts (not raw decimals)
+        
+        // k = reserveIn * reserveOut
+        uint256 k = reserveIn * reserveOut;
+        
+        // volumeOut = reserveOut - (k / (reserveIn + volumeIn))
+        uint256 denominator = reserveIn + volumeIn;
+        uint256 volumeOut = reserveOut - (k / denominator);
+        
+        // Realized price = volumeOut / volumeIn (actual token amounts)
+        // We need to scale for precision in the ratio calculation
+        uint256 realizedPrice = volumeOut;
+        uint256 realizedPriceBase = volumeIn;
+        
+        // Observed price = reserveOut / reserveIn (actual token amounts)
+        uint256 observedPrice = reserveOut;
+        uint256 observedPriceBase = reserveIn;
+        
+        // Calculate slippage: 1 - (realizedPrice / observedPrice)
+        // priceRatio = (realizedPrice / realizedPriceBase) / (observedPrice / observedPriceBase)
+        // priceRatio = (realizedPrice * observedPriceBase) / (realizedPriceBase * observedPrice)
+        uint256 priceRatio = (realizedPrice * observedPriceBase * 10000) / (realizedPriceBase * observedPrice);
+        
+        // If priceRatio > 10000, it means we're getting a better price (negative slippage), set to 0
+        if (priceRatio > 10000) {
+            slippageBps = 0;
+        } else {
+            slippageBps = 10000 - priceRatio; // Slippage in basis points
+        }
+    }
+
+    /**
+     * @dev Interpolate optimal volume using logarithmic interpolation for v4
+     */
+    function _interpolateOptimalVolumeV4(
+        uint256 volume1,
+        uint256 volume2, 
+        uint256 slippage1,
+        uint256 slippage2,
+        uint256 targetSlippage
+    ) internal pure returns (uint256) {
+        
+        if (slippage1 == slippage2) {
+            return volume2; // No interpolation needed
+        }
+        
+        if (slippage2 >= targetSlippage) {
+            return volume2; // Even quarter volume is too high
+        }
+        
+        // Logarithmic interpolation
+        // Using fixed-point arithmetic for precision
+        uint256 logV1 = _log2(volume1);
+        uint256 logV2 = _log2(volume2);
+        uint256 logS1 = _log2(slippage1);
+        uint256 logS2 = _log2(slippage2);
+        uint256 logTarget = _log2(targetSlippage);
+        
+        // Linear interpolation in log space
+        // logV_target = logV1 + (logV2 - logV1) * (logTarget - logS1) / (logS2 - logS1)
+        uint256 logVTarget;
+        if (logS2 > logS1) {
+            logVTarget = logV1 + ((logV2 - logV1) * (logTarget - logS1)) / (logS2 - logS1);
+        } else {
+            // If slippage values are too close, use simple linear interpolation
+            logVTarget = logV1 + (logV2 - logV1) / 2;
+        }
+        
+        return _exp2(logVTarget);
+    }
+
+    /**
+     * @dev Refine volume using binary search for v4
+     */
+    function _refineVolumeV4(
+        uint256 currentVolume,
+        uint256 currentSlippage,
+        uint256 targetSlippage,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) internal pure returns (uint256) {
+        
+        // Binary search refinement - search between quarter volume and current volume
+        uint256 low = currentVolume / 4;  // Start from quarter volume
+        uint256 high = currentVolume;     // End at current volume
+        uint256 mid;
+        
+        for (uint256 i = 0; i < 8; i++) { // More iterations for better precision
+            mid = (low + high) / 2;
+            uint256 midSlippage = _calculateSlippageV4(mid, reserveIn, reserveOut);
+            
+            if (midSlippage > targetSlippage) {
+                high = mid; // Reduce volume
+            } else {
+                low = mid;  // Increase volume
+            }
+            
+            if (high - low <= high / 1000) break; // 0.1% precision
+        }
+        
+        return mid;
     }
 }
