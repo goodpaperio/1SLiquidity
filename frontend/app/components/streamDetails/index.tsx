@@ -589,8 +589,12 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 <>
                   <p className="">
                     {showCompleted
-                      ? `${swappedAmountIn} ${tokenIn?.symbol}`
-                      : `${remainingAmountIn} ${tokenIn?.symbol}`}
+                      ? `${formatNumberSmart(swappedAmountIn)} ${
+                          tokenIn?.symbol
+                        }`
+                      : `${formatNumberSmart(remainingAmountIn)} ${
+                          tokenIn?.symbol
+                        }`}
                   </p>
                   <p className="text-white52 text-[14px]">
                     $

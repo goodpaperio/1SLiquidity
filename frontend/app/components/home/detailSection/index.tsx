@@ -98,7 +98,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
       const usdValue = minOutput * tokenToUsdPrice
       usdString = ` ($${usdValue.toFixed(2)})`
     }
-    return `${minOutput.toFixed(4)} ${tokenToSymbol}${usdString}`
+    return `${formatNumberSmart(minOutput)} ${tokenToSymbol}${usdString}`
   }
 
   // Format slippage savings as percentage and USD value
@@ -108,7 +108,9 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     if (isNaN(numericBuyAmount) || numericBuyAmount === 0) return '0%'
 
     // Format USD value
-    const usdString = `$${Math.abs(slippageSavings).toFixed(2)}`
+    const usdString = `$${formatNumberSmart(
+      Math.abs(slippageSavings).toFixed(2)
+    )}`
 
     // Calculate percentage
     const savingsPercentage =
