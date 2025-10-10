@@ -947,7 +947,10 @@ export const useCoreTrading = () => {
   )
 
   const getTradeInfo = useCallback(
-    async (tradeId: number): Promise<TradeData | null> => {
+    async (
+      tradeId: number,
+      allowFailure?: boolean
+    ): Promise<TradeData | null> => {
       try {
         const contract = getContract()
         const trade = await contract.getTrade(tradeId)
@@ -971,6 +974,9 @@ export const useCoreTrading = () => {
           protocolFee: protocolFee,
         }
       } catch (error: any) {
+        if (allowFailure) {
+          return null
+        }
         console.error('Error getting trade info:', error)
         toast.error(
           `Failed to get trade info: ${error.reason || error.message}`
