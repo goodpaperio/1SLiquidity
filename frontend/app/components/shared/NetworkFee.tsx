@@ -37,21 +37,27 @@ const NetworkFee: React.FC<NetworkFeeProps> = ({
     const networkFeeBps = getNetworkFeeBps()
 
     if (!buyAmount || !tokenToUsdPrice || isCalculating) {
-      return `${networkFeeBps} BPS${tokenToSymbol ? ` ${tokenToSymbol}` : ''}`
+      return `${networkFeeBps} bps${tokenToSymbol ? ` ${tokenToSymbol}` : ''}`
     }
 
     const numericBuyAmount = parseFloat(buyAmount)
     if (isNaN(numericBuyAmount)) {
-      return `${networkFeeBps} BPS${tokenToSymbol ? ` ${tokenToSymbol}` : ''}`
+      return `${networkFeeBps} bps${tokenToSymbol ? ` ${tokenToSymbol}` : ''}`
     }
 
     // Calculate fee in token amount (buyAmount is in output token units)
     const networkFeeInToken = numericBuyAmount * (networkFeeBps / 10000)
     const networkFeeUsd = networkFeeInToken * tokenToUsdPrice
 
-    return `${networkFeeBps} BPS ${
-      tokenToSymbol || ''
-    } ($${networkFeeUsd.toFixed(2)})`
+    return (
+      <div className="flex flex-col items-end">
+        <p className="">
+          {networkFeeBps} bps ({networkFeeInToken.toFixed(2)}{' '}
+          {tokenToSymbol || ''})
+        </p>
+        <p className="text-white52 text-[12px]">${networkFeeUsd.toFixed(2)}</p>
+      </div>
+    )
   }
 
   return (

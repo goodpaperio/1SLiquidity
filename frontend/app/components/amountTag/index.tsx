@@ -29,8 +29,8 @@ const AmountTag: React.FC<Props> = ({
   className,
 }) => {
   return (
-    <div className={cn('flex justify-between items-center', className)}>
-      <div className="flex items-center gap-1">
+    <div className={cn('flex justify-between items-start', className)}>
+      <div className="flex items-start gap-1">
         <p className={cn('text-[14px]', titleClassName)}>{title}</p>
         <Tooltip>
           <TooltipTrigger asChild>
