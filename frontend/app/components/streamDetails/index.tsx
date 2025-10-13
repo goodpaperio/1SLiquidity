@@ -120,6 +120,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     (selectedStream.cancellations && selectedStream.cancellations.length > 0) ||
     (selectedStream.settlements && selectedStream.settlements.length > 0)
 
+  const isStreamSettled =
+    selectedStream.settlements && selectedStream.settlements.length > 0
+
   // Calculate swapped amount values
   // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
   const formattedSwapAmountOut = tokenOut
@@ -192,7 +195,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   // Calculate actual swapped input amount (amountIn - amountRemaining)
   // If stream is completed (instasettled), show full amount, otherwise show actually swapped amount
   const swappedAmountIn = tokenIn
-    ? isStreamCompleted
+    ? isStreamSettled
       ? formatUnits(BigInt(amountIn), tokenIn.decimals) // Show full amount if instasettled
       : formatUnits(
           BigInt(amountIn) - BigInt(amountRemaining),
@@ -205,17 +208,17 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   // Calculate remaining amounts - set to 0 if stream is completed
   const remainingAmountIn =
-    tokenIn && !isStreamCompleted
+    tokenIn && !isStreamSettled
       ? formatUnits(BigInt(amountRemaining), tokenIn.decimals)
       : '0'
   const remainingAmountInUsd =
-    tokenIn && !isStreamCompleted
+    tokenIn && !isStreamSettled
       ? Number(remainingAmountIn) * (tokenIn.usd_price || 0)
       : 0
 
   // Calculate remaining output (estimated based on proportion) - set to 0 if stream is completed
   const remainingAmountOut =
-    tokenOut && amountIn > 0 && !isStreamCompleted
+    tokenOut && amountIn > 0 && !isStreamSettled
       ? formatUnits(
           (BigInt(selectedStream.minAmountOut) * BigInt(amountRemaining)) /
             BigInt(amountIn),
@@ -223,8 +226,19 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
         )
       : '0'
   const remainingAmountOutUsd =
-    tokenOut && !isStreamCompleted
+    tokenOut && !isStreamSettled
       ? Number(remainingAmountOut) * (tokenOut.usd_price || 0)
+      : 0
+
+  // Calculate BPS savings in token amount
+  const savingsInTokenOut =
+    (Number(remainingAmountOut) * Number(selectedStream.instasettleBps || 0)) /
+    10000
+
+  // Calculate savings in USD
+  const savingsInUsd =
+    tokenOut && !isNaN(savingsInTokenOut)
+      ? savingsInTokenOut * (tokenOut.usd_price || 0)
       : 0
 
   const NETWORK_FEE_BPS = 5 // 5 basis points
@@ -507,6 +521,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             sellToken={tokenIn}
             buyToken={tokenOut}
             isLoading={isLoading || isLoadingTokens}
+            cancelled={selectedStream.cancellations.length > 0}
           />
 
           <div className="flex gap-2 justify-between py-4 border-b border-borderBottom">
@@ -654,12 +669,21 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             <AmountTag
               title="BPS Savings"
               amount={
-                selectedStream.isInstasettlable
-                  ? `5 BPS  ${tokenOut?.symbol} ($${(
-                      amountInUsd *
-                      (5 / 10000)
-                    ).toFixed(2)})`
-                  : 'N/A'
+                selectedStream.isInstasettlable &&
+                selectedStream.instasettleBps ? (
+                  <div className="flex flex-col items-end">
+                    <p className="">
+                      {Number(selectedStream.instasettleBps)} bps (
+                      {formatNumberWithSubscript(savingsInTokenOut.toFixed(4))}{' '}
+                      {tokenOut?.symbol || ''})
+                    </p>
+                    <p className="text-white52 text-[12px]">
+                      ${savingsInUsd.toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  'N/A'
+                )
               }
               infoDetail="Info"
               titleClassName="text-white52"
@@ -689,8 +713,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 isLoading
                   ? '0%'
                   : `${
-                      selectedStream.settlements.length > 0 ||
-                      selectedStream.cancellations.length > 0
+                      selectedStream.settlements.length > 0
                         ? 100
                         : volumeExecutedPercentage
                     }%`
@@ -802,6 +825,44 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             walletAddress={walletAddress}
             isLoading={isLoading}
           /> */}
+
+          {/* Cancellations */}
+          {selectedStream.cancellations &&
+            selectedStream.cancellations.length > 0 &&
+            selectedStream.cancellations.map((cancellation) => (
+              <div
+                key={cancellation.id}
+                className="w-full p-4 border-[1px] border-red-900/30 bg-red-900/5 rounded-[15px] mt-2.5 hover:bg-red-900/10 transition-all duration-300"
+              >
+                <div className="w-full flex justify-between gap-1 items-center">
+                  <div className="flex items-center gap-0 py-1 px-1 rounded-[4px] uppercase text-red-400 text-[12px] leading-none bg-red-900/20">
+                    Cancelled
+                  </div>
+
+                  <a
+                    href={`https://etherscan.io/tx/${
+                      cancellation.id.split('-')[0]
+                    }`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-red-400 underline text-[14px] hover:text-red-300 transition-colors cursor-pointer"
+                  >
+                    {formatWalletAddress(cancellation.id.split('-')[0])}
+                  </a>
+                </div>
+
+                <div className="mt-2.5 text-[14px] text-white">
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-24" />
+                  ) : (
+                    <>
+                      Trade cancelled{' '}
+                      {formatRelativeTime(cancellation.timestamp)}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
 
           {formattedSettlements.map((settlement, index) => (
             <StreamCard

@@ -61,7 +61,7 @@ const ConfigTrade: React.FC<Props> = ({
   const { getTradeInfo } = useCoreTrading()
 
   const getTradeInfoCallback = useCallback(async () => {
-    const tradeInfo = await getTradeInfo(selectedStream.tradeId)
+    const tradeInfo = await getTradeInfo(selectedStream.tradeId, true)
     setTradeInfo(tradeInfo)
   }, [getTradeInfo, selectedStream.tradeId])
 
