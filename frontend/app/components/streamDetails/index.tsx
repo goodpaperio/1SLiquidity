@@ -674,7 +674,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                   <div className="flex flex-col items-end">
                     <p className="">
                       {Number(selectedStream.instasettleBps)} bps (
-                      {formatNumberWithSubscript(savingsInTokenOut.toFixed(4))}{' '}
+                      {formatNumberSmart(savingsInTokenOut.toFixed(4))}{' '}
                       {tokenOut?.symbol || ''})
                     </p>
                     <p className="text-white52 text-[12px]">
