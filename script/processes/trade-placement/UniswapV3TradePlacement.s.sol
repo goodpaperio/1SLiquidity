@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "../../SingleDexProtocol.s.sol";
 import "../../../src/Utils.sol";
 import "../../../src/adapters/UniswapV3Fetcher.sol";
+import "../../../src/interfaces/IUniversalDexInterface.sol";
 
 contract UniswapV3TradePlacement is SingleDexProtocol {
     address constant UNISWAP_V3_QUOTER_V2 = 0x61fFE014bA17989E743c5F6cB21bF9697530B21e;
@@ -22,8 +23,7 @@ contract UniswapV3TradePlacement is SingleDexProtocol {
     }
 
     function run() external {
-        testPlaceTradeWETHUSDC();
-        testEnhancedSlippageProtection();
+        testSweetSpotAlgoV3WithDifferentAmounts();
     }
 
     function testPlaceTradeWETHUSDC() public {
@@ -178,5 +178,90 @@ contract UniswapV3TradePlacement is SingleDexProtocol {
         console.log("SUCCESS: QuoterV2 integration: Working");
         console.log("SUCCESS: Slippage calculation: Working");
         console.log("SUCCESS: Pool validation: Working");
+    }
+
+    function testSweetSpotAlgoV3WithDifferentAmounts() public {
+        console.log("=== Testing SweetSpotAlgo v3 with Different WETH Amounts on UniswapV3 ===");
+        
+        // Test amounts: 1, 3, 10, 30, 100, 1000 WETH
+        uint256[] memory testAmounts = new uint256[](6);
+        testAmounts[0] = 1 * 1e18;    // 1 WETH
+        testAmounts[1] = 3 * 1e18;    // 3 WETH
+        testAmounts[2] = 10 * 1e18;   // 10 WETH
+        testAmounts[3] = 30 * 1e18;   // 30 WETH
+        testAmounts[4] = 100 * 1e18;  // 100 WETH
+        testAmounts[5] = 1000 * 1e18; // 1000 WETH
+        
+        for (uint256 i = 0; i < testAmounts.length; i++) {
+            uint256 amountIn = testAmounts[i];
+            console.log("\n--- Testing with %d WETH ---", amountIn / 1e18);
+            
+            // Test both price-based and reserve-based selection
+            testSweetSpotForAmount(amountIn, false, "Reserve-based");
+            testSweetSpotForAmount(amountIn, true, "Price-based");
+        }
+    }
+    
+    function testSweetSpotForAmount(uint256 amountIn, bool usePriceBased, string memory selectionType) internal {
+        console.log("Testing %s selection for %d WETH", selectionType, amountIn / 1e18);
+        
+        // Get sweet spot evaluation without placing actual trade
+        try streamDaemon.evaluateSweetSpotAndDex(
+            WETH,
+            USDC,
+            amountIn,
+            0, // effectiveGas
+            usePriceBased
+        ) returns (uint256 sweetSpot, address bestFetcher, address router) {
+            console.log("  *** CALCULATED Sweet Spot: %d ***", sweetSpot);
+            console.log("  Best Fetcher: %s", bestFetcher);
+            console.log("  Router: %s", router);
+            
+            // Get some additional info about the selected DEX
+            try IUniversalDexInterface(bestFetcher).getDexType() returns (string memory dexType) {
+                console.log("  DEX Type: %s", dexType);
+            } catch {
+                console.log("  DEX Type: Unknown");
+            }
+            
+            // Get reserves for context
+            try IUniversalDexInterface(bestFetcher).getReserves(WETH, USDC) returns (uint256 reserveIn, uint256 reserveOut) {
+                console.log("  WETH Reserve: %d WETH", reserveIn / 1e18);
+                console.log("  USDC Reserve: %d USDC", reserveOut / 1e6);
+                
+                // Calculate what percentage of the pool this trade represents
+                if (reserveIn > 0) {
+                    uint256 poolPercentage = (amountIn * 10000) / reserveIn; // in basis points
+                    console.log("  Trade as %% of pool: %d%%", poolPercentage / 100);
+                }
+            } catch {
+                console.log("  Could not get reserves");
+            }
+            
+            // Get a price quote for context
+            try IUniversalDexInterface(bestFetcher).getPrice(WETH, USDC, amountIn) returns (uint256 amountOut) {
+                console.log("  Expected USDC out: %d USDC", amountOut / 1e6);
+                if (amountIn > 0) {
+                    console.log("  Effective rate: %d USDC per WETH", (amountOut * 1e18) / amountIn);
+                }
+            } catch {
+                console.log("  Could not get price quote");
+            }
+            
+            // Test the sweetSpotAlgo_v3 directly to see the actual calculation
+            console.log("  --- Direct SweetSpotAlgo v3 Test ---");
+            try streamDaemon._sweetSpotAlgo(WETH, USDC, amountIn, bestFetcher) returns (uint256 directSweetSpot) {
+                console.log("  *** DIRECT SweetSpotAlgo v3 result: %d ***", directSweetSpot);
+            } catch Error(string memory reason) {
+                console.log("  Direct SweetSpotAlgo v3 Error: %s", reason);
+            } catch {
+                console.log("  Direct SweetSpotAlgo v3 Unknown error");
+            }
+            
+        } catch Error(string memory reason) {
+            console.log("  Error: %s", reason);
+        } catch {
+            console.log("  Unknown error occurred");
+        }
     }
 }
