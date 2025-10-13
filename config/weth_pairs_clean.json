@@ -1,8 +1,8 @@
 {
-  "description": "Toutes les paires de liquidité contenant le token WETH avec réserves non-nulles (incluant tous les tokens de base)",
-  "totalCount": 103,
-  "extractedAt": "2025-08-06T09:24:51.092Z",
-  "filterCriteria": "Réserves token0 > 0 ET token1 > 0",
+  "description": "All liquidity pairs containing WETH token with non-zero reserves (including all base tokens)",
+  "totalCount": 99,
+  "extractedAt": "2025-10-05T12:39:39.257Z",
+  "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
   "pairs": [
     {
       "name": "1inch",
@@ -13,28 +13,12 @@
       "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
     },
     {
-      "name": "aioz",
-      "address": "0x626e8036deb333b408be468f951bdb42433cbf18"
-    },
-    {
-      "name": "amp",
-      "address": "0xff20817765cb7f73d4bde2e66e067e58d11095c2"
-    },
-    {
-      "name": "ape",
-      "address": "0x4d224452801aced8b2f0aebe155379bb5d594381"
-    },
-    {
       "name": "arb",
       "address": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
     },
     {
       "name": "ath",
       "address": "0xbe0ed4138121ecfc5c0e56b40517da27e6c5226b"
-    },
-    {
-      "name": "axl",
-      "address": "0x467719ad09025fcc6cf6f8311755809d45a5e5f3"
     },
     {
       "name": "axs",
@@ -55,6 +39,10 @@
     {
       "name": "bonk",
       "address": "0x1151cb3d861920e07a38e03eead12c32178567f6"
+    },
+    {
+      "name": "borg",
+      "address": "0x64d0f55cd8c7133a9d7102b13987235f486f2224"
     },
     {
       "name": "btt",
@@ -89,14 +77,6 @@
       "address": "0xd533a949740bb3306d119cc777fa900ba034cd52"
     },
     {
-      "name": "ctc",
-      "address": "0xa3ee21c306a700e682abcdfe9baa6a08f3820419"
-    },
-    {
-      "name": "cvx",
-      "address": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b"
-    },
-    {
       "name": "dai",
       "address": "0x6b175474e89094c44da98b954eedeac495271d0f"
     },
@@ -129,6 +109,10 @@
       "address": "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb"
     },
     {
+      "name": "ethx",
+      "address": "0xa35b1b31ce002fbf2058d22f30f95d405200a15b"
+    },
+    {
       "name": "ezeth",
       "address": "0xbf5495efe5db9ce00f80364c8b423567e58d2110"
     },
@@ -141,8 +125,8 @@
       "address": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e"
     },
     {
-      "name": "frax",
-      "address": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0"
+      "name": "fluid",
+      "address": "0x6f40d4a6237c257fff2db00fa0510deeecd303eb"
     },
     {
       "name": "frxeth",
@@ -163,6 +147,10 @@
     {
       "name": "gt",
       "address": "0xe66747a101bff2dba3697199dcce5b743b454759"
+    },
+    {
+      "name": "icp",
+      "address": "0x00f3c42833c3170159af4e92dbb451fb3f708917"
     },
     {
       "name": "imx",
@@ -189,6 +177,10 @@
       "address": "0x2af5d2ad76741191d15dfe7bf6ac92d4bd912ca3"
     },
     {
+      "name": "linea",
+      "address": "0x1789e0043623282d5dcc7f213d703c6d8bafbb04"
+    },
+    {
       "name": "link",
       "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
     },
@@ -201,10 +193,6 @@
       "address": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
     },
     {
-      "name": "matic",
-      "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
-    },
-    {
       "name": "meth",
       "address": "0xd5f7838f5c461feff7fe49ea5ebaf7728bb0adfa"
     },
@@ -213,16 +201,8 @@
       "address": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354"
     },
     {
-      "name": "mog",
-      "address": "0xaaee1a9723aadb7afa2810263653a34ba2c21c7a"
-    },
-    {
       "name": "morpho",
       "address": "0x58d97b57bb95320f9a05dc918aef65434969c2b2"
-    },
-    {
-      "name": "move",
-      "address": "0x3073f7aaa4db83f95e9fff17424f71d4751a3073"
     },
     {
       "name": "near",
@@ -249,12 +229,20 @@
       "address": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3"
     },
     {
+      "name": "oseth",
+      "address": "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38"
+    },
+    {
       "name": "paxg",
       "address": "0x45804880de22913dafe09f4980848ece6ecbaf78"
     },
     {
       "name": "pendle",
       "address": "0x808507121b80c02388fad14726482e061b8da827"
+    },
+    {
+      "name": "pengu",
+      "address": "0x6418c0dd099a9fda397c766304cdd918233e8847"
     },
     {
       "name": "pepe",
@@ -271,10 +259,6 @@
     {
       "name": "qnt",
       "address": "0x4a220e6096b25eadb88358cb44068a3248254675"
-    },
-    {
-      "name": "rekt",
-      "address": "0xdd3b11ef34cd511a2da159034a05fcb94d806686"
     },
     {
       "name": "render",
@@ -309,6 +293,10 @@
       "address": "0x56072c95faa701256059aa122697b133aded9279"
     },
     {
+      "name": "snx",
+      "address": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
+    },
+    {
       "name": "spx",
       "address": "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c"
     },
@@ -341,16 +329,8 @@
       "address": "0x467bccd9d29f223bce8043b84e8c8b282827790f"
     },
     {
-      "name": "tkx",
-      "address": "0x667102bd3413bfeaa3dffb48fa8288819e480a88"
-    },
-    {
       "name": "ton",
       "address": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1"
-    },
-    {
-      "name": "turbo",
-      "address": "0xa35923162c49cf95e6bf26623385eb431ad920d3"
     },
     {
       "name": "tusd",
@@ -366,7 +346,7 @@
     },
     {
       "name": "usdc",
-      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     },
     {
       "name": "usds",
@@ -386,7 +366,7 @@
     },
     {
       "name": "wbtc",
-      "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+      "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
     },
     {
       "name": "weeth",
@@ -399,6 +379,10 @@
     {
       "name": "wld",
       "address": "0x163f8c2467924be0ae7b5347228cabf260318753"
+    },
+    {
+      "name": "wlfi",
+      "address": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
     },
     {
       "name": "wsteth",

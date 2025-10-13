@@ -2,10 +2,31 @@
 
 This `Config.sol` file dynamically loads all token addresses that form pairs with USDC from the JSON file `config/usdc_pairs_clean.json`.
 
+## 🔧 Generation Script
+
+An automated script generates `*_pairs_clean.json` files from `liquidity.json`:
+
+```bash
+# From the config folder
+npm run generate:pairs
+
+# Or directly
+node generate-pairs.js
+```
+
+This script automatically generates:
+
+- `usdc_pairs_clean.json` (71 pairs)
+- `usdt_pairs_clean.json` (54 pairs)
+- `wbtc_pairs_clean.json` (30 pairs)
+- `weth_pairs_clean.json` (99 pairs)
+
+📖 See [SCRIPT_README.md](./SCRIPT_README.md) for more details.
+
 ## Features
 
 - ✅ **No hardcoded addresses** - All addresses are loaded from JSON
-- ✅ **89 USDC pair addresses** - All tokens from the JSON file are available
+- ✅ **71 USDC pair addresses** - All tokens from the JSON file are available
 - ✅ **Search by name** - Get an address by token name
 - ✅ **Search by address** - Get a token name by its address
 - ✅ **Utility functions** - Verification, indexing, subsets

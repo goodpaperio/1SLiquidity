@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {IUniversalDexInterface} from "./interfaces/IUniversalDexInterface.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IUniversalDexInterface } from "./interfaces/IUniversalDexInterface.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract StreamDaemon is Ownable {
     IUniversalDexInterface public universalDexInterface;
@@ -75,7 +75,11 @@ contract StreamDaemon is Ownable {
         uint256 volume,
         uint256 effectiveGas,
         bool usePriceBased
-    ) public view returns (uint256 sweetSpot, address bestFetcher, address router) {
+    )
+        public
+        view
+        returns (uint256 sweetSpot, address bestFetcher, address router)
+    {
         address identifiedFetcher;
         uint256 maxReserveIn;
         uint256 maxReserveOut;
@@ -100,7 +104,11 @@ contract StreamDaemon is Ownable {
         sweetSpot = _sweetSpotAlgo(tokenIn, tokenOut, volume, maxReserveIn, maxReserveOut, effectiveGas);
     }
 
-    function findBestPriceForTokenPair(address tokenIn, address tokenOut, uint256 volume)
+    function findBestPriceForTokenPair(
+        address tokenIn,
+        address tokenOut,
+        uint256 volume
+    )
         public
         view
         returns (address bestFetcher, uint256 maxReserveIn, uint256 maxReserveOut)
@@ -135,7 +143,10 @@ contract StreamDaemon is Ownable {
      * @dev always written in terms of
      *  **the token that is being added to the pool** (tokenIn)
      */
-    function findHighestReservesForTokenPair(address tokenIn, address tokenOut)
+    function findHighestReservesForTokenPair(
+        address tokenIn,
+        address tokenOut
+    )
         public
         view
         returns (address bestFetcher, uint256 maxReserveIn, uint256 maxReserveOut)
@@ -164,7 +175,11 @@ contract StreamDaemon is Ownable {
         uint256 reserveIn,
         uint256 reserveOut,
         uint256 effectiveGas
-    ) public view returns (uint256 sweetSpot) {
+    )
+        public
+        view
+        returns (uint256 sweetSpot)
+    {
         // ensure no division by 0
         if (reserveIn == 0 || reserveOut == 0 || effectiveGas == 0) {
             revert("No reserves or appropriate gas estimation"); // **revert** if no reserves
@@ -204,7 +219,11 @@ contract StreamDaemon is Ownable {
         // @audit need to add a case for volume < 0.001 pool depth whereby sweetspot = 1
     }
 
-    function _sweetSpotAlgo_v1(uint256 scaledVolume, uint256 scaledReserveIn, uint256 scaledReserveOut)
+    function _sweetSpotAlgo_v1(
+        uint256 scaledVolume,
+        uint256 scaledReserveIn,
+        uint256 scaledReserveOut
+    )
         public
         pure
         returns (uint256 sweetSpot)
