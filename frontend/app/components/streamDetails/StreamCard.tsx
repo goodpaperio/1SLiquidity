@@ -2,6 +2,7 @@ import { formatCustomTime, formatWalletAddress } from '@/app/lib/helper'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 
 type Props = {
   status: 'ongoing' | 'scheduled' | 'completed' | 'Instasettled'
@@ -46,8 +47,8 @@ const StreamCard: React.FC<Props> = ({
   const renderStreamLine = (stream: Props['stream'][0], index: number) => (
     <div className="flex text-white" key={index}>
       <p className="text-white52">
-        Stream {index + (streamIndex || 1)}: {stream.sell.amount}{' '}
-        {stream.sell.token}
+        Stream {index + (streamIndex || 1)}:{' '}
+        {formatNumberSmart(stream.sell.amount)} {stream.sell.token}
       </p>
       <Image
         src="/icons/right-arrow.svg"
@@ -57,7 +58,7 @@ const StreamCard: React.FC<Props> = ({
         className="w-3 mx-1.5"
       />
       <p className="text-white52">
-        {stream.buy.amount} {stream.buy.token}
+        {formatNumberSmart(stream.buy.amount)} {stream.buy.token}
       </p>
     </div>
   )

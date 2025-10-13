@@ -5,9 +5,9 @@ import { ReserveData } from '@/app/lib/dex/calculators'
 import { formatEther } from 'ethers/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import DexSummary from './DexSummary'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import NetworkFee from '../../shared/NetworkFee'
-import { formatNumberWithSubscript } from '@/app/lib/utils/number'
 
 interface DetailSectionProps {
   sellAmount?: string
@@ -98,7 +98,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
       const usdValue = minOutput * tokenToUsdPrice
       usdString = ` ($${usdValue.toFixed(2)})`
     }
-    return `${minOutput.toFixed(4)} ${tokenToSymbol}${usdString}`
+    return `${formatNumberSmart(minOutput)} ${tokenToSymbol}${usdString}`
   }
 
   // Format slippage savings as percentage and USD value
@@ -108,7 +108,9 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     if (isNaN(numericBuyAmount) || numericBuyAmount === 0) return '0%'
 
     // Format USD value
-    const usdString = `$${Math.abs(slippageSavings).toFixed(2)}`
+    const usdString = `$${formatNumberSmart(
+      Math.abs(slippageSavings).toFixed(2)
+    )}`
 
     // Calculate percentage
     const savingsPercentage =
@@ -147,7 +149,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             />
           )}
           <p>
-            {formatNumberWithSubscript(sellAmount)} {tokenFromSymbol}
+            {formatNumberSmart(sellAmount)} {tokenFromSymbol}
           </p>
           {inValidAmount ? (
             <Image
@@ -170,7 +172,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             {isCalculating ? (
               <LoadingSkeleton />
             ) : (
-              `${formatNumberWithSubscript(buyAmount)} ${tokenToSymbol} (Est)`
+              `${formatNumberSmart(buyAmount)} ${tokenToSymbol} (Est)`
             )}
           </p>
         </div>

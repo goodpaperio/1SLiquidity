@@ -1,3 +1,5 @@
+import { formatNumberAdvanced } from '@/lib/utils'
+
 /**
  * Formats a number with decimal limits and subscript notation for consecutive zeros
  * @param value The number to format (number, string, or undefined)
@@ -42,4 +44,37 @@ export function formatNumberWithSubscript(
 
   // Combine integer and decimal parts
   return formattedDecimal ? `${integerPart}.${formattedDecimal}` : integerPart
+}
+
+/**
+ * Smart wrapper that decides which formatting function to use based on the number's characteristics
+ * @param value The number to format (number, string, or undefined)
+ * @param maxDecimals Maximum number of decimal places for subscript formatting (default: 5)
+ * @returns Formatted number string, or null if value is undefined
+ *
+ * Logic:
+ * - If number >= 10,000: use formatNumberAdvanced
+ * - If number < 10,000 with significant decimals: use formatNumberWithSubscript
+ */
+export function formatNumberSmart(
+  value: number | string | undefined,
+  maxDecimals: number = 5
+): string | null {
+  if (value === undefined) return null
+
+  const numValue = typeof value === 'string' ? parseFloat(value) : value
+
+  if (isNaN(numValue)) return numValue.toString()
+
+  if (numValue === 0) return '0'
+
+  const absValue = Math.abs(numValue)
+
+  // If the number is >= 10,000, use formatNumberAdvanced
+  if (absValue >= 10000) {
+    return formatNumberAdvanced(numValue)
+  }
+
+  // For numbers < 10,000, use formatNumberWithSubscript
+  return formatNumberWithSubscript(value, maxDecimals)
 }
