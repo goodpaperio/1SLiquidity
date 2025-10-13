@@ -4,6 +4,10 @@ import AmountTag from '../../amountTag'
 import { ReserveData } from '@/app/lib/dex/calculators'
 import { formatEther } from 'ethers/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import DexSummary from './DexSummary'
+import { formatNumberSmart } from '@/app/lib/utils/number'
+import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import NetworkFee from '../../shared/NetworkFee'
 
 interface DetailSectionProps {
   sellAmount?: string
@@ -20,6 +24,7 @@ interface DetailSectionProps {
   isFetchingReserves?: boolean
   slippageSavings?: number | null
   dexFee?: number | null
+  usePriceBased?: boolean
 }
 
 const DetailSection: React.FC<DetailSectionProps> = ({
@@ -37,8 +42,17 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   isCalculating = false,
   slippageSavings = null,
   isFetchingReserves = false,
+  usePriceBased = true,
 }) => {
   const [showDetails, setShowDetails] = useState(true)
+  const { contractInfo, getContractInfo } = useCoreTrading()
+
+  // Fetch contract info on component mount if not already available
+  useEffect(() => {
+    if (!contractInfo) {
+      getContractInfo()
+    }
+  }, [contractInfo, getContractInfo])
 
   const toggleDetails = () => setShowDetails(!showDetails)
 
@@ -84,7 +98,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
       const usdValue = minOutput * tokenToUsdPrice
       usdString = ` ($${usdValue.toFixed(2)})`
     }
-    return `${minOutput.toFixed(4)} ${tokenToSymbol}${usdString}`
+    return `${formatNumberSmart(minOutput)} ${tokenToSymbol}${usdString}`
   }
 
   // Format slippage savings as percentage and USD value
@@ -94,7 +108,9 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     if (isNaN(numericBuyAmount) || numericBuyAmount === 0) return '0%'
 
     // Format USD value
-    const usdString = `$${Math.abs(slippageSavings).toFixed(2)}`
+    const usdString = `$${formatNumberSmart(
+      Math.abs(slippageSavings).toFixed(2)
+    )}`
 
     // Calculate percentage
     const savingsPercentage =
@@ -133,7 +149,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             />
           )}
           <p>
-            {sellAmount} {tokenFromSymbol}
+            {formatNumberSmart(sellAmount)} {tokenFromSymbol}
           </p>
           {inValidAmount ? (
             <Image
@@ -156,7 +172,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             {isCalculating ? (
               <LoadingSkeleton />
             ) : (
-              `${buyAmount} ${tokenToSymbol} (Est)`
+              `${formatNumberSmart(buyAmount)} ${tokenToSymbol} (Est)`
             )}
           </p>
         </div>
@@ -222,6 +238,13 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             infoDetail="Estimated"
             isLoading={isCalculating}
           />
+          <NetworkFee
+            buyAmount={buyAmount}
+            tokenToUsdPrice={tokenToUsdPrice}
+            tokenToSymbol={tokenToSymbol}
+            contractInfo={contractInfo}
+            isCalculating={isCalculating}
+          />
           {/* <AmountTag
             title="Price Impact"
             amount={'0.25%'}
@@ -256,6 +279,15 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             amount={'12 mins'}
             infoDetail="Estimated"
           /> */}
+        </div>
+
+        <div className="w-full border-t border-borderBottom">
+          <DexSummary
+            reserves={reserves}
+            tokenFromSymbol={tokenFromSymbol}
+            tokenToSymbol={tokenToSymbol}
+            usePriceBased={usePriceBased}
+          />
         </div>
       </div>
 

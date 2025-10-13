@@ -44,7 +44,6 @@ const WinSection: React.FC<Props> = ({
   //   setActive(false)
   // })
 
-  console.log('WinSection isLoading', isLoading)
   return (
     <div ref={sectionRef} className="md:w-fit w-full h-fit relative">
       {/* {amount > 0 && (

@@ -394,3 +394,18 @@ export const InfoIcon = React.forwardRef<
 })
 
 InfoIcon.displayName = 'InfoIcon' // Good practice for debugging
+
+export const DocsIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path d="M11.667 1.667H5c-0.92 0-1.667 0.747-1.667 1.667v13.333c0 0.92 0.747 1.667 1.667 1.667h10c0.92 0 1.667-0.747 1.667-1.667V6.667L11.667 1.667z" />
+    </svg>
+  )
+}

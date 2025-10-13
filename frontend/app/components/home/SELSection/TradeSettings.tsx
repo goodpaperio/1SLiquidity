@@ -1,15 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import {
-  ChevronRight,
-  Info,
-  ChevronLeft,
-  Zap,
-  Check,
-  X,
-  InfoIcon,
-} from 'lucide-react'
+import { ChevronRight, Info, ChevronLeft, Zap, Check, X } from 'lucide-react'
+import { InfoIcon } from '@/app/lib/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Tooltip,
@@ -23,9 +16,19 @@ import { Switch } from '@/components/ui/switch'
 import SettingsIcon from '@/app/shared/icons/Settings'
 import { useScreenSize } from '@/app/lib/hooks/useScreenSize'
 import { cn } from '@/lib/utils'
-import { FireIcon } from './HotPair/fire-icon'
+import InstasettlableInput from './InstasettlableInput'
 
-export default function TradingSettings() {
+interface TradingSettingsProps {
+  onSettingsChange?: (settings: {
+    usePriceBased: boolean
+    instasettlableValue: string | null
+    isInstasettlable: boolean
+  }) => void
+}
+
+export default function TradingSettings({
+  onSettingsChange,
+}: TradingSettingsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [showTradeOptions, setShowTradeOptions] = useState(false)
@@ -34,11 +37,28 @@ export default function TradingSettings() {
   const [v4PoolsEnabled, setV4PoolsEnabled] = useState(true)
   const [v3PoolsEnabled, setV3PoolsEnabled] = useState(true)
   const [v2PoolsEnabled, setV2PoolsEnabled] = useState(true)
+  const [tradingMode, setTradingMode] = useState<
+    'PRICE_BASED' | 'RESERVE_BASED'
+  >('RESERVE_BASED')
+  const [instasettlableValue, setInstasettlableValue] = useState<string | null>(
+    null
+  )
+  const [isInstasettlable, setIsInstasettlable] = useState(false)
 
   const { isMobile, isXl, isDesktop, isTablet } = useScreenSize()
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (onSettingsChange) {
+      onSettingsChange({
+        usePriceBased: tradingMode === 'PRICE_BASED',
+        instasettlableValue,
+        isInstasettlable,
+      })
+    }
+  }, [tradingMode, instasettlableValue, isInstasettlable, onSettingsChange])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -275,7 +295,7 @@ export default function TradingSettings() {
                             <InfoIcon className="h-5 w-5 cursor-help block" />
                           </TooltipTrigger>
                           <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
-                            <p>Advanced Trade Options</p>
+                            <p>Advanced trade options</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -288,71 +308,82 @@ export default function TradingSettings() {
                       <X className="h-4 w-4 text-[#3F4542] group-hover:text-white transition-all duration-300" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-medium">
-                        Instasettlable
-                      </span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-zinc-500 cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
-                            <p>
-                              Maximum price difference you're willing to accept
-                              for this trade
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="relative w-[120px]">
-                      <Input
-                        //   type="number"
-                        defaultValue="100"
-                        step="0.1"
-                        min="0.1"
-                        className="pr-12 border-zinc-700 text-white rounded-full text-right"
+                  <InstasettlableInput
+                    defaultValue="100"
+                    onValueChange={(value, confirmed) => {
+                      // Only enable instasettlable when the tick is clicked (confirmed)
+                      setIsInstasettlable(
+                        confirmed &&
+                          value !== null &&
+                          value !== '' &&
+                          value !== '0'
+                      )
+                      setInstasettlableValue(confirmed ? value : null)
+                    }}
+                  />
+
+                  {/* Trading Mode Toggle */}
+                  <div className="flex items-center justify-center">
+                    <div className="relative p-[2px] border-[2px] border-zinc-700 flex rounded-[7px] w-[280px] overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-[#3b3a3a] rounded-[7px] transition-all duration-300 border-[2px] border-black"
+                        style={{
+                          width: '50%',
+                          transform: `translateX(${
+                            tradingMode === 'RESERVE_BASED' ? '0%' : '100%'
+                          })`,
+                        }}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                        BPS
-                      </span>
+                      <div
+                        onClick={() => setTradingMode('RESERVE_BASED')}
+                        className={`relative z-10 ${
+                          tradingMode === 'RESERVE_BASED'
+                            ? 'text-white'
+                            : 'text-gray-500'
+                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                      >
+                        RESERVE BASED
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                              <p>
+                                Execute trades based on liquidity pool reserves
+                                and availability
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div
+                        onClick={() => setTradingMode('PRICE_BASED')}
+                        className={`relative z-10 ${
+                          tradingMode === 'PRICE_BASED'
+                            ? 'text-white'
+                            : 'text-gray-500'
+                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                      >
+                        PRICE BASED
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                              <p>
+                                Execute trades based on price movements and
+                                market conditions
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-medium">Swap deadline</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-zinc-500 cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
-                            <p>
-                              Your transaction will revert if it is pending for
-                              more than this period of time
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="relative w-[120px] flex items-center">
-                      <Input
-                        //   type="number"
-                        defaultValue="4"
-                        step="1"
-                        min="1"
-                        className="pr-[4.2rem] border-zinc-700 text-white rounded-full text-right"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                        minutes
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-medium">Trade options</span>
                     </div>
@@ -363,7 +394,7 @@ export default function TradingSettings() {
                       <span className="text-zinc-400">Default</span>
                       <ChevronRight className="h-5 w-5 text-zinc-400" />
                     </div>
-                  </div>
+                  </div> */}
                 </CardContent>
               )}
             </Card>

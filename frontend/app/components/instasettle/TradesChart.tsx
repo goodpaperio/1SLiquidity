@@ -83,7 +83,7 @@ export default function TradesChart({
   // Use real trades data instead of dummy API
   const limit =
     selectedTopN === 'all' ? DEFAULT_RECORDS : parseInt(selectedTopN)
-  const { trades, isLoading, error } = useTrades({
+  const { trades, isLoading, error, refetch } = useTrades({
     first: limit,
     skip: 0,
   })
@@ -97,10 +97,19 @@ export default function TradesChart({
     if (!trades || trades.length === 0) return []
 
     // Filter trades based on selected tokens
-    let filteredTrades = trades
+    let filteredTrades = trades.filter(
+      (trade) =>
+        trade.isInstasettlable &&
+        trade.settlements.length === 0 &&
+        trade.cancellations.length === 0
+    )
+
     if (selectedTokenFrom && selectedTokenTo) {
       filteredTrades = trades.filter(
         (trade) =>
+          trade.isInstasettlable &&
+          trade.settlements.length === 0 &&
+          trade.cancellations.length === 0 &&
           trade.tokenIn?.toLowerCase() ===
             selectedTokenFrom.token_address?.toLowerCase() &&
           trade.tokenOut?.toLowerCase() ===
@@ -167,88 +176,83 @@ export default function TradesChart({
             )
           : '0'
 
-        // Calculate cost (same logic as TradesTable)
-        const targetAmountOut = trade.minAmountOut
-        const realisedAmountOut = trade.realisedAmountOut
-        const instasettleBps = trade.instasettleBps
-
-        const cost = BigInt(targetAmountOut) - BigInt(realisedAmountOut)
-        const formatCost = tokenOut
-          ? formatUnits(BigInt(cost || '0'), tokenOut.decimals || 18)
+        // Calculate remaining amount out in tokens (what instasettler needs to provide)
+        const remainingAmountOut =
+          BigInt(trade.minAmountOut) - BigInt(trade.realisedAmountOut)
+        const formattedRemainingAmountOut = tokenOut
+          ? formatUnits(remainingAmountOut, tokenOut.decimals || 18)
           : '0'
 
-        // Calculate amountOut for effective price
-        let amountOut: bigint
-        try {
-          amountOut =
-            ((BigInt(targetAmountOut) - BigInt(realisedAmountOut)) *
-              (BigInt(10000) - BigInt(instasettleBps))) /
-            BigInt(10000)
-        } catch {
-          amountOut = BigInt(0)
-        }
+        // Calculate cost in USD (what instasettler needs to pay in tokenOut)
+        const costInUsd =
+          tokenOut && !isNaN(Number(formattedRemainingAmountOut))
+            ? Number(formattedRemainingAmountOut) * (tokenOut.usd_price || 0)
+            : 0
 
-        // Calculate amountIn for effective price
-        const NETWORK_FEE_BPS = BigInt(15) // 15 basis points
+        // Calculate network fee (15 basis points = 0.15%)
+        const NETWORK_FEE_BPS = BigInt(15)
         const networkFee =
           (BigInt(trade.amountIn) * NETWORK_FEE_BPS) / BigInt(10000)
 
-        let amountIn: bigint
+        // Calculate effective price (tokens out per token in ratio)
+        let effectivePriceRatio = 0
         try {
-          amountIn =
+          const amountInAfterFee =
             (BigInt(trade.amountRemaining) *
               (BigInt(10000) - NETWORK_FEE_BPS)) /
             BigInt(10000)
-        } catch {
-          amountIn = BigInt(1) // Use 1 to avoid division by zero
-        }
 
-        // Calculate effective price
-        let effectivePrice = 0
-        try {
-          if (amountIn > BigInt(0)) {
-            const tokenOutDecimals = tokenOut?.decimals || 6 // Default to 6 for USDC
-            const tokenInDecimals = tokenIn?.decimals || 18 // Default to 18 for ETH
+          const amountOutAfterDiscount =
+            (remainingAmountOut *
+              (BigInt(10000) - BigInt(trade.instasettleBps))) /
+            BigInt(10000)
+
+          if (amountInAfterFee > BigInt(0)) {
+            const tokenOutDecimals = tokenOut?.decimals || 18
+            const tokenInDecimals = tokenIn?.decimals || 18
 
             const amountOutFloat =
-              Number(amountOut) / Math.pow(10, tokenOutDecimals)
+              Number(amountOutAfterDiscount) / Math.pow(10, tokenOutDecimals)
             const amountInFloat =
-              Number(amountIn) / Math.pow(10, tokenInDecimals)
+              Number(amountInAfterFee) / Math.pow(10, tokenInDecimals)
 
-            effectivePrice = amountOutFloat / amountInFloat
+            effectivePriceRatio = amountOutFloat / amountInFloat
           }
         } catch {
-          effectivePrice = 0
+          effectivePriceRatio = 0
         }
 
-        // Calculate savings
-        let savings = 0
-        try {
-          const volume = Number(formattedAmountRemaining)
-          savings = effectivePrice - volume
-          savings = isFinite(savings) ? Math.max(0, savings) : 0
-        } catch (error) {
-          savings = 0
-        }
+        // Calculate savings in tokenOut (discount on amountOut)
+        const savingsInTokenOut =
+          (Number(formattedRemainingAmountOut) * Number(trade.instasettleBps)) /
+          10000
+
+        // Calculate savings in USD
+        const savingsInUsd =
+          tokenOut && !isNaN(savingsInTokenOut)
+            ? savingsInTokenOut * (tokenOut.usd_price || 0)
+            : 0
 
         // Create ExtendedTrade object
         const extendedTrade: ExtendedTrade = {
           ...trade,
-          effectivePrice: isFinite(effectivePrice) ? effectivePrice : 0,
+          effectivePrice: isFinite(effectivePriceRatio)
+            ? effectivePriceRatio
+            : 0,
           networkFee: isFinite(Number(networkFee)) ? Number(networkFee) : 0,
           amountInUsd: isFinite(amountInUsd) ? amountInUsd : 0,
           tokenInDetails: tokenIn || null,
           tokenOutDetails: tokenOut || null,
           formattedAmountRemaining: formattedAmountRemaining,
-          cost: Number(formatCost),
-          savings: isFinite(savings) ? savings : 0,
+          cost: isFinite(costInUsd) ? costInUsd : 0,
+          savings: isFinite(savingsInUsd) ? savingsInUsd : 0,
         }
+        console.log('ivan instasettle extendedTrade', extendedTrade)
 
         return {
-          cost: Number(formatCost), // Cost in USD for X-axis
-          volume: Number(formattedAmountRemaining), // Volume (formattedAmountRemaining)
-          savings: isFinite(savings) ? savings : 0, // Savings in USD for Y-axis
-          // savings: Number(formatCost) * Math.floor(Math.random() * 100) + 1,
+          cost: isFinite(costInUsd) ? costInUsd : 0, // Cost in USD for X-axis
+          volume: Number(formattedAmountRemaining), // Volume in tokens
+          savings: isFinite(savingsInUsd) ? savingsInUsd : 0, // Savings in USD for Y-axis
           trade: extendedTrade,
         }
       } catch (error) {
@@ -316,12 +320,12 @@ export default function TradesChart({
     if (!isChartReady) return
     setSelectedBar(selectedBar === index ? null : index)
     if (selectedBar !== index) {
-      console.log('Selected Bar Details:', {
-        cost: data.cost,
-        volume: data.volume,
-        savings: data.savings,
-        trade: data.trade,
-      })
+      // console.log('Selected Bar Details:', {
+      //   cost: data.cost,
+      //   volume: data.volume,
+      //   savings: data.savings,
+      //   trade: data.trade,
+      // })
     }
   }
 
@@ -412,6 +416,7 @@ export default function TradesChart({
           onClearSelection={() => setSelectedBar(null)}
           selectedTokenFrom={selectedTokenFrom}
           selectedTokenTo={selectedTokenTo}
+          refetchTrades={refetch}
         />
       </div>
     )
@@ -484,6 +489,7 @@ export default function TradesChart({
           onClearSelection={() => setSelectedBar(null)}
           selectedTokenFrom={selectedTokenFrom}
           selectedTokenTo={selectedTokenTo}
+          refetchTrades={refetch}
         />
       </div>
     )
@@ -586,7 +592,8 @@ export default function TradesChart({
                 }}
               >
                 {/* Background gradient */}
-                <div
+                {/* TODO: add background gradient */}
+                {/* <div
                   className="w-full h-64 bg-gradient-to-br from-[#114532] to-[#22432e] absolute bottom-[35px] left-0"
                   style={{
                     WebkitMaskImage:
@@ -598,7 +605,7 @@ export default function TradesChart({
                     maskRepeat: 'no-repeat',
                     maskSize: '100% 100%',
                   }}
-                />
+                /> */}
 
                 <ChartContainer
                   config={chartConfig}
@@ -654,7 +661,8 @@ export default function TradesChart({
                     <Bar
                       dataKey="savings"
                       radius={8}
-                      // maxBarSize={20}
+                      maxBarSize={sortedChartData.length <= 10 ? 60 : undefined}
+                      minPointSize={5}
                       activeIndex={(selectedBar || activeBar) ?? undefined}
                     >
                       {sortedChartData.map((entry, index) => (
@@ -713,6 +721,7 @@ export default function TradesChart({
         onClearSelection={() => setSelectedBar(null)}
         selectedTokenFrom={selectedTokenFrom}
         selectedTokenTo={selectedTokenTo}
+        refetchTrades={refetch}
       />
     </div>
   )

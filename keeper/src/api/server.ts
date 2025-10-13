@@ -261,11 +261,11 @@ app.get(
 app.get(
   '/api/tokens/top',
   asyncHandler(async (req: Request, res: Response) => {
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 1000
     const metric = (req.query.metric as string) || 'reserveAtotaldepth'
 
-    if (limit < 1 || limit > 500) {
-      throw { statusCode: 400, message: 'Limit must be between 1 and 500' }
+    if (limit < 1 || limit > 2000) {
+      throw { statusCode: 400, message: 'Limit must be between 1 and 2000' }
     }
 
     const validMetrics = [
@@ -315,6 +315,7 @@ app.get(
         ...t,
         marketCap: t.marketCap ? t.marketCap.toString() : null,
       })),
+      total: topTokens.length,
       metric,
       limit,
     })

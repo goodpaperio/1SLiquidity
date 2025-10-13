@@ -2,13 +2,8 @@ import { title } from 'process'
 
 export const NAV_LINKS: NAV_LINKS[] = [
   {
-    title: 'Home',
-    href: '/',
-    icon: '/icons/home.svg',
-  },
-  {
     title: 'Stream',
-    href: '/swaps',
+    href: '/',
     icon: '/icons/swaps.svg',
   },
   {
@@ -20,6 +15,11 @@ export const NAV_LINKS: NAV_LINKS[] = [
     title: 'Hot Pairs',
     href: '/hotpairs',
     icon: '/icons/fire.svg',
+  },
+  {
+    title: 'Docs',
+    href: '/docs',
+    icon: '/icons/docs.svg',
   },
   // {
   //   title: 'Pools',

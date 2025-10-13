@@ -1,8 +1,8 @@
 {
-  "description": "Toutes les paires de liquidité contenant le token USDT avec réserves non-nulles (incluant tous les tokens de base)",
-  "totalCount": 53,
-  "extractedAt": "2025-08-06T09:24:51.086Z",
-  "filterCriteria": "Réserves token0 > 0 ET token1 > 0",
+  "description": "All liquidity pairs containing USDT token with non-zero reserves (including all base tokens)",
+  "totalCount": 54,
+  "extractedAt": "2025-10-05T12:39:39.252Z",
+  "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
   "pairs": [
     {
       "name": "1inch",
@@ -11,10 +11,6 @@
     {
       "name": "aave",
       "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
-    },
-    {
-      "name": "ape",
-      "address": "0x4d224452801aced8b2f0aebe155379bb5d594381"
     },
     {
       "name": "arb",
@@ -73,12 +69,20 @@
       "address": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
     },
     {
+      "name": "ff",
+      "address": "0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949"
+    },
+    {
       "name": "floki",
       "address": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e"
     },
     {
-      "name": "frax",
-      "address": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0"
+      "name": "gho",
+      "address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f"
+    },
+    {
+      "name": "gno",
+      "address": "0x6810e776880c02933d47db1b9fc05908e5386b96"
     },
     {
       "name": "grt",
@@ -93,20 +97,16 @@
       "address": "0x7420b4b9a0110cdc71fb720908340c03f9bc03ec"
     },
     {
+      "name": "ldo",
+      "address": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
+    },
+    {
       "name": "link",
       "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
     },
     {
       "name": "mana",
       "address": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
-    },
-    {
-      "name": "matic",
-      "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
-    },
-    {
-      "name": "move",
-      "address": "0x3073f7aaa4db83f95e9fff17424f71d4751a3073"
     },
     {
       "name": "nexo",
@@ -133,10 +133,6 @@
       "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933"
     },
     {
-      "name": "pol",
-      "address": "0x455e53cbb86018ac2b8092fdcd39d8444affc3f6"
-    },
-    {
       "name": "pyusd",
       "address": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
     },
@@ -157,16 +153,16 @@
       "address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
     },
     {
+      "name": "snx",
+      "address": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
+    },
+    {
+      "name": "steth",
+      "address": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
       "name": "super",
       "address": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55"
-    },
-    {
-      "name": "susde",
-      "address": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
-    },
-    {
-      "name": "tkx",
-      "address": "0x667102bd3413bfeaa3dffb48fa8288819e480a88"
     },
     {
       "name": "ton",
@@ -193,6 +189,10 @@
       "address": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
     },
     {
+      "name": "usdf",
+      "address": "0xfa2b947eec368f42195f24f36d2af29f7c24cec2"
+    },
+    {
       "name": "usdt",
       "address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
     },
@@ -207,6 +207,10 @@
     {
       "name": "weth",
       "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    {
+      "name": "wlfi",
+      "address": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
     },
     {
       "name": "wsteth",

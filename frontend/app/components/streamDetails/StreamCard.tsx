@@ -2,9 +2,10 @@ import { formatCustomTime, formatWalletAddress } from '@/app/lib/helper'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 
 type Props = {
-  status: 'ongoing' | 'scheduled' | 'completed'
+  status: 'ongoing' | 'scheduled' | 'completed' | 'Instasettled'
   stream: {
     sell: { amount: number; token: string }
     buy: { amount: number; token: string }
@@ -14,6 +15,7 @@ type Props = {
   isInstasettle?: boolean
   timeRemaining?: string
   isLoading?: boolean
+  streamIndex?: number
 }
 
 const StreamCard: React.FC<Props> = ({
@@ -24,6 +26,7 @@ const StreamCard: React.FC<Props> = ({
   isInstasettle,
   timeRemaining,
   isLoading = false,
+  streamIndex,
 }) => {
   const renderStreams = (streams: Props['stream']) => {
     if (streams.length > 4) {
@@ -44,7 +47,8 @@ const StreamCard: React.FC<Props> = ({
   const renderStreamLine = (stream: Props['stream'][0], index: number) => (
     <div className="flex text-white" key={index}>
       <p className="text-white52">
-        Stream {index + 1}: {stream.sell.amount} {stream.sell.token}
+        Stream {index + (streamIndex || 1)}:{' '}
+        {formatNumberSmart(stream.sell.amount)} {stream.sell.token}
       </p>
       <Image
         src="/icons/right-arrow.svg"
@@ -54,7 +58,7 @@ const StreamCard: React.FC<Props> = ({
         className="w-3 mx-1.5"
       />
       <p className="text-white52">
-        {stream.buy.amount} {stream.buy.token}
+        {formatNumberSmart(stream.buy.amount)} {stream.buy.token}
       </p>
     </div>
   )
@@ -93,9 +97,14 @@ const StreamCard: React.FC<Props> = ({
         </div>
 
         {walletAddress && (
-          <p className={`text-primary underline text-[14px]`}>
+          <a
+            href={`https://etherscan.io/tx/${walletAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-primary underline text-[14px] hover:text-primary/80 transition-colors cursor-pointer`}
+          >
             {formatWalletAddress(walletAddress)}
-          </p>
+          </a>
         )}
       </div>
 

@@ -12,6 +12,15 @@ export interface Cancellation {
   timestamp: string
 }
 
+export interface Settlement {
+  id: string
+  settler: string
+  totalAmountIn: string
+  totalAmountOut: string
+  totalFees: string
+  timestamp: string
+}
+
 export interface Trade {
   amountIn: string
   amountRemaining: string
@@ -36,6 +45,7 @@ export interface Trade {
   tokenInDetails?: any // Using any for now since we don't have the token type here
   tokenOutDetails?: any // Using any for now since we don't have the token type here
   cancellations: Cancellation[]
+  settlements: Settlement[]
 }
 
 export interface TradesResponse {

@@ -127,7 +127,7 @@ const fetchTokenPairs = async ({
 }
 
 const fetchTopTokens = async ({
-  limit = 50,
+  limit = 1000,
   metric = 'slippageSavings',
 }: UseTopTokensParams = {}): Promise<TopTokensResponse> => {
   const params = new URLSearchParams({
@@ -289,7 +289,7 @@ export const useEnhancedTokenPairs = (params: UseTokenPairsParams) => {
 }
 
 export const useEnhancedTopTokens = (params: UseTopTokensParams = {}) => {
-  const { limit = 100, metric = 'slippageSavings', enabled = true } = params
+  const { limit = 1000, metric = 'slippageSavings', enabled = true } = params
   const { enhanceTokenPair, isLoadingTokenList } = useTokenEnhancer()
 
   const baseQuery = useQuery({

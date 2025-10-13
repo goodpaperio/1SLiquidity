@@ -11,7 +11,7 @@ import { useAppKitAccount, useAppKitState } from '@reown/appkit/react'
 import { useToast } from '@/app/lib/context/toastProvider'
 import { formatWalletAddress } from '@/app/lib/helper'
 import { useWalletTokens } from '@/app/lib/hooks/useWalletTokens'
-import { ChevronDown } from 'lucide-react'
+import { CheckIcon, ChevronDown, CopyIcon } from 'lucide-react'
 import tokensListData from '@/app/lib/utils/tokens-list-04-09-2025.json'
 
 // Types for JSON data
@@ -171,8 +171,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  console.log('SelectTokenModal rendered')
-
   const [searchValue, setSearchValue] = useState('')
   const [tokenFilter, setTokenFilter] = useState<'all' | 'my'>('all')
   const [selectedBaseToken, setSelectedBaseToken] = useState<string | null>(
@@ -194,11 +192,20 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   const chainIdWithPrefix = stateData?.selectedNetworkId || 'eip155:1'
   const chainId = chainIdWithPrefix.split(':')[1]
   const chainName = CHAIN_NAMES[chainId] || 'Unknown Chain'
-
-  console.log('Modal - Chain ID:', chainId)
-  console.log('Modal - Chain Name:', chainName)
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
 
   const { addToast } = useToast()
+
+  const handleCopy = (
+    e: React.MouseEvent<HTMLDivElement | SVGSVGElement>,
+    address: string
+  ) => {
+    e.stopPropagation()
+    if (!address) return
+    navigator.clipboard.writeText(address)
+    setCopiedAddress(address)
+    setTimeout(() => setCopiedAddress(null), 1000) // show check for 2s
+  }
 
   // Get wallet tokens for the current chain
   const { tokens: walletTokens, isLoading: isLoadingWalletTokens } =
@@ -207,8 +214,8 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   // Use token list from our enhanced hook that fetches from CoinGecko API with caching
   const { tokens: availableTokens, isLoading, error, refetch } = useTokenList()
 
-  console.log('Modal - Available Tokens:', availableTokens)
-  console.log('Modal - Wallet Tokens:', walletTokens)
+  // console.log('Modal - Available Tokens:', availableTokens)
+  // console.log('Modal - Wallet Tokens:', walletTokens)
 
   // Determine which base token to filter by
   useEffect(() => {
@@ -220,7 +227,13 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
       otherFieldToken &&
       BASE_TOKENS.includes(otherFieldToken.symbol.toUpperCase())
     ) {
-      setSelectedBaseToken(otherFieldToken.symbol.toUpperCase())
+      // setSelectedBaseToken(otherFieldToken.symbol.toUpperCase())
+      // Normalize ETH/WETH to use WETH for filtering since they have the same address
+      let baseTokenSymbol = otherFieldToken.symbol.toUpperCase()
+      if (baseTokenSymbol === 'ETH') {
+        baseTokenSymbol = 'WETH'
+      }
+      setSelectedBaseToken(baseTokenSymbol)
     } else {
       // Check if any token from results is selected in the other field
       if (otherFieldToken) {
@@ -278,24 +291,24 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
 
   const displayTokens = createDisplayTokens()
 
-  console.log('Modal - Display Tokens:', displayTokens)
-  console.log('Number of Display Tokens:', displayTokens.length)
-  console.log('Selected Base Token:', selectedBaseToken)
+  // console.log('Modal - Display Tokens:', displayTokens)
+  // console.log('Number of Display Tokens:', displayTokens.length)
+  // console.log('Selected Base Token:', selectedBaseToken)
   // Log available tokens to check WETH price
-  console.log(
-    'Available Tokens:',
-    availableTokens.filter(
-      (t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth'
-    )
-  )
-  console.log(
-    'Wallet Tokens:',
-    walletTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
-  )
-  console.log(
-    'Display Tokens:',
-    displayTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
-  )
+  // console.log(
+  //   'Available Tokens:',
+  //   availableTokens.filter(
+  //     (t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth'
+  //   )
+  // )
+  // console.log(
+  //   'Wallet Tokens:',
+  //   walletTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
+  // )
+  // console.log(
+  //   'Display Tokens:',
+  //   displayTokens.filter((t: TOKENS_TYPE) => t.symbol.toLowerCase() === 'weth')
+  // )
 
   // Function to format balance based on decimals
   const formatTokenBalance = (balance: string, decimals: number) => {
@@ -397,7 +410,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
   // Filter tokens based on search and make sure we don't show the already selected token in the other field
   const getFilteredTokens = () => {
     let filteredTokens = displayTokens
-    console.log('Initial tokens count:', displayTokens.length)
 
     // Remove duplicate tokens (keep the one with higher balance)
     filteredTokens = Object.values(
@@ -405,7 +417,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
         (acc: { [key: string]: TOKENS_TYPE }, token: TOKENS_TYPE) => {
           const lowerAddress = token.token_address?.toLowerCase() || ''
           if (!lowerAddress) {
-            console.log('Token with no address:', token)
             return acc
           }
           if (
@@ -419,7 +430,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
         {}
       )
     )
-    console.log('After deduplication tokens count:', filteredTokens.length)
 
     // Apply search filter if search value exists
     if (debouncedSearchValue) {
@@ -430,17 +440,12 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
           token.symbol.toLowerCase().includes(searchLower) ||
           token.token_address.toLowerCase() === searchLower
       )
-      console.log('After search filter tokens count:', filteredTokens.length)
     }
 
     // Filter by "My tokens" if selected and wallet is connected
     if (tokenFilter === 'my' && address) {
       filteredTokens = filteredTokens.filter(
         (token: TOKENS_TYPE) => parseFloat(token.balance) > 0
-      )
-      console.log(
-        'After "my tokens" filter tokens count:',
-        filteredTokens.length
       )
     }
 
@@ -456,7 +461,6 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
           token.token_address !== selectedTokenFrom.token_address
       )
     }
-    console.log('Final filtered tokens count:', filteredTokens.length)
 
     // Sort tokens by market value (usd_price * balance) and popularity
     return filteredTokens.sort((a: TOKENS_TYPE, b: TOKENS_TYPE) => {
@@ -719,9 +723,21 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                             {token.symbol}
                           </p>
                           {token.token_address && (
-                            <p className="text-[14px] uppercase text-gray p-0 leading-tight">
-                              {formatWalletAddress(token.token_address)}
-                            </p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[14px] uppercase text-gray p-0 leading-tight">
+                                {formatWalletAddress(token.token_address)}
+                              </p>
+                              {copiedAddress === token.token_address ? (
+                                <CheckIcon className="w-3.5 h-3.5 text-green-500" />
+                              ) : (
+                                <CopyIcon
+                                  className="w-3.5 h-3.5 cursor-pointer hover:text-gray-400"
+                                  onClick={(e) =>
+                                    handleCopy(e, token.token_address)
+                                  }
+                                />
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -825,7 +841,18 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                     <div className="flex items-center gap-1">
                       <span className="text-sm text-gray">filtered by</span>
                       <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                        {selectedBaseToken}
+                        {/* {selectedBaseToken} */}
+                        {(() => {
+                          // Get the original token symbol for display
+                          const otherFieldToken =
+                            currentInputField === 'from'
+                              ? selectedTokenTo
+                              : selectedTokenFrom
+                          return (
+                            otherFieldToken?.symbol.toUpperCase() ||
+                            selectedBaseToken
+                          )
+                        })()}
                       </span>
                       <button
                         onClick={() => setSelectedBaseToken(null)}
@@ -942,9 +969,21 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                               {token.symbol}
                             </p>
                             {token.token_address && (
-                              <p className="text-[14px] uppercase text-gray p-0 leading-tight">
-                                {formatWalletAddress(token.token_address)}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[14px] uppercase text-gray p-0 leading-tight">
+                                  {formatWalletAddress(token.token_address)}
+                                </p>
+                                {copiedAddress === token.token_address ? (
+                                  <CheckIcon className="w-3.5 h-3.5 text-green-500" />
+                                ) : (
+                                  <CopyIcon
+                                    className="w-3.5 h-3.5 cursor-pointer hover:text-gray"
+                                    onClick={(e) =>
+                                      handleCopy(e, token.token_address)
+                                    }
+                                  />
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>

@@ -2,6 +2,7 @@
 
 import { NAV_LINKS } from '@/app/lib/constants'
 import {
+  DocsIcon,
   HomeIcon,
   InstasettleIcon,
   SwapsIcon,
@@ -178,6 +179,14 @@ const Navbar: React.FC<Props> = ({ isBack, onBack }) => {
                       isActive={pathname === link.href}
                     />
                   )}
+                  {link.title === 'Docs' && (
+                    <DocsIcon
+                      className={cn(
+                        'w-4.5 h-4.5 text-white',
+                        pathname === link.href && 'text-primary'
+                      )}
+                    />
+                  )}
                   <span>{link.title}</span>
                 </Link>
               )
@@ -206,31 +215,22 @@ const Navbar: React.FC<Props> = ({ isBack, onBack }) => {
 
       {/* live button and connect button */}
       <div className="flex gap-[10px] ">
-        <div className="flex items-center justify-center">
-          <span>Ongoing Trades:</span>
-        </div>
         <div
           onClick={() => {
             showWalletDetailsSidebar(false)
             showGlobalStreamSidebar(!isGlobalStreamSidebarOpen)
           }}
           className={cn(
-            'relative cursor-pointer h-10 rounded-[12px] flex items-center justify-center border-primary border-[2px] transition-all duration-300',
+            'relative cursor-pointer h-10 rounded-[12px] flex items-center border-primary border-[2px] transition-all duration-300 w-auto px-3 justify-between gap-2',
             isGlobalStreamSidebarOpen
               ? 'border-success bg-successGradient'
-              : 'hover:bg-[#2a2a2a]',
-            isConnected ? 'w-10' : 'w-14'
+              : 'hover:bg-[#2a2a2a]'
           )}
         >
-          {/* <Image
-            src="/icons/live-statistics.svg"
-            alt="logo"
-            className="w-6 h-6 text-red"
-            width={40}
-            height={40}
-          /> */}
-          {/* <LiveStatisticsIcon className="w-6 h-6 text-primary" /> */}
-          <TypewriterIcon className="w-6 h-6 text-primary" />
+          <span className="text-white text-sm whitespace-nowrap">
+            Ongoing Trades
+          </span>
+          <TypewriterIcon className="w-6 h-6 text-primary flex-shrink-0" />
           {/* <div className="absolute w-[24px] h-[12px] bg-primaryRed -bottom-1.5 text-xs font-semibold uppercase flex items-center justify-center rounded-[2px]">
             LIVE
           </div> */}

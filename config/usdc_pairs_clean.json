@@ -1,8 +1,8 @@
 {
-  "description": "Toutes les paires de liquidité contenant le token USDC avec réserves non-nulles (incluant tous les tokens de base)",
-  "totalCount": 74,
-  "extractedAt": "2025-08-06T09:24:51.096Z",
-  "filterCriteria": "Réserves token0 > 0 ET token1 > 0",
+  "description": "All liquidity pairs containing USDC token with non-zero reserves (including all base tokens)",
+  "totalCount": 71,
+  "extractedAt": "2025-10-05T12:39:39.247Z",
+  "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
   "pairs": [
     {
       "name": "1inch",
@@ -13,24 +13,12 @@
       "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
     },
     {
-      "name": "amp",
-      "address": "0xff20817765cb7f73d4bde2e66e067e58d11095c2"
-    },
-    {
-      "name": "ape",
-      "address": "0x4d224452801aced8b2f0aebe155379bb5d594381"
-    },
-    {
       "name": "arb",
       "address": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
     },
     {
-      "name": "axl",
-      "address": "0x467719ad09025fcc6cf6f8311755809d45a5e5f3"
-    },
-    {
-      "name": "bnb",
-      "address": "0xb8c77482e45f1f44de1745f52c74426c631bdd52"
+      "name": "axs",
+      "address": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
     },
     {
       "name": "bonk",
@@ -59,10 +47,6 @@
     {
       "name": "crv",
       "address": "0xd533a949740bb3306d119cc777fa900ba034cd52"
-    },
-    {
-      "name": "cvx",
-      "address": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b"
     },
     {
       "name": "dai",
@@ -97,12 +81,12 @@
       "address": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
     },
     {
-      "name": "frax",
-      "address": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0"
+      "name": "ff",
+      "address": "0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949"
     },
     {
-      "name": "gala",
-      "address": "0xd1d2eb1b1e90b638588728b4130137d262c87cae"
+      "name": "fluid",
+      "address": "0x6f40d4a6237c257fff2db00fa0510deeecd303eb"
     },
     {
       "name": "gho",
@@ -125,6 +109,10 @@
       "address": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
     },
     {
+      "name": "linea",
+      "address": "0x1789e0043623282d5dcc7f213d703c6d8bafbb04"
+    },
+    {
       "name": "link",
       "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
     },
@@ -133,16 +121,8 @@
       "address": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
     },
     {
-      "name": "matic",
-      "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
-    },
-    {
       "name": "mnt",
       "address": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354"
-    },
-    {
-      "name": "mog",
-      "address": "0xaaee1a9723aadb7afa2810263653a34ba2c21c7a"
     },
     {
       "name": "near",
@@ -205,8 +185,16 @@
       "address": "0x3845badade8e6dff049820680d1f14bd3903a5d0"
     },
     {
+      "name": "sena",
+      "address": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
+    },
+    {
       "name": "shib",
       "address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "name": "snx",
+      "address": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
     },
     {
       "name": "spx",
@@ -233,16 +221,12 @@
       "address": "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd"
     },
     {
-      "name": "syrup",
-      "address": "0x643c4e15d7d62ad0abec4a9bd4b001aa3ef52d66"
+      "name": "syrupusdc",
+      "address": "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b"
     },
     {
       "name": "tel",
       "address": "0x467bccd9d29f223bce8043b84e8c8b282827790f"
-    },
-    {
-      "name": "tkx",
-      "address": "0x667102bd3413bfeaa3dffb48fa8288819e480a88"
     },
     {
       "name": "ton",
@@ -287,6 +271,10 @@
     {
       "name": "weth",
       "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    {
+      "name": "wlfi",
+      "address": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
     },
     {
       "name": "wsteth",

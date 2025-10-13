@@ -95,13 +95,11 @@ export const usePrefetchReserves = ({
     // Enable medium priority batch after delay
     const mediumTimer = setTimeout(() => {
       setEnabledQueriesCount(4) // Enable first 4 queries
-      console.log('Enabling medium priority pairs for prefetch')
     }, CACHE_CONFIG.MEDIUM_DELAY)
 
     // Enable low priority batch after longer delay
     const lowTimer = setTimeout(() => {
       setEnabledQueriesCount(PAIRS_TO_PREFETCH.length) // Enable all queries
-      console.log('Enabling low priority pairs for prefetch')
     }, CACHE_CONFIG.LOW_DELAY)
 
     return () => {
@@ -134,8 +132,6 @@ export const usePrefetchReserves = ({
         CACHE_CONFIG.REQUEST_TIMEOUT
       )
 
-      // console.log(`Prefetching reserves for ${fromSymbol}-${toSymbol}`)
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/reserves?tokenA=${fromAddress}&tokenB=${toAddress}`,
         { signal: controller.signal }
@@ -162,11 +158,13 @@ export const usePrefetchReserves = ({
         dex: data.dex,
         pairAddress: data.pairAddress,
         reserves: data.reserves,
+        price: data.price,
         decimals: data.decimals,
         timestamp: data.timestamp,
         token0Address: fromAddress,
         token1Address: toAddress,
         totalReserves: data.totalReserves, // Include totalReserves from API
+        otherDexes: data.otherDexes,
       } as ReserveData
 
       const calculator = DexCalculatorFactory.createCalculator(
@@ -174,8 +172,6 @@ export const usePrefetchReserves = ({
         undefined,
         chainId
       )
-
-      // console.log(`Successfully prefetched ${fromSymbol}-${toSymbol}`)
 
       return {
         reserveData: reserveDataWithDecimals,

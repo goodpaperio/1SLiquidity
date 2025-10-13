@@ -9,6 +9,7 @@ export interface ReserveResult {
     token0: number
     token1: number
   }
+  price: number
   timestamp: number
   // Optional fields for aggregated data (only present in getAllReserves)
   totalReserves?: {
@@ -17,4 +18,18 @@ export interface ReserveResult {
     totalReserveTokenA: string
     totalReserveTokenB: string
   }
+  otherDexes?: {
+    dex: string
+    pairAddress: string
+    reserves: {
+      token0: string
+      token1: string
+    }
+    price: number
+    decimals: {
+      token0: number
+      token1: number
+    }
+    timestamp: number
+  }[]
 }

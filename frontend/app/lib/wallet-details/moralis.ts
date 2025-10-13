@@ -61,9 +61,6 @@ const getWhitelistedTokens = (): string[] => {
       })
     })
 
-    console.log(
-      `🔍 DEBUG: Loaded ${whitelistedTokens.length} whitelisted tokens from JSON file`
-    )
     return whitelistedTokens
   } catch (error) {
     console.error('💥 Error loading whitelisted tokens from JSON:', error)
@@ -262,17 +259,8 @@ export const getWalletTokens = async (
     const shouldCheckNew = shouldCheckForNewTokens(address, chain)
 
     if (cachedTokens && !shouldCheckNew) {
-      // console.log(
-      //   `🔍 DEBUG: Using cached wallet tokens for ${address} on ${chain}`
-      // )
       return cachedTokens
     }
-
-    // console.log(
-    //   `🔍 DEBUG: Fetching fresh wallet tokens for ${address} on ${chain}${
-    //     cachedTokens ? ' (checking for new tokens)' : ''
-    //   }`
-    // )
 
     await initMoralis()
 
@@ -295,10 +283,7 @@ export const getWalletTokens = async (
       if (!newTokensDetected) {
         // No new tokens, update the last check timestamp and return cached data
         updateLastCheckTimestamp(address, chain)
-        console.log(`✅ DEBUG: No new tokens detected, using cached data`)
         return cachedTokens
-      } else {
-        console.log(`🆕 DEBUG: New tokens detected, fetching fresh data`)
       }
     }
 
@@ -468,11 +453,6 @@ export const getWalletTokens = async (
 
       // Always exclude blacklisted tokens
       if (blacklistedTokens.includes(token.token_address.toLowerCase())) {
-        console.log(
-          '🚫 DEBUG: Token blacklisted:',
-          token.symbol,
-          token.token_address
-        )
         return false
       }
 
@@ -480,7 +460,6 @@ export const getWalletTokens = async (
       if (
         token.token_address === '0x0000000000000000000000000000000000000000'
       ) {
-        console.log('✅ DEBUG: Native token included:', token.symbol)
         return true
       }
 
@@ -489,24 +468,11 @@ export const getWalletTokens = async (
 
       // STRICT WHITELIST CHECK - Only include tokens that are whitelisted
       if (whitelistedTokens.includes(token.token_address.toLowerCase())) {
-        // console.log(
-        //   '✅ DEBUG: Token whitelisted:',
-        //   token.symbol,
-        //   token.token_address
-        // )
         return true
       }
 
-      // If not in whitelist, exclude the token
-      console.log(
-        '🚫 DEBUG: Token not whitelisted, excluding:',
-        token.symbol,
-        token.token_address
-      )
       return false
     })
-
-    console.log(`📈 DEBUG: Total tokens after filtering: ${validTokens.length}`)
 
     // Cache the result before returning
     setCachedWalletData(cacheKey, timestampKey, validTokens)

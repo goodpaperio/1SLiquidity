@@ -43,14 +43,14 @@ export function calculateSweetSpot(
   const scaledReserveB = Number(reserveB) / 10 ** decimalsB
   const scaledVolume = Number(tradeVolume) / 10 ** decimalsA
 
-  console.log('Reserves: ==>', {
-    reserveA,
-    reserveB,
-    scaledReserveA,
-    scaledReserveB,
-    scaledVolume,
-    sellAmount,
-  })
+  // console.log('Reserves: ==>', {
+  //   reserveA,
+  //   reserveB,
+  //   scaledReserveA,
+  //   scaledReserveB,
+  //   scaledVolume,
+  //   sellAmount,
+  // })
 
   // Calculate alpha based on which reserve is larger
   const alpha =

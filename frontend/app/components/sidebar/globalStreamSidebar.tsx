@@ -52,25 +52,63 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
 
   // Fetch trades data with Apollo's 30s polling
   const { trades, isLoading, error, isRefetching } = useTrades({
-    first: 10,
+    first: 100,
     skip: 0,
   })
+
+  const isTradeCompleted = (trade: any) => {
+    return (
+      trade.executions?.some(
+        (execution: any) => execution.lastSweetSpot === '0'
+      ) ||
+      trade.executions?.some(
+        (execution: any) => execution.lastSweetSpot === '0'
+      ) ||
+      trade.settlements?.length > 0 ||
+      trade.cancellations?.length > 0
+    )
+  }
 
   const filteredTrades = trades.filter((trade) => {
     if (activeTab.title === 'My Trades') {
       return address && trade.user?.toLowerCase() === address.toLowerCase()
     }
-    return true
+    // For global trades, filter out completed trades
+    return !isTradeCompleted(trade)
+  })
+
+  const ongoingTrades = trades.filter((trade) => {
+    if (activeTab.title === 'My Trades') {
+      return (
+        address &&
+        trade.user?.toLowerCase() === address.toLowerCase() &&
+        !isTradeCompleted(trade)
+      )
+    }
+    return filteredTrades.includes(trade)
+  })
+
+  const pastTrades = trades.filter((trade) => {
+    if (activeTab.title === 'My Trades') {
+      return (
+        address &&
+        trade.user?.toLowerCase() === address.toLowerCase() &&
+        isTradeCompleted(trade)
+      )
+    }
+    return []
   })
 
   // Fetch token list for price data
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
 
-  // Calculate total USD value of trades (using filtered trades)
+  // Calculate total USD value of trades (using appropriate trades based on tab)
   const calculateTotalTradesValue = () => {
+    const tradesToCalculate =
+      activeTab.title === 'My Trades' ? ongoingTrades : filteredTrades
     if (
-      !filteredTrades ||
-      filteredTrades.length === 0 ||
+      !tradesToCalculate ||
+      tradesToCalculate.length === 0 ||
       !tokens ||
       tokens.length === 0
     )
@@ -99,7 +137,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
       )
     }
 
-    return filteredTrades.reduce((total, trade) => {
+    return tradesToCalculate.reduce((total, trade) => {
       const tokenIn = findTokenForTrade(trade.tokenIn)
 
       if (!tokenIn) return total
@@ -226,7 +264,9 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                     ) : (
                       <>
                         <p className="text-[20px] text-white52">
-                          {filteredTrades.length}
+                          {activeTab.title === 'My Trades'
+                            ? ongoingTrades.length
+                            : filteredTrades.length}
                         </p>
                       </>
                     )}
@@ -267,17 +307,24 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                 <p className="text-[20px] pb-3.5">Ongoing Trades</p>
 
                 <div className="flex flex-col gap-2">
-                  {!isLoading && filteredTrades.length === 0 ? (
+                  {!isLoading &&
+                  (activeTab.title === 'My Trades'
+                    ? ongoingTrades
+                    : filteredTrades
+                  ).length === 0 ? (
                     <div className="text-white52 text-center py-8">
                       {activeTab.title === 'My Trades' && !address
                         ? 'Connect wallet to view your trades'
                         : activeTab.title === 'My Trades'
-                        ? 'No trades found for your wallet'
+                        ? 'No ongoing trades found for your wallet'
                         : 'No trades found'}
                     </div>
                   ) : (
                     <>
-                      {filteredTrades.map((trade) => (
+                      {(activeTab.title === 'My Trades'
+                        ? ongoingTrades
+                        : filteredTrades
+                      ).map((trade) => (
                         <SwapStream
                           key={trade.id}
                           onClick={() => {
@@ -306,6 +353,8 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                                 isInstasettlable: false,
                                 realisedAmountOut: '0',
                                 executions: [],
+                                settlements: [],
+                                cancellations: [],
                               }}
                               isLoading={true}
                               isUser={activeTab.title === 'My Trades'}
@@ -314,6 +363,26 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                     </>
                   )}
                 </div>
+
+                {activeTab.title === 'My Trades' && pastTrades.length > 0 && (
+                  <div className="mt-8">
+                    <p className="text-[20px] pb-3.5">Past Trades</p>
+                    <div className="flex flex-col gap-2">
+                      {pastTrades.map((trade) => (
+                        <SwapStream
+                          key={trade.id}
+                          onClick={() => {
+                            setIsStreamSelected(true)
+                            setSelectedStream(trade)
+                          }}
+                          trade={trade}
+                          isLoading={isLoading}
+                          isUser={true}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </>

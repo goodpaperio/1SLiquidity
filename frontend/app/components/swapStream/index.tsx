@@ -10,6 +10,9 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
+import { XIcon } from 'lucide-react'
+import { formatNumberSmart } from '@/app/lib/utils/number'
+import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 
 type Trade = {
   id: string
@@ -22,6 +25,8 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
+  settlements: any[]
+  cancellations: any[]
 }
 
 type Props = {
@@ -33,7 +38,9 @@ type Props = {
 
 const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
-  const estimatedTime = useStreamTime(Number(trade?.lastSweetSpot) || 0)
+
+  const remainingStreams = calculateRemainingStreams(trade)
+  const estimatedTime = useStreamTime(remainingStreams, 5)
 
   // Find token information with ETH/WETH handling
   const findTokenForTrade = (address: string) => {
@@ -80,7 +87,10 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
 
   return (
     <div
-      className="w-full border border-white14 relative bg-white005 p-4 rounded-[15px] cursor-pointer hover:bg-tabsGradient transition-all duration-300"
+      className={cn(
+        'w-full border border-white14 relative bg-white005 p-4 rounded-[15px] cursor-pointer hover:bg-tabsGradient transition-all duration-300',
+        trade.cancellations.length > 0 && 'border-[#3d0e0e] hover:bg-red-700/10'
+      )}
       onClick={() => onClick?.(trade)}
     >
       <div className="flex mr-8 items-center gap-1.5 absolute top-4 left-2">
@@ -112,10 +122,10 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   width={2400}
                   height={2400}
                   alt={tokenIn?.symbol || 'token'}
-                  className="w-[18px] h-[18px]"
+                  className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedAmountIn} {tokenIn?.symbol}
+                  {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol}
                 </p>
               </>
             )}
@@ -144,10 +154,11 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   width={2400}
                   height={2400}
                   alt={tokenOut?.symbol || 'token'}
-                  className="w-[18px] h-[18px]"
+                  className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formattedMinAmountOut} {tokenOut?.symbol} (EST)
+                  {formatNumberSmart(formattedMinAmountOut)} {tokenOut?.symbol}{' '}
+                  (EST)
                 </p>
               </>
             )}
@@ -159,10 +170,19 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
             <Skeleton className="h-[3px] w-1/4 absolute top-0 left-0" />
           ) : (
             <div
-              className="h-[3px] bg-primary absolute top-0 left-0"
+              className={cn(
+                'h-[3px] bg-primary absolute top-0 left-0',
+                trade.cancellations.length > 0 && 'bg-red-700'
+              )}
               style={{
                 width: `${Math.min(
-                  (trade.executions.length / Number(trade.lastSweetSpot)) * 100,
+                  ((trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
+                    : trade.executions.length) /
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
+                      : remainingStreams)) *
+                    100,
                   100
                 )}%`,
               }}
@@ -172,7 +192,7 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
 
         <div
           className={cn(
-            'flex justify-between items-center gap-2 text-white52',
+            'flex flex-wrap items-center gap-x-2 gap-y-1 text-white52',
             isLoading ? 'mt-3.5' : 'mt-1.5'
           )}
         >
@@ -186,12 +206,21 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
             </>
           ) : (
             <>
-              <p className="">
-                {/* 25/100 completed {/* Hardcoded as requested */}
-                {trade.executions.length} / {trade.lastSweetSpot} completed
+              <p className="whitespace-nowrap">
+                {trade.settlements.length > 0
+                  ? trade.settlements.length + trade.executions.length
+                  : trade.executions.length}{' '}
+                /{' '}
+                {trade.settlements.length > 0
+                  ? trade.settlements.length + trade.executions.length
+                  : remainingStreams}{' '}
+                completed
               </p>
-              <div className="flex gap-2">
-                <div className="flex items-center">
+              {trade.settlements.length > 0 ||
+              trade.cancellations.length > 0 ? (
+                ''
+              ) : (
+                <div className="flex items-center whitespace-nowrap ml-auto">
                   <Image
                     src="/icons/time.svg"
                     alt="clock"
@@ -201,28 +230,39 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   />
                   <p>{estimatedTime || '..'}</p>
                 </div>
-                {trade.isInstasettlable && (
-                  <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                    >
-                      <path
-                        d="M13 2L6 14H11V22L18 10H13V2Z"
-                        fill="#40f798"
-                        fillOpacity="0.72"
-                      />
-                    </svg>
-                    <span className="text-xs sm:inline-block hidden">
-                      Instasettle
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
+              {trade.isInstasettlable && (
+                <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none whitespace-nowrap ml-auto">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                  >
+                    <path
+                      d="M13 2L6 14H11V22L18 10H13V2Z"
+                      fill="#40f798"
+                      fillOpacity="0.72"
+                    />
+                  </svg>
+                  <span className="text-xs sm:inline-block hidden">
+                    {trade.settlements.length > 0
+                      ? 'Instasettled'
+                      : 'Instasettle'}
+                  </span>
+                </div>
+              )}
+
+              {trade.cancellations.length > 0 && (
+                <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none whitespace-nowrap ml-auto">
+                  <XIcon className="w-3.5 h-3.5" />
+                  <span className="text-xs sm:inline-block hidden">
+                    Cancelled
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>

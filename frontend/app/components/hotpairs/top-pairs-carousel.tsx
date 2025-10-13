@@ -31,7 +31,7 @@ export default function TopPairsCarousel({
     error: topTokensError,
     refetch: refetchTopTokens,
   } = useEnhancedTopTokens({
-    limit: 100,
+    limit: 1000,
     metric: 'slippageSavings', // You can change this based on your needs
     enabled: true,
   })
@@ -57,6 +57,13 @@ export default function TopPairsCarousel({
       setSortedPairs(sorted)
     }
   }, [topTokensData])
+
+  // Auto-select first pair when data loads
+  useEffect(() => {
+    if (sortedPairs.length > 0 && !activeHotPair) {
+      handleSetActiveHotPair(sortedPairs[0])
+    }
+  }, [sortedPairs, activeHotPair])
 
   // Enhanced setActiveHotPair that includes slippageSavingsUsd
   const handleSetActiveHotPair = (pair: any) => {
@@ -101,7 +108,6 @@ export default function TopPairsCarousel({
                     </CarouselItem>
                   ))
               : sortedPairs?.map((pair: any, index: number) => {
-                  console.log('Pair ==>', pair)
                   return (
                     <CarouselItem
                       key={index}

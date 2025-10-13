@@ -44,6 +44,23 @@ functions:
           path: reserves
           method: options
           cors: true
+  price:
+    handler: src/functions/price/handler.main
+    timeout: 90
+    memorySize: 1024
+    events:
+      - http:
+          path: price
+          method: get
+          cors: true
+      - http:
+          path: price
+          method: post
+          cors: true
+      - http:
+          path: price
+          method: options
+          cors: true
 
 plugins:
   - serverless-webpack

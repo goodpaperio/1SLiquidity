@@ -1,38 +1,70 @@
 [
   {
     "inputs": [
-      { "internalType": "address", "name": "_streamDaemon", "type": "address" },
-      { "internalType": "address", "name": "_executor", "type": "address" },
-      { "internalType": "address", "name": "_registry", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_streamDaemon",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_executor",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_registry",
+        "type": "address"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
     ],
     "name": "OwnableInvalidOwner",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
     ],
     "name": "OwnableUnauthorizedAccount",
     "type": "error"
   },
-  { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
   {
     "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
     ],
     "name": "SafeERC20FailedOperation",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      }
     ],
     "name": "ToxicTrade",
     "type": "error"
@@ -381,29 +413,55 @@
   {
     "inputs": [],
     "name": "MAX_BPS",
-    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MAX_FEE_CAP_BPS",
-    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      }
     ],
     "name": "cancelTrade",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
     ],
     "name": "claimProtocolFees",
     "outputs": [],
@@ -412,27 +470,65 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "address", "name": "", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
     ],
     "name": "eoaTokenBalance",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      }
     ],
     "name": "executeStream",
     "outputs": [
       {
         "components": [
-          { "internalType": "address", "name": "owner", "type": "address" },
-          { "internalType": "uint8", "name": "attempts", "type": "uint8" },
-          { "internalType": "address", "name": "tokenIn", "type": "address" },
-          { "internalType": "address", "name": "tokenOut", "type": "address" },
-          { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint8",
+            "name": "attempts",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "amountRemaining",
@@ -448,7 +544,11 @@
             "name": "realisedAmountOut",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "tradeId", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "tradeId",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "instasettleBps",
@@ -464,7 +564,11 @@
             "name": "isInstasettlable",
             "type": "bool"
           },
-          { "internalType": "bool", "name": "usePriceBased", "type": "bool" }
+          {
+            "internalType": "bool",
+            "name": "usePriceBased",
+            "type": "bool"
+          }
         ],
         "internalType": "struct Utils.Trade",
         "name": "updatedTrade",
@@ -476,7 +580,11 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "pairId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "pairId",
+        "type": "bytes32"
+      }
     ],
     "name": "executeTrades",
     "outputs": [],
@@ -487,35 +595,71 @@
     "inputs": [],
     "name": "executor",
     "outputs": [
-      { "internalType": "contract Executor", "name": "", "type": "address" }
+      {
+        "internalType": "contract Executor",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "pairId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "pairId",
+        "type": "bytes32"
+      }
     ],
     "name": "getPairIdTradeIds",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      }
     ],
     "name": "getTrade",
     "outputs": [
       {
         "components": [
-          { "internalType": "address", "name": "owner", "type": "address" },
-          { "internalType": "uint8", "name": "attempts", "type": "uint8" },
-          { "internalType": "address", "name": "tokenIn", "type": "address" },
-          { "internalType": "address", "name": "tokenOut", "type": "address" },
-          { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint8",
+            "name": "attempts",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "amountRemaining",
@@ -531,7 +675,11 @@
             "name": "realisedAmountOut",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "tradeId", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "tradeId",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "instasettleBps",
@@ -547,7 +695,11 @@
             "name": "isInstasettlable",
             "type": "bool"
           },
-          { "internalType": "bool", "name": "usePriceBased", "type": "bool" }
+          {
+            "internalType": "bool",
+            "name": "usePriceBased",
+            "type": "bool"
+          }
         ],
         "internalType": "struct Utils.Trade",
         "name": "",
@@ -559,7 +711,11 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      }
     ],
     "name": "instasettle",
     "outputs": [],
@@ -569,44 +725,92 @@
   {
     "inputs": [],
     "name": "instasettleProtocolFeeBps",
-    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "lastTradeId",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "modulusResiduals",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "owner",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "", "type": "bytes32" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
     "name": "pairIdTradeIds",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes", "name": "tradeData", "type": "bytes" }
+      {
+        "internalType": "bytes",
+        "name": "tradeData",
+        "type": "bytes"
+      }
     ],
     "name": "placeTrade",
     "outputs": [],
@@ -614,9 +818,21 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "protocolFees",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -624,7 +840,11 @@
     "inputs": [],
     "name": "registry",
     "outputs": [
-      { "internalType": "contract IRegistry", "name": "", "type": "address" }
+      {
+        "internalType": "contract IRegistry",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -638,7 +858,11 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_executor", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_executor",
+        "type": "address"
+      }
     ],
     "name": "setExecutor",
     "outputs": [],
@@ -646,7 +870,13 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint16", "name": "bps", "type": "uint16" }],
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "bps",
+        "type": "uint16"
+      }
+    ],
     "name": "setInstasettleProtocolFeeBps",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -654,7 +884,11 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_registry", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_registry",
+        "type": "address"
+      }
     ],
     "name": "setRegistry",
     "outputs": [],
@@ -662,7 +896,13 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint16", "name": "bps", "type": "uint16" }],
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "bps",
+        "type": "uint16"
+      }
+    ],
     "name": "setStreamBotFeeBps",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -670,7 +910,11 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "_streamDaemon", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_streamDaemon",
+        "type": "address"
+      }
     ],
     "name": "setStreamDaemon",
     "outputs": [],
@@ -678,7 +922,13 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint16", "name": "bps", "type": "uint16" }],
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "bps",
+        "type": "uint16"
+      }
+    ],
     "name": "setStreamProtocolFeeBps",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -687,7 +937,13 @@
   {
     "inputs": [],
     "name": "streamBotFeeBps",
-    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -695,7 +951,11 @@
     "inputs": [],
     "name": "streamDaemon",
     "outputs": [
-      { "internalType": "contract StreamDaemon", "name": "", "type": "address" }
+      {
+        "internalType": "contract StreamDaemon",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -703,19 +963,51 @@
   {
     "inputs": [],
     "name": "streamProtocolFeeBps",
-    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "trades",
     "outputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "uint8", "name": "attempts", "type": "uint8" },
-      { "internalType": "address", "name": "tokenIn", "type": "address" },
-      { "internalType": "address", "name": "tokenOut", "type": "address" },
-      { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "attempts",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "amountRemaining",
@@ -731,22 +1023,42 @@
         "name": "realisedAmountOut",
         "type": "uint256"
       },
-      { "internalType": "uint256", "name": "tradeId", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "tradeId",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "instasettleBps",
         "type": "uint256"
       },
-      { "internalType": "uint256", "name": "lastSweetSpot", "type": "uint256" },
-      { "internalType": "bool", "name": "isInstasettlable", "type": "bool" },
-      { "internalType": "bool", "name": "usePriceBased", "type": "bool" }
+      {
+        "internalType": "uint256",
+        "name": "lastSweetSpot",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isInstasettlable",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "usePriceBased",
+        "type": "bool"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "newOwner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
     ],
     "name": "transferOwnership",
     "outputs": [],

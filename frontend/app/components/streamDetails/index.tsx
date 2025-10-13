@@ -18,6 +18,10 @@ import { cn } from '@/lib/utils'
 import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import { formatNumberSmart } from '@/app/lib/utils/number'
+import { useEffect, useState } from 'react'
+import NetworkFee from '../shared/NetworkFee'
+import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -41,16 +45,30 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   walletAddress,
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
-  const { placeTrade, loading, instasettle, cancelTrade } = useCoreTrading()
+  const {
+    placeTrade,
+    loading,
+    instasettle,
+    cancelTrade,
+    contractInfo,
+    getContractInfo,
+  } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
+  const [showCompleted, setShowCompleted] = useState(true)
+
+  // Fetch contract info on component mount if not already available
+  useEffect(() => {
+    if (!contractInfo) {
+      getContractInfo()
+    }
+  }, [contractInfo, getContractInfo])
 
   if (!selectedStream) {
     return null
   }
 
-  const estimatedTime = useStreamTime(
-    Number(selectedStream?.lastSweetSpot) || 0
-  )
+  const remainingStreams = calculateRemainingStreams(selectedStream)
+  const estimatedTime = useStreamTime(remainingStreams, 5)
 
   // Find token information with ETH/WETH handling
   const findTokenForTrade = (address: string) => {
@@ -97,9 +115,20 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   const aggregates = calculateTradeAggregates(selectedStream)
 
+  // Check if stream is completed (has cancellations or settlements)
+  const isStreamCompleted =
+    (selectedStream.cancellations && selectedStream.cancellations.length > 0) ||
+    (selectedStream.settlements && selectedStream.settlements.length > 0)
+
+  const isStreamSettled =
+    selectedStream.settlements && selectedStream.settlements.length > 0
+
   // Calculate swapped amount values
+  // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
   const formattedSwapAmountOut = tokenOut
-    ? formatUnits(BigInt(aggregates.realisedAmountOut), tokenOut.decimals)
+    ? isStreamCompleted
+      ? formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals) // Show full expected output if instasettled
+      : formatUnits(BigInt(aggregates.realisedAmountOut), tokenOut.decimals) // Show actually realized output
     : '0'
   const swapAmountOutUsd = tokenOut
     ? Number(formattedSwapAmountOut) * (tokenOut.usd_price || 0)
@@ -118,34 +147,99 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   // Format execution amounts and calculate their times
   const formattedExecutions =
-    selectedStream.executions?.map((execution) => ({
+    selectedStream.executions
+      ?.map((execution) => ({
+        sell: {
+          amount: Number(
+            formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
+          ),
+          token: tokenIn?.symbol || '',
+        },
+        buy: {
+          amount: Number(
+            formatUnits(
+              BigInt(execution.realisedAmountOut),
+              tokenOut?.decimals || 18
+            )
+          ),
+          token: tokenOut?.symbol || '',
+        },
+        id: execution.id,
+        timestamp: Number(execution.timestamp),
+        estimatedTime: formatRelativeTime(execution.timestamp),
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp) || []
+
+  const formattedSettlements =
+    selectedStream.settlements?.map((settlement) => ({
       sell: {
         amount: Number(
-          formatUnits(BigInt(execution.amountIn), tokenIn?.decimals || 18)
+          formatUnits(BigInt(settlement.totalAmountIn), tokenIn?.decimals || 18)
         ),
         token: tokenIn?.symbol || '',
       },
       buy: {
         amount: Number(
           formatUnits(
-            BigInt(execution.realisedAmountOut),
+            BigInt(settlement.totalAmountOut),
             tokenOut?.decimals || 18
           )
         ),
         token: tokenOut?.symbol || '',
       },
-      id: execution.id,
-      timestamp: Number(execution.timestamp),
-      estimatedTime: formatRelativeTime(execution.timestamp),
+      id: settlement.id,
+      timestamp: Number(settlement.timestamp),
+      estimatedTime: formatRelativeTime(settlement.timestamp),
     })) || []
 
   // Calculate actual swapped input amount (amountIn - amountRemaining)
+  // If stream is completed (instasettled), show full amount, otherwise show actually swapped amount
   const swappedAmountIn = tokenIn
-    ? formatUnits(BigInt(amountIn) - BigInt(amountRemaining), tokenIn.decimals)
+    ? isStreamSettled
+      ? formatUnits(BigInt(amountIn), tokenIn.decimals) // Show full amount if instasettled
+      : formatUnits(
+          BigInt(amountIn) - BigInt(amountRemaining),
+          tokenIn.decimals
+        ) // Show actually swapped amount
     : '0'
   const swappedAmountInUsd = tokenIn
     ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
     : 0
+
+  // Calculate remaining amounts - set to 0 if stream is completed
+  const remainingAmountIn =
+    tokenIn && !isStreamSettled
+      ? formatUnits(BigInt(amountRemaining), tokenIn.decimals)
+      : '0'
+  const remainingAmountInUsd =
+    tokenIn && !isStreamSettled
+      ? Number(remainingAmountIn) * (tokenIn.usd_price || 0)
+      : 0
+
+  // Calculate remaining output (estimated based on proportion) - set to 0 if stream is completed
+  const remainingAmountOut =
+    tokenOut && amountIn > 0 && !isStreamSettled
+      ? formatUnits(
+          (BigInt(selectedStream.minAmountOut) * BigInt(amountRemaining)) /
+            BigInt(amountIn),
+          tokenOut.decimals
+        )
+      : '0'
+  const remainingAmountOutUsd =
+    tokenOut && !isStreamSettled
+      ? Number(remainingAmountOut) * (tokenOut.usd_price || 0)
+      : 0
+
+  // Calculate BPS savings in token amount
+  const savingsInTokenOut =
+    (Number(remainingAmountOut) * Number(selectedStream.instasettleBps || 0)) /
+    10000
+
+  // Calculate savings in USD
+  const savingsInUsd =
+    tokenOut && !isNaN(savingsInTokenOut)
+      ? savingsInTokenOut * (tokenOut.usd_price || 0)
+      : 0
 
   const NETWORK_FEE_BPS = 5 // 5 basis points
 
@@ -156,10 +250,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const networkFeeUsd = tokenIn
     ? networkFeeInToken * (tokenIn.usd_price || 0)
     : 0
-
-  // console.log('selectedStream ===>', selectedStream)
-  // console.log('tokenIn ===>', tokenIn)
-  // console.log('tokenOut ===>', tokenOut)
 
   const handleInstasettleClick = async (item: any) => {
     if (isConnectedWallet) {
@@ -191,6 +281,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
           },
           signer
         )
+        if (res.success) {
+          onClose()
+        }
       }
     }
   }
@@ -201,6 +294,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
       if (signer) {
         const res = await cancelTrade(Number(selectedStream.tradeId), signer)
+        if (res.success) {
+          onClose()
+        }
       }
     }
   }
@@ -227,12 +323,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     // Final realisedAmountOut = existing + executions sum
     const finalRealisedAmountOut = existingRealisedOut + totalExecRealisedOut
 
-    // console.log('executions ===>', executions)
-    // console.log('totalExecutedAmountIn ===>', totalExecutedAmountIn)
-    // console.log('totalExecRealisedOut ===>', totalExecRealisedOut)
-    // console.log('existingRealisedOut ===>', existingRealisedOut)
-    // console.log('finalRealisedAmountOut ===>', finalRealisedAmountOut)
-
     // amountIn (original) and recalculated amountRemaining
     const amountIn = BigInt(trade.amountIn ?? '0')
     const recalculatedAmountRemaining = amountIn - totalExecutedAmountIn
@@ -243,11 +333,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       realisedAmountOut: finalRealisedAmountOut.toString(),
     }
   }
-
-  // console.log(
-  //   'selectedStream.cancellations ===>',
-  //   selectedStream.cancellations.some((cancellation) => !!cancellation.id)
-  // )
 
   return (
     <>
@@ -297,23 +382,54 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       </div>
 
       <div className="flex items-center justify-end pb-2">
-        {selectedStream.isInstasettlable && (
-          <div className="flex items-center py-1 text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-            >
-              <path
-                d="M13 2L6 14H11V22L18 10H13V2Z"
-                fill="#40f798"
-                fillOpacity="0.72"
-              />
-            </svg>
-            <span className="text-xs sm:inline-block hidden">Instasettle</span>
+        {(selectedStream.isInstasettlable ||
+          selectedStream.settlements.length > 0 ||
+          selectedStream.cancellations.length > 0 ||
+          selectedStream.executions?.some(
+            (execution: any) => execution.lastSweetSpot === '0'
+          )) && (
+          <div
+            className={cn(
+              'flex items-center py-1 text-sm gap-1 pl-1 pr-1.5 rounded-full leading-none',
+              selectedStream.cancellations.length > 0
+                ? 'bg-red-900/20 text-red-400'
+                : selectedStream.executions?.some(
+                    (execution: any) => execution.lastSweetSpot === '0'
+                  ) || selectedStream.settlements.length > 0
+                ? 'bg-green-900/20 text-green-400'
+                : 'bg-zinc-900 text-primary'
+            )}
+          >
+            {selectedStream.cancellations.length === 0 &&
+              !selectedStream.executions?.some(
+                (execution: any) => execution.lastSweetSpot === '0'
+              ) && (
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                >
+                  <path
+                    d="M13 2L6 14H11V22L18 10H13V2Z"
+                    fill="#40f798"
+                    fillOpacity="0.72"
+                  />
+                </svg>
+              )}
+            <span className="text-xs sm:inline-block hidden">
+              {selectedStream.settlements.length > 0
+                ? 'Instasettled'
+                : selectedStream.cancellations.length > 0
+                ? 'Cancelled'
+                : selectedStream.executions?.some(
+                    (execution: any) => execution.lastSweetSpot === '0'
+                  )
+                ? 'Completed'
+                : 'Instasettle'}
+            </span>
           </div>
         )}
         {/* <div className="flex bg-white005 items-center gap-2 px-2 py-1 rounded-full">
@@ -405,6 +521,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             sellToken={tokenIn}
             buyToken={tokenOut}
             isLoading={isLoading || isLoadingTokens}
+            cancelled={selectedStream.cancellations.length > 0}
           />
 
           <div className="flex gap-2 justify-between py-4 border-b border-borderBottom">
@@ -417,7 +534,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    {formattedAmountIn} {tokenIn?.symbol}
+                    {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
                     ${amountInUsd.toFixed(2)}
@@ -434,7 +551,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="text-white">
-                    ~ {formattedMinAmountOut} {tokenOut?.symbol}
+                    ~ {formatNumberSmart(formattedMinAmountOut)}{' '}
+                    {tokenOut?.symbol}
                   </p>
                   <p className="text-white52 text-[14px]">
                     ${amountOutUsd.toFixed(2)}
@@ -444,9 +562,39 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-2 justify-between py-4 border-b border-borderBottom">
+          {/* Toggle for Completed/Remaining */}
+          <div className="flex items-center justify-center py-2">
+            <div className="flex items-center bg-white005 rounded-full p-0.5">
+              <button
+                onClick={() => setShowCompleted(true)}
+                className={cn(
+                  'px-2.5 py-1 text-xs rounded-full transition-all duration-200',
+                  showCompleted
+                    ? 'bg-primary text-black font-medium'
+                    : 'text-white52 hover:text-white'
+                )}
+              >
+                Completed
+              </button>
+              <button
+                onClick={() => setShowCompleted(false)}
+                className={cn(
+                  'px-2.5 py-1 text-xs rounded-full transition-all duration-200',
+                  !showCompleted
+                    ? 'bg-primary text-black font-medium'
+                    : 'text-white52 hover:text-white'
+                )}
+              >
+                Remaining
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-between py-2 border-b border-borderBottom">
             <div className="flex flex-col leading-tight gap-2 items-start">
-              <p className="text-[14px] text-white52">Swapped Input</p>
+              <p className="text-[14px] text-white52">
+                {showCompleted ? 'Swapped Input' : 'Remaining Input'}
+              </p>
               {isLoading ? (
                 <>
                   <Skeleton className="h-6 w-24" />
@@ -455,10 +603,19 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="">
-                    {swappedAmountIn} {tokenIn?.symbol}
+                    {showCompleted
+                      ? `${formatNumberSmart(swappedAmountIn)} ${
+                          tokenIn?.symbol
+                        }`
+                      : `${formatNumberSmart(remainingAmountIn)} ${
+                          tokenIn?.symbol
+                        }`}
                   </p>
                   <p className="text-white52 text-[14px]">
-                    ${swappedAmountInUsd.toFixed(2)}
+                    $
+                    {showCompleted
+                      ? swappedAmountInUsd.toFixed(2)
+                      : remainingAmountInUsd.toFixed(2)}
                   </p>
                 </>
               )}
@@ -471,7 +628,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               height={1000}
             />
             <div className="flex flex-col leading-tight gap-2 items-end">
-              <p className="text-[14px] text-white52">Output</p>
+              <p className="text-[14px] text-white52">
+                {showCompleted ? 'Output' : 'Remaining Output'}
+              </p>
               {isLoading ? (
                 <>
                   <Skeleton className="h-6 w-24" />
@@ -480,51 +639,105 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               ) : (
                 <>
                   <p className="">
-                    {formattedSwapAmountOut} {tokenOut?.symbol}
+                    {showCompleted
+                      ? `${formatNumberSmart(formattedSwapAmountOut)} ${
+                          tokenOut?.symbol
+                        }`
+                      : `~ ${formatNumberSmart(remainingAmountOut)} ${
+                          tokenOut?.symbol
+                        }`}
                   </p>
                   <p className="text-white52 text-[14px]">
-                    ${swapAmountOutUsd.toFixed(2)}
+                    $
+                    {showCompleted
+                      ? swapAmountOutUsd.toFixed(2)
+                      : remainingAmountOutUsd.toFixed(2)}
                   </p>
                 </>
               )}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 py-4 border-b border-borderBottom">
+          <div
+            className={cn(
+              'flex flex-col gap-2 py-4 border-b border-borderBottom',
+              (selectedStream.settlements.length > 0 ||
+                selectedStream.cancellations.length > 0) &&
+                'border-b-0'
+            )}
+          >
             <AmountTag
               title="BPS Savings"
               amount={
-                selectedStream.isInstasettlable
-                  ? `5 BPS ($${(amountInUsd * 0.05).toFixed(2)})`
-                  : 'N/A'
+                selectedStream.isInstasettlable &&
+                selectedStream.instasettleBps ? (
+                  <div className="flex flex-col items-end">
+                    <p className="">
+                      {Number(selectedStream.instasettleBps)} bps (
+                      {formatNumberWithSubscript(savingsInTokenOut.toFixed(4))}{' '}
+                      {tokenOut?.symbol || ''})
+                    </p>
+                    <p className="text-white52 text-[12px]">
+                      ${savingsInUsd.toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  'N/A'
+                )
               }
               infoDetail="Info"
               titleClassName="text-white52"
-              amountClassName="text-white52"
+              amountClassName={
+                selectedStream.isInstasettlable ? undefined : 'text-white52'
+              }
               showInstaIcon={selectedStream.isInstasettlable}
               isLoading={isLoading}
             />
             <AmountTag
               title="Streams Completed"
-              amount={isLoading ? '0' : executionsCount.toString()}
+              amount={
+                isLoading
+                  ? '0'
+                  : selectedStream.settlements.length > 0 ||
+                    selectedStream.cancellations.length > 0
+                  ? (Number(executionsCount) + 1).toString()
+                  : executionsCount.toString()
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
             />
             <AmountTag
               title="Trade Volume Executed"
-              amount={isLoading ? '0%' : `${volumeExecutedPercentage}%`}
+              amount={
+                isLoading
+                  ? '0%'
+                  : `${
+                      selectedStream.settlements.length > 0
+                        ? 100
+                        : volumeExecutedPercentage
+                    }%`
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
             />
-            <AmountTag
-              title="Est time"
-              amount={isLoading ? '...' : estimatedTime}
-              infoDetail="Info"
-              titleClassName="text-white52"
-              isLoading={isLoading}
-            />
+            {!(
+              selectedStream.settlements.length > 0 ||
+              selectedStream.cancellations.length > 0
+            ) && (
+              <AmountTag
+                title="Est time"
+                amount={
+                  isLoading || selectedStream.settlements.length > 0
+                    ? '...'
+                    : estimatedTime
+                }
+                infoDetail="Info"
+                titleClassName="text-white52"
+                isLoading={isLoading}
+              />
+            )}
             {/* <AmountTag
               title="Output Fee"
               amount="$190.54"
@@ -532,16 +745,26 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               titleClassName="text-white52"
               isLoading={isLoading}
             /> */}
-            <AmountTag
-              title="Network Fee"
-              amount={`5 BPS ($${networkFeeUsd.toFixed(2)})`}
-              infoDetail="Info"
+            <NetworkFee
+              buyAmount={formattedMinAmountOut}
+              tokenToUsdPrice={tokenOut?.usd_price}
+              tokenToSymbol={tokenOut?.symbol}
+              contractInfo={contractInfo}
+              isCalculating={isLoading}
               titleClassName="text-white52"
-              isLoading={isLoading}
             />
             <AmountTag
               title="Wallet Address"
-              amount={formatWalletAddress(selectedStream.user)}
+              amount={
+                <a
+                  href={`https://etherscan.io/address/${selectedStream.user}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80 transition-colors"
+                >
+                  {formatWalletAddress(selectedStream.user)}
+                </a>
+              }
               infoDetail="Info"
               titleClassName="text-white52"
               isLoading={isLoading}
@@ -552,25 +775,31 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               <Button text="Execute Instasettle" />
             </div>
           )} */}
-          <ConfigTrade
-            amountReceived={`$${amountOutUsd.toFixed(2)}`}
-            fee="$190.54"
-            isEnabled={
-              (selectedStream.isInstasettlable &&
-                selectedStream.user?.toLowerCase() !==
-                  walletAddress?.toLowerCase()) ||
-              selectedStream.user?.toLowerCase() ===
-                walletAddress?.toLowerCase()
-            }
-            // isEnabled={true}
-            isUser={isUser}
-            isLoading={isLoading || loading}
-            selectedStream={selectedStream}
-            handleInstasettleClick={handleInstasettleClick}
-            handleCancelClick={handleCancelClick}
-            walletAddress={walletAddress}
-            isCancellable={selectedStream.cancellations.length === 0}
-          />
+          {selectedStream.settlements.length > 0 ||
+          selectedStream.cancellations.length > 0 ? (
+            ''
+          ) : (
+            <ConfigTrade
+              amountReceived={`$${amountOutUsd.toFixed(2)}`}
+              fee="$190.54"
+              isEnabled={
+                selectedStream.isInstasettlable ||
+                selectedStream.user?.toLowerCase() ===
+                  walletAddress?.toLowerCase()
+              }
+              // isEnabled={true}
+              isUser={isUser}
+              isLoading={isLoading || loading}
+              selectedStream={selectedStream}
+              handleInstasettleClick={handleInstasettleClick}
+              handleCancelClick={handleCancelClick}
+              walletAddress={walletAddress}
+              isCancellable={selectedStream.cancellations.length === 0}
+              tokenIn={tokenIn}
+              tokenOut={tokenOut}
+              formattedAmountIn={formattedAmountIn}
+            />
+          )}
         </div>
 
         <div className="mt-7">
@@ -597,6 +826,62 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             isLoading={isLoading}
           /> */}
 
+          {/* Cancellations */}
+          {selectedStream.cancellations &&
+            selectedStream.cancellations.length > 0 &&
+            selectedStream.cancellations.map((cancellation) => (
+              <div
+                key={cancellation.id}
+                className="w-full p-4 border-[1px] border-red-900/30 bg-red-900/5 rounded-[15px] mt-2.5 hover:bg-red-900/10 transition-all duration-300"
+              >
+                <div className="w-full flex justify-between gap-1 items-center">
+                  <div className="flex items-center gap-0 py-1 px-1 rounded-[4px] uppercase text-red-400 text-[12px] leading-none bg-red-900/20">
+                    Cancelled
+                  </div>
+
+                  <a
+                    href={`https://etherscan.io/tx/${
+                      cancellation.id.split('-')[0]
+                    }`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-red-400 underline text-[14px] hover:text-red-300 transition-colors cursor-pointer"
+                  >
+                    {formatWalletAddress(cancellation.id.split('-')[0])}
+                  </a>
+                </div>
+
+                <div className="mt-2.5 text-[14px] text-white">
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-24" />
+                  ) : (
+                    <>
+                      Trade cancelled{' '}
+                      {formatRelativeTime(cancellation.timestamp)}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+
+          {formattedSettlements.map((settlement, index) => (
+            <StreamCard
+              key={settlement.id}
+              status="Instasettled"
+              stream={[
+                {
+                  sell: settlement.sell,
+                  buy: settlement.buy,
+                },
+              ]}
+              date={new Date(settlement.timestamp * 1000)}
+              timeRemaining={settlement.estimatedTime}
+              walletAddress={settlement.id.split('-')[0]}
+              isInstasettle={false}
+              isLoading={isLoading}
+            />
+          ))}
+
           {formattedExecutions.map((execution, index) => (
             <StreamCard
               key={execution.id}
@@ -607,6 +892,12 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                   buy: execution.buy,
                 },
               ]}
+              streamIndex={
+                selectedStream.isInstasettlable &&
+                selectedStream.settlements.length > 0
+                  ? 2
+                  : 0
+              }
               date={new Date(execution.timestamp * 1000)}
               timeRemaining={execution.estimatedTime}
               walletAddress={execution.id.split('-')[0]}

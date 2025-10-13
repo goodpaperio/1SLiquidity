@@ -1,53 +1,83 @@
-import { ethers } from 'ethers';
-import { PriceResult } from '../types/price';
-import { ReserveResult } from '../types/reserves';
-import { CONTRACT_ADDRESSES, CONTRACT_ABIS, COMMON } from '../config/dex';
-import { DepthData, DepthConfig, DepthPoint } from '../types/depth';
-import { DecimalUtils } from '../utils/decimals';
-import { TokenService } from '../services/token-service';
+import { ethers } from 'ethers'
+import { PriceResult } from '../types/price'
+import { ReserveResult } from '../types/reserves'
+import { CONTRACT_ADDRESSES, CONTRACT_ABIS, COMMON } from '../config/dex'
+import { DepthData, DepthConfig, DepthPoint } from '../types/depth'
+import { DecimalUtils } from '../utils/decimals'
+import { TokenService } from '../services/token-service'
 
 export class SushiSwapService {
-  private router: ethers.Contract;
-  private factory: ethers.Contract;
-  private provider: ethers.Provider;
-  private tokenService: TokenService;
+  private router: ethers.Contract
+  private factory: ethers.Contract
+  private provider: ethers.Provider
+  private tokenService: TokenService
 
   constructor(provider: ethers.Provider) {
-    this.provider = provider;
-    this.tokenService = TokenService.getInstance(provider);
+    this.provider = provider
+    this.tokenService = TokenService.getInstance(provider)
     this.router = new ethers.Contract(
       CONTRACT_ADDRESSES.SUSHISWAP.ROUTER,
       CONTRACT_ABIS.SUSHISWAP.ROUTER,
       provider
-    );
+    )
     this.factory = new ethers.Contract(
       CONTRACT_ADDRESSES.SUSHISWAP.FACTORY,
       CONTRACT_ABIS.SUSHISWAP.FACTORY,
       provider
-    );
+    )
   }
 
-  async getReserves(tokenA: string, tokenB: string): Promise<ReserveResult | null> {
+  //   // Helper method to convert Wei to normal value for price calculation
+  private convertWeiToNormal(weiValue: bigint, decimals: number): number {
+    const divisor = Math.pow(10, decimals)
+    return Number(weiValue) / divisor
+  }
+
+  async getReserves(
+    tokenA: string,
+    tokenB: string
+  ): Promise<ReserveResult | null> {
     try {
-      const pairAddress = await this.factory.getPair(tokenA, tokenB);
+      const pairAddress = await this.factory.getPair(tokenA, tokenB)
       if (pairAddress === COMMON.ZERO_ADDRESS) {
-        return null;
+        return null
       }
 
-      const pair = new ethers.Contract(pairAddress, CONTRACT_ABIS.SUSHISWAP.PAIR, this.provider);
-      const [reserve0, reserve1] = await pair.getReserves();
-      const token0 = await pair.token0();
+      const pair = new ethers.Contract(
+        pairAddress,
+        CONTRACT_ABIS.SUSHISWAP.PAIR,
+        this.provider
+      )
+      const [reserve0, reserve1] = await pair.getReserves()
+      const token0 = await pair.token0()
 
-      const isToken0First = tokenA.toLowerCase() === token0.toLowerCase();
-      const token0Reserve = isToken0First ? reserve0 : reserve1;
-      const token1Reserve = isToken0First ? reserve1 : reserve0;
+      const isToken0First = tokenA.toLowerCase() === token0.toLowerCase()
+      const token0Reserve = isToken0First ? reserve0 : reserve1
+      const token1Reserve = isToken0First ? reserve1 : reserve0
 
       // const normalizedToken0Reserve = this.normalizeTo18Decimals(token0Reserve, decimals.token0)
       // const normalizedToken1Reserve = this.normalizeTo18Decimals(token1Reserve, decimals.token1)
 
+      const [token0Info, token1Info] = await Promise.all([
+        this.tokenService.getTokenInfo(tokenA),
+        this.tokenService.getTokenInfo(tokenB),
+      ])
+
+      // Calculate price: reservesTokenB / reservesTokenA (in normalized values)
+      const reservesTokenAinEth = this.convertWeiToNormal(
+        BigInt(token0Reserve.toString()),
+        token0Info.decimals
+      )
+      const reservesTokenBinEth = this.convertWeiToNormal(
+        BigInt(token1Reserve.toString()),
+        token1Info.decimals
+      )
+      const price = reservesTokenBinEth / reservesTokenAinEth
+
       console.log('SushiSwap reserves:', {
         token0: token0Reserve.toString(),
-        token1: token1Reserve.toString()
+        token1: token1Reserve.toString(),
+        price: price,
       })
 
       return {
@@ -55,45 +85,49 @@ export class SushiSwapService {
         pairAddress,
         reserves: {
           token0: token0Reserve.toString(),
-          token1: token1Reserve.toString()
+          token1: token1Reserve.toString(),
         },
-        timestamp: Date.now()
-      } as ReserveResult;
+        price: price,
+        timestamp: Date.now(),
+      } as ReserveResult
     } catch (error) {
-      console.error('Error fetching SushiSwap reserves:', error);
-      return null;
+      console.error('Error fetching SushiSwap reserves:', error)
+      return null
     }
   }
 
   async getPrice(tokenA: string, tokenB: string): Promise<PriceResult | null> {
     try {
-      const pairAddress = await this.factory.getPair(tokenA, tokenB);
+      const pairAddress = await this.factory.getPair(tokenA, tokenB)
       if (pairAddress === COMMON.ZERO_ADDRESS) {
-        return null;
+        return null
       }
 
       const [token0Info, token1Info] = await Promise.all([
         this.tokenService.getTokenInfo(tokenA),
-        this.tokenService.getTokenInfo(tokenB)
-      ]);
+        this.tokenService.getTokenInfo(tokenB),
+      ])
 
-      const amountIn = DecimalUtils.normalizeAmount('1', token0Info.decimals);
-      const amounts = await this.router.getAmountsOut(amountIn, [tokenA, tokenB]);
+      const amountIn = DecimalUtils.normalizeAmount('1', token0Info.decimals)
+      const amounts = await this.router.getAmountsOut(amountIn, [
+        tokenA,
+        tokenB,
+      ])
       const price = DecimalUtils.calculatePrice(
         amounts[0],
         amounts[1],
         token0Info.decimals,
         token1Info.decimals
-      );
+      )
 
       return {
         dex: 'sushiswap',
         price,
-        timestamp: Date.now()
-      };
+        timestamp: Date.now(),
+      }
     } catch (error) {
-      console.error('SushiSwap price fetch failed:', error);
-      return null;
+      console.error('SushiSwap price fetch failed:', error)
+      return null
     }
   }
 
@@ -183,4 +217,4 @@ export class SushiSwapService {
   //   const newReserve0 = k / newReserve1;
   //   return DecimalUtils.formatAmount(newReserve0, decimals0);
   // }
-} 
+}

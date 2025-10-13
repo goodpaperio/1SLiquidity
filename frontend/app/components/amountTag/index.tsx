@@ -9,12 +9,13 @@ import {
 
 type Props = {
   title: string
-  amount: string | undefined
+  amount: string | React.ReactNode | undefined
   infoDetail?: string
   titleClassName?: string
   amountClassName?: string
   showInstaIcon?: boolean
   isLoading?: boolean
+  className?: string
 }
 
 const AmountTag: React.FC<Props> = ({
@@ -25,10 +26,11 @@ const AmountTag: React.FC<Props> = ({
   amountClassName,
   showInstaIcon = false,
   isLoading = false,
+  className,
 }) => {
   return (
-    <div className="flex justify-between items-center">
-      <div className="flex items-center gap-1">
+    <div className={cn('flex justify-between items-start', className)}>
+      <div className="flex items-start gap-1">
         <p className={cn('text-[14px]', titleClassName)}>{title}</p>
         <Tooltip>
           <TooltipTrigger asChild>

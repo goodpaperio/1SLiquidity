@@ -39,6 +39,12 @@ const SELSection = () => {
   const [isRefresh, setIsRefresh] = useState(false)
   const [forceRefreshKey, setForceRefreshKey] = useState(0) // Add this to force recalculation
 
+  const [tradingSettings, setTradingSettings] = useState({
+    usePriceBased: true,
+    instasettlableValue: null as string | null,
+    isInstasettlable: false,
+  })
+
   const { addToast } = useToast()
   const {
     selectedTokenFrom,
@@ -51,19 +57,6 @@ const SELSection = () => {
   const [isInsufficientLiquidity, setIsInsufficientLiquidity] = useState(false)
   const { placeTrade, loading, placeTradeDummy } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
-
-  // console.log('loading =========>', loading)
-  // console.log('isConnectedWallet =========>', isConnectedWallet)
-  // console.log('isConnected =========>', isConnected)
-  // console.log('selectedTokenFrom =========>', getSigner())
-
-  // const { prefetchedReserves, getPairKey } = usePrefetchReserves()
-  // const pairKey = getPairKey('USDC', 'WETH')
-  // const pairKey2 = getPairKey('WETH', 'USDC')
-  // const pairData = prefetchedReserves[pairKey]
-  // const pairData2 = prefetchedReserves[pairKey2]
-  // console.log('pairData =========>', pairData)
-  // console.log('pairData2 =========>', pairData2)
 
   // Get current chain from AppKit
   const stateData = useAppKitState()
@@ -264,17 +257,8 @@ const SELSection = () => {
 
   const handleRefresh = useCallback(() => {
     if (dexCalculator && reserveData) {
-      // console.log('handleRefresh called with:', {
-      //   sellAmount,
-      //   hasCalculator: !!dexCalculator,
-      //   hasReserves: !!reserveData,
-      // })
       setIsRefresh(true)
     } else {
-      // console.log('handleRefresh skipped - missing calculator or reserves:', {
-      //   hasCalculator: !!dexCalculator,
-      //   hasReserves: !!reserveData,
-      // })
     }
   }, [dexCalculator, reserveData, sellAmount])
 
@@ -322,12 +306,9 @@ const SELSection = () => {
 
   // Check for insufficient liquidity (95% threshold)
   useEffect(() => {
-    // console.log('reserveData totalReserves ===>', reserveData?.totalReserves)
     if (sellAmount > 0 && reserveData?.totalReserves?.totalReserveTokenA) {
       const totalReserveTokenA = reserveData.totalReserves.totalReserveTokenA
       const liquidityThreshold = totalReserveTokenA * 0.95
-      console.log('liquidityThreshold ===>', liquidityThreshold)
-      console.log('sellAmount ===>', sellAmount)
       setIsInsufficientLiquidity(sellAmount >= liquidityThreshold)
     } else {
       setIsInsufficientLiquidity(false)
@@ -480,8 +461,8 @@ const SELSection = () => {
             tokenOut: selectedTokenTo?.token_address || '',
             amountIn: sellAmount.toString(),
             minAmountOut: buyAmount.toString(),
-            isInstasettlable: false,
-            usePriceBased: false,
+            isInstasettlable: tradingSettings.isInstasettlable,
+            usePriceBased: tradingSettings.usePriceBased,
           },
           signer
         )
@@ -491,14 +472,6 @@ const SELSection = () => {
       }
     }
   }
-
-  console.log('selectedTokenFrom ===>', selectedTokenFrom)
-  console.log('selectedTokenTo ===>', selectedTokenTo)
-
-  // console.log('isCalculating ===>', isCalculating)
-  // console.log('buyAmount ===>', buyAmount)
-  // console.log('sellAmount ===>', sellAmount)
-  // console.log('isInsufficientLiquidity ===>', isInsufficientLiquidity)
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
@@ -567,7 +540,16 @@ const SELSection = () => {
                 </div>
               </div>
             )}
-            <TradingSettings />
+            <TradingSettings
+              onSettingsChange={useCallback(
+                (settings: {
+                  usePriceBased: boolean
+                  instasettlableValue: string | null
+                  isInstasettlable: boolean
+                }) => setTradingSettings(settings),
+                []
+              )}
+            />
           </div>
         </div>
 
@@ -655,7 +637,7 @@ const SELSection = () => {
         )} */}
 
         <div className="w-full mt-[14px] mb-[20px]">
-          {isConnected && pathname === '/swaps' ? (
+          {isConnected && pathname === '/' ? (
             <Button
               text={
                 isConnected && isInsufficientBalance && !isFetchingReserves
@@ -696,15 +678,7 @@ const SELSection = () => {
           ) : (
             <Button
               text={
-                pathname === '/'
-                  ? isFetchingReserves
-                    ? 'Fetching reserves...'
-                    : calculationError
-                    ? calculationError
-                    : isInsufficientLiquidity
-                    ? 'Insufficient Liquidity'
-                    : 'Get Started'
-                  : isFetchingReserves
+                isFetchingReserves
                   ? 'Fetching reserves...'
                   : calculationError
                   ? calculationError
@@ -747,10 +721,11 @@ const SELSection = () => {
               isCalculating={isCalculating}
               isFetchingReserves={isFetchingReserves}
               slippageSavings={slippageSavings}
+              usePriceBased={tradingSettings.usePriceBased}
             />
           )}
 
-        {pathname === '/' && (
+        {/* {pathname === '/' && (
           <div className="flex flex-col items-center justify-center z-20">
             <motion.div
               className="flex flex-col items-center cursor-pointer"
@@ -790,7 +765,7 @@ const SELSection = () => {
               />
             </motion.div>
           </div>
-        )}
+        )} */}
       </motion.div>
     </div>
   )
