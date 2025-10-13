@@ -77,7 +77,7 @@ contract TradeCancel is TradePlacement {
     }
 
     function test_RevertWhen_CancellingNonExistentTrade() public {
-        vm.expectRevert("Trade does not exist");
+        vm.expectRevert("Trade inexistent or being called from null address");
         core.cancelTrade(999_999);
     }
 

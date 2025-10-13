@@ -92,8 +92,20 @@ contract SingleDexProtocol is Test {
             dexType = "Curve";
             console.log("SingleDexProtocol: Identified as Curve");
         } else {
-            console.log("SingleDexProtocol: ERROR - Unsupported DEX router", dexRouter);
-            revert("Unsupported DEX router");
+            // Check if it's a CurveMetaFetcher by checking if it implements IUniversalDexInterface
+            // and returns "Curve" as DEX type
+            try IUniversalDexInterface(dexRouter).getDexType() returns (string memory routerDexType) {
+                if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("Curve"))) {
+                    dexType = "CurveMeta";
+                    console.log("SingleDexProtocol: Identified as CurveMeta");
+                } else {
+                    console.log("SingleDexProtocol: ERROR - Unsupported DEX router", dexRouter);
+                    revert("Unsupported DEX router");
+                }
+            } catch {
+                console.log("SingleDexProtocol: ERROR - Unsupported DEX router", dexRouter);
+                revert("Unsupported DEX router");
+            }
         }
         console.log("SingleDexProtocol: Setting router in Registry for type", dexType);
         registry.setRouter(dexType, dexRouter);
