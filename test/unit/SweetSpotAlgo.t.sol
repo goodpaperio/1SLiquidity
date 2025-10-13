@@ -5,10 +5,12 @@ import {console} from "forge-std/console.sol";
 import {Deploys} from "test/shared/Deploys.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {MockERC20} from "test/mock/MockERC20.sol";
+import {AMockFetcher} from "test/mock/MockFetcher.sol";
 
 contract SweetSpotAlgoTest is Deploys {
     MockERC20 tokenIn;
     MockERC20 tokenOut;
+    AMockFetcher mockFetcher;
 
     function setUp() public override {
         super.setUp();
@@ -21,6 +23,9 @@ contract SweetSpotAlgoTest is Deploys {
         // Deploy mock tokens with different decimals
         tokenIn = new MockERC20("Token In", "TKI", 18);
         tokenOut = new MockERC20("Token Out", "TKO", 8);
+        
+        // Get the first mock fetcher from the deployed DEXes
+        mockFetcher = AMockFetcher(dexes[0]);
     }
 
     function test_SweetSpotAlgo_NormalCase() public {
@@ -28,10 +33,12 @@ contract SweetSpotAlgoTest is Deploys {
         uint256 reserveIn = 5_000_000 * 10 ** 18;
         uint256 reserveOut = 500_000 * 10 ** 8;
         uint256 volume = 400_000 * 10 ** 18; // 100k tokens
-        uint256 effectiveGas = 1; // $1 gas
+        
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(reserveIn, reserveOut);
 
         uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+            address(tokenIn), address(tokenOut), volume, address(mockFetcher)
         );
 
         // Sweet spot should be between 4 and 500
@@ -43,10 +50,12 @@ contract SweetSpotAlgoTest is Deploys {
         uint256 reserveIn = 100 * 10 ** 18; // 100 tokens
         uint256 reserveOut = 100 * 10 ** 18; // 100 tokens
         uint256 volume = 1 * 10 ** 18; // 1 token
-        uint256 effectiveGas = 1; // $1 gas
+        
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(reserveIn, reserveOut);
 
         uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+            address(tokenIn), address(tokenOut), volume, address(mockFetcher)
         );
 
         assertEq(sweetSpot, 4, "Should return minimum sweet spot of 4");
@@ -57,43 +66,42 @@ contract SweetSpotAlgoTest is Deploys {
         uint256 reserveIn = 1_000_000_000 * 10 ** 18; // 1B tokens
         uint256 reserveOut = 1_000_000_000 * 10 ** 18; // 1B tokens
         uint256 volume = 1_000_000 * 10 ** 18; // 1M tokens
-        uint256 effectiveGas = 1; // $1 gas
+        
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(reserveIn, reserveOut);
 
         uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+            address(tokenIn), address(tokenOut), volume, address(mockFetcher)
         );
 
         assertEq(sweetSpot, 500, "Should return maximum sweet spot of 500");
     }
 
-    function test_SweetSpotAlgo_RevertOnZeroReserves() public {
+    function test_SweetSpotAlgo_ZeroReserves() public {
         uint256 volume = 100_000 * 10 ** 18;
-        uint256 effectiveGas = 1;
+        
+        // Set zero reserves on the mock fetcher
+        mockFetcher.setReserves(0, 0);
 
-        vm.expectRevert("No reserves or appropriate gas estimation");
-        streamDaemon._sweetSpotAlgo(
-            address(tokenIn),
-            address(tokenOut),
-            volume,
-            0, // zero reserveIn
-            1_000_000 * 10 ** 6,
-            effectiveGas
+        uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
+            address(tokenIn), address(tokenOut), volume, address(mockFetcher)
         );
+
+        // Should return fallback sweet spot of 4
+        assertEq(sweetSpot, 4, "Should return fallback sweet spot of 4 for zero reserves");
     }
 
-    function test_SweetSpotAlgo_RevertOnZeroGas() public {
-        uint256 reserveIn = 1_000_000 * 10 ** 18;
-        uint256 reserveOut = 1_000_000 * 10 ** 6;
+    function test_SweetSpotAlgo_ZeroReserveIn() public {
         uint256 volume = 100_000 * 10 ** 18;
+        
+        // Set zero reserveIn on the mock fetcher
+        mockFetcher.setReserves(0, 1_000_000 * 10 ** 8);
 
-        vm.expectRevert("No reserves or appropriate gas estimation");
-        streamDaemon._sweetSpotAlgo(
-            address(tokenIn),
-            address(tokenOut),
-            volume,
-            reserveIn,
-            reserveOut,
-            0 // zero effectiveGas
+        uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
+            address(tokenIn), address(tokenOut), volume, address(mockFetcher)
         );
+
+        // Should return fallback sweet spot of 4
+        assertEq(sweetSpot, 4, "Should return fallback sweet spot of 4 for zero reserveIn");
     }
 }

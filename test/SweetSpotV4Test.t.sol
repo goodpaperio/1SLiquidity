@@ -41,7 +41,7 @@ contract SweetSpotV4Test is Test {
             uint256 volume = testAmounts[i];
             console.log("\n--- Testing with %d WETH ---", volume / 1e18);
             
-            uint256 sweetSpot = streamDaemon._sweetSpotAlgo_v4(
+            uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
                 WETH,
                 USDC,
                 volume,
