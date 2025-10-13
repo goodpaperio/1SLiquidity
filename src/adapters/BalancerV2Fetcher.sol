@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "../interfaces/IUniversalDexInterface.sol";
 import "../interfaces/dex/IBalancerVault.sol";
-import "./BalancerV2PoolRegistry.sol";
+import "./BalancerV2PoolRegistry.sol"; 
 
 interface IERC20Decimals { 
     function decimals() external view returns (uint8); 

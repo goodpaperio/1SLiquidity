@@ -68,7 +68,7 @@ contract BalancerV2PoolRegistry is IBalancerV2PoolRegistry {
         delete _pools[key].list;
 
         for (uint256 i = 0; i < poolAddrs.length; i++) {
-            address p = poolAddrs[i];
+            address p = poolAddrs[i]; 
             require(p != address(0), "POOL_0");
             _pools[key].list.push(PoolInfo({ 
                 pool: p, 
