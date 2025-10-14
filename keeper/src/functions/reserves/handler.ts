@@ -204,7 +204,8 @@ export const main = async (
 
       // If data is stale but usable, return it and refresh in background
       console.log(
-        `🟡 Stale cache hit for ${tokenA}-${tokenB}, ${shouldRefresh ? 'refreshing in background' : 'still valid'
+        `🟡 Stale cache hit for ${tokenA}-${tokenB}, ${
+          shouldRefresh ? 'refreshing in background' : 'still valid'
         }`
       )
 
@@ -225,7 +226,8 @@ export const main = async (
 
     // No cache or cache too old - need fresh data
     console.log(
-      `Cache miss for reserves of ${tokenA}-${tokenB}${dex ? ` from ${dex}` : ''
+      `Cache miss for reserves of ${tokenA}-${tokenB}${
+        dex ? ` from ${dex}` : ''
       }, fetching from API...`
     )
 
@@ -244,13 +246,15 @@ export const main = async (
         }
 
         if (!reservesData) {
+          console.log(`No reserves found for ${tokenA}-${tokenB} on ${dex}`)
+
           return {
             statusCode: 404,
             headers,
             body: JSON.stringify({
               error: 'No reserves',
-              // message: 'No liquidity found for the token pair',
-              message: `No reserves found for ${tokenA}-${tokenB} on ${dex}`,
+              message: 'No reserves found for the token pair',
+              // message: `No reserves found for ${tokenA}-${tokenB} on ${dex}`,
             }),
           }
         }
