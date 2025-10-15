@@ -5,6 +5,12 @@ import * as path from 'path'
 const envPath = path.join(__dirname, '../../.env')
 dotenv.config({ path: envPath })
 
+// IMPORTANT: Token pair format has been reversed!
+// OLD FORMAT: baseToken -> otherTokens (e.g., USDT -> LINK)
+// NEW FORMAT: otherTokens -> baseToken (e.g., LINK -> USDT)
+// Base tokens include: USDT, USDC, WETH, WBTC
+// All old logic has been commented out and new logic implemented below
+
 import { createProvider } from '../utils/provider'
 import { ReservesAggregator } from '../services/reserves-aggregator'
 import { TokenService } from '../services/token-service'
@@ -96,23 +102,23 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-      'reservesAUniswapV2',
-      'reservesASushiswap',
-      'reservesACurve',
-      'reservesABalancer',
-      'reservesAUniswapV3_500',
-      'reservesAUniswapV3_3000',
-      'reservesAUniswapV3_10000',
-    ]
+        'reservesAUniswapV2',
+        'reservesASushiswap',
+        'reservesACurve',
+        'reservesABalancer',
+        'reservesAUniswapV3_500',
+        'reservesAUniswapV3_3000',
+        'reservesAUniswapV3_10000',
+      ]
     : [
-      'reservesBUniswapV2',
-      'reservesBSushiswap',
-      'reservesBCurve',
-      'reservesBBalancer',
-      'reservesBUniswapV3_500',
-      'reservesBUniswapV3_3000',
-      'reservesBUniswapV3_10000',
-    ]
+        'reservesBUniswapV2',
+        'reservesBSushiswap',
+        'reservesBCurve',
+        'reservesBBalancer',
+        'reservesBUniswapV3_500',
+        'reservesBUniswapV3_3000',
+        'reservesBUniswapV3_10000',
+      ]
 
   let totalWei = BigInt(0)
 
@@ -322,18 +328,26 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
       // Add to seen pairs set
       seenPairs.add(pairKey)
 
-      // Create the pair with correct logic:
-      // baseToken -> resultToken (e.g., USDT -> LINK)
+      // OLD LOGIC (commented out): baseToken -> resultToken (e.g., USDT -> LINK)
+      // tokenPairs.push({
+      //   baseTokenSymbol: baseTokenSymbol, // e.g., "USDT"
+      //   baseTokenAddress: baseTokenAddress, // e.g., USDT address
+      //   tokenSymbol: token.tokenName.toUpperCase(), // e.g., "LINK"
+      //   tokenAddress: token.tokenAddress.toLowerCase(), // e.g., LINK address
+      //   tokenName: token.tokenName,
+      // })
+
+      // NEW LOGIC: resultToken -> baseToken (e.g., LINK -> USDT)
       tokenPairs.push({
-        baseTokenSymbol: baseTokenSymbol, // e.g., "USDT"
-        baseTokenAddress: baseTokenAddress, // e.g., USDT address
-        tokenSymbol: token.tokenName.toUpperCase(), // e.g., "LINK"
-        tokenAddress: token.tokenAddress.toLowerCase(), // e.g., LINK address
-        tokenName: token.tokenName,
+        baseTokenSymbol: token.tokenName.toUpperCase(), // e.g., "LINK" (now the base)
+        baseTokenAddress: token.tokenAddress.toLowerCase(), // e.g., LINK address (now the base)
+        tokenSymbol: baseTokenSymbol, // e.g., "USDT" (now the result token)
+        tokenAddress: baseTokenAddress, // e.g., USDT address (now the result token)
+        tokenName: baseTokenSymbol, // Use base token symbol as name
       })
 
       console.log(
-        `  Added pair: ${baseTokenSymbol} -> ${token.tokenName.toUpperCase()}`
+        `  Added pair: ${token.tokenName.toUpperCase()} -> ${baseTokenSymbol}`
       )
     }
   }
@@ -515,7 +529,8 @@ async function fetchTopTokensByMarketCap(
     })
 
     console.log(
-      `Filtered ${enrichedTokens.length - erc20Tokens.length
+      `Filtered ${
+        enrichedTokens.length - erc20Tokens.length
       } non-ERC20 tokens out of ${enrichedTokens.length} total tokens`
     )
 
@@ -563,13 +578,22 @@ async function analyzeTokenPairLiquidity(
   const liquidityPairs: LiquidityResult[] = []
 
   try {
-    // Get reserves from all DEXes for this specific token pair
+    // OLD LOGIC (commented out): Get reserves from all DEXes for this specific token pair
     // tokenA = baseToken, tokenB = resultToken
+    // const allReserves = await getAllReservesForPair(
+    //   pair.baseTokenAddress, // tokenA = base token (USDC, USDT, etc.)
+    //   pair.tokenAddress, // tokenB = result token (LINK, WBTC, etc.)
+    //   pair.baseTokenSymbol, // tokenA symbol
+    //   pair.tokenSymbol // tokenB symbol
+    // )
+
+    // NEW LOGIC: Get reserves from all DEXes for this specific token pair
+    // tokenA = resultToken (now the base), tokenB = baseToken (now the result)
     const allReserves = await getAllReservesForPair(
-      pair.baseTokenAddress, // tokenA = base token (USDC, USDT, etc.)
-      pair.tokenAddress, // tokenB = result token (LINK, WBTC, etc.)
-      pair.baseTokenSymbol, // tokenA symbol
-      pair.tokenSymbol // tokenB symbol
+      pair.baseTokenAddress, // tokenA = result token (LINK, WBTC, etc.) - now the base
+      pair.tokenAddress, // tokenB = base token (USDC, USDT, etc.) - now the result
+      pair.baseTokenSymbol, // tokenA symbol (result token symbol)
+      pair.tokenSymbol // tokenB symbol (base token symbol)
     )
 
     if (allReserves.length > 0) {
@@ -713,13 +737,29 @@ async function getAllReservesForPair(
       }
 
       if (reserves) {
+        // OLD LOGIC (commented out): tokenA = baseToken, tokenB = resultToken
+        // const liquidityResult: LiquidityResult = {
+        //   tokenAddress: tokenB, // Result token address (e.g., USDC address)
+        //   tokenSymbol: baseSymbol, // Result token symbol (e.g., "USDC")
+        //   tokenName: baseSymbol, // Result token name (e.g., "USDC")
+        //   marketCap: 0, // Will be set by parent function
+        //   baseToken: tokenA, // Base token address (e.g., USDT address)
+        //   baseTokenSymbol: tokenSymbol, // Base token symbol (e.g., "USDT")
+        //   dex: dex.name,
+        //   reserves: reserves.reserves,
+        //   decimals: reserves.decimals,
+        //   timestamp: reserves.timestamp,
+        //   pairAddress: reserves.pairAddress,
+        // }
+
+        // NEW LOGIC: tokenA = resultToken (now base), tokenB = baseToken (now result)
         const liquidityResult: LiquidityResult = {
-          tokenAddress: tokenB, // Result token address (e.g., USDC address)
-          tokenSymbol: baseSymbol, // Result token symbol (e.g., "USDC")
-          tokenName: baseSymbol, // Result token name (e.g., "USDC")
+          tokenAddress: tokenB, // Result token address (e.g., USDC address) - now the result
+          tokenSymbol: baseSymbol, // Result token symbol (e.g., "USDC") - now the result
+          tokenName: baseSymbol, // Result token name (e.g., "USDC") - now the result
           marketCap: 0, // Will be set by parent function
-          baseToken: tokenA, // Base token address (e.g., USDT address)
-          baseTokenSymbol: tokenSymbol, // Base token symbol (e.g., "USDT")
+          baseToken: tokenA, // Base token address (e.g., LINK address) - now the base
+          baseTokenSymbol: tokenSymbol, // Base token symbol (e.g., "LINK") - now the base
           dex: dex.name,
           reserves: reserves.reserves,
           decimals: reserves.decimals,
@@ -729,9 +769,10 @@ async function getAllReservesForPair(
 
         results.push(liquidityResult)
         console.log(
-          `      Found ${dex.name} liquidity${reserves.pairAddress
-            ? ` (Pool Address: ${reserves.pairAddress})`
-            : ''
+          `      Found ${dex.name} liquidity${
+            reserves.pairAddress
+              ? ` (Pool Address: ${reserves.pairAddress})`
+              : ''
           }`
         )
       }
@@ -866,13 +907,22 @@ async function transformToColumnFormat(
 
   results.forEach((tokenSummary) => {
     tokenSummary.liquidityPairs.forEach((pair) => {
-      // Create a unique key for each token pair
+      // OLD LOGIC (commented out): Create a unique key for each token pair
       // baseToken-resultToken (tokenA-tokenB)
+      // const pairKey = `${pair.baseToken}-${pair.tokenAddress}`
+
+      // NEW LOGIC: Create a unique key for each token pair
+      // resultToken-baseToken (tokenA-tokenB) - reversed
       const pairKey = `${pair.baseToken}-${pair.tokenAddress}`
 
-      // Filter out stable coin pairs (USDC, USDT, WBTC, WETH)
-      const tokenAAddress = pair.baseToken.toLowerCase()
-      const tokenBAddress = pair.tokenAddress.toLowerCase()
+      // OLD LOGIC (commented out): Filter out stable coin pairs (USDC, USDT, WBTC, WETH)
+      // const tokenAAddress = pair.baseToken.toLowerCase()
+      // const tokenBAddress = pair.tokenAddress.toLowerCase()
+
+      // NEW LOGIC: Filter out stable coin pairs (USDC, USDT, WBTC, WETH)
+      // Now tokenA = resultToken (LINK, WBTC, etc.), tokenB = baseToken (USDC, USDT, etc.)
+      const tokenAAddress = pair.baseToken.toLowerCase() // resultToken (LINK, WBTC, etc.)
+      const tokenBAddress = pair.tokenAddress.toLowerCase() // baseToken (USDC, USDT, etc.)
 
       // Debug logging
       console.log(`Checking pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`)
@@ -887,7 +937,19 @@ async function transformToColumnFormat(
         )})`
       )
 
-      // FIXED: Check if BOTH tokens are stable coins - if so, skip this pair
+      // OLD LOGIC (commented out): Check if BOTH tokens are stable coins - if so, skip this pair
+      // if (
+      //   STABLE_COIN_ADDRESSES.has(tokenAAddress) &&
+      //   STABLE_COIN_ADDRESSES.has(tokenBAddress)
+      // ) {
+      //   console.log(
+      //     `🚫 Filtering out stable coin pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`
+      //   )
+      //   return // Skip this pair
+      // }
+
+      // NEW LOGIC: Check if BOTH tokens are stable coins - if so, skip this pair
+      // Now tokenA = resultToken, tokenB = baseToken
       if (
         STABLE_COIN_ADDRESSES.has(tokenAAddress) &&
         STABLE_COIN_ADDRESSES.has(tokenBAddress)
@@ -899,16 +961,29 @@ async function transformToColumnFormat(
       }
 
       if (!tokenPairMap.has(pairKey)) {
-        // Initialize the record for this token pair
+        // OLD LOGIC (commented out): Initialize the record for this token pair
+        // tokenPairMap.set(pairKey, {
+        //   timestamp: new Date(pair.timestamp),
+        //   tokenAAddress: pair.baseToken, // tokenA = base token (USDT, USDC, etc.)
+        //   tokenASymbol: pair.baseTokenSymbol, // tokenA symbol
+        //   tokenAName: pair.baseTokenSymbol, // tokenA name
+        //   tokenADecimals: pair.decimals.token0, // Assuming token0 is the base token (tokenA)
+        //   tokenBAddress: pair.tokenAddress, // tokenB = result token (LINK, WBTC, etc.)
+        //   tokenBSymbol: pair.tokenSymbol, // tokenB symbol
+        //   tokenBDecimals: pair.decimals.token1, // Assuming token1 is the result token (tokenB)
+        //   marketCap: tokenSummary.marketCap,
+
+        // NEW LOGIC: Initialize the record for this token pair
+        // tokenA = resultToken (LINK, WBTC, etc.), tokenB = baseToken (USDC, USDT, etc.)
         tokenPairMap.set(pairKey, {
           timestamp: new Date(pair.timestamp),
-          tokenAAddress: pair.baseToken, // tokenA = base token (USDT, USDC, etc.)
-          tokenASymbol: pair.baseTokenSymbol, // tokenA symbol
-          tokenAName: pair.baseTokenSymbol, // tokenA name
-          tokenADecimals: pair.decimals.token0, // Assuming token0 is the base token (tokenA)
-          tokenBAddress: pair.tokenAddress, // tokenB = result token (LINK, WBTC, etc.)
-          tokenBSymbol: pair.tokenSymbol, // tokenB symbol
-          tokenBDecimals: pair.decimals.token1, // Assuming token1 is the result token (tokenB)
+          tokenAAddress: pair.baseToken, // tokenA = result token (LINK, WBTC, etc.) - now the base
+          tokenASymbol: pair.baseTokenSymbol, // tokenA symbol (result token symbol)
+          tokenAName: pair.baseTokenSymbol, // tokenA name (result token name)
+          tokenADecimals: pair.decimals.token0, // Assuming token0 is the result token (tokenA)
+          tokenBAddress: pair.tokenAddress, // tokenB = base token (USDC, USDT, etc.) - now the result
+          tokenBSymbol: pair.tokenSymbol, // tokenB symbol (base token symbol)
+          tokenBDecimals: pair.decimals.token1, // Assuming token1 is the base token (tokenB)
           marketCap: tokenSummary.marketCap,
           // Initialize all DEX reserves as null
           reservesAUniswapV2: null,
@@ -1168,7 +1243,7 @@ async function transformToColumnFormat(
       priceAccuracyNODECA,
       priceAccuracyDECA,
     } = sweetSpot
-        ? await calculateSlippageSavings(
+      ? await calculateSlippageSavings(
           BigInt(record.reserveAtotaldepthWei), // Total reserves A
           highestLiquidityADex, // Best DEX name
           feeTier, // Fee tier
@@ -1181,7 +1256,7 @@ async function transformToColumnFormat(
           sweetSpot,
           bestDexPairAddress
         )
-        : {
+      : {
           slippageSavings: 0,
           percentageSavings: 0,
           priceAccuracyNODECA: 0,
@@ -1207,7 +1282,8 @@ async function transformToColumnFormat(
     `📋 Grouped ${results.reduce(
       (sum, r) => sum + r.liquidityPairs.length,
       0
-    )} individual DEX pairs into ${transformedRecords.length
+    )} individual DEX pairs into ${
+      transformedRecords.length
     } token pair records with total depth calculations`
   )
 
@@ -1582,7 +1658,9 @@ export async function calculateSlippageSavings(
           // Get pool metadata
           const poolMetadata = (BALANCER_POOL_METADATA as any)[pairAddress]
           if (!poolMetadata) {
-            throw new Error(`No metadata found for Balancer pool ${pairAddress}`)
+            throw new Error(
+              `No metadata found for Balancer pool ${pairAddress}`
+            )
           }
 
           // Use metadata for token indices (no blockchain calls needed)
@@ -1928,7 +2006,8 @@ async function runLiquidityAnalysisFromJson(
     for (let i = 0; i < totalPairs; i++) {
       const pair = tokenPairs[i]
       console.log(
-        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${pair.tokenSymbol
+        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${
+          pair.tokenSymbol
         }...`
       )
 
@@ -2113,7 +2192,8 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
     for (let i = 0; i < actualTokensToProcess; i++) {
       const token = tokensToProcess[i]
       console.log(
-        `\n[${i + 1}/${actualTokensToProcess}] Processing ${token.symbol
+        `\n[${i + 1}/${actualTokensToProcess}] Processing ${
+          token.symbol
         } (Market Cap: $${token.market_cap.toLocaleString()})...`
       )
 
@@ -2316,12 +2396,21 @@ export async function analyzeTokenPairLiquidityComprehensive(
       `✅ Token B: ${tokenBInfo.symbol} - ${tokenBInfo.decimals} decimals`
     )
 
-    // Use existing getAllReservesForPair function
+    // OLD LOGIC (commented out): Use existing getAllReservesForPair function
+    // const allReserves = await getAllReservesForPair(
+    //   tokenAAddress,
+    //   tokenBAddress,
+    //   tokenAInfo.symbol,
+    //   tokenBInfo.symbol
+    // )
+
+    // NEW LOGIC: Use existing getAllReservesForPair function with reversed parameters
+    // tokenA = resultToken (now base), tokenB = baseToken (now result)
     const allReserves = await getAllReservesForPair(
-      tokenAAddress,
-      tokenBAddress,
-      tokenAInfo.symbol,
-      tokenBInfo.symbol
+      tokenAAddress, // resultToken (now the base)
+      tokenBAddress, // baseToken (now the result)
+      tokenAInfo.symbol, // resultToken symbol (now the base)
+      tokenBInfo.symbol // baseToken symbol (now the result)
     )
 
     if (allReserves.length === 0) {
@@ -2391,13 +2480,23 @@ export async function analyzeTokenPairLiquidityComprehensive(
       feeTier = 3000 // Use 0.3% fee for V2-style AMMs
     }
 
-    // Sweet spot should pass in reserve A and reserve B of dex with highest liquidity instead of total reserves
+    // OLD LOGIC (commented out): Sweet spot should pass in reserve A and reserve B of dex with highest liquidity instead of total reserves
+    // const sweetSpot = calculateSweetSpot(
+    //   totalReservesA,
+    //   BigInt(bestDex.reserves.tokenA),
+    //   BigInt(bestDex.reserves.tokenB),
+    //   tokenAInfo.decimals,
+    //   tokenBInfo.decimals
+    // )
+
+    // NEW LOGIC: Sweet spot calculation with reversed token pairs
+    // Now tokenA = resultToken, tokenB = baseToken
     const sweetSpot = calculateSweetSpot(
-      totalReservesA,
-      BigInt(bestDex.reserves.tokenA),
-      BigInt(bestDex.reserves.tokenB),
-      tokenAInfo.decimals,
-      tokenBInfo.decimals
+      totalReservesA, // Total reserves of resultToken (now tokenA)
+      BigInt(bestDex.reserves.tokenA), // Best DEX reserves of resultToken (now tokenA)
+      BigInt(bestDex.reserves.tokenB), // Best DEX reserves of baseToken (now tokenB)
+      tokenAInfo.decimals, // ResultToken decimals (now tokenA)
+      tokenBInfo.decimals // BaseToken decimals (now tokenB)
     )
 
     console.log(`Sweet spot: ${sweetSpot} streams`)
@@ -2407,15 +2506,15 @@ export async function analyzeTokenPairLiquidityComprehensive(
       priceAccuracyNODECA,
       priceAccuracyDECA,
     } = await calculateSlippageSavings(
-      totalReservesA,
+      totalReservesA, // Total reserves of resultToken (now tokenA)
       bestDex.name,
       feeTier,
-      BigInt(bestDex.reserves.tokenA),
-      BigInt(bestDex.reserves.tokenB),
-      tokenAInfo.decimals,
-      tokenBInfo.decimals,
-      tokenAAddress,
-      tokenBAddress,
+      BigInt(bestDex.reserves.tokenA), // Best DEX reserves of resultToken (now tokenA)
+      BigInt(bestDex.reserves.tokenB), // Best DEX reserves of baseToken (now tokenB)
+      tokenAInfo.decimals, // ResultToken decimals (now tokenA)
+      tokenBInfo.decimals, // BaseToken decimals (now tokenB)
+      tokenAAddress, // ResultToken address (now tokenA)
+      tokenBAddress, // BaseToken address (now tokenB)
       sweetSpot,
       bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
     )
@@ -2432,17 +2531,32 @@ export async function analyzeTokenPairLiquidityComprehensive(
     const result = {
       success: true,
       data: {
+        // OLD LOGIC (commented out): tokenA = baseToken, tokenB = resultToken
+        // tokenA: {
+        //   address: tokenAAddress,
+        //   symbol: tokenAInfo.symbol,
+        //   name: tokenAInfo.symbol,
+        //   decimals: tokenAInfo.decimals,
+        // },
+        // tokenB: {
+        //   address: tokenBAddress,
+        //   symbol: tokenBInfo.symbol,
+        //   name: tokenBInfo.symbol,
+        //   decimals: tokenBInfo.decimals,
+        // },
+
+        // NEW LOGIC: tokenA = resultToken (now base), tokenB = baseToken (now result)
         tokenA: {
-          address: tokenAAddress,
-          symbol: tokenAInfo.symbol,
-          name: tokenAInfo.symbol,
-          decimals: tokenAInfo.decimals,
+          address: tokenAAddress, // ResultToken address (now the base)
+          symbol: tokenAInfo.symbol, // ResultToken symbol (now the base)
+          name: tokenAInfo.symbol, // ResultToken name (now the base)
+          decimals: tokenAInfo.decimals, // ResultToken decimals (now the base)
         },
         tokenB: {
-          address: tokenBAddress,
-          symbol: tokenBInfo.symbol,
-          name: tokenBInfo.symbol,
-          decimals: tokenBInfo.decimals,
+          address: tokenBAddress, // BaseToken address (now the result)
+          symbol: tokenBInfo.symbol, // BaseToken symbol (now the result)
+          name: tokenBInfo.symbol, // BaseToken name (now the result)
+          decimals: tokenBInfo.decimals, // BaseToken decimals (now the result)
         },
         dexes: dexResults,
         totalReserves: {
@@ -2474,13 +2588,19 @@ export async function analyzeTokenPairLiquidityComprehensive(
     console.log(`\n📋 COMPREHENSIVE LIQUIDITY ANALYSIS RESULTS`)
     console.log(`===============================================`)
     console.log(`Token Pair: ${tokenAInfo.symbol}/${tokenBInfo.symbol}`)
-    console.log(`Token A: ${tokenAInfo.symbol} (${tokenAAddress})`)
-    console.log(`Token B: ${tokenBInfo.symbol} (${tokenBAddress})`)
+    console.log(
+      `Token A: ${tokenAInfo.symbol} (${tokenAAddress}) - ResultToken (now base)`
+    )
+    console.log(
+      `Token B: ${tokenBInfo.symbol} (${tokenBAddress}) - BaseToken (now result)`
+    )
     console.log(`\nDEX Analysis:`)
     dexResults.forEach((dex) => {
       console.log(
-        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${tokenAInfo.symbol
-        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${tokenBInfo.symbol
+        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${
+          tokenAInfo.symbol
+        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${
+          tokenBInfo.symbol
         } (Total: ${dex.totalLiquidity.toFixed(6)})`
       )
     })
@@ -2488,10 +2608,10 @@ export async function analyzeTokenPairLiquidityComprehensive(
       `\nTotal Reserves: ${weiToNormal(
         totalReservesA.toString(),
         tokenAInfo.decimals
-      ).toFixed(6)} ${tokenAInfo.symbol} / ${weiToNormal(
+      ).toFixed(6)} ${tokenAInfo.symbol} (ResultToken) / ${weiToNormal(
         totalReservesB.toString(),
         tokenBInfo.decimals
-      ).toFixed(6)} ${tokenBInfo.symbol}`
+      ).toFixed(6)} ${tokenBInfo.symbol} (BaseToken)`
     )
     console.log(`\nSweet Spot: ${sweetSpot} streams`)
     console.log(`\nSavings Analysis (${bestDex.name}):`)
