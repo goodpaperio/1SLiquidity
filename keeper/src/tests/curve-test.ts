@@ -16,11 +16,11 @@ async function testCurveService() {
 
   // Get a test pool from the generated metadata (3CRV pool)
   const poolAddresses = Object.keys(CURVE_POOL_METADATA)
-  const testPoolAddress = poolAddresses.find(addr => 
-    (CURVE_POOL_METADATA as any)[addr]?.name?.includes('3CRV') || 
+  const testPoolAddress = poolAddresses.find(addr =>
+    (CURVE_POOL_METADATA as any)[addr]?.name?.includes('3CRV') ||
     (CURVE_POOL_METADATA as any)[addr]?.tokens?.length >= 3
   ) || poolAddresses[0]
-  
+
   if (!testPoolAddress) {
     console.log('No Curve pools available for testing')
     return
@@ -28,8 +28,8 @@ async function testCurveService() {
 
   console.log('Using test pool:', testPoolAddress)
   console.log('Pool metadata:', (CURVE_POOL_METADATA as any)[testPoolAddress])
-  
-  const curveService = new CurveService(provider, testPoolAddress)
+
+  const curveService = new CurveService(provider, testPoolAddress, (CURVE_POOL_METADATA as any)[testPoolAddress])
 
   console.log('Testing pool:', testPoolAddress)
 
@@ -57,7 +57,7 @@ async function testCurveService() {
     if (poolTokens && poolTokens.length >= 2) {
       const tokenA = poolTokens[0]
       const tokenB = poolTokens[1]
-      
+
       console.log(`Testing reserves for ${tokenA}/${tokenB}`)
       const reserves = await curveService.getReserves(tokenA, tokenB)
       if (reserves) {
@@ -84,7 +84,7 @@ async function testCurveService() {
     if (poolTokens && poolTokens.length >= 2) {
       const tokenA = poolTokens[0]
       const tokenB = poolTokens[1]
-      
+
       console.log(`Testing price for ${tokenA}/${tokenB}`)
       const price = await curveService.getPrice(tokenA, tokenB)
       if (price) {
@@ -114,10 +114,10 @@ async function testCurveIntegration() {
 
   // Get test tokens from a pool
   const poolAddresses = Object.keys(CURVE_POOL_METADATA)
-  const testPoolAddress = poolAddresses.find(addr => 
+  const testPoolAddress = poolAddresses.find(addr =>
     (CURVE_POOL_METADATA as any)[addr]?.tokens?.length >= 2
   ) || poolAddresses[0]
-  
+
   if (!testPoolAddress) {
     console.log('No suitable Curve pools available for testing')
     return
@@ -137,10 +137,10 @@ async function testCurveIntegration() {
   try {
     const { PriceAggregator } = await import('../services/price-aggregator')
     const priceAggregator = new PriceAggregator(provider)
-    
+
     // Initialize Curve filtering
     priceAggregator.initializeCurvePoolFilter(CURVE_POOL_METADATA)
-    
+
     // Test specific Curve pool
     console.log(`Testing price for ${tokenA}/${tokenB} on pool ${testPoolAddress}`)
     const curvePrice = await priceAggregator.getPriceFromDex(tokenA, tokenB, 'curve')
@@ -158,10 +158,10 @@ async function testCurveIntegration() {
   try {
     const { ReservesAggregator } = await import('../services/reserves-aggregator')
     const reservesAggregator = new ReservesAggregator(provider)
-    
+
     // Initialize Curve filtering
     reservesAggregator.initializeCurvePoolFilter(CURVE_POOL_METADATA)
-    
+
     console.log(`Testing reserves for ${tokenA}/${tokenB} on pool ${testPoolAddress}`)
     const curveReserves = await reservesAggregator.getReservesFromDex(tokenA, tokenB, 'curve')
     if (curveReserves) {
@@ -178,10 +178,10 @@ async function testCurveIntegration() {
   try {
     const { ReservesAggregator } = await import('../services/reserves-aggregator')
     const reservesAggregator = new ReservesAggregator(provider)
-    
+
     // Initialize Curve filtering
     reservesAggregator.initializeCurvePoolFilter(CURVE_POOL_METADATA)
-    
+
     console.log(`Testing getAllReserves for ${tokenA}/${tokenB} (should use smart filtering)`)
     const allReserves = await reservesAggregator.getAllReserves(tokenA, tokenB)
     if (allReserves) {

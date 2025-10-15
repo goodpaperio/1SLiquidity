@@ -96,23 +96,23 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-        'reservesAUniswapV2',
-        'reservesASushiswap',
-        'reservesACurve',
-        'reservesABalancer',
-        'reservesAUniswapV3_500',
-        'reservesAUniswapV3_3000',
-        'reservesAUniswapV3_10000',
-      ]
+      'reservesAUniswapV2',
+      'reservesASushiswap',
+      'reservesACurve',
+      'reservesABalancer',
+      'reservesAUniswapV3_500',
+      'reservesAUniswapV3_3000',
+      'reservesAUniswapV3_10000',
+    ]
     : [
-        'reservesBUniswapV2',
-        'reservesBSushiswap',
-        'reservesBCurve',
-        'reservesBBalancer',
-        'reservesBUniswapV3_500',
-        'reservesBUniswapV3_3000',
-        'reservesBUniswapV3_10000',
-      ]
+      'reservesBUniswapV2',
+      'reservesBSushiswap',
+      'reservesBCurve',
+      'reservesBBalancer',
+      'reservesBUniswapV3_500',
+      'reservesBUniswapV3_3000',
+      'reservesBUniswapV3_10000',
+    ]
 
   let totalWei = BigInt(0)
 
@@ -515,8 +515,7 @@ async function fetchTopTokensByMarketCap(
     })
 
     console.log(
-      `Filtered ${
-        enrichedTokens.length - erc20Tokens.length
+      `Filtered ${enrichedTokens.length - erc20Tokens.length
       } non-ERC20 tokens out of ${enrichedTokens.length} total tokens`
     )
 
@@ -691,7 +690,7 @@ async function getAllReservesForPair(
     { name: 'uniswap-v2', fee: null },
     { name: 'sushiswap', fee: null },
     { name: 'curve', fee: null },
-    { name: 'balancer', fee: null },
+    // { name: 'balancer', fee: null },
   ]
 
   for (const dex of dexes) {
@@ -730,10 +729,9 @@ async function getAllReservesForPair(
 
         results.push(liquidityResult)
         console.log(
-          `      Found ${dex.name} liquidity${
-            reserves.pairAddress
-              ? ` (Pool Address: ${reserves.pairAddress})`
-              : ''
+          `      Found ${dex.name} liquidity${reserves.pairAddress
+            ? ` (Pool Address: ${reserves.pairAddress})`
+            : ''
           }`
         )
       }
@@ -1170,7 +1168,7 @@ async function transformToColumnFormat(
       priceAccuracyNODECA,
       priceAccuracyDECA,
     } = sweetSpot
-      ? await calculateSlippageSavings(
+        ? await calculateSlippageSavings(
           BigInt(record.reserveAtotaldepthWei), // Total reserves A
           highestLiquidityADex, // Best DEX name
           feeTier, // Fee tier
@@ -1183,7 +1181,7 @@ async function transformToColumnFormat(
           sweetSpot,
           bestDexPairAddress
         )
-      : {
+        : {
           slippageSavings: 0,
           percentageSavings: 0,
           priceAccuracyNODECA: 0,
@@ -1209,8 +1207,7 @@ async function transformToColumnFormat(
     `📋 Grouped ${results.reduce(
       (sum, r) => sum + r.liquidityPairs.length,
       0
-    )} individual DEX pairs into ${
-      transformedRecords.length
+    )} individual DEX pairs into ${transformedRecords.length
     } token pair records with total depth calculations`
   )
 
@@ -1582,17 +1579,21 @@ export async function calculateSlippageSavings(
 
           console.log('BALANCER PAIR ADDRESS', pairAddress)
 
-          // Get pool tokens to find correct indices
-          const [tokens, balances, lastChangeBlock] = await vault.getPoolTokens(
-            pairAddress
-          )
+          // Get pool metadata
+          const poolMetadata = (BALANCER_POOL_METADATA as any)[pairAddress]
+          if (!poolMetadata) {
+            throw new Error(`No metadata found for Balancer pool ${pairAddress}`)
+          }
 
-          // Find token indices in the pool
+          // Use metadata for token indices (no blockchain calls needed)
+          const tokens = poolMetadata.tokens.map((t: string) => t.toLowerCase())
+
+          // Find token indices in the pool using metadata
           const tokenInIndex = tokens.findIndex(
-            (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
+            (token: string) => token === tokenIn.toLowerCase()
           )
           const tokenOutIndex = tokens.findIndex(
-            (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
+            (token: string) => token === tokenOut.toLowerCase()
           )
 
           if (tokenInIndex === -1 || tokenOutIndex === -1) {
@@ -1725,6 +1726,12 @@ export async function calculateSlippageSavings(
 
         console.log('CURVE POOL ADDRESS', pairAddress)
 
+        // Get pool metadata
+        const poolMetadata = (CURVE_POOL_METADATA as any)[pairAddress]
+        if (!poolMetadata) {
+          throw new Error(`No metadata found for Curve pool ${pairAddress}`)
+        }
+
         // Create Curve pool contract instance
         const poolContract = new ethers.Contract(
           pairAddress,
@@ -1734,43 +1741,16 @@ export async function calculateSlippageSavings(
 
         // Helper to get quote from Curve pool
         async function getCurveQuote(amountIn: bigint) {
-          // Get pool information
-          const [coins, balances, isMeta] = await Promise.all([
-            poolContract
-              .coins(0)
-              .then(() => poolContract.coins(1))
-              .then(() =>
-                Promise.all([poolContract.coins(0), poolContract.coins(1)])
-              )
-              .catch(() => null),
-            poolContract
-              .balances(0)
-              .then(() => poolContract.balances(1))
-              .then(() =>
-                Promise.all([
-                  poolContract.balances(0),
-                  poolContract.balances(1),
-                ])
-              )
-              .catch(() => null),
-            // Try to call is_meta, fallback to false if not available
-            poolContract.is_meta().catch(() => false),
-          ])
+          // Use metadata for token indices (no blockchain calls needed)
+          const coins = poolMetadata.tokens.map((t: string) => t.toLowerCase())
+          const isMeta = poolMetadata.isMeta
 
-          if (!coins || !balances) {
-            throw new Error('Could not fetch pool data from Curve contract')
-          }
-
-          console.log('Curve pool coins:', coins)
-          console.log('Curve pool balances:', balances)
-          console.log('Curve is meta pool:', isMeta)
-
-          // Find token indices in the pool
+          // Find token indices in the pool using metadata
           const tokenInIndex = coins.findIndex(
-            (coin: string) => coin.toLowerCase() === tokenIn.toLowerCase()
+            (coin: string) => coin === tokenIn.toLowerCase()
           )
           const tokenOutIndex = coins.findIndex(
-            (coin: string) => coin.toLowerCase() === tokenOut.toLowerCase()
+            (coin: string) => coin === tokenOut.toLowerCase()
           )
 
           if (tokenInIndex === -1 || tokenOutIndex === -1) {
@@ -1780,6 +1760,7 @@ export async function calculateSlippageSavings(
           }
 
           console.log('Curve token indices:', { tokenInIndex, tokenOutIndex })
+          console.log('Curve is meta pool:', isMeta)
 
           // Use appropriate function based on pool type
           let amountOut: bigint
@@ -1947,8 +1928,7 @@ async function runLiquidityAnalysisFromJson(
     for (let i = 0; i < totalPairs; i++) {
       const pair = tokenPairs[i]
       console.log(
-        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${
-          pair.tokenSymbol
+        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${pair.tokenSymbol
         }...`
       )
 
@@ -2133,8 +2113,7 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
     for (let i = 0; i < actualTokensToProcess; i++) {
       const token = tokensToProcess[i]
       console.log(
-        `\n[${i + 1}/${actualTokensToProcess}] Processing ${
-          token.symbol
+        `\n[${i + 1}/${actualTokensToProcess}] Processing ${token.symbol
         } (Market Cap: $${token.market_cap.toLocaleString()})...`
       )
 
@@ -2500,10 +2479,8 @@ export async function analyzeTokenPairLiquidityComprehensive(
     console.log(`\nDEX Analysis:`)
     dexResults.forEach((dex) => {
       console.log(
-        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${
-          tokenAInfo.symbol
-        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${
-          tokenBInfo.symbol
+        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${tokenAInfo.symbol
+        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${tokenBInfo.symbol
         } (Total: ${dex.totalLiquidity.toFixed(6)})`
       )
     })

@@ -28,7 +28,7 @@ export class PriceAggregator {
     this.sushiswap = new SushiSwapService(provider);
     this.curveServices = new Map();
     this.balancerServices = new Map();
-    
+
     // Balancer and Curve services will be initialized dynamically when pool filters are set up
   }
 
@@ -38,12 +38,12 @@ export class PriceAggregator {
    */
   initializeCurvePoolFilter(poolMetadata: Record<string, any>) {
     this.curvePoolFilter = createCurvePoolFilter(poolMetadata);
-    
+
     // Initialize Curve services for all pools in metadata
     Object.keys(poolMetadata).forEach(poolAddress => {
-      this.curveServices.set(poolAddress, new CurveService(this.provider, poolAddress));
+      this.curveServices.set(poolAddress, new CurveService(this.provider, poolAddress, poolMetadata[poolAddress]));
     });
-    
+
     console.log(`Initialized ${Object.keys(poolMetadata).length} Curve services`);
   }
 
@@ -53,12 +53,12 @@ export class PriceAggregator {
    */
   initializeBalancerPoolFilter(poolMetadata: Record<string, any>) {
     this.balancerPoolFilter = createBalancerPoolFilter(poolMetadata);
-    
+
     // Initialize Balancer services for all pools in metadata
     Object.keys(poolMetadata).forEach(poolAddress => {
-      this.balancerServices.set(poolAddress, new BalancerService(this.provider, poolAddress));
+      this.balancerServices.set(poolAddress, new BalancerService(this.provider, poolAddress, poolMetadata[poolAddress]));
     });
-    
+
     console.log(`Initialized ${Object.keys(poolMetadata).length} Balancer services`);
   }
 
@@ -122,23 +122,23 @@ export class PriceAggregator {
             console.log(`No suitable Curve pools found for ${tokenA}/${tokenB}`);
             return null;
           }
-          
+
           const bestPoolAddress = candidatePools[0];
           const curveService = this.curveServices.get(bestPoolAddress);
           if (!curveService) {
             console.log(`Curve service not found for pool ${bestPoolAddress}`);
             return null;
           }
-          
+
           const price = await this.fetchWithRetry(
             () => curveService.getPrice(tokenA, tokenB),
             `Curve ${bestPoolAddress}`
           );
-          
+
           if (price) {
             price.dex = `curve-${bestPoolAddress}`;
           }
-          
+
           return price;
         } else {
           console.log('Curve pool filter not initialized - skipping Curve pools');
@@ -152,14 +152,14 @@ export class PriceAggregator {
             console.log(`No suitable Balancer pools found for ${tokenA}/${tokenB}`);
             return null;
           }
-          
+
           const bestPoolAddress = candidatePools[0];
           const balancerService = this.balancerServices.get(bestPoolAddress);
           if (!balancerService) {
             console.log(`Balancer service not found for pool ${bestPoolAddress}`);
             return null;
           }
-          
+
           const balancerResult = await this.fetchWithRetry(
             () => balancerService.getPrice(tokenA, tokenB),
             `Balancer ${bestPoolAddress}`
@@ -220,11 +220,11 @@ export class PriceAggregator {
       // Use smart filtering to find relevant pools
       const candidatePools = this.curvePoolFilter.findBestPools(tokenA, tokenB, 5);
       console.log(`Found ${candidatePools.length} candidate Curve pools for ${tokenA}/${tokenB}`);
-      
+
       for (const poolAddress of candidatePools) {
         const curveService = this.curveServices.get(poolAddress);
         if (!curveService) continue;
-        
+
         try {
           const curvePrice = await this.fetchWithRetry(
             () => curveService.getPrice(tokenA, tokenB),
@@ -252,11 +252,11 @@ export class PriceAggregator {
       // Use smart filtering to find relevant pools
       const candidatePools = await this.balancerPoolFilter.findBestPools(tokenA, tokenB, 5);
       console.log(`Found ${candidatePools.length} candidate Balancer pools for ${tokenA}/${tokenB}`);
-      
+
       for (const poolAddress of candidatePools) {
         const balancerService = this.balancerServices.get(poolAddress);
         if (!balancerService) continue;
-        
+
         try {
           const balancerResult = await this.fetchWithRetry(
             () => balancerService.getPrice(tokenA, tokenB),

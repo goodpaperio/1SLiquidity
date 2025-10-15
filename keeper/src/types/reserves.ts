@@ -11,6 +11,11 @@ export interface ReserveResult {
   }
   price: number
   timestamp: number
+  // Token indices for Curve and Balancer pools
+  tokenIndices?: {
+    token0Index: number
+    token1Index: number
+  }
   // Optional fields for aggregated data (only present in getAllReserves)
   totalReserves?: {
     totalReserveTokenAWei: string
@@ -31,5 +36,9 @@ export interface ReserveResult {
       token1: number
     }
     timestamp: number
+    tokenIndices?: {
+      token0Index: number
+      token1Index: number
+    }
   }[]
 }

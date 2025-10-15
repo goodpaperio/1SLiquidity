@@ -63,7 +63,7 @@ export class ReservesAggregator {
     Object.keys(poolMetadata).forEach((poolAddress) => {
       this.curveServices.set(
         poolAddress,
-        new CurveService(this.provider, poolAddress)
+        new CurveService(this.provider, poolAddress, poolMetadata[poolAddress])
       )
     })
 
@@ -83,7 +83,7 @@ export class ReservesAggregator {
     Object.keys(poolMetadata).forEach((poolAddress) => {
       this.balancerServices.set(
         poolAddress,
-        new BalancerService(this.provider, poolAddress)
+        new BalancerService(this.provider, poolAddress, poolMetadata[poolAddress])
       )
     })
 
@@ -327,8 +327,9 @@ export class ReservesAggregator {
                 token0: token0Info.decimals,
                 token1: token1Info.decimals,
               },
-              price: 0,
+              price: balancerResult.price,
               timestamp: balancerResult.timestamp,
+              tokenIndices: balancerResult.tokenIndices,
             }
           }
         } else {
@@ -832,8 +833,9 @@ export class ReservesAggregator {
                 token0: token0Info.decimals,
                 token1: token1Info.decimals,
               },
-              price: 0,
+              price: balancerResult.price,
               timestamp: balancerResult.timestamp,
+              tokenIndices: balancerResult.tokenIndices,
             }
             const meanReserves = this.calculateGeometricMean(
               balancerReserves.reserves,
