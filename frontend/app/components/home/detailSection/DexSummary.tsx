@@ -28,7 +28,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
       curve: '/assets/curve.png',
       uniswap: '/assets/uniswap.png',
       sushiswap: '/assets/sushiswap.png',
-      balancer: '/assets/balancer.png',
+      balancer: '/assets/balancer-dex.png',
     }),
     []
   )
