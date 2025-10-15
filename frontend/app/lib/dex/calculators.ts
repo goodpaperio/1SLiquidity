@@ -163,6 +163,11 @@ export interface ReserveData {
     token0: number
     token1: number
   }
+  // Token indices for Curve and Balancer pools
+  tokenIndices?: {
+    token0Index: number
+    token1Index: number
+  }
   // Total reserves from API
   totalReserves?: {
     totalReserveTokenAWei: string
@@ -183,6 +188,10 @@ export interface ReserveData {
     decimals: {
       token0: number
       token1: number
+    }
+    tokenIndices?: {
+      token0Index: number
+      token1Index: number
     }
   }>
 }
@@ -1306,58 +1315,52 @@ export class CurveCalculator extends BaseDexCalculator {
       // Convert input amount to BigNumber with proper decimals
       const amountInBN = ethers.utils.parseUnits(amountIn, token0Decimals)
 
-      // Get pool information
-      const [coins, balances, isMeta] = await Promise.all([
-        this.getPoolCoins(),
-        this.getPoolBalances(),
-        this.pool.is_meta().catch(() => false),
-      ])
+      // Use token indices from API response if available
+      let tokenInIndex: number
+      let tokenOutIndex: number
 
-      if (!coins || !balances) {
-        throw new Error('Could not fetch pool data from Curve contract')
-      }
+      if (reserveData.tokenIndices) {
+        // Use indices from API response (optimized)
+        tokenInIndex = reserveData.tokenIndices.token0Index
+        tokenOutIndex = reserveData.tokenIndices.token1Index
+      } else {
+        // Fallback to querying contract for indices
+        const [coins, balances, isMeta] = await Promise.all([
+          this.getPoolCoins(),
+          this.getPoolBalances(),
+          this.pool.is_meta().catch(() => false),
+        ])
 
-      // console.log('Curve pool coins:', coins)
-      // console.log('Curve pool balances:', balances)
-      // console.log('Curve is meta pool:', isMeta)
+        if (!coins || !balances) {
+          throw new Error('Could not fetch pool data from Curve contract')
+        }
 
-      // Find token indices in the pool
-      const tokenInIndex = coins.findIndex(
-        (coin: string) => coin.toLowerCase() === tokenIn.toLowerCase()
-      )
-      const tokenOutIndex = coins.findIndex(
-        (coin: string) => coin.toLowerCase() === tokenOut.toLowerCase()
-      )
-
-      if (tokenInIndex === -1 || tokenOutIndex === -1) {
-        throw new Error(
-          `Tokens not found in Curve pool: ${tokenIn}, ${tokenOut}`
+        tokenInIndex = coins.findIndex(
+          (coin: string) => coin.toLowerCase() === tokenIn.toLowerCase()
         )
-      }
+        tokenOutIndex = coins.findIndex(
+          (coin: string) => coin.toLowerCase() === tokenOut.toLowerCase()
+        )
 
-      // console.log('Curve token indices:', { tokenInIndex, tokenOutIndex })
+        if (tokenInIndex === -1 || tokenOutIndex === -1) {
+          throw new Error(
+            `Tokens not found in Curve pool: ${tokenIn}, ${tokenOut}`
+          )
+        }
+      }
 
       // Use appropriate function based on pool type
       let amountOut: ethers.BigNumber
       try {
-        if (isMeta) {
-          // For meta pools, try get_dy_underlying first, fallback to get_dy
-          try {
-            amountOut = await this.pool.get_dy_underlying(
-              tokenInIndex,
-              tokenOutIndex,
-              amountInBN
-            )
-          } catch (error) {
-            console.log('get_dy_underlying failed, trying get_dy:', error)
-            amountOut = await this.pool.get_dy(
-              tokenInIndex,
-              tokenOutIndex,
-              amountInBN
-            )
-          }
-        } else {
-          // For regular pools, use get_dy
+        // Check if it's a meta pool by trying get_dy_underlying first
+        try {
+          amountOut = await this.pool.get_dy_underlying(
+            tokenInIndex,
+            tokenOutIndex,
+            amountInBN
+          )
+        } catch (error) {
+          // Fallback to get_dy for regular pools
           amountOut = await this.pool.get_dy(
             tokenInIndex,
             tokenOutIndex,
@@ -1378,6 +1381,8 @@ export class CurveCalculator extends BaseDexCalculator {
         formattedResult: result,
         token0Decimals,
         token1Decimals,
+        tokenInIndex,
+        tokenOutIndex,
       })
 
       return result
@@ -1588,33 +1593,42 @@ export class BalancerCalculator extends BaseDexCalculator {
 
       const poolId = poolMetadata.poolId
 
+      // Use token indices from API response if available
+      let tokenInIndex: number
+      let tokenOutIndex: number
+
+      if (reserveData.tokenIndices) {
+        // Use indices from API response (optimized)
+        tokenInIndex = reserveData.tokenIndices.token0Index
+        tokenOutIndex = reserveData.tokenIndices.token1Index
+      } else {
+        // Fallback to querying vault for indices
+        const [tokens, balances, lastChangeBlock] =
+          await this.vault.getPoolTokens(poolId)
+
+        tokenInIndex = tokens.findIndex(
+          (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
+        )
+        tokenOutIndex = tokens.findIndex(
+          (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
+        )
+
+        if (tokenInIndex === -1 || tokenOutIndex === -1) {
+          throw new Error(
+            `Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`
+          )
+        }
+      }
+
       console.log('Balancer pool info:', {
         poolAddress: this.poolAddress,
         poolId,
         tokenIn,
         tokenOut,
         amountInBN: amountInBN.toString(),
+        tokenInIndex,
+        tokenOutIndex,
       })
-
-      // Get pool tokens to find correct indices
-      const [tokens, balances, lastChangeBlock] =
-        await this.vault.getPoolTokens(poolId)
-
-      // Find token indices in the pool
-      const tokenInIndex = tokens.findIndex(
-        (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
-      )
-      const tokenOutIndex = tokens.findIndex(
-        (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
-      )
-
-      if (tokenInIndex === -1 || tokenOutIndex === -1) {
-        throw new Error(
-          `Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`
-        )
-      }
-
-      console.log('Token indices:', { tokenInIndex, tokenOutIndex, tokens })
 
       const swaps = [
         {
@@ -1708,25 +1722,34 @@ export class BalancerCalculator extends BaseDexCalculator {
 
       const poolId = poolMetadata.poolId
 
-      // Get pool tokens to find correct indices
-      const [tokens, balances, lastChangeBlock] =
-        await this.vault.getPoolTokens(poolId)
+      // Use token indices from API response if available
+      let tokenInIndex: number
+      let tokenOutIndex: number
 
-      // Find token indices in the pool
-      const tokenInIndex = tokens.findIndex(
-        (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
-      )
-      const tokenOutIndex = tokens.findIndex(
-        (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
-      )
+      if (reserveData.tokenIndices) {
+        // Use indices from API response (optimized)
+        tokenInIndex = reserveData.tokenIndices.token0Index
+        tokenOutIndex = reserveData.tokenIndices.token1Index
+      } else {
+        // Fallback to querying vault for indices
+        const [tokens, balances, lastChangeBlock] =
+          await this.vault.getPoolTokens(poolId)
 
-      if (tokenInIndex === -1 || tokenOutIndex === -1) {
-        throw new Error(
-          `Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`
+        tokenInIndex = tokens.findIndex(
+          (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
         )
+        tokenOutIndex = tokens.findIndex(
+          (token: string) => token.toLowerCase() === tokenOut.toLowerCase()
+        )
+
+        if (tokenInIndex === -1 || tokenOutIndex === -1) {
+          throw new Error(
+            `Tokens not found in Balancer pool: ${tokenIn}, ${tokenOut}`
+          )
+        }
       }
 
-      console.log('Token indices:', { tokenInIndex, tokenOutIndex, tokens })
+      console.log('Token indices:', { tokenInIndex, tokenOutIndex })
 
       const swaps = [
         {
