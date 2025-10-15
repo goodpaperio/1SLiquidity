@@ -92,12 +92,14 @@ contract SingleDexProtocol is Test {
             dexType = "Curve";
             console.log("SingleDexProtocol: Identified as Curve");
         } else {
-            // Check if it's a CurveMetaFetcher by checking if it implements IUniversalDexInterface
-            // and returns "Curve" as DEX type
+            // Check if it's a fetcher by checking if it implements IUniversalDexInterface
             try IUniversalDexInterface(dexRouter).getDexType() returns (string memory routerDexType) {
                 if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("Curve"))) {
                     dexType = "CurveMeta";
                     console.log("SingleDexProtocol: Identified as CurveMeta");
+                } else if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("Balancer"))) {
+                    dexType = "Balancer";
+                    console.log("SingleDexProtocol: Identified as Balancer (fetcher)");
                 } else {
                     console.log("SingleDexProtocol: ERROR - Unsupported DEX router", dexRouter);
                     revert("Unsupported DEX router");
