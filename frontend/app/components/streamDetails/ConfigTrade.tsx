@@ -16,6 +16,7 @@ import { Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { ethers } from 'ethers'
+import ImageFallback from '@/app/shared/ImageFallback'
 
 type Props = {
   amountReceived: string
@@ -69,7 +70,7 @@ const ConfigTrade: React.FC<Props> = ({
 
   const settlerPaymentFormatted = tradeInfo?.settlerPayment
     ? parseFloat(
-        ethers.utils.formatUnits(tradeInfo.settlerPayment, tokenOut.decimals)
+        ethers.utils.formatUnits(tradeInfo.settlerPayment, tokenOut?.decimals)
       ).toFixed(4)
     : '0'
 
@@ -183,7 +184,7 @@ const ConfigTrade: React.FC<Props> = ({
                     <p className="text-[14px]">
                       {remainingAmountIn} {tokenIn.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenIn?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -192,7 +193,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenIn?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
@@ -235,13 +236,13 @@ const ConfigTrade: React.FC<Props> = ({
                         ? parseFloat(
                             ethers.utils.formatUnits(
                               tradeInfo.settlerPayment,
-                              tokenOut.decimals
+                              tokenOut?.decimals
                             )
                           ).toFixed(4)
                         : 0}{' '}
-                      {tokenOut.symbol}
+                      {tokenOut?.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenOut?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -250,7 +251,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenOut?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
@@ -312,13 +313,13 @@ const ConfigTrade: React.FC<Props> = ({
                         ? parseFloat(
                             ethers.utils.formatUnits(
                               tradeInfo.protocolFee,
-                              tokenOut.decimals
+                              tokenOut?.decimals
                             )
                           ).toFixed(4)
                         : '0'}{' '}
                       {/* {tokenOut.symbol} */}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenOut?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -327,7 +328,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenOut?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
@@ -401,7 +402,7 @@ const ConfigTrade: React.FC<Props> = ({
                     <p className="text-[14px]">
                       {remainingAmountIn} {tokenIn.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenIn?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -410,7 +411,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenIn?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>

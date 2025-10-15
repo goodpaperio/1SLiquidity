@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { Skeleton } from '@/components/ui/skeleton'
+import ImageFallback from '@/app/shared/ImageFallback'
 
 type TokenBarProps = {
   sellToken?: TOKENS_TYPE
@@ -29,7 +30,7 @@ const TokenBar: React.FC<TokenBarProps> = ({
           {isLoading ? (
             <Skeleton className="w-[30px] h-[30px] rounded-full" />
           ) : (
-            <Image
+            <ImageFallback
               src={
                 (sellToken?.symbol.toLowerCase() === 'usdt'
                   ? '/tokens/usdt.svg'
@@ -38,7 +39,7 @@ const TokenBar: React.FC<TokenBarProps> = ({
               alt={sellToken?.symbol || 'token'}
               width={40}
               height={40}
-              className="border-[1.5px] border-black w-[30px] rounded-full"
+              className="border-[1.5px] border-black w-[30px] h-[30px] overflow-hidden object-cover rounded-full"
             />
           )}
         </div>
@@ -69,7 +70,7 @@ const TokenBar: React.FC<TokenBarProps> = ({
           {isLoading ? (
             <Skeleton className="w-[30px] h-[30px] rounded-full" />
           ) : (
-            <Image
+            <ImageFallback
               src={
                 (buyToken?.symbol.toLowerCase() === 'usdt'
                   ? '/tokens/usdt.svg'
@@ -78,7 +79,7 @@ const TokenBar: React.FC<TokenBarProps> = ({
               alt={buyToken?.symbol || 'token'}
               width={40}
               height={40}
-              className="border-[1.5px] border-black w-[30px] rounded-full"
+              className="border-[1.5px] border-black w-[30px] h-[30px] overflow-hidden object-cover rounded-full"
             />
           )}
         </div>
