@@ -217,7 +217,13 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                 completed
               </p>
               {trade.settlements.length > 0 ||
-              trade.cancellations.length > 0 ? (
+              trade.cancellations.length > 0 ||
+              (trade.settlements.length > 0
+                ? trade.settlements.length + trade.executions.length
+                : trade.executions.length) >=
+                (trade.settlements.length > 0
+                  ? trade.settlements.length + trade.executions.length
+                  : remainingStreams) ? (
                 ''
               ) : (
                 <div className="flex items-center whitespace-nowrap ml-auto">

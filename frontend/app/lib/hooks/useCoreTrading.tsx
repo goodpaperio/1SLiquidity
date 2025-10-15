@@ -662,12 +662,12 @@ export const useCoreTrading = () => {
       ) => {
         const toastContent = (
           <NotifiSwapStream
-            tokenInObj={params.tokenInObj}
-            tokenOutObj={params.tokenOutObj}
-            tokenIn={params?.tokenIn || ''}
-            tokenOut={params?.tokenOut || ''}
-            amountIn={params.amountIn.toString()}
-            amountOut={params.minAmountOut.toString()}
+            tokenOutObj={params.tokenInObj}
+            tokenInObj={params.tokenOutObj}
+            tokenOut={params?.tokenIn || ''}
+            tokenIn={params?.tokenOut || ''}
+            amountOut={params.amountIn.toString()}
+            amountIn={params.minAmountOut.toString()}
             step={step}
             progress={progress}
             currentStep={currentStep}

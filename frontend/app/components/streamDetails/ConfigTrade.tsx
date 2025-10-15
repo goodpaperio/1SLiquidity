@@ -31,6 +31,7 @@ type Props = {
   tokenIn?: any
   tokenOut?: any
   formattedAmountIn?: string
+  remainingAmountIn?: string
 }
 
 const ConfigTrade: React.FC<Props> = ({
@@ -47,6 +48,7 @@ const ConfigTrade: React.FC<Props> = ({
   tokenIn,
   tokenOut,
   formattedAmountIn,
+  remainingAmountIn,
 }) => {
   const [showDetails, setShowDetails] = useState(false)
   const toggleDetails = () => setShowDetails(!showDetails)
@@ -179,7 +181,7 @@ const ConfigTrade: React.FC<Props> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <p className="text-[14px]">
-                      {Number(formattedAmountIn)} {tokenIn.symbol}
+                      {remainingAmountIn} {tokenIn.symbol}
                     </p>
                     <Image
                       src={
@@ -397,7 +399,7 @@ const ConfigTrade: React.FC<Props> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <p className="text-[14px]">
-                      {Number(formattedAmountIn)} {tokenIn.symbol}
+                      {remainingAmountIn} {tokenIn.symbol}
                     </p>
                     <Image
                       src={
