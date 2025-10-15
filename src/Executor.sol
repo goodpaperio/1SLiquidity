@@ -9,7 +9,9 @@ import "./interfaces/dex/IUniswapV2Router.sol";
 import "./interfaces/dex/IUniswapV3Router.sol";
 import "./interfaces/dex/IBalancerVault.sol";
 import "./interfaces/dex/ICurvePool.sol";
+import "./interfaces/dex/ICurveMetaRegistry.sol";
 import "./interfaces/dex/IOneInchV5Router.sol";
+import "./adapters/BalancerV2Fetcher.sol";
 import "forge-std/console.sol";
 
 contract Executor {
@@ -90,20 +92,28 @@ contract Executor {
     function executeBalancerTrade(
         bytes memory params // @audit consider adding validation for params length
     ) external returns (uint256) {
-        // Decode all parameters
+        // Decode all parameters - router is actually the fetcher address
         (
             address tokenIn,
             address tokenOut,
             uint256 amountIn,
             uint256 amountOutMin,
             address recipient, // @audit verify recipient is not zero address
-            bytes32 poolId,
-            address router
-        ) = abi.decode(params, (address, address, uint256, uint256, address, bytes32, address));
+            address fetcherAddress
+        ) = abi.decode(params, (address, address, uint256, uint256, address, address));
 
         if (amountIn == 0) revert ZeroAmount();
 
-        IERC20(tokenIn).forceApprove(router, amountIn);
+        // Get the BalancerV2Fetcher to find the best pool
+        BalancerV2Fetcher fetcher = BalancerV2Fetcher(fetcherAddress);
+        
+        // Use deepest reserves by default (not price-based selection)
+        // The StreamDaemon should select the appropriate DEX based on usePriceBased flag
+        (address deepestPool, bytes32 poolId) = fetcher.getDeepestPool(tokenIn, tokenOut);
+        require(deepestPool != address(0), "No valid pool found");
+        address balancerVault = address(fetcher.vault());
+
+        IERC20(tokenIn).forceApprove(balancerVault, amountIn);
 
         IBalancerVault.SingleSwap memory singleSwap = IBalancerVault.SingleSwap({
             poolId: poolId,
@@ -121,8 +131,8 @@ contract Executor {
             toInternalBalance: false
         });
 
-        IBalancerVault(router).swap(singleSwap, funds, amountOutMin, block.timestamp + 300);
-        uint256 amountOut = IERC20(tokenOut).balanceOf(address(this));
+        // Execute the swap and get the exact amount returned by Balancer Vault
+        uint256 amountOut = IBalancerVault(balancerVault).swap(singleSwap, funds, amountOutMin, block.timestamp + 300);
 
         // @audit consider additional validation on amountOut
         emit TradeExecuted(tokenIn, tokenOut, amountIn, amountOut); // @audit consider adding more event data
@@ -185,6 +195,112 @@ contract Executor {
 
         // @audit consider additional validation on amountOut
         emit TradeExecuted(tokenIn, tokenOut, amountIn, actualAmountOut); // @audit consider adding more event data
+        console.log("TradeExecuted event emitted, returning:", actualAmountOut);
+        return actualAmountOut;
+    }
+
+    function executeCurveMetaTrade(
+        bytes memory params
+    ) external returns (uint256) {
+        // Decode parameters for CurveMeta (no hardcoded indices)
+        (
+            address tokenIn,
+            address tokenOut,
+            uint256 amountIn,
+            uint256 amountOutMin,
+            address recipient,
+            address router
+        ) = abi.decode(params, (address, address, uint256, uint256, address, address));
+
+        if (amountIn == 0) revert ZeroAmount();
+
+        console.log("Executor: Starting CurveMeta trade");
+        console.log("tokenIn:", tokenIn);
+        console.log("tokenOut:", tokenOut);
+        console.log("amountIn:", amountIn);
+        console.log("amountOutMin:", amountOutMin);
+        console.log("recipient:", recipient);
+        console.log("router:", router);
+
+        // Get the CurveMetaFetcher to find the best pool and indices
+        // The router should be the CurveMetaFetcher address
+        ICurveMetaRegistry metaRegistry = ICurveMetaRegistry(0xF98B45FA17DE75FB1aD0e7aFD971b0ca00e379fC);
+        
+        // Find the best pool for this token pair
+        address[] memory pools = metaRegistry.find_pools_for_coins(tokenIn, tokenOut);
+        require(pools.length > 0, "No Curve pools found for token pair");
+        
+        address bestPool = address(0);
+        int128 bestI = 0;
+        int128 bestJ = 0;
+        bool bestIsUnderlying = false;
+        uint256 bestScore = 0;
+        
+        // Find the pool with the highest depth (min of the two reserves)
+        for (uint256 p = 0; p < pools.length; p++) {
+            address pool = pools[p];
+            if (pool == address(0)) continue;
+            
+            (int128 i, int128 j, bool isUnderlying) = metaRegistry.get_coin_indices(pool, tokenIn, tokenOut);
+            if (i < 0 || j < 0) continue;
+            
+            // Calculate depth score
+            uint256[8] memory balances = isUnderlying 
+                ? metaRegistry.get_underlying_balances(pool)
+                : metaRegistry.get_balances(pool);
+            
+            uint256 reserveA = balances[uint256(int256(i))];
+            uint256 reserveB = balances[uint256(int256(j))];
+            uint256 score = reserveA < reserveB ? reserveA : reserveB;
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestPool = pool;
+                bestI = i;
+                bestJ = j;
+                bestIsUnderlying = isUnderlying;
+            }
+        }
+        
+        require(bestPool != address(0), "No suitable Curve pool found");
+        console.log("Selected pool:", bestPool);
+        console.log("Coin indices:", uint256(int256(bestI)), uint256(int256(bestJ)));
+        console.log("Is underlying:", bestIsUnderlying);
+
+        // Approve the token being traded
+        IERC20(tokenIn).forceApprove(bestPool, amountIn);
+
+        // Get initial balance of output token to calculate difference
+        uint256 initialBalance = IERC20(tokenOut).balanceOf(address(this));
+        console.log("Initial balance of tokenOut:", initialBalance);
+
+        // Execute the Curve exchange
+        // Use exchange_underlying if it's an underlying token trade
+        bool success;
+        if (bestIsUnderlying) {
+            (success,) = bestPool.call(abi.encodeWithSignature(
+                "exchange_underlying(int128,int128,uint256,uint256)",
+                bestI, bestJ, amountIn, amountOutMin
+            ));
+        } else {
+            (success,) = bestPool.call(abi.encodeWithSignature(
+                "exchange(int128,int128,uint256,uint256)",
+                bestI, bestJ, amountIn, amountOutMin
+            ));
+        }
+
+        // Check final balance to get actual amount received
+        uint256 finalBalance = IERC20(tokenOut).balanceOf(address(this));
+        console.log("Final balance of tokenOut:", finalBalance);
+
+        uint256 actualAmountOut = finalBalance - initialBalance;
+        console.log("Actual amount out calculated:", actualAmountOut);
+
+        // Validate that tokens were actually transferred
+        require(actualAmountOut > 0, "No tokens received from Curve exchange");
+        require(actualAmountOut >= amountOutMin, "Insufficient output amount");
+
+        emit TradeExecuted(tokenIn, tokenOut, amountIn, actualAmountOut);
         console.log("TradeExecuted event emitted, returning:", actualAmountOut);
         return actualAmountOut;
     }
