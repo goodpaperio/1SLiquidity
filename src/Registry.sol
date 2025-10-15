@@ -52,6 +52,10 @@ contract Registry is IRegistry, Ownable {
         // Curve
         dexExecutors["Curve"] = Executor.executeCurveTrade.selector;
         dexParameterEncoders["Curve"] = _getCurveParameterEncoder();
+        
+        // CurveMeta (new dynamic approach)
+        dexExecutors["CurveMeta"] = Executor.executeCurveMetaTrade.selector;
+        dexParameterEncoders["CurveMeta"] = _getCurveMetaParameterEncoder();
 
         // OneInch
         dexExecutors["OneInch"] = Executor.executeOneInchTrade.selector;
@@ -195,13 +199,14 @@ contract Registry is IRegistry, Ownable {
             params =
                 abi.encode(tokenIn, tokenOut, amount, minOut, recipient, uniswapV3Fee, SQRT_PRICE_LIMIT_X96, router);
         } else if (parameterEncoder == _getBalancerParameterEncoder()) {
-            // Balancer-style DEXes
-            // BAL/WETH pool on Balancer
-            bytes32 poolId = 0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014;
-            params = abi.encode(tokenIn, tokenOut, amount, minOut, recipient, poolId, router);
+            // Balancer-style DEXes - use dynamic pool lookup
+            params = _prepareBalancerTrade(tokenIn, tokenOut, amount, minOut, recipient, router).params;
         } else if (parameterEncoder == _getCurveParameterEncoder()) {
-            // Curve-style DEXes
+            // Curve-style DEXes (legacy hardcoded approach)
             params = _prepareCurveTrade(tokenIn, tokenOut, amount, minOut, recipient, router).params;
+        } else if (parameterEncoder == _getCurveMetaParameterEncoder()) {
+            // CurveMeta-style DEXes (dynamic approach)
+            params = _prepareCurveMetaTrade(tokenIn, tokenOut, amount, minOut, recipient, router).params;
         } else if (parameterEncoder == _getOneInchParameterEncoder()) {
             // OneInch-style DEXes
             params = _prepareOneInchTrade(tokenIn, tokenOut, amount, minOut, recipient, router).params;
@@ -228,6 +233,10 @@ contract Registry is IRegistry, Ownable {
 
     function _getCurveParameterEncoder() internal pure returns (bytes4) {
         return bytes4(keccak256("CurveStyle"));
+    }
+
+    function _getCurveMetaParameterEncoder() internal pure returns (bytes4) {
+        return bytes4(keccak256("CurveMetaStyle"));
     }
 
     function _getOneInchParameterEncoder() internal pure returns (bytes4) {
@@ -279,13 +288,14 @@ contract Registry is IRegistry, Ownable {
         address router
     )
         internal
-        view
+        pure
         returns (TradeData memory)
     {
-        // BAL/WETH pool on Balancer
-        bytes32 poolId = 0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014;
-        // Encode all parameters into a single bytes value
-        bytes memory params = abi.encode(tokenIn, tokenOut, amount, minOut, recipient, poolId, router);
+        // For Balancer, we pass the fetcher address as the router parameter
+        // The executor will use this to get the pool ID dynamically
+        // Note: usePriceBased flag is not passed here - it should be handled by the StreamDaemon
+        // which selects the appropriate DEX based on the flag
+        bytes memory params = abi.encode(tokenIn, tokenOut, amount, minOut, recipient, router);
 
         return TradeData({ selector: Executor.executeBalancerTrade.selector, router: router, params: params });
     }
@@ -318,6 +328,21 @@ contract Registry is IRegistry, Ownable {
         if (token == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) return 1; // USDC
         if (token == 0xdAC17F958D2ee523a2206206994597C13D831ec7) return 2; // USDT
         return 0; // Default to DAI index
+    }
+
+    function _prepareCurveMetaTrade(
+        address tokenIn,
+        address tokenOut,
+        uint256 amount,
+        uint256 minOut,
+        address recipient,
+        address router
+    ) internal pure returns (TradeData memory) {
+        // For CurveMeta, we don't need to hardcode indices - the executor will query them dynamically
+        // We just need to pass the basic trade parameters
+        bytes memory params = abi.encode(tokenIn, tokenOut, amount, minOut, recipient, router);
+
+        return TradeData({selector: Executor.executeCurveMetaTrade.selector, router: router, params: params});
     }
 
     function _prepareSushiswapTrade(
