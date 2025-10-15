@@ -157,7 +157,13 @@ export default function TokenPairsSection({
 
         if (result.data) {
           const data = enhanceTokenPair(result.data)
-          handleActiveHotPair(data)
+
+          const pairWithSlippageSavingsUsd = {
+            ...data,
+            slippageSavingsUsd:
+              data.slippageSavings * (data.tokenBUsdPrice || 1),
+          }
+          handleActiveHotPair(pairWithSlippageSavingsUsd)
         }
       } catch (error) {
         console.error('Error fetching data:', error)

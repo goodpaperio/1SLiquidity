@@ -73,13 +73,11 @@ const HotPairs = () => {
 
   const handleActiveHotPair = (pair: any) => {
     if (!pair) return
-
     setActiveHotPair(pair)
     setVolumeAmount(pair?.reserveAtotaldepth)
     // setVolumeAmount(pair?.reserveAtotaldepthWei)
     setWinAmount(pair?.percentageSavings || 0)
-    // setSlippageSavingsUsd(pair?.slippageSavingsUsd)
-    setSlippageSavingsUsd(pair.slippageSavings * (pair.tokenBUsdPrice || 1))
+    setSlippageSavingsUsd(pair?.slippageSavingsUsd)
 
     setVolumeActive(true)
     setWinActive(true)
@@ -132,16 +130,16 @@ const HotPairs = () => {
     setWinLoading(true)
     setVolumeLoading(false)
 
-    const calculator = DexCalculatorFactory.createCalculator(
-      activeHotPair?.highestLiquidityADex || 'uniswap-v2',
-      undefined,
-      '1'
-    )
+    // const calculator = DexCalculatorFactory.createCalculator(
+    //   activeHotPair?.highestLiquidityADex || 'uniswap-v2',
+    //   undefined,
+    //   '1'
+    // )
 
-    const tradeVolumeBN = normalizeAmount(
-      amount.toString(),
-      activeHotPair?.tokenADecimals
-    )
+    // const tradeVolumeBN = normalizeAmount(
+    //   amount.toString(),
+    //   activeHotPair?.tokenADecimals
+    // )
 
     // console.log('tradeVolumeBN ===>', tradeVolumeBN)
     // console.log(
@@ -155,39 +153,40 @@ const HotPairs = () => {
     // console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
     // console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
 
-    const sweetSpot = calculateSweetSpot(
-      tradeVolumeBN,
-      BigInt(activeHotPair?.reserveAtotaldepthWei),
-      BigInt(activeHotPair?.reserveBtotaldepthWei),
-      activeHotPair?.tokenADecimals,
-      activeHotPair?.tokenBDecimals,
-      0
-    )
+    //   const sweetSpot = calculateSweetSpot(
+    //   tradeVolumeBN,
+    //   BigInt(activeHotPair?.reserveAtotaldepthWei),
+    //   BigInt(activeHotPair?.reserveBtotaldepthWei),
+    //   activeHotPair?.tokenADecimals,
+    //   activeHotPair?.tokenBDecimals,
+    //   0
+    // )
 
-    const feeTier = activeHotPair?.highestLiquidityADex
-      ? activeHotPair?.highestLiquidityADex?.startsWith('uniswap-v3')
-        ? parseInt(activeHotPair?.highestLiquidityADex.split('-')[2])
-        : 3000
-      : 3000
+    // const feeTier = activeHotPair?.highestLiquidityADex
+    //   ? activeHotPair?.highestLiquidityADex?.startsWith('uniswap-v3')
+    //     ? parseInt(activeHotPair?.highestLiquidityADex.split('-')[2])
+    //     : 3000
+    //   : 3000
 
-    const { savings, percentageSavings } = await calculateSlippageSavings(
-      calculator.getProvider(),
-      tradeVolumeBN,
-      activeHotPair?.highestLiquidityADex || 'uniswap-v2',
-      feeTier,
-      BigInt(activeHotPair?.reserveAtotaldepthWei),
-      BigInt(activeHotPair?.reserveBtotaldepthWei),
-      activeHotPair?.tokenADecimals,
-      activeHotPair?.tokenBDecimals,
-      activeHotPair?.tokenAAddress,
-      activeHotPair?.tokenBAddress,
-      sweetSpot
-    )
+    // const { savings, percentageSavings } = await calculateSlippageSavings(
+    //   calculator.getProvider(),
+    //   tradeVolumeBN,
+    //   activeHotPair?.highestLiquidityADex || 'uniswap-v2',
+    //   feeTier,
+    //   BigInt(activeHotPair?.reserveAtotaldepthWei),
+    //   BigInt(activeHotPair?.reserveBtotaldepthWei),
+    //   activeHotPair?.tokenADecimals,
+    //   activeHotPair?.tokenBDecimals,
+    //   activeHotPair?.tokenAAddress,
+    //   activeHotPair?.tokenBAddress,
+    //   sweetSpot
+    // )
 
-    const savingsInUSD = savings * (activeHotPair?.tokenBUsdPrice || 1)
+    // const savingsInUSD = savings * (activeHotPair?.tokenBUsdPrice || 1)
     // setWinAmount(savingsInUSD || 0)
-    setWinAmount(Number(percentageSavings.toFixed(2)) || 0)
-    setSlippageSavingsUsd(savingsInUSD)
+
+    setWinAmount(activeHotPair?.percentageSavings)
+    setSlippageSavingsUsd(activeHotPair.slippageSavingsUsd)
     setWinLoading(false)
 
     // After one seond set volume loading to false
