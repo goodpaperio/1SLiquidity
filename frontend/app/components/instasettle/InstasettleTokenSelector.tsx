@@ -287,7 +287,7 @@ const InstasettleTokenSelector: React.FC<InstasettleTokenSelectorProps> = ({
                           alt={fromToken.name || ''}
                           width={32}
                           height={32}
-                          className="w-8 h-8 object-contain"
+                          className="w-8 h-8 overflow-hidden object-cover rounded-full"
                           onError={(e) => {
                             // If the token image fails to load, use a fallback
                             const target = e.target as HTMLImageElement
@@ -480,7 +480,7 @@ const InstasettleTokenSelector: React.FC<InstasettleTokenSelectorProps> = ({
                           alt={toToken.name || ''}
                           width={32}
                           height={32}
-                          className="w-8 h-8 object-contain"
+                          className="w-8 h-8 overflow-hidden object-cover rounded-full"
                           onError={(e) => {
                             // If the token image fails to load, use a fallback
                             const target = e.target as HTMLImageElement
