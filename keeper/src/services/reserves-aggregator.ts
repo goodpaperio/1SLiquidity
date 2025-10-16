@@ -257,31 +257,52 @@ export class ReservesAggregator {
         break
       case 'curve':
         if (this.curvePoolFilter) {
-          // Use smart filtering to find the best Curve pool
+          // Use smart filtering to find candidate Curve pools
           const candidatePools = this.curvePoolFilter.findBestPools(
             tokenA,
             tokenB,
-            1
+            5
           )
           if (candidatePools.length === 0) {
             console.log(`No suitable Curve pools found for ${tokenA}/${tokenB}`)
             return null
           }
 
-          const bestPoolAddress = candidatePools[0]
-          const curveService = this.curveServices.get(bestPoolAddress)
-          if (!curveService) {
-            console.log(`Curve service not found for pool ${bestPoolAddress}`)
-            return null
+          // Evaluate all candidate pools to find the best one
+          let bestReserves: ReserveResult | null = null
+          let bestMeanReserves = 0n
+          let bestPoolAddress = ''
+
+          for (const poolAddress of candidatePools) {
+            const curveService = this.curveServices.get(poolAddress)
+            if (!curveService) {
+              console.log(`Curve service not found for pool ${poolAddress}`)
+              continue
+            }
+
+            const poolReserves = await this.fetchWithRetry(
+              () => curveService.getReserves(tokenA, tokenB),
+              `Curve ${poolAddress}`
+            )
+
+            if (poolReserves) {
+              const meanReserves = this.calculateGeometricMean(
+                poolReserves.reserves,
+                { token0: token0Info.decimals, token1: token1Info.decimals }
+              )
+
+              if (meanReserves > bestMeanReserves) {
+                bestReserves = poolReserves
+                bestMeanReserves = meanReserves
+                bestPoolAddress = poolAddress
+              }
+            }
           }
 
-          reserves = await this.fetchWithRetry(
-            () => curveService.getReserves(tokenA, tokenB),
-            `Curve ${bestPoolAddress}`
-          )
-
-          if (reserves) {
-            reserves.dex = `curve-${bestPoolAddress}`
+          if (bestReserves) {
+            bestReserves.dex = `curve-${bestPoolAddress}`
+            reserves = bestReserves
+            console.log(`Selected best Curve pool ${bestPoolAddress} with mean reserves: ${bestMeanReserves.toString()}`)
           }
         } else {
           console.log(
@@ -292,11 +313,11 @@ export class ReservesAggregator {
         break
       case 'balancer':
         if (this.balancerPoolFilter) {
-          // Use smart filtering to find the best Balancer pool
+          // Use smart filtering to find candidate Balancer pools
           const candidatePools = await this.balancerPoolFilter.findBestPools(
             tokenA,
             tokenB,
-            1
+            5
           )
           if (candidatePools.length === 0) {
             console.log(
@@ -305,32 +326,53 @@ export class ReservesAggregator {
             return null
           }
 
-          const bestPoolAddress = candidatePools[0]
-          const balancerService = this.balancerServices.get(bestPoolAddress)
-          if (!balancerService) {
-            console.log(
-              `Balancer service not found for pool ${bestPoolAddress}`
+          // Evaluate all candidate pools to find the best one
+          let bestReserves: ReserveResult | null = null
+          let bestMeanReserves = 0n
+          let bestPoolAddress = ''
+
+          for (const poolAddress of candidatePools) {
+            const balancerService = this.balancerServices.get(poolAddress)
+            if (!balancerService) {
+              console.log(`Balancer service not found for pool ${poolAddress}`)
+              continue
+            }
+
+            const balancerResult = await balancerService.getReserves(
+              tokenA,
+              tokenB
             )
-            return null
+            if (balancerResult) {
+              const poolReserves = {
+                dex: balancerResult.dex,
+                pairAddress: balancerResult.pairAddress,
+                reserves: balancerResult.reserves,
+                decimals: {
+                  token0: token0Info.decimals,
+                  token1: token1Info.decimals,
+                },
+                price: balancerResult.price,
+                timestamp: balancerResult.timestamp,
+                tokenIndices: balancerResult.tokenIndices,
+              }
+
+              const meanReserves = this.calculateGeometricMean(
+                balancerResult.reserves,
+                { token0: token0Info.decimals, token1: token1Info.decimals }
+              )
+
+              if (meanReserves > bestMeanReserves) {
+                bestReserves = poolReserves
+                bestMeanReserves = meanReserves
+                bestPoolAddress = poolAddress
+              }
+            }
           }
 
-          const balancerResult = await balancerService.getReserves(
-            tokenA,
-            tokenB
-          )
-          if (balancerResult) {
-            reserves = {
-              dex: balancerResult.dex,
-              pairAddress: balancerResult.pairAddress,
-              reserves: balancerResult.reserves,
-              decimals: {
-                token0: token0Info.decimals,
-                token1: token1Info.decimals,
-              },
-              price: balancerResult.price,
-              timestamp: balancerResult.timestamp,
-              tokenIndices: balancerResult.tokenIndices,
-            }
+          if (bestReserves) {
+            bestReserves.dex = `balancer-${bestPoolAddress}`
+            reserves = bestReserves
+            console.log(`Selected best Balancer pool ${bestPoolAddress} with mean reserves: ${bestMeanReserves.toString()}`)
           }
         } else {
           console.log(
@@ -741,6 +783,7 @@ export class ReservesAggregator {
 
     // Try Curve pools for the token pair with smart filtering
     console.log('Fetching Curve reserves...')
+    const curveResults: { result: ReserveResult; meanReserves: bigint }[] = []
     if (this.curvePoolFilter) {
       // Use smart filtering to find relevant pools
       const candidatePools = this.curvePoolFilter.findBestPools(
@@ -782,7 +825,7 @@ export class ReservesAggregator {
               },
             }
 
-            results.push({
+            curveResults.push({
               result: resultWithDecimals,
               meanReserves: meanReserves,
             })
@@ -795,6 +838,15 @@ export class ReservesAggregator {
           console.log(`Curve ${poolAddress} reserves fetch failed:`, error)
         }
       }
+
+      // Find the best Curve pool and add it to main results
+      if (curveResults.length > 0) {
+        const bestCurvePool = curveResults.reduce((prev, current) => {
+          return current.meanReserves > prev.meanReserves ? current : prev
+        })
+        results.push(bestCurvePool)
+        console.log(`Selected best Curve pool: ${bestCurvePool.result.dex} with mean reserves: ${bestCurvePool.meanReserves.toString()}`)
+      }
     } else {
       console.log('Curve pool filter not initialized - skipping Curve pools')
     }
@@ -804,6 +856,7 @@ export class ReservesAggregator {
 
     // Try Balancer pools for the token pair with smart filtering
     console.log('Fetching Balancer reserves...')
+    const balancerResults: { result: ReserveResult; meanReserves: bigint }[] = []
     if (this.balancerPoolFilter) {
       // Use smart filtering to find relevant pools
       const candidatePools = await this.balancerPoolFilter.findBestPools(
@@ -842,7 +895,7 @@ export class ReservesAggregator {
               { token0: token0Info.decimals, token1: token1Info.decimals }
             )
 
-            results.push({
+            balancerResults.push({
               result: balancerReserves,
               meanReserves: meanReserves,
             })
@@ -855,6 +908,15 @@ export class ReservesAggregator {
           console.log(`Balancer ${poolAddress} reserves fetch failed:`, error)
         }
       }
+
+      // Find the best Balancer pool and add it to main results
+      if (balancerResults.length > 0) {
+        const bestBalancerPool = balancerResults.reduce((prev, current) => {
+          return current.meanReserves > prev.meanReserves ? current : prev
+        })
+        results.push(bestBalancerPool)
+        console.log(`Selected best Balancer pool: ${bestBalancerPool.result.dex} with mean reserves: ${bestBalancerPool.meanReserves.toString()}`)
+      }
     } else {
       console.log(
         'Balancer pool filter not initialized - skipping Balancer pools'
@@ -866,21 +928,35 @@ export class ReservesAggregator {
       return null
     }
 
-    // Find the result with highest liquidity
-    const deepestPool = results.reduce((prev, current) => {
-      return current.meanReserves > prev.meanReserves ? current : prev
+    // Sort results by mean reserves in descending order (highest first)
+    const sortedResults = results.sort((a, b) => {
+      if (b.meanReserves > a.meanReserves) return 1
+      if (b.meanReserves < a.meanReserves) return -1
+      return 0
     })
 
+    // Find the result with highest liquidity (first in sorted array)
+    const deepestPool = sortedResults[0]
+
     // Create otherDexes array with all results except the deepest pool
-    const otherDexes = results
-      .filter(
-        (r) =>
-          r.result.dex !== deepestPool.result.dex ||
-          r.result.pairAddress !== deepestPool.result.pairAddress
-      )
+    const otherDexes = sortedResults
+      .slice(1) // Skip the first (best) result
+      .map((r) => r.result)
+
+    // Create separate arrays for other Curve and Balancer pools
+    const otherCurvePools = curveResults
+      .filter((r) => r.result.dex !== deepestPool.result.dex)
+      .map((r) => r.result)
+
+    const otherBalancerPools = balancerResults
+      .filter((r) => r.result.dex !== deepestPool.result.dex)
       .map((r) => r.result)
 
     console.log('Selected deepest pool with liquidity:', deepestPool.result)
+    console.log('All pools sorted by mean reserves (highest first):', sortedResults.map(r => ({
+      dex: r.result.dex,
+      meanReserves: r.meanReserves.toString()
+    })))
     console.log('Total reserves across all DEXes:', {
       totalReserveTokenA: totalReserveTokenA.toString(),
       totalReserveTokenB: totalReserveTokenB.toString(),
@@ -910,6 +986,8 @@ export class ReservesAggregator {
         ),
       },
       otherDexes: otherDexes,
+      otherCurvePools: otherCurvePools,
+      otherBalancerPools: otherBalancerPools,
     }
   }
 

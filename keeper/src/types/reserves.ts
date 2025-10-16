@@ -41,4 +41,40 @@ export interface ReserveResult {
       token1Index: number
     }
   }[]
+  otherCurvePools?: {
+    dex: string
+    pairAddress: string
+    reserves: {
+      token0: string
+      token1: string
+    }
+    price: number
+    decimals: {
+      token0: number
+      token1: number
+    }
+    timestamp: number
+    tokenIndices?: {
+      token0Index: number
+      token1Index: number
+    }
+  }[]
+  otherBalancerPools?: {
+    dex: string
+    pairAddress: string
+    reserves: {
+      token0: string
+      token1: string
+    }
+    price: number
+    decimals: {
+      token0: number
+      token1: number
+    }
+    timestamp: number
+    tokenIndices?: {
+      token0Index: number
+      token1Index: number
+    }
+  }[]
 }

@@ -103,7 +103,7 @@ export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     // If not in cache, fetch from API
     console.log(`Cache miss for price of ${tokenA}-${tokenB}${dex ? ` from ${dex}` : ''}, fetching from API...`);
     let response;
-    
+
     if (dex) {
       // Fetch price from specific DEX
       response = await priceAggregator.getPriceFromDex(tokenA, tokenB, dex);
@@ -119,7 +119,8 @@ export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxy
       }
     } else {
       // Fetch prices from all DEXes
-      response = await priceAggregator.getAllPrices(tokenA, tokenB);
+      const priceResults = await priceAggregator.getAllPrices(tokenA, tokenB);
+      response = priceResults;
     }
 
     // Only store in cache if we have valid data
@@ -139,7 +140,7 @@ export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxy
     };
   } catch (error) {
     console.error('Error in price handler:', error);
-    
+
     return {
       statusCode: 500,
       headers: {

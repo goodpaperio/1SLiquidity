@@ -116,62 +116,89 @@ export class PriceAggregator {
         );
       case 'curve':
         if (this.curvePoolFilter) {
-          // Use smart filtering to find the best Curve pool
-          const candidatePools = this.curvePoolFilter.findBestPools(tokenA, tokenB, 1);
+          // Use smart filtering to find candidate Curve pools
+          const candidatePools = this.curvePoolFilter.findBestPools(tokenA, tokenB, 5);
           if (candidatePools.length === 0) {
             console.log(`No suitable Curve pools found for ${tokenA}/${tokenB}`);
             return null;
           }
 
-          const bestPoolAddress = candidatePools[0];
-          const curveService = this.curveServices.get(bestPoolAddress);
-          if (!curveService) {
-            console.log(`Curve service not found for pool ${bestPoolAddress}`);
-            return null;
+          // Evaluate all candidate pools to find the best one
+          let bestPrice: PriceResult | null = null;
+          let bestPriceValue = 0;
+          let bestPoolAddress = '';
+
+          for (const poolAddress of candidatePools) {
+            const curveService = this.curveServices.get(poolAddress);
+            if (!curveService) {
+              console.log(`Curve service not found for pool ${poolAddress}`);
+              continue;
+            }
+
+            const price = await this.fetchWithRetry(
+              () => curveService.getPrice(tokenA, tokenB),
+              `Curve ${poolAddress}`
+            );
+
+            if (price && parseFloat(price.price) > bestPriceValue) {
+              bestPrice = price;
+              bestPriceValue = parseFloat(price.price);
+              bestPoolAddress = poolAddress;
+            }
           }
 
-          const price = await this.fetchWithRetry(
-            () => curveService.getPrice(tokenA, tokenB),
-            `Curve ${bestPoolAddress}`
-          );
-
-          if (price) {
-            price.dex = `curve-${bestPoolAddress}`;
+          if (bestPrice) {
+            bestPrice.dex = `curve-${bestPoolAddress}`;
+            console.log(`Selected best Curve pool ${bestPoolAddress} with price: ${bestPriceValue}`);
           }
 
-          return price;
+          return bestPrice;
         } else {
           console.log('Curve pool filter not initialized - skipping Curve pools');
           return null;
         }
       case 'balancer':
         if (this.balancerPoolFilter) {
-          // Use smart filtering to find the best Balancer pool
-          const candidatePools = await this.balancerPoolFilter.findBestPools(tokenA, tokenB, 1);
+          // Use smart filtering to find candidate Balancer pools
+          const candidatePools = await this.balancerPoolFilter.findBestPools(tokenA, tokenB, 5);
           if (candidatePools.length === 0) {
             console.log(`No suitable Balancer pools found for ${tokenA}/${tokenB}`);
             return null;
           }
 
-          const bestPoolAddress = candidatePools[0];
-          const balancerService = this.balancerServices.get(bestPoolAddress);
-          if (!balancerService) {
-            console.log(`Balancer service not found for pool ${bestPoolAddress}`);
-            return null;
+          // Evaluate all candidate pools to find the best one
+          let bestPrice: PriceResult | null = null;
+          let bestPriceValue = 0;
+          let bestPoolAddress = '';
+
+          for (const poolAddress of candidatePools) {
+            const balancerService = this.balancerServices.get(poolAddress);
+            if (!balancerService) {
+              console.log(`Balancer service not found for pool ${poolAddress}`);
+              continue;
+            }
+
+            const balancerResult = await this.fetchWithRetry(
+              () => balancerService.getPrice(tokenA, tokenB),
+              `Balancer ${poolAddress}`
+            );
+            if (balancerResult && parseFloat(balancerResult.price) > bestPriceValue) {
+              bestPrice = {
+                dex: balancerResult.dex,
+                price: balancerResult.price,
+                timestamp: balancerResult.timestamp
+              };
+              bestPriceValue = parseFloat(balancerResult.price);
+              bestPoolAddress = poolAddress;
+            }
           }
 
-          const balancerResult = await this.fetchWithRetry(
-            () => balancerService.getPrice(tokenA, tokenB),
-            `Balancer ${bestPoolAddress}`
-          );
-          if (balancerResult) {
-            return {
-              dex: balancerResult.dex,
-              price: balancerResult.price,
-              timestamp: balancerResult.timestamp
-            };
+          if (bestPrice) {
+            bestPrice.dex = `balancer-${bestPoolAddress}`;
+            console.log(`Selected best Balancer pool ${bestPoolAddress} with price: ${bestPriceValue}`);
           }
-          return null;
+
+          return bestPrice;
         } else {
           console.log('Balancer pool filter not initialized - skipping Balancer pools');
           return null;
@@ -181,8 +208,14 @@ export class PriceAggregator {
     }
   }
 
-  async getAllPrices(tokenA: string, tokenB: string): Promise<PriceResult[]> {
+  async getAllPrices(tokenA: string, tokenB: string): Promise<{
+    allPrices: PriceResult[];
+    otherCurvePools: PriceResult[];
+    otherBalancerPools: PriceResult[];
+  }> {
     const results: PriceResult[] = [];
+    const curveResults: PriceResult[] = [];
+    const balancerResults: PriceResult[] = [];
 
     // Fetch data sequentially instead of in parallel to avoid rate limits
     console.log('Fetching Uniswap V3 (500) price...');
@@ -233,11 +266,20 @@ export class PriceAggregator {
           if (curvePrice) {
             // Update the dex name to include pool address
             curvePrice.dex = `curve-${poolAddress}`;
-            results.push(curvePrice);
+            curveResults.push(curvePrice);
           }
         } catch (error) {
           console.log(`Curve ${poolAddress} price fetch failed:`, error);
         }
+      }
+
+      // Find the best Curve pool and add it to main results
+      if (curveResults.length > 0) {
+        const bestCurvePool = curveResults.reduce((prev, current) => {
+          return parseFloat(current.price) > parseFloat(prev.price) ? current : prev;
+        });
+        results.push(bestCurvePool);
+        console.log(`Selected best Curve pool: ${bestCurvePool.dex} with price: ${bestCurvePool.price}`);
       }
     } else {
       console.log('Curve pool filter not initialized - skipping Curve pools');
@@ -268,16 +310,73 @@ export class PriceAggregator {
               price: balancerResult.price,
               timestamp: balancerResult.timestamp
             };
-            results.push(balancerPrice);
+            balancerResults.push(balancerPrice);
           }
         } catch (error) {
           console.log(`Balancer ${poolAddress} price fetch failed:`, error);
         }
       }
+
+      // Find the best Balancer pool and add it to main results
+      if (balancerResults.length > 0) {
+        const bestBalancerPool = balancerResults.reduce((prev, current) => {
+          return parseFloat(current.price) > parseFloat(prev.price) ? current : prev;
+        });
+        results.push(bestBalancerPool);
+        console.log(`Selected best Balancer pool: ${bestBalancerPool.dex} with price: ${bestBalancerPool.price}`);
+      }
     } else {
       console.log('Balancer pool filter not initialized - skipping Balancer pools');
     }
 
-    return results;
+    // Sort all prices by price value in descending order (highest first)
+    const sortedResults = results.sort((a, b) => {
+      const priceA = parseFloat(a.price);
+      const priceB = parseFloat(b.price);
+      if (priceB > priceA) return 1;
+      if (priceB < priceA) return -1;
+      return 0;
+    });
+
+    // Sort other Curve pools by price in descending order
+    const sortedOtherCurvePools = curveResults
+      .filter((r) => !results.some(main => main.dex === r.dex))
+      .sort((a, b) => {
+        const priceA = parseFloat(a.price);
+        const priceB = parseFloat(b.price);
+        if (priceB > priceA) return 1;
+        if (priceB < priceA) return -1;
+        return 0;
+      });
+
+    // Sort other Balancer pools by price in descending order
+    const sortedOtherBalancerPools = balancerResults
+      .filter((r) => !results.some(main => main.dex === r.dex))
+      .sort((a, b) => {
+        const priceA = parseFloat(a.price);
+        const priceB = parseFloat(b.price);
+        if (priceB > priceA) return 1;
+        if (priceB < priceA) return -1;
+        return 0;
+      });
+
+    console.log('All prices sorted by value (highest first):', sortedResults.map(p => ({
+      dex: p.dex,
+      price: p.price
+    })));
+    console.log('Other Curve pools sorted by price:', sortedOtherCurvePools.map(p => ({
+      dex: p.dex,
+      price: p.price
+    })));
+    console.log('Other Balancer pools sorted by price:', sortedOtherBalancerPools.map(p => ({
+      dex: p.dex,
+      price: p.price
+    })));
+
+    return {
+      allPrices: sortedResults,
+      otherCurvePools: sortedOtherCurvePools,
+      otherBalancerPools: sortedOtherBalancerPools,
+    };
   }
 } 
