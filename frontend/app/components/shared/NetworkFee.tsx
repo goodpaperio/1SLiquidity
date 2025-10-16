@@ -67,6 +67,7 @@ const NetworkFee: React.FC<NetworkFeeProps> = ({
       infoDetail="Estimated"
       isLoading={isCalculating}
       titleClassName={titleClassName}
+      firstColumnClassName="items-center"
     />
   )
 }

@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { ethers } from 'ethers'
 import ImageFallback from '@/app/shared/ImageFallback'
+import { InfoIcon } from '@/app/lib/icons'
 
 type Props = {
   amountReceived: string
@@ -136,7 +137,7 @@ const ConfigTrade: React.FC<Props> = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                        <InfoIcon className="h-4 w-4 cursor-help block" />
                       </TooltipTrigger>
                       <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                         <p>

@@ -16,6 +16,7 @@ type Props = {
   showInstaIcon?: boolean
   isLoading?: boolean
   className?: string
+  firstColumnClassName?: string
 }
 
 const AmountTag: React.FC<Props> = ({
@@ -26,11 +27,12 @@ const AmountTag: React.FC<Props> = ({
   amountClassName,
   showInstaIcon = false,
   isLoading = false,
+  firstColumnClassName,
   className,
 }) => {
   return (
     <div className={cn('flex justify-between items-start', className)}>
-      <div className="flex items-start gap-1">
+      <div className={cn('flex items-center gap-1', firstColumnClassName)}>
         <p className={cn('text-[14px]', titleClassName)}>{title}</p>
         <Tooltip>
           <TooltipTrigger asChild>
