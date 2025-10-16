@@ -1,19 +1,23 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAnimation } from 'framer-motion'
 import Image from 'next/image'
 import { motion, Variants } from 'framer-motion'
 import Navbar from '../navbar'
 import TradesChart from './TradesChart'
-import TokenSelector from './TokenSelector'
+import InstasettleTokenSelector from './InstasettleTokenSelector'
 import { InstasettleIcon } from '@/app/lib/icons'
 import HeroSection from '../shared/HeroSection'
-import { useModal } from '@/app/lib/context/modalContext'
+import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 
 const Instasettle = () => {
   const controls = useAnimation()
-  const { selectedTokenFrom, selectedTokenTo } = useModal()
+  const [selectedTokenFrom, setSelectedTokenFrom] =
+    useState<TOKENS_TYPE | null>(null)
+  const [selectedTokenTo, setSelectedTokenTo] = useState<TOKENS_TYPE | null>(
+    null
+  )
 
   useEffect(() => {
     controls.start('visible')
@@ -96,7 +100,10 @@ const Instasettle = () => {
               Peer-to-Peer OTC Trades. Beat Market Prices. Instantly.
             </motion.h2>
           </div>
-          <TokenSelector />
+          <InstasettleTokenSelector
+            onTokenFromChange={setSelectedTokenFrom}
+            onTokenToChange={setSelectedTokenTo}
+          />
           <TradesChart
             selectedTokenFrom={selectedTokenFrom}
             selectedTokenTo={selectedTokenTo}

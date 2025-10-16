@@ -263,18 +263,19 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             tokenOutObj: tokenOut,
             tokenIn: selectedStream.tokenIn || '',
             tokenOut: selectedStream.tokenOut || '',
-            amountIn: Number(
-              formatUnits(
-                BigInt(selectedStream.amountIn),
-                tokenIn?.decimals || 18
-              )
-            ).toString(),
+            // amountIn: Number(
+            //   formatUnits(
+            //     BigInt(selectedStream.amountIn),
+            //     tokenIn?.decimals || 18
+            //   )
+            // ).toString(),
             minAmountOut: Number(
               formatUnits(
                 BigInt(selectedStream.minAmountOut),
                 tokenOut?.decimals || 18
               )
             ).toString(),
+            amountIn: formatNumberSmart(remainingAmountIn || '0') || '0',
             isInstasettlable: true,
             usePriceBased: false,
             signer: signer,
@@ -798,6 +799,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               tokenIn={tokenIn}
               tokenOut={tokenOut}
               formattedAmountIn={formattedAmountIn}
+              remainingAmountIn={
+                formatNumberSmart(remainingAmountIn || '0') || undefined
+              }
             />
           )}
         </div>

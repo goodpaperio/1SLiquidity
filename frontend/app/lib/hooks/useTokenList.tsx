@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { TOKENS_TYPE } from './useWalletTokens'
 import { useAppKitState } from '@reown/appkit/react'
+import tokensListData from '../utils/tokens-list-04-09-2025.json'
 
 // Update the CoinGeckoToken interface to better match our needs
 interface CoinGeckoToken {
@@ -41,6 +42,24 @@ interface EssentialToken {
       contract_address: string
     }
   }
+}
+
+// Types for JSON data
+interface JsonTokenResult {
+  tokenName: string
+  tokenAddress: string
+  tokenDecimals: number
+  tokenSymbol: string
+  success: boolean
+  failureReason: string
+}
+
+interface JsonBaseTokenData {
+  baseToken: string
+  totalTests: number
+  successCount: number
+  failureCount: number
+  results: JsonTokenResult[]
 }
 
 // Mapping from chain IDs to CoinGecko platform identifiers
@@ -136,6 +155,72 @@ const isERC20Token = (
   }
 
   return isValid
+}
+
+// Helper function to get all unique tokens from JSON results (only successful ones)
+const getAllTokensFromJson = (): {
+  tokenName: string
+  tokenAddress: string
+  tokenDecimals: number
+  tokenSymbol: string
+}[] => {
+  const allTokens: {
+    tokenName: string
+    tokenAddress: string
+    tokenDecimals: number
+    tokenSymbol: string
+  }[] = []
+  const seenAddresses = new Set<string>()
+
+  tokensListData.testResults.forEach((baseTokenData: JsonBaseTokenData) => {
+    baseTokenData.results.forEach((token: JsonTokenResult) => {
+      // Only include tokens where success is true
+      if (token.success) {
+        const lowerAddress = token.tokenAddress.toLowerCase()
+        if (!seenAddresses.has(lowerAddress)) {
+          seenAddresses.add(lowerAddress)
+          allTokens.push({
+            tokenName: token.tokenName,
+            tokenAddress: token.tokenAddress,
+            tokenDecimals: token.tokenDecimals,
+            tokenSymbol: token.tokenSymbol,
+          })
+        }
+      }
+    })
+  })
+
+  return allTokens
+}
+
+// Helper function to create fallback tokens from JSON data
+const createFallbackTokensFromJson = (
+  jsonTokens: {
+    tokenName: string
+    tokenAddress: string
+    tokenDecimals: number
+    tokenSymbol: string
+  }[],
+  targetPlatform: string
+): TOKENS_TYPE[] => {
+  return jsonTokens.map((jsonToken) => ({
+    name:
+      jsonToken.tokenName.charAt(0).toUpperCase() +
+      jsonToken.tokenName.slice(1),
+    symbol: jsonToken.tokenSymbol,
+    icon: `/tokens/${jsonToken.tokenName.toLowerCase()}.svg`,
+    popular: false,
+    value: 0,
+    status: 'increase' as const,
+    statusAmount: 0,
+    token_address: jsonToken.tokenAddress,
+    decimals: jsonToken.tokenDecimals,
+    balance: '0',
+    possible_spam: false,
+    usd_price: 0,
+    market_cap_rank: 999999,
+    usd_value: 0,
+  }))
 }
 
 // Function to get token decimals from detail_platforms object
@@ -687,8 +772,35 @@ export const useTokenList = () => {
             )
           } catch (error) {
             console.error('Error fetching platform tokens:', error)
-            // If platform list fetch fails, fall back to essential tokens only
-            return formatCoingeckoTokens(essentialTokens, targetPlatform)
+            // If platform list fetch fails, fall back to essential tokens + JSON fallbacks
+            const essentialTokensFormatted = formatCoingeckoTokens(
+              essentialTokens,
+              targetPlatform
+            )
+
+            // Add JSON tokens as fallbacks
+            const jsonTokens = getAllTokensFromJson()
+            const fallbackTokens = createFallbackTokensFromJson(
+              jsonTokens,
+              targetPlatform
+            )
+
+            const mergedTokens = [...essentialTokensFormatted]
+            const essentialAddresses = new Set(
+              essentialTokensFormatted.map((t) => t.token_address.toLowerCase())
+            )
+
+            fallbackTokens.forEach((fallbackToken) => {
+              if (
+                !essentialAddresses.has(
+                  fallbackToken.token_address.toLowerCase()
+                )
+              ) {
+                mergedTokens.push(fallbackToken)
+              }
+            })
+
+            return mergedTokens
           }
         }
 
@@ -725,8 +837,35 @@ export const useTokenList = () => {
             localStorage.setItem(marketDataTimestampKey, Date.now().toString())
           } catch (error) {
             console.error('Error fetching market data:', error)
-            // If market data fetch fails, fall back to essential tokens only
-            return formatCoingeckoTokens(essentialTokens, targetPlatform)
+            // If market data fetch fails, fall back to essential tokens + JSON fallbacks
+            const essentialTokensFormatted = formatCoingeckoTokens(
+              essentialTokens,
+              targetPlatform
+            )
+
+            // Add JSON tokens as fallbacks
+            const jsonTokens = getAllTokensFromJson()
+            const fallbackTokens = createFallbackTokensFromJson(
+              jsonTokens,
+              targetPlatform
+            )
+
+            const mergedTokens = [...essentialTokensFormatted]
+            const essentialAddresses = new Set(
+              essentialTokensFormatted.map((t) => t.token_address.toLowerCase())
+            )
+
+            fallbackTokens.forEach((fallbackToken) => {
+              if (
+                !essentialAddresses.has(
+                  fallbackToken.token_address.toLowerCase()
+                )
+              ) {
+                mergedTokens.push(fallbackToken)
+              }
+            })
+
+            return mergedTokens
           }
         }
 
@@ -770,11 +909,37 @@ export const useTokenList = () => {
         combinedTokens.push(...additionalTokens)
 
         // Format and return the final token list
-        return formatCoingeckoTokens(combinedTokens, targetPlatform)
+        const coingeckoTokens = formatCoingeckoTokens(
+          combinedTokens,
+          targetPlatform
+        )
+
+        // Get JSON tokens and merge with CoinGecko tokens
+        const jsonTokens = getAllTokensFromJson()
+        const fallbackTokens = createFallbackTokensFromJson(
+          jsonTokens,
+          targetPlatform
+        )
+
+        // Merge tokens: use CoinGecko data if available, otherwise use JSON fallback
+        const mergedTokens = [...coingeckoTokens]
+        const coingeckoAddresses = new Set(
+          coingeckoTokens.map((t) => t.token_address.toLowerCase())
+        )
+
+        fallbackTokens.forEach((fallbackToken) => {
+          if (
+            !coingeckoAddresses.has(fallbackToken.token_address.toLowerCase())
+          ) {
+            mergedTokens.push(fallbackToken)
+          }
+        })
+
+        return mergedTokens
       } catch (error) {
         console.error('Error in token list fetch:', error)
-        // If everything fails, return essential tokens
-        return formatCoingeckoTokens(
+        // If everything fails, return essential tokens + JSON fallbacks
+        const essentialTokens = formatCoingeckoTokens(
           topTokens.filter((t: EssentialToken) => {
             const tokenAddress = getTokenAddressForPlatform(
               t.platforms,
@@ -788,6 +953,28 @@ export const useTokenList = () => {
           }),
           targetPlatform
         )
+
+        // Add JSON tokens as fallbacks
+        const jsonTokens = getAllTokensFromJson()
+        const fallbackTokens = createFallbackTokensFromJson(
+          jsonTokens,
+          targetPlatform
+        )
+
+        const mergedTokens = [...essentialTokens]
+        const essentialAddresses = new Set(
+          essentialTokens.map((t) => t.token_address.toLowerCase())
+        )
+
+        fallbackTokens.forEach((fallbackToken) => {
+          if (
+            !essentialAddresses.has(fallbackToken.token_address.toLowerCase())
+          ) {
+            mergedTokens.push(fallbackToken)
+          }
+        })
+
+        return mergedTokens
       }
     },
     staleTime: TOKEN_CONFIG.MARKET_DATA_CACHE_DURATION / 2,

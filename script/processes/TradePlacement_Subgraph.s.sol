@@ -97,7 +97,9 @@ contract TradePlacement is Script {
             amountWETH,
             amountOutMin,
             false, // isInstasettlable
-            botGasAllowance
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
         
         console.log("Trade data details:");

@@ -13,19 +13,33 @@ export interface BalancerPoolInfo {
   poolType: string
 }
 
+interface BalancerPoolMetadata {
+  poolId: string
+  symbol: string
+  name: string
+  tokens: string[]
+  tokenDecimals: number[]
+  tokenNames: string[]
+  tokenSymbols: string[]
+  isActive: boolean
+}
+
 export class BalancerService {
   private provider: ethers.Provider
   private poolAddress: string
   private vaultAddress: string
   private tokenService: TokenService
+  private metadata: BalancerPoolMetadata
 
   constructor(
     provider: ethers.Provider,
     poolAddress: string,
+    metadata: BalancerPoolMetadata,
     vaultAddress: string = '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
   ) {
     this.provider = provider
     this.poolAddress = poolAddress
+    this.metadata = metadata
     this.vaultAddress = vaultAddress
     this.tokenService = TokenService.getInstance(provider)
   }
@@ -37,25 +51,19 @@ export class BalancerService {
   }
 
   /**
-   * Get pool ID from the pool contract
-   * Balancer pool IDs are 32-byte identifiers that must be obtained from the contract
+   * Get token indices from metadata (no blockchain call needed)
    */
-  private async getPoolIdFromContract(): Promise<string | null> {
-    try {
-      const pool = new ethers.Contract(
-        this.poolAddress,
-        CONTRACT_ABIS.BALANCER.POOL,
-        this.provider
-      )
-      return await pool.getPoolId()
-    } catch (error) {
-      console.error(`Error getting pool ID from contract ${this.poolAddress}:`, error)
-      return null
-    }
+  private getTokenIndices(tokenA: string, tokenB: string): [number, number] {
+    const tokens = this.metadata.tokens.map((t) => t.toLowerCase())
+
+    const tokenAIndex = tokens.findIndex((token) => token === tokenA.toLowerCase())
+    const tokenBIndex = tokens.findIndex((token) => token === tokenB.toLowerCase())
+
+    return [tokenAIndex, tokenBIndex]
   }
 
   /**
-   * Get pool information including tokens and balances
+   * Get pool information using metadata and fetching only balances
    */
   async getPoolInfo(): Promise<BalancerPoolInfo | null> {
     try {
@@ -64,35 +72,36 @@ export class BalancerService {
         CONTRACT_ABIS.BALANCER.VAULT,
         this.provider
       )
-      const pool = new ethers.Contract(
-        this.poolAddress,
-        CONTRACT_ABIS.BALANCER.POOL,
-        this.provider
-      )
 
-      // Get pool ID from the pool contract
-      const poolId = await this.getPoolIdFromContract()
-      if (!poolId) {
-        console.error(`Could not get pool ID for pool ${this.poolAddress}`)
-        return null
-      }
+      // Use poolId from metadata (no blockchain call needed)
+      const poolId = this.metadata.poolId
 
-      // Get pool tokens and balances
+      // Get pool balances from vault (only dynamic data we need)
       const [tokens, balances, lastChangeBlock] = await vault.getPoolTokens(
         poolId
       )
 
-      // Get additional pool info from the pool contract
+      // Get additional pool info from the pool contract (only if needed)
       let swapFee = '0'
       let poolType = 'Unknown'
 
       try {
+        const pool = new ethers.Contract(
+          this.poolAddress,
+          CONTRACT_ABIS.BALANCER.POOL,
+          this.provider
+        )
         swapFee = await pool.getSwapFeePercentage()
       } catch (e) {
         // Some pools might not have this method
       }
 
       try {
+        const pool = new ethers.Contract(
+          this.poolAddress,
+          CONTRACT_ABIS.BALANCER.POOL,
+          this.provider
+        )
         poolType = await pool.getPoolType()
       } catch (e) {
         // Some pools might not have this method
@@ -131,18 +140,14 @@ export class BalancerService {
     pairAddress: string
     timestamp: number
     price: number
+    tokenIndices: {
+      token0Index: number
+      token1Index: number
+    }
   } | null> {
     try {
-      const poolInfo = await this.getPoolInfo()
-      if (!poolInfo) return null
-
-      // Find token indices
-      const tokenAIndex = poolInfo.tokens.findIndex(
-        (token) => token.toLowerCase() === tokenA.toLowerCase()
-      )
-      const tokenBIndex = poolInfo.tokens.findIndex(
-        (token) => token.toLowerCase() === tokenB.toLowerCase()
-      )
+      // Get token indices from metadata (no blockchain call needed)
+      const [tokenAIndex, tokenBIndex] = this.getTokenIndices(tokenA, tokenB)
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
         console.log(
@@ -150,6 +155,14 @@ export class BalancerService {
         )
         return null
       }
+
+      // Get balances from vault (only dynamic data we need)
+      const vault = new ethers.Contract(
+        this.vaultAddress,
+        CONTRACT_ABIS.BALANCER.VAULT,
+        this.provider
+      )
+      const [tokens, balances] = await vault.getPoolTokens(this.metadata.poolId)
 
       // Get token decimals
       const [token0Info, token1Info] = await Promise.all([
@@ -159,31 +172,35 @@ export class BalancerService {
 
       // Calculate price: reservesTokenB / reservesTokenA (in normalized values)
       const reservesTokenAinEth = this.convertWeiToNormal(
-        BigInt(poolInfo.balances[tokenAIndex]),
+        BigInt(balances[tokenAIndex]),
         token0Info.decimals
       )
       const reservesTokenBinEth = this.convertWeiToNormal(
-        BigInt(poolInfo.balances[tokenBIndex]),
+        BigInt(balances[tokenBIndex]),
         token1Info.decimals
       )
       const price = reservesTokenBinEth / reservesTokenAinEth
 
       console.log('Balancer reserves:', {
-        token0: poolInfo.balances[tokenAIndex].toString(),
-        token1: poolInfo.balances[tokenBIndex].toString(),
+        token0: balances[tokenAIndex].toString(),
+        token1: balances[tokenBIndex].toString(),
         price: price,
       })
 
       // Return reserves in the order they appear in the pool
       return {
         reserves: {
-          token0: poolInfo.balances[tokenAIndex].toString(),
-          token1: poolInfo.balances[tokenBIndex].toString(),
+          token0: balances[tokenAIndex].toString(),
+          token1: balances[tokenBIndex].toString(),
         },
         price: price,
         dex: `balancer-${this.poolAddress}`,
-        pairAddress: poolInfo.poolId, // Use poolId instead of poolAddress for Balancer
+        pairAddress: this.metadata.poolId, // Use poolId from metadata
         timestamp: Date.now(),
+        tokenIndices: {
+          token0Index: tokenAIndex,
+          token1Index: tokenBIndex,
+        },
       }
     } catch (error) {
       console.error(
@@ -200,18 +217,18 @@ export class BalancerService {
   async getPrice(
     tokenA: string,
     tokenB: string
-  ): Promise<{ price: string; dex: string; timestamp: number } | null> {
+  ): Promise<{
+    price: string;
+    dex: string;
+    timestamp: number;
+    tokenIndices: {
+      token0Index: number
+      token1Index: number
+    }
+  } | null> {
     try {
-      const poolInfo = await this.getPoolInfo()
-      if (!poolInfo) return null
-
-      // Find token indices
-      const tokenAIndex = poolInfo.tokens.findIndex(
-        (token) => token.toLowerCase() === tokenA.toLowerCase()
-      )
-      const tokenBIndex = poolInfo.tokens.findIndex(
-        (token) => token.toLowerCase() === tokenB.toLowerCase()
-      )
+      // Get token indices from metadata (no blockchain call needed)
+      const [tokenAIndex, tokenBIndex] = this.getTokenIndices(tokenA, tokenB)
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
         console.log(
@@ -220,6 +237,14 @@ export class BalancerService {
         return null
       }
 
+      // Get balances from vault (only dynamic data we need)
+      const vault = new ethers.Contract(
+        this.vaultAddress,
+        CONTRACT_ABIS.BALANCER.VAULT,
+        this.provider
+      )
+      const [tokens, balances] = await vault.getPoolTokens(this.metadata.poolId)
+
       // Get token decimals
       const [token0Info, token1Info] = await Promise.all([
         this.tokenService.getTokenInfo(tokenA),
@@ -227,8 +252,8 @@ export class BalancerService {
       ])
 
       // Calculate spot price: balanceB / balanceA
-      const balanceA = BigInt(poolInfo.balances[tokenAIndex])
-      const balanceB = BigInt(poolInfo.balances[tokenBIndex])
+      const balanceA = BigInt(balances[tokenAIndex])
+      const balanceB = BigInt(balances[tokenBIndex])
 
       if (balanceA === 0n) {
         console.log(`Zero balance for tokenA in pool ${this.poolAddress}`)
@@ -247,6 +272,10 @@ export class BalancerService {
         price,
         dex: `balancer-${this.poolAddress}`,
         timestamp: Date.now(),
+        tokenIndices: {
+          token0Index: tokenAIndex,
+          token1Index: tokenBIndex,
+        },
       }
     } catch (error) {
       console.error(
@@ -258,24 +287,18 @@ export class BalancerService {
   }
 
   /**
-   * Check if a pool contains both tokens
+   * Check if a pool contains both tokens using metadata
    */
-  async hasTokens(tokenA: string, tokenB: string): Promise<boolean> {
-    try {
-      const poolInfo = await this.getPoolInfo()
-      if (!poolInfo) return false
+  hasTokens(tokenA: string, tokenB: string): boolean {
+    const tokens = this.metadata.tokens.map((t) => t.toLowerCase())
 
-      const hasTokenA = poolInfo.tokens.some(
-        (token) => token.toLowerCase() === tokenA.toLowerCase()
-      )
-      const hasTokenB = poolInfo.tokens.some(
-        (token) => token.toLowerCase() === tokenB.toLowerCase()
-      )
+    const hasTokenA = tokens.some(
+      (token) => token === tokenA.toLowerCase()
+    )
+    const hasTokenB = tokens.some(
+      (token) => token === tokenB.toLowerCase()
+    )
 
-      return hasTokenA && hasTokenB
-    } catch (error) {
-      console.error(`Error checking tokens in pool ${this.poolAddress}:`, error)
-      return false
-    }
+    return hasTokenA && hasTokenB
   }
 }

@@ -17,5 +17,6 @@ library Utils {
         uint256 lastSweetSpot; //v
         bool isInstasettlable; //c
         bool usePriceBased; //c - NEW FIELD for price-based vs reserve-based DEX selection
+        bool onlyInstasettle; //c - NEW FIELD for trades that should only be settled via instasettle
     }
 }

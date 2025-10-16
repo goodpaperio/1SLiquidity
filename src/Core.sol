@@ -239,8 +239,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             uint256 amountIn,
             uint256 amountOutMin,
             bool isInstasettlable,
-            bool usePriceBased
-        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool));
+            bool usePriceBased,
+            uint256 instasettleBps,
+            bool onlyInstasettle
+        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool, uint256, bool));
         // @audit may be better to abstract sweetSpot algo to here and pass the value along, since small (<0.001% pool depth) trades shouldn't be split at all and would save hefty logic
         // @audit edge cases wrt pool depths (specifically extremely small volume to volume reserves) create anomalies in the algo output
         // @audit similarly for the sake of OPTIMISTIC and DETERMINISTIC placement patterns, we should abstract the calculation of sweetSpot nad the definition of appropriate DEX into seperated, off contract functions
@@ -260,11 +262,13 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             targetAmountOut: amountOutMin,
             realisedAmountOut: 0,
             tradeId: tradeId,
-            instasettleBps: 100,
+            instasettleBps: instasettleBps,
             lastSweetSpot: 0, // @audit check that we need to speficially evaluate this here
             isInstasettlable: isInstasettlable,
-            usePriceBased: usePriceBased
+            usePriceBased: usePriceBased,
+            onlyInstasettle: onlyInstasettle
         });
+        
 
         pairIdTradeIds[pairId].push(tradeId);
 
@@ -288,20 +292,20 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             amountOutMin,
             updatedTrade.realisedAmountOut, // Use actual realised amount after stream
             isInstasettlable,
-            100, // instasettleBps default
+            instasettleBps, // Use the passed instasettleBps parameter
             updatedTrade.lastSweetSpot, // Use actual sweet spot utilized
             usePriceBased
         );
     }
 
-    function cancelTrade(uint256 tradeId) public nonReentrant returns (bool) {
+    function cancelTrade(uint256 tradeId) public returns (bool) {
         // @audit It is essential that this authority may be granted by a bot, therefore meaning if the msg.sender is
         // Core.
         // @audit Similarly, when the Router is implemented, we mnust forward the msg.sender in the function call /
         // veridy signed message
         Utils.Trade memory trade = trades[tradeId];
         if (trade.owner == address(0)) {
-            revert("Trade does not exist");
+            revert("Trade inexistent or being called from null address");
         }
         if (trade.owner == msg.sender || msg.sender == address(this)) {
             bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
@@ -323,8 +327,14 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 botFeesAccrued = 0;
         address tokenOutForRun = address(0);
 
-        for (uint256 i = 0; i < tradeIds.length; i++) {
-            Utils.Trade storage trade = trades[tradeIds[i]];
+        // Cap the number of trades processed to prevent out of gas errors
+        uint256 maxTradesToProcess = 20;
+        uint256 tradesToProcess = tradeIds.length > maxTradesToProcess ? maxTradesToProcess : tradeIds.length;
+
+        // Process trades in reverse order to avoid array index issues when trades are deleted
+        for (uint256 i = tradesToProcess; i > 0; i--) {
+            uint256 index = i - 1; // Convert to 0-based index
+            Utils.Trade storage trade = trades[tradeIds[index]];
             if (trade.attempts >= 3) {
                 // we delete the trade from storage
                 cancelTrade(trade.tradeId);
@@ -342,8 +352,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                     }
                     if (updatedTrade.lastSweetSpot == 0) {
                         IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-                        delete trades[tradeIds[i]];
-                        _removeTradeIdFromArray(pairId, tradeIds[i]);
+                        delete trades[tradeIds[index]];
+                        _removeTradeIdFromArray(pairId, tradeIds[index]);
                     }
                 } catch Error(string memory reason) {
                     trade.attempts++;

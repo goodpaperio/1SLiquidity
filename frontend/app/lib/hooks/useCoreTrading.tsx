@@ -39,7 +39,7 @@ export interface InstasettleParams extends PlaceTradeParams {
 }
 
 export interface ContractInfo {
-  owner: string
+  owner?: string
   streamDaemon: string
   executor: string
   registry: string
@@ -175,7 +175,7 @@ export const useCoreTrading = () => {
       const contract = getContract()
 
       const [
-        owner,
+        // owner,
         streamDaemon,
         executor,
         registry,
@@ -186,7 +186,7 @@ export const useCoreTrading = () => {
         streamBotFeeBps,
         instasettleProtocolFeeBps,
       ] = await Promise.all([
-        contract.owner(),
+        // contract.owner(),
         contract.streamDaemon(),
         contract.executor(),
         contract.registry(),
@@ -199,7 +199,7 @@ export const useCoreTrading = () => {
       ])
 
       const info: ContractInfo = {
-        owner,
+        // owner,
         streamDaemon,
         executor,
         registry,
@@ -662,12 +662,12 @@ export const useCoreTrading = () => {
       ) => {
         const toastContent = (
           <NotifiSwapStream
-            tokenInObj={params.tokenInObj}
-            tokenOutObj={params.tokenOutObj}
-            tokenIn={params?.tokenIn || ''}
-            tokenOut={params?.tokenOut || ''}
-            amountIn={params.amountIn.toString()}
-            amountOut={params.minAmountOut.toString()}
+            tokenOutObj={params.tokenInObj}
+            tokenInObj={params.tokenOutObj}
+            tokenOut={params?.tokenIn || ''}
+            tokenIn={params?.tokenOut || ''}
+            amountOut={params.amountIn.toString()}
+            amountIn={params.minAmountOut.toString()}
             step={step}
             progress={progress}
             currentStep={currentStep}

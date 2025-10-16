@@ -40,7 +40,8 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
         balancerRegistry.setPoolsForPair(WETH, BAL, wethBalPools, 0);
 
         // Set up protocol with new BalancerV2Fetcher
-        setUpSingleDex(address(balancerFetcher), BALANCER_VAULT);
+        // For Balancer V2, we pass the fetcher as the router since the executor needs to call fetcher methods
+        setUpSingleDex(address(balancerFetcher), address(balancerFetcher));
 
         // Check WETH whale balance and transfer
         uint256 wethWhaleBalance = IERC20(WETH).balanceOf(WETH_WHALE);
@@ -97,7 +98,9 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
             amountIn,
             amountOutMin,
             false,
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         core.placeTrade(tradeData);
@@ -146,8 +149,10 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
             WETH,
             amountIn,
             amountOutMin,
-            false,
-            false // usePriceBased - set to false for backward compatibility
+            false, // isInstasettlable
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle
         );
 
         try core.placeTrade(tradeData) {
@@ -262,7 +267,7 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
         // Verify that the Registry is configured for Balancer
         string memory dexType = "Balancer";
         address router = registry.getRouter(dexType);
-        assertEq(router, BALANCER_VAULT, "Registry should have Balancer router configured");
+        assertEq(router, address(balancerFetcher), "Registry should have BalancerV2Fetcher as router");
 
         // Verify that the Core contract can identify Balancer as a DEX
         address firstDex = streamDaemon.dexs(0); // Get the first DEX address
