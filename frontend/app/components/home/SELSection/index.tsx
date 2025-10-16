@@ -43,6 +43,7 @@ const SELSection = () => {
     usePriceBased: true,
     instasettlableValue: null as string | null,
     isInstasettlable: false,
+    onlyInstasettle: false,
   })
 
   const { addToast } = useToast()
@@ -463,6 +464,8 @@ const SELSection = () => {
             minAmountOut: buyAmount.toString(),
             isInstasettlable: tradingSettings.isInstasettlable,
             usePriceBased: tradingSettings.usePriceBased,
+            instasettleBps: tradingSettings.instasettlableValue || '0',
+            onlyInstasettle: tradingSettings.onlyInstasettle,
           },
           signer
         )
@@ -546,6 +549,7 @@ const SELSection = () => {
                   usePriceBased: boolean
                   instasettlableValue: string | null
                   isInstasettlable: boolean
+                  onlyInstasettle: boolean
                 }) => setTradingSettings(settings),
                 []
               )}
