@@ -1596,15 +1596,21 @@ export class BalancerCalculator extends BaseDexCalculator {
       // Use token indices from API response if available
       let tokenInIndex: number
       let tokenOutIndex: number
+      let tokens: string[]
 
       if (reserveData.tokenIndices) {
         // Use indices from API response (optimized)
         tokenInIndex = reserveData.tokenIndices.token0Index
         tokenOutIndex = reserveData.tokenIndices.token1Index
+        // Still need to get tokens array for assets
+        const [tokensFromVault, balances, lastChangeBlock] =
+          await this.vault.getPoolTokens(poolId)
+        tokens = tokensFromVault
       } else {
         // Fallback to querying vault for indices
-        const [tokens, balances, lastChangeBlock] =
+        const [tokensFromVault, balances, lastChangeBlock] =
           await this.vault.getPoolTokens(poolId)
+        tokens = tokensFromVault
 
         tokenInIndex = tokens.findIndex(
           (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
@@ -1640,7 +1646,8 @@ export class BalancerCalculator extends BaseDexCalculator {
         },
       ]
 
-      const assets = [tokenIn, tokenOut]
+      // Build assets array using the pool's token ordering
+      const assets = tokens
 
       const funds = {
         sender: ethers.constants.AddressZero,
@@ -1667,8 +1674,9 @@ export class BalancerCalculator extends BaseDexCalculator {
         result
       )[0]
 
-      // deltas[0] = +amountIn, deltas[1] = -amountOut
-      const amountOutBN = ethers.BigNumber.from(deltas[1]).mul(-1)
+      // deltas correspond to the assets array indices
+      // tokenOut delta will be negative, so multiply by -1 to get positive amount
+      const amountOutBN = ethers.BigNumber.from(deltas[tokenOutIndex]).mul(-1)
 
       // Format the result using token1 decimals
       const resultFormatted = this.formatOutput(amountOutBN, token1Decimals)
@@ -1725,15 +1733,21 @@ export class BalancerCalculator extends BaseDexCalculator {
       // Use token indices from API response if available
       let tokenInIndex: number
       let tokenOutIndex: number
+      let tokens: string[]
 
       if (reserveData.tokenIndices) {
         // Use indices from API response (optimized)
         tokenInIndex = reserveData.tokenIndices.token0Index
         tokenOutIndex = reserveData.tokenIndices.token1Index
+        // Still need to get tokens array for assets
+        const [tokensFromVault, balances, lastChangeBlock] =
+          await this.vault.getPoolTokens(poolId)
+        tokens = tokensFromVault
       } else {
         // Fallback to querying vault for indices
-        const [tokens, balances, lastChangeBlock] =
+        const [tokensFromVault, balances, lastChangeBlock] =
           await this.vault.getPoolTokens(poolId)
+        tokens = tokensFromVault
 
         tokenInIndex = tokens.findIndex(
           (token: string) => token.toLowerCase() === tokenIn.toLowerCase()
@@ -1761,7 +1775,8 @@ export class BalancerCalculator extends BaseDexCalculator {
         },
       ]
 
-      const assets = [tokenIn, tokenOut]
+      // Build assets array using the pool's token ordering
+      const assets = tokens
 
       const funds = {
         sender: ethers.constants.AddressZero,
@@ -1788,8 +1803,9 @@ export class BalancerCalculator extends BaseDexCalculator {
         result
       )[0]
 
-      // deltas[0] = +amountIn, deltas[1] = -amountOut
-      const amountInBN = ethers.BigNumber.from(deltas[0])
+      // deltas correspond to the assets array indices
+      // tokenIn delta will be positive
+      const amountInBN = ethers.BigNumber.from(deltas[tokenInIndex])
 
       // Format the result using token0 decimals
       const resultFormatted = this.formatOutput(amountInBN, token0Decimals)
@@ -1864,7 +1880,8 @@ export class BalancerCalculator extends BaseDexCalculator {
         },
       ]
 
-      const assets = [tokenIn, tokenOut]
+      // Build assets array using the pool's token ordering
+      const assets = tokens
 
       const funds = {
         sender: ethers.constants.AddressZero,
@@ -1891,8 +1908,9 @@ export class BalancerCalculator extends BaseDexCalculator {
         result
       )[0]
 
-      // deltas[0] = +amountIn, deltas[1] = -amountOut
-      const amountOutBN = ethers.BigNumber.from(deltas[1]).mul(-1)
+      // deltas correspond to the assets array indices
+      // tokenOut delta will be negative, so multiply by -1 to get positive amount
+      const amountOutBN = ethers.BigNumber.from(deltas[tokenOutIndex]).mul(-1)
 
       // Format the result with output token decimals
       const resultFormatted = this.formatOutput(amountOutBN, decimalsOut)
@@ -1959,7 +1977,8 @@ export class BalancerCalculator extends BaseDexCalculator {
         },
       ]
 
-      const assets = [tokenIn, tokenOut]
+      // Build assets array using the pool's token ordering
+      const assets = tokens
 
       const funds = {
         sender: ethers.constants.AddressZero,
@@ -1986,8 +2005,9 @@ export class BalancerCalculator extends BaseDexCalculator {
         result
       )[0]
 
-      // deltas[0] = +amountIn, deltas[1] = -amountOut
-      const amountInBN = ethers.BigNumber.from(deltas[0])
+      // deltas correspond to the assets array indices
+      // tokenIn delta will be positive
+      const amountInBN = ethers.BigNumber.from(deltas[tokenInIndex])
 
       // Format the result with input token decimals
       const resultFormatted = this.formatOutput(amountInBN, decimalsIn)
