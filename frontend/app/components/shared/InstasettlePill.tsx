@@ -17,7 +17,7 @@ const InstasettlePill: React.FC<InstasettlePillProps> = ({
 
   const getText = () => {
     if (isOnlyInstasettlable) {
-      return isSettled ? 'Instasettled' : 'Only Instasettlable'
+      return isSettled ? 'Instasettled' : 'Only Instasettle'
     }
     return isSettled ? 'Instasettled' : 'Instasettle'
   }
