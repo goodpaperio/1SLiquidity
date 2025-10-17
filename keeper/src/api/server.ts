@@ -306,6 +306,8 @@ app.get(
         slippageSavings: true,
         percentageSavings: true,
         highestLiquidityADex: true,
+        priceAccuracyDECA: true,
+        priceAccuracyNODECA: true,
       },
     })
 
