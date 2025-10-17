@@ -19,9 +19,17 @@ import { ArrowLeft, X } from 'lucide-react'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { formatNumberSmart } from '@/app/lib/utils/number'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import NetworkFee from '../shared/NetworkFee'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import ImageFallback from '@/app/shared/ImageFallback'
+import { ethers } from 'ethers'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -104,6 +112,48 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const formattedMinAmountOut = tokenOut
     ? formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals)
     : '0'
+
+  // Calculate effective price (tokens out per token in ratio)
+  const calculateEffectivePrice = () => {
+    try {
+      // Calculate remaining amount out (what instasettler needs to provide)
+      const remainingAmountOut =
+        BigInt(selectedStream.minAmountOut) -
+        BigInt(selectedStream.realisedAmountOut)
+
+      // Calculate network fee (15 basis points = 0.15%)
+      const NETWORK_FEE_BPS = BigInt(15)
+
+      // Calculate amount in after fee
+      const amountInAfterFee =
+        (BigInt(selectedStream.amountRemaining) *
+          (BigInt(10000) - NETWORK_FEE_BPS)) /
+        BigInt(10000)
+
+      // Calculate amount out after discount
+      const amountOutAfterDiscount =
+        (remainingAmountOut *
+          (BigInt(10000) - BigInt(selectedStream.instasettleBps))) /
+        BigInt(10000)
+
+      if (amountInAfterFee > BigInt(0)) {
+        const tokenOutDecimals = tokenOut?.decimals || 18
+        const tokenInDecimals = tokenIn?.decimals || 18
+
+        const amountOutFloat =
+          Number(amountOutAfterDiscount) / Math.pow(10, tokenOutDecimals)
+        const amountInFloat =
+          Number(amountInAfterFee) / Math.pow(10, tokenInDecimals)
+
+        return amountOutFloat / amountInFloat
+      }
+      return 0
+    } catch {
+      return 0
+    }
+  }
+
+  const effectivePrice = calculateEffectivePrice()
 
   // Calculate USD values (using token price from tokenList)
   const amountInUsd = tokenIn
@@ -334,6 +384,27 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       realisedAmountOut: finalRealisedAmountOut.toString(),
     }
   }
+
+  const [tradeInfo, setTradeInfo] = useState<any>(null)
+  const { getTradeInfo } = useCoreTrading()
+
+  const getTradeInfoCallback = useCallback(async () => {
+    const tradeInfo = await getTradeInfo(Number(selectedStream.tradeId), true)
+    setTradeInfo(tradeInfo)
+  }, [getTradeInfo, selectedStream.tradeId])
+
+  const settlerPaymentFormatted = tradeInfo?.settlerPayment
+    ? parseFloat(
+        ethers.utils.formatUnits(tradeInfo.settlerPayment, tokenOut?.decimals)
+      ).toFixed(4)
+    : '0'
+
+  // console.log('settlerPaymentFormatted', settlerPaymentFormatted)
+  // console.log('tradeInfo', tradeInfo)
+
+  useEffect(() => {
+    getTradeInfoCallback()
+  }, [getTradeInfoCallback])
 
   return (
     <>
@@ -661,13 +732,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
           <div
             className={cn(
-              'flex flex-col gap-2 py-4 border-b border-borderBottom',
-              (selectedStream.settlements.length > 0 ||
-                selectedStream.cancellations.length > 0) &&
-                'border-b-0'
+              'flex flex-col gap-2 pt-2.5 pb-4 border-b border-borderBottom',
+              selectedStream.cancellations.length > 0 && 'border-b-0'
             )}
           >
-            <AmountTag
+            <p className="text-[14px] text-white w-full text-center">STREAMS</p>
+
+            {/* <AmountTag
               title="BPS Savings"
               amount={
                 selectedStream.isInstasettlable &&
@@ -693,7 +764,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               }
               showInstaIcon={selectedStream.isInstasettlable}
               isLoading={isLoading}
-            />
+            /> */}
             <AmountTag
               title="Streams Completed"
               amount={
@@ -771,11 +842,315 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               isLoading={isLoading}
             />
           </div>
-          {/* {selectedStream.isInstasettle && (
-            <div className="mt-4">
-              <Button text="Execute Instasettle" />
+
+          {selectedStream.isInstasettlable && (
+            <div
+              className={cn(
+                'flex flex-col gap-2 pt-2.5 pb-4 border-b border-borderBottom',
+                (selectedStream.settlements.length > 0 ||
+                  selectedStream.cancellations.length > 0) &&
+                  'border-b-0'
+              )}
+            >
+              <div className="flex items-center w-full justify-center">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                >
+                  <path
+                    d="M13 2L6 14H11V22L18 10H13V2Z"
+                    fill="#40f798"
+                    fillOpacity="0.72"
+                  />
+                </svg>
+                <span className="text-[14px] font-medium uppercase">
+                  Instasettlable
+                </span>
+              </div>
+              {/* <p className="text-[14px] text-white w-full text-center">STREAMS</p> */}
+
+              <AmountTag
+                title="BPS Savings"
+                amount={
+                  selectedStream.isInstasettlable &&
+                  selectedStream.instasettleBps ? (
+                    <div className="flex flex-col items-end">
+                      <p className="">
+                        {Number(selectedStream.instasettleBps)} BPS (
+                        {formatNumberSmart(savingsInTokenOut.toFixed(4))}{' '}
+                        {tokenOut?.symbol || ''})
+                      </p>
+                      <p className="text-white52 text-[12px]">
+                        ${savingsInUsd.toFixed(2)}
+                      </p>
+                    </div>
+                  ) : (
+                    'N/A'
+                  )
+                }
+                infoDetail="Info"
+                titleClassName="text-white52"
+                amountClassName={
+                  selectedStream.isInstasettlable ? undefined : 'text-white52'
+                }
+                showInstaIcon={selectedStream.isInstasettlable}
+                isLoading={isLoading}
+              />
+
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
+                    {selectedStream.isInstasettlable && (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          d="M13 2L6 14H11V22L18 10H13V2Z"
+                          fill="#40f798"
+                          fillOpacity="0.72"
+                        />
+                      </svg>
+                    )}
+                    <p className={cn('text-[14px] text-white52')}>
+                      Effective Price
+                    </p>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src="/icons/info.svg"
+                        alt="info"
+                        className="w-3.5 h-3.5 cursor-pointer"
+                        width={20}
+                        height={20}
+                        priority // Add priority to load the image faster
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                      {/* <p>{infoDetail || 'Additional information'}</p> */}
+                      <p>
+                        Lorem Ipsum is simply dummy text of the printing and
+                        typesetting industry. Lorem Ipsum has been the
+                        industry's standard dummy text ever since the 1500
+                        &nbsp;{' '}
+                        <a
+                          href="https://www.lipsum.com/"
+                          target="_blank"
+                          className="text-[#aeabab] underline"
+                        >
+                          Learn more
+                        </a>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-1">
+                  <p className="text-[14px]">
+                    {effectivePrice?.toFixed(2)} {tokenOut?.symbol || 'N/A'} /{' '}
+                    {tokenIn?.symbol || 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-[14px] text-white52')}>
+                    Amount Received
+                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src="/icons/info.svg"
+                        alt="info"
+                        className="w-3.5 h-3.5 cursor-pointer"
+                        width={20}
+                        height={20}
+                        priority // Add priority to load the image faster
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                      {/* <p>{infoDetail || 'Additional information'}</p> */}
+                      <p>
+                        Lorem Ipsum is simply dummy text of the printing and
+                        typesetting industry. Lorem Ipsum has been the
+                        industry's standard dummy text ever since the 1500
+                        &nbsp;{' '}
+                        <a
+                          href="https://www.lipsum.com/"
+                          target="_blank"
+                          className="text-[#aeabab] underline"
+                        >
+                          Learn more
+                        </a>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-1">
+                  <p className="text-[14px]">
+                    {remainingAmountIn} {tokenIn?.symbol}
+                  </p>
+                  <ImageFallback
+                    src={
+                      (tokenIn?.symbol.toLowerCase() === 'usdt'
+                        ? '/tokens/usdt.svg'
+                        : tokenIn?.icon) || '/icons/default-token.svg'
+                    }
+                    alt={tokenIn?.symbol || 'token'}
+                    width={40}
+                    height={40}
+                    className="border-[1.5px] border-black w-[18px] h-[18px] overflow-hidden object-cover rounded-full"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-[14px] text-white52')}>
+                    Settler Payment
+                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src="/icons/info.svg"
+                        alt="info"
+                        className="w-3.5 h-3.5 cursor-pointer"
+                        width={20}
+                        height={20}
+                        priority // Add priority to load the image faster
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                      {/* <p>{infoDetail || 'Additional information'}</p> */}
+                      <p>
+                        Lorem Ipsum is simply dummy text of the printing and
+                        typesetting industry. Lorem Ipsum has been the
+                        industry's standard dummy text ever since the 1500
+                        &nbsp;{' '}
+                        <a
+                          href="https://www.lipsum.com/"
+                          target="_blank"
+                          className="text-[#aeabab] underline"
+                        >
+                          Learn more
+                        </a>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-1">
+                  <p className="text-[14px]">
+                    {tradeInfo?.settlerPayment
+                      ? parseFloat(
+                          ethers.utils.formatUnits(
+                            tradeInfo.settlerPayment,
+                            tokenOut?.decimals
+                          )
+                        ).toFixed(4)
+                      : 0}{' '}
+                    {tokenOut?.symbol}
+                  </p>
+                  <ImageFallback
+                    src={
+                      (tokenOut?.symbol.toLowerCase() === 'usdt'
+                        ? '/tokens/usdt.svg'
+                        : tokenOut?.icon) || '/icons/default-token.svg'
+                    }
+                    alt={tokenOut?.symbol || 'token'}
+                    width={40}
+                    height={40}
+                    className="border-[1.5px] border-black w-[18px] h-[18px] overflow-hidden object-cover rounded-full"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-[14px] text-white52')}>Fee</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src="/icons/info.svg"
+                        alt="info"
+                        className="w-3.5 h-3.5 cursor-pointer"
+                        width={20}
+                        height={20}
+                        priority // Add priority to load the image faster
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                      {/* <p>{infoDetail || 'Additional information'}</p> */}
+                      <p>
+                        Lorem Ipsum is simply dummy text of the printing and
+                        typesetting industry. Lorem Ipsum has been the
+                        industry's standard dummy text ever since the 1500
+                        &nbsp;{' '}
+                        <a
+                          href="https://www.lipsum.com/"
+                          target="_blank"
+                          className="text-[#aeabab] underline"
+                        >
+                          Learn more
+                        </a>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-1">
+                  <p className="text-[14px]">
+                    {tradeInfo?.protocolFee
+                      ? parseFloat(
+                          ethers.utils.formatUnits(
+                            tradeInfo.protocolFee,
+                            tokenOut?.decimals
+                          )
+                        ).toFixed(4)
+                      : '0'}{' '}
+                    {/* {tokenOut.symbol} */}
+                  </p>
+                  <ImageFallback
+                    src={
+                      (tokenOut?.symbol.toLowerCase() === 'usdt'
+                        ? '/tokens/usdt.svg'
+                        : tokenOut?.icon) || '/icons/default-token.svg'
+                    }
+                    alt={tokenOut?.symbol || 'token'}
+                    width={40}
+                    height={40}
+                    className="border-[1.5px] border-black w-[18px] h-[18px] overflow-hidden object-cover rounded-full"
+                  />
+                </div>
+              </div>
+
+              {selectedStream.isInstasettlable &&
+                !(
+                  selectedStream.settlements.length > 0 ||
+                  selectedStream.cancellations.length > 0
+                ) && (
+                  <Button
+                    text="EXECUTE INSTASETTLE"
+                    className="h-[2.25rem]"
+                    disabled={
+                      isLoading ||
+                      selectedStream.settlements.length > 0 ||
+                      !walletAddress
+                    }
+                    loading={isLoading}
+                    onClick={() => handleInstasettleClick(selectedStream)}
+                  />
+                )}
             </div>
-          )} */}
+          )}
+
           {selectedStream.settlements.length > 0 ||
           selectedStream.cancellations.length > 0 ? (
             ''
@@ -783,12 +1158,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             <ConfigTrade
               amountReceived={`$${amountOutUsd.toFixed(2)}`}
               fee="$190.54"
-              isEnabled={
-                selectedStream.isInstasettlable ||
-                selectedStream.user?.toLowerCase() ===
-                  walletAddress?.toLowerCase()
-              }
-              // isEnabled={true}
+              // isEnabled={
+              //   selectedStream.isInstasettlable ||
+              //   selectedStream.user?.toLowerCase() ===
+              //     walletAddress?.toLowerCase()
+              // }
+
+              isEnabled={isUser}
               isUser={isUser}
               isLoading={isLoading || loading}
               selectedStream={selectedStream}

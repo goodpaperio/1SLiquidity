@@ -33,7 +33,25 @@ const AmountTag: React.FC<Props> = ({
   return (
     <div className={cn('flex justify-between items-start', className)}>
       <div className={cn('flex items-center gap-1', firstColumnClassName)}>
-        <p className={cn('text-[14px]', titleClassName)}>{title}</p>
+        <div className="flex items-center gap-1">
+          {showInstaIcon && (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+            >
+              <path
+                d="M13 2L6 14H11V22L18 10H13V2Z"
+                fill="#40f798"
+                fillOpacity="0.72"
+              />
+            </svg>
+          )}
+          <p className={cn('text-[14px]', titleClassName)}>{title}</p>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Image
@@ -68,7 +86,7 @@ const AmountTag: React.FC<Props> = ({
         ) : (
           <>
             <p className={cn('text-[14px]', amountClassName)}>{amount}</p>
-            {showInstaIcon && (
+            {/* {showInstaIcon && (
               <svg
                 width="20"
                 height="20"
@@ -83,7 +101,7 @@ const AmountTag: React.FC<Props> = ({
                   fillOpacity="0.72"
                 />
               </svg>
-            )}
+            )} */}
           </>
         )}
       </div>

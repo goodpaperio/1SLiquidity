@@ -91,7 +91,9 @@ const ConfigTrade: React.FC<Props> = ({
     >
       <div
         className={`w-full flex justify-center gap-1 duration-300 ease-in-out ${
-          isEnabled ? 'text-white cursor-pointer' : 'text-white/50'
+          isEnabled
+            ? 'text-white cursor-pointer'
+            : 'text-white/50 cursor-not-allowed'
         }`}
         onClick={isEnabled ? toggleDetails : undefined}
       >
@@ -106,7 +108,7 @@ const ConfigTrade: React.FC<Props> = ({
             : 'max-h-0'
         }`}
       >
-        {selectedStream.isInstasettlable ? (
+        {/* {selectedStream.isInstasettlable ? (
           <>
             <div
               className={cn(
@@ -164,7 +166,6 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -207,14 +208,13 @@ const ConfigTrade: React.FC<Props> = ({
                         <Image
                           src="/icons/info.svg"
                           alt="info"
-                          className="w-4 h-4 cursor-pointer"
+                          className="w-3.5 h-3.5 cursor-pointer"
                           width={20}
                           height={20}
                           priority // Add priority to load the image faster
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -257,24 +257,7 @@ const ConfigTrade: React.FC<Props> = ({
                   </div>
                 </div>
 
-                {/* <div className="w-full">
-                  <AmountTag
-                    title="Fee"
-                    amount={
-                      tradeInfo?.protocolFee
-                        ? parseFloat(
-                            ethers.utils.formatUnits(
-                              tradeInfo.protocolFee,
-                              tokenOut.decimals
-                            )
-                          ).toFixed(4)
-                        : '0'
-                    }
-                    infoDetail="Estimated"
-                    isLoading={false}
-                    className="w-full"
-                  />
-                </div> */}
+               
 
                 <div className="flex justify-between items-center w-full">
                   <div className="flex items-center gap-1">
@@ -291,7 +274,6 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -318,7 +300,6 @@ const ConfigTrade: React.FC<Props> = ({
                             )
                           ).toFixed(4)
                         : '0'}{' '}
-                      {/* {tokenOut.symbol} */}
                     </p>
                     <ImageFallback
                       src={
@@ -382,7 +363,6 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -430,7 +410,79 @@ const ConfigTrade: React.FC<Props> = ({
               />
             )}
           </>
-        )}
+        )} */}
+
+        <>
+          {!selectedStream.isInstasettlable && (
+            <div className={cn('w-full flex flex-col gap-2 py-4')}>
+              <div className="flex items-start w-full flex-col justify-between gap-1.5">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-1">
+                    <p className={cn('text-[14px]')}>Amount Received</p>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Image
+                          src="/icons/info.svg"
+                          alt="info"
+                          className="w-4 h-4 cursor-pointer"
+                          width={20}
+                          height={20}
+                          priority // Add priority to load the image faster
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                        {/* <p>{infoDetail || 'Additional information'}</p> */}
+                        <p>
+                          Lorem Ipsum is simply dummy text of the printing and
+                          typesetting industry. Lorem Ipsum has been the
+                          industry's standard dummy text ever since the 1500
+                          &nbsp;{' '}
+                          <a
+                            href="https://www.lipsum.com/"
+                            target="_blank"
+                            className="text-[#aeabab] underline"
+                          >
+                            Learn more
+                          </a>
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[14px]">
+                      {remainingAmountIn} {tokenIn.symbol}
+                    </p>
+                    <ImageFallback
+                      src={
+                        (tokenIn?.symbol.toLowerCase() === 'usdt'
+                          ? '/tokens/usdt.svg'
+                          : tokenIn?.icon) || '/icons/default-token.svg'
+                      }
+                      alt={tokenIn?.symbol || 'token'}
+                      width={40}
+                      height={40}
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isUser && (
+            <Button
+              text="CANCEL TRADE"
+              theme="destructive"
+              className={cn(
+                'h-[2.25rem]',
+                selectedStream.isInstasettlable && 'mt-3'
+              )}
+              disabled={isLoading || !isCancellable || !walletAddress}
+              loading={isLoading}
+              onClick={() => handleCancelClick(selectedStream)}
+            />
+          )}
+        </>
       </div>
     </div>
   )
