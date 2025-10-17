@@ -1001,6 +1001,8 @@ async function transformToColumnFormat(
           reservesAUniswapV3_10000: null,
           reservesBUniswapV3_10000: null,
           pairAddress: null,
+          priceAccuracyDECA: null,
+          priceAccuracyNODECA: null,
         })
       }
 
@@ -1274,7 +1276,8 @@ async function transformToColumnFormat(
     // record.highestLiquidityBDex = highestLiquidityBDex
     record.slippageSavings = slippageSavings
     record.percentageSavings = percentageSavings
-
+    record.priceAccuracyDECA = priceAccuracyDECA
+    record.priceAccuracyNODECA = priceAccuracyNODECA
     transformedRecords.push(record)
   }
 
