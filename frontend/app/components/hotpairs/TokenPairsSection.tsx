@@ -101,16 +101,16 @@ export default function TokenPairsSection({
   const { enhanceTokenPair, isLoadingTokenList, coinGeckoTokens } =
     useTokenEnhancer()
 
-  // Get filtered tokens based on selected base token
-  const getFilteredOtherTokens = () => {
+  // Get filtered base tokens based on selected other token
+  const getFilteredBaseTokens = () => {
     let jsonTokenAddresses: string[] = []
 
-    if (selectedBaseToken) {
-      // If a base token is selected, show only its result tokens
-      const baseTokenResults = getTokensForBaseToken(
-        selectedBaseToken.symbol.toUpperCase()
+    if (selectedOtherToken) {
+      // If an other token is selected, show only its result tokens
+      const otherTokenResults = getTokensForBaseToken(
+        selectedOtherToken.symbol.toUpperCase()
       )
-      jsonTokenAddresses = baseTokenResults.map((token) =>
+      jsonTokenAddresses = otherTokenResults.map((token) =>
         token.tokenAddress.toLowerCase()
       )
     } else {
@@ -171,12 +171,12 @@ export default function TokenPairsSection({
     }
   }
 
-  const filteredOtherTokens = getFilteredOtherTokens()
+  const filteredBaseTokens = getFilteredBaseTokens()
 
   return (
     <div className="flex flex-col items-center w-full justify-center gap-8">
       <div className="flex flex-col md:flex-row items-center w-full justify-center gap-8 max-w-[45rem]">
-        {/* Left Section -> Base Tokens: 2x2 Grid */}
+        {/* Left Section -> Other Tokens: 2x2 Grid */}
         <div className="flex flex-wrap justify-center md:grid md:grid-cols-2 gap-4 md:min-w-[9rem]">
           {tokensList
             .filter((token) =>
@@ -186,7 +186,7 @@ export default function TokenPairsSection({
               <TokenIcon
                 key={token.id}
                 token={token}
-                isBaseToken={true}
+                isBaseToken={false}
                 selectedBaseToken={selectedBaseToken}
                 selectedOtherToken={selectedOtherToken}
                 setSelectedBaseToken={setSelectedBaseToken}
@@ -200,19 +200,20 @@ export default function TokenPairsSection({
         {/* Vertical Divider */}
         <div className="w-[60%] h-[1px] md:w-[1px] md:h-28 bg-green-500 rounded-full"></div>
 
-        {/* Right Section -> Other Tokens: 4x2 Grid */}
-        {filteredOtherTokens.length > 0 ? (
+        {/* Right Section -> Base Tokens: 4x2 Grid */}
+        {filteredBaseTokens.length > 0 ? (
           <div className="grid grid-rows-2 grid-flow-col gap-4 overflow-x-auto py-2 px-2 auto-cols-max max-w-[90%] md:min-w-[30rem]">
-            {filteredOtherTokens.map((token) => (
+            {filteredBaseTokens.map((token) => (
               <TokenIcon
                 key={token.id}
                 token={token}
-                isBaseToken={false}
+                isBaseToken={true}
                 selectedBaseToken={selectedBaseToken}
                 selectedOtherToken={selectedOtherToken}
+                setSelectedBaseToken={setSelectedBaseToken}
                 setSelectedOtherToken={setSelectedOtherToken}
                 refetchSpecificPair={refetchSpecificPair}
-                disabled={!selectedBaseToken} // Disable if no base token selected
+                disabled={!selectedOtherToken} // Disable if no other token selected
                 clearBaseAndOtherTokens={clearBaseAndOtherTokens}
               />
             ))}
@@ -317,15 +318,8 @@ function TokenIcon({
               token.symbol.toUpperCase()
           ) {
             // Unselect base token if clicked again
-            clearBaseAndOtherTokens()
-            // setSelectedBaseToken(null)
+            setSelectedBaseToken(null)
           } else {
-            if (selectedBaseToken && selectedOtherToken) {
-              setSelectedOtherToken(null)
-              setSelectedBaseToken(token)
-              return
-            }
-
             setSelectedBaseToken(token)
             if (selectedOtherToken) {
               refetchSpecificPair(
@@ -341,8 +335,15 @@ function TokenIcon({
               token.symbol.toUpperCase()
           ) {
             // Unselect other token if clicked again
-            setSelectedOtherToken(null)
+            clearBaseAndOtherTokens()
+            // setSelectedOtherToken(null)
           } else {
+            if (selectedBaseToken && selectedOtherToken) {
+              setSelectedBaseToken(null)
+              setSelectedOtherToken(token)
+              return
+            }
+
             setSelectedOtherToken(token)
             if (selectedBaseToken) {
               refetchSpecificPair(
