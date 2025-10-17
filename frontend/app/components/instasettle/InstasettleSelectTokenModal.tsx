@@ -80,6 +80,7 @@ const InstasettleSelectTokenModal: React.FC<
     availableTokenAddresses,
     isLoading: isLoadingTrades,
     error: tradesError,
+    trades,
   } = useInstasettleTrades()
 
   // Get wallet tokens for the current chain
@@ -97,10 +98,39 @@ const InstasettleSelectTokenModal: React.FC<
     setTimeout(() => setCopiedAddress(null), 1000)
   }
 
-  // Filter tokens to only show those available in instasettle trades
+  // Get token addresses for from and to sections based on trades
+  const getTokenAddressesForSection = () => {
+    const tokenInAddresses = new Set<string>()
+    const tokenOutAddresses = new Set<string>()
+
+    trades.forEach((trade) => {
+      if (
+        trade.isInstasettlable &&
+        trade.settlements.length === 0 &&
+        trade.cancellations.length === 0
+      ) {
+        tokenInAddresses.add(trade.tokenIn.toLowerCase())
+        tokenOutAddresses.add(trade.tokenOut.toLowerCase())
+      }
+    })
+
+    return {
+      tokenInAddresses: Array.from(tokenInAddresses),
+      tokenOutAddresses: Array.from(tokenOutAddresses),
+    }
+  }
+
+  // Filter tokens to only show those available in instasettle trades for the current section
   const getFilteredTokens = () => {
+    const { tokenInAddresses, tokenOutAddresses } =
+      getTokenAddressesForSection()
+
+    // Filter tokens based on current input field
+    const allowedAddresses =
+      currentInputField === 'from' ? tokenInAddresses : tokenOutAddresses
+
     let filteredTokens = availableTokens.filter((token) =>
-      availableTokenAddresses.includes(token.token_address.toLowerCase())
+      allowedAddresses.includes(token.token_address.toLowerCase())
     )
 
     // Remove duplicate tokens (keep the one with higher balance)
@@ -432,12 +462,15 @@ const InstasettleSelectTokenModal: React.FC<
             <div className="h-[55vh] overflow-y-auto scrollbar-hide pb-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <p className="text-[20px] text-white">Available Tokens</p>
+                  <p className="text-[20px] text-white">
+                    {currentInputField === 'from' ? 'From Tokens' : 'To Tokens'}
+                  </p>
                   <span className="text-sm text-gray">
-                    ({getFilteredTokens().length} tokens)
+                    ({getFilteredTokens().length} token
+                    {getFilteredTokens().length > 1 ? 's' : ''})
                   </span>
                 </div>
-                {address && (
+                {/* {address && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       className="flex items-center gap-2 px-3 py-1 text-sm rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-colors"
@@ -477,7 +510,7 @@ const InstasettleSelectTokenModal: React.FC<
                       </div>
                     )}
                   </div>
-                )}
+                )} */}
               </div>
 
               <div className="flex flex-col gap-1 my-[13px]">
@@ -492,7 +525,8 @@ const InstasettleSelectTokenModal: React.FC<
                   </>
                 ) : getFilteredTokens().length === 0 ? (
                   <div className="text-center p-4 text-white">
-                    No available tokens found on {chainName}
+                    No {currentInputField === 'from' ? 'from' : 'to'} tokens
+                    found on {chainName}
                   </div>
                 ) : (
                   getFilteredTokens().map((token: TOKENS_TYPE, ind: number) => {
