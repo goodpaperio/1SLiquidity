@@ -10,6 +10,7 @@ import {
   formatAccuracy,
 } from '@/app/lib/utils/priceAccuracy'
 import { useMemo } from 'react'
+import { InfoIcon } from '@/app/lib/icons'
 
 export default function PairCard({
   pair,
@@ -134,9 +135,7 @@ export default function PairCard({
                     Price Accuracy
                   </p>
                   <div className="relative group/tooltip" role="tooltip">
-                    <div className="w-3 h-3 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center cursor-help">
-                      <span className="text-[8px] text-zinc-400">i</span>
-                    </div>
+                    <InfoIcon className="h-3 w-3 cursor-help" />
                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/tooltip:block w-48 p-2 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-300 z-50">
                       Compares indicative price to best executable on-chain
                       price across all DEX pools
