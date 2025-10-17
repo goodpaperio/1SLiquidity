@@ -198,8 +198,6 @@ export default function HotPairBox() {
     if (fromToken && toToken) {
       setSelectedTokenFrom(fromToken)
       setSelectedTokenTo(toToken)
-
-      setIsOpen(false)
     }
   }
 
@@ -275,7 +273,7 @@ export default function HotPairBox() {
                   </TooltipProvider> */}
                 </div>
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 max-h-[420px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {isLoading
                     ? Array(3)
                         .fill(0)
@@ -285,7 +283,7 @@ export default function HotPairBox() {
                           </div>
                         ))
                     : sortedPairs
-                        ?.slice(0, 3)
+                        ?.slice(0, 20)
                         .map((pair: any, index: number) => (
                           <div
                             key={index}

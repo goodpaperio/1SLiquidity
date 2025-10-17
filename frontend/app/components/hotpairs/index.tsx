@@ -73,13 +73,11 @@ const HotPairs = () => {
 
   const handleActiveHotPair = (pair: any) => {
     if (!pair) return
-
     setActiveHotPair(pair)
     setVolumeAmount(pair?.reserveAtotaldepth)
     // setVolumeAmount(pair?.reserveAtotaldepthWei)
     setWinAmount(pair?.percentageSavings || 0)
-    // setSlippageSavingsUsd(pair?.slippageSavingsUsd)
-    setSlippageSavingsUsd(pair.slippageSavings * (pair.tokenBUsdPrice || 1))
+    setSlippageSavingsUsd(pair?.slippageSavingsUsd)
 
     setVolumeActive(true)
     setWinActive(true)
@@ -143,17 +141,17 @@ const HotPairs = () => {
       activeHotPair?.tokenADecimals
     )
 
-    // console.log('tradeVolumeBN ===>', tradeVolumeBN)
-    // console.log(
-    //   'reserveAtotaldepthWei ===>',
-    //   activeHotPair?.reserveAtotaldepthWei
-    // )
-    // console.log(
-    //   'reserveBtotaldepthWei ===>',
-    //   activeHotPair?.reserveBtotaldepthWei
-    // )
-    // console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
-    // console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
+    console.log('tradeVolumeBN ===>', tradeVolumeBN)
+    console.log(
+      'reserveAtotaldepthWei ===>',
+      activeHotPair?.reserveAtotaldepthWei
+    )
+    console.log(
+      'reserveBtotaldepthWei ===>',
+      activeHotPair?.reserveBtotaldepthWei
+    )
+    console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
+    console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
 
     const sweetSpot = calculateSweetSpot(
       tradeVolumeBN,
@@ -183,9 +181,9 @@ const HotPairs = () => {
       activeHotPair?.tokenBAddress,
       sweetSpot
     )
+    console.log('savings ===>', savings)
 
     const savingsInUSD = savings * (activeHotPair?.tokenBUsdPrice || 1)
-    // setWinAmount(savingsInUSD || 0)
     setWinAmount(Number(percentageSavings.toFixed(2)) || 0)
     setSlippageSavingsUsd(savingsInUSD)
     setWinLoading(false)
