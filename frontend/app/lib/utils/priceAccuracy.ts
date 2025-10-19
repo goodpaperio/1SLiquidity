@@ -1,14 +1,6 @@
 interface PriceAccuracyResult {
   aToB: number // A→B accuracy percentage (with DECA)
   bToA: number // B→A accuracy percentage (without DECA)
-  details: {
-    aToBIndicative: number
-    aToBBest: number
-    bToAIndicative: number
-    bToABest: number
-    testSizeA: number
-    testSizeB: number
-  }
 }
 
 /**
@@ -38,14 +30,6 @@ export function calculatePriceAccuracy(pair: any): PriceAccuracyResult | null {
     return {
       aToB: clampedAToB,
       bToA: clampedBToA,
-      details: {
-        aToBIndicative: pair.priceAccuracyDECA,
-        aToBBest: 1.0,
-        bToAIndicative: pair.priceAccuracyNODECA,
-        bToABest: 1.0,
-        testSizeA: 0,
-        testSizeB: 0,
-      },
     }
   } catch (error) {
     console.error('Error calculating price accuracy:', error)
