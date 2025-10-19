@@ -1,6 +1,6 @@
 interface PriceAccuracyResult {
-  aToB: number // A→B accuracy percentage
-  bToA: number // B→A accuracy percentage
+  aToB: number // A→B accuracy percentage (with DECA)
+  bToA: number // B→A accuracy percentage (without DECA)
   details: {
     aToBIndicative: number
     aToBBest: number
@@ -11,24 +11,38 @@ interface PriceAccuracyResult {
   }
 }
 
+/**
+ * Calculate price accuracy from API data
+ * The API provides priceAccuracyDECA and priceAccuracyNODECA as ratios
+ * We convert these to accuracy percentages:
+ * - A ratio close to 1.0 means high accuracy
+ * - We calculate: 100 - abs((ratio - 1.0) * 100)
+ */
 export function calculatePriceAccuracy(pair: any): PriceAccuracyResult | null {
   try {
-    // Return mock values for now
-    // Generate semi-random but consistent values based on pair address
-    const hash = pair.tokenAAddress
-      ? parseInt(pair.tokenAAddress.slice(2, 10), 16)
-      : 0
-    const aToBBase = 85 + (hash % 15) // 85-99%
-    const bToABase = 70 + (hash % 25) // 70-94%
+    // Check if the API data is available
+    if (
+      typeof pair.priceAccuracyDECA !== 'number' ||
+      typeof pair.priceAccuracyNODECA !== 'number'
+    ) {
+      return null
+    }
+
+    const aToBAccuracy = 100 - Math.abs((pair.priceAccuracyDECA - 1.0) * 100)
+    const bToAAccuracy = 100 - Math.abs((pair.priceAccuracyNODECA - 1.0) * 100)
+
+    // Ensure values are within reasonable bounds (0-100)
+    const clampedAToB = Math.max(0, Math.min(100, aToBAccuracy))
+    const clampedBToA = Math.max(0, Math.min(100, bToAAccuracy))
 
     return {
-      aToB: aToBBase,
-      bToA: bToABase,
+      aToB: clampedAToB,
+      bToA: clampedBToA,
       details: {
-        aToBIndicative: 0,
-        aToBBest: 0,
-        bToAIndicative: 0,
-        bToABest: 0,
+        aToBIndicative: pair.priceAccuracyDECA,
+        aToBBest: 1.0,
+        bToAIndicative: pair.priceAccuracyNODECA,
+        bToABest: 1.0,
         testSizeA: 0,
         testSizeB: 0,
       },
