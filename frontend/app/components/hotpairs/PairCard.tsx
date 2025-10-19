@@ -142,13 +142,13 @@ export default function PairCard({
                           <span className="text-[#40f798] font-semibold">
                             Green
                           </span>
-                          : With DECA routing
+                          : With DECASTREAM
                         </div>
                         <div>
                           <span className="text-[#ff6b6b] font-semibold">
                             Red
                           </span>
-                          : Without DECA routing
+                          : Without DECASTREAM
                         </div>
                         <div className="text-zinc-400 mt-1 pt-1 border-t border-zinc-700">
                           Lorem ipsum, dolor sit amet consectetur
