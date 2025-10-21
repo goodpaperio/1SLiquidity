@@ -20,7 +20,7 @@ contract BalancerV2Fetcher is IUniversalDexInterface {
     }
 
     function getDexType() external pure returns (string memory) { 
-        return "Balancer"; 
+        return "BalancerV2"; 
     }
     
     function getDexVersion() external pure returns (string memory) { 

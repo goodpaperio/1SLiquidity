@@ -37,6 +37,7 @@ contract SingleDexProtocol is Test {
     address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address constant BAL = 0xba100000625a3754423978a60c9317c58a424e3D;
 
     // Real whale addresses
     address constant WETH_WHALE = 0x2F0b23f53734252Bda2277357e97e1517d6B042A;
@@ -97,9 +98,15 @@ contract SingleDexProtocol is Test {
                 if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("Curve"))) {
                     dexType = "CurveMeta";
                     console.log("SingleDexProtocol: Identified as CurveMeta");
+                } else if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("CurveMeta"))) {
+                    dexType = "CurveMeta";
+                    console.log("SingleDexProtocol: Identified as CurveMeta");
                 } else if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("Balancer"))) {
                     dexType = "Balancer";
                     console.log("SingleDexProtocol: Identified as Balancer (fetcher)");
+                } else if (keccak256(abi.encodePacked(routerDexType)) == keccak256(abi.encodePacked("BalancerV2"))) {
+                    dexType = "BalancerV2";
+                    console.log("SingleDexProtocol: Identified as BalancerV2 (fetcher)");
                 } else {
                     console.log("SingleDexProtocol: ERROR - Unsupported DEX router", dexRouter);
                     revert("Unsupported DEX router");
