@@ -13,6 +13,8 @@ export interface TokenPair {
   tokenAName: string
   tokenBAddress: string
   tokenBSymbol: string
+  tokenADecimals: number
+  tokenBDecimals: number
   reserveAtotaldepth: number
   reserveBtotaldepth: number
   reserveAtotaldepthWei: string
@@ -20,6 +22,10 @@ export interface TokenPair {
   marketCap: string | null
   timestamp: string
   slippageSavings: number
+  percentageSavings: number
+  highestLiquidityADex: string
+  priceAccuracyDECA: number
+  priceAccuracyNODECA: number
 }
 
 // Enhanced token pair with CoinGecko data
