@@ -106,22 +106,22 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-        'reservesAUniswapV2',
-        'reservesASushiswap',
-        'reservesACurve',
-        'reservesABalancer',
-        'reservesAUniswapV3_500',
-        'reservesAUniswapV3_3000',
-        'reservesAUniswapV3_10000',
+      'reservesAUniswapV2',
+      'reservesASushiswap',
+      'reservesACurve',
+      'reservesABalancer',
+      'reservesAUniswapV3_500',
+      'reservesAUniswapV3_3000',
+      'reservesAUniswapV3_10000',
       ]
     : [
-        'reservesBUniswapV2',
-        'reservesBSushiswap',
-        'reservesBCurve',
-        'reservesBBalancer',
-        'reservesBUniswapV3_500',
-        'reservesBUniswapV3_3000',
-        'reservesBUniswapV3_10000',
+      'reservesBUniswapV2',
+      'reservesBSushiswap',
+      'reservesBCurve',
+      'reservesBBalancer',
+      'reservesBUniswapV3_500',
+      'reservesBUniswapV3_3000',
+      'reservesBUniswapV3_10000',
       ]
 
   let totalWei = BigInt(0)
@@ -288,7 +288,7 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
   const jsonData: JsonFileStructure = JSON.parse(fileContent)
 
   const tokenPairs: TokenPair[] = []
-  const seenPairs = new Set<string>(); // Track unique pairs to avoid duplicates
+  const seenPairs = new Set<string>() // Track unique pairs to avoid duplicates
 
   // Process each base token's results
   for (const testResult of jsonData.testResults) {
@@ -334,16 +334,16 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
 
       // OLD LOGIC (commented out): baseToken -> resultToken (e.g., USDT -> LINK)
       // tokenPairs.push({
-      //   baseTokenSymbol: baseTokenSymbol, // e.g., 'USDT'
+      //   baseTokenSymbol: baseTokenSymbol, // e.g., "USDT"
       //   baseTokenAddress: baseTokenAddress, // e.g., USDT address
-      //   tokenSymbol: token.tokenName.toUpperCase(), // e.g., 'LINK'
+      //   tokenSymbol: token.tokenName.toUpperCase(), // e.g., "LINK"
       //   tokenAddress: token.tokenAddress.toLowerCase(), // e.g., LINK address
       //   tokenName: token.tokenName,
       // })
 
       // NEW LOGIC: resultToken -> baseToken (e.g., LINK -> USDT)
       tokenPairs.push({
-        baseTokenSymbol: token.tokenName.toUpperCase(), // e.g., 'LINK' (now the base)
+        baseTokenSymbol: token.tokenName.toUpperCase(), // e.g., "LINK" (now the base)
         baseTokenAddress: token.tokenAddress.toLowerCase(), // e.g., LINK address (now the base)
         tokenSymbol: baseTokenSymbol, // e.g., 'USDT' (now the result token)
         tokenAddress: baseTokenAddress, // e.g., USDT address (now the result token)
@@ -470,7 +470,7 @@ async function fetchTopTokensByMarketCap(
   )
 
   const tokens: TokenInfo[] = []
-  const targetPlatform = 'ethereum'; // Focus on Ethereum only
+  const targetPlatform = 'ethereum' // Focus on Ethereum only
 
   try {
     // Fetch tokens by market cap from CoinGecko API
@@ -927,8 +927,8 @@ async function transformToColumnFormat(
 
       // NEW LOGIC: Filter out stable coin pairs (USDC, USDT, WBTC, WETH)
       // Now tokenA = resultToken (LINK, WBTC, etc.), tokenB = baseToken (USDC, USDT, etc.)
-      const tokenAAddress = pair.baseToken.toLowerCase(); // resultToken (LINK, WBTC, etc.)
-      const tokenBAddress = pair.tokenAddress.toLowerCase(); // baseToken (USDC, USDT, etc.)
+      const tokenAAddress = pair.baseToken.toLowerCase() // resultToken (LINK, WBTC, etc.)
+      const tokenBAddress = pair.tokenAddress.toLowerCase() // baseToken (USDC, USDT, etc.)
 
       // Debug logging
       console.log(`Checking pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`)
@@ -963,7 +963,7 @@ async function transformToColumnFormat(
         console.log(
           `🚫 Filtering out stable coin pair: ${pair.baseTokenSymbol}/${pair.tokenSymbol}`
         )
-        return; // Skip this pair
+        return // Skip this pair
       }
 
       if (!tokenPairMap.has(pairKey)) {
@@ -1186,9 +1186,9 @@ async function transformToColumnFormat(
     )
 
     const highestLiquidityADex = bestDex.dex
-    const highestLiquidityAReserve = bestDex.reserveA; // Individual DEX reserve A
-    const highestLiquidityBReserve = bestDex.reserveB; // Individual DEX reserve B
-    const bestDexPairAddress = bestDex.pairAddress; // Pool address for Curve, Pool ID for Balancer
+    const highestLiquidityAReserve = bestDex.reserveA // Individual DEX reserve A
+    const highestLiquidityBReserve = bestDex.reserveB // Individual DEX reserve B
+    const bestDexPairAddress = bestDex.pairAddress // Pool address for Curve, Pool ID for Balancer
 
     console.log('<=======>')
     console.log('record.tokenASymbol =====>', record.tokenASymbol)
@@ -1218,24 +1218,24 @@ async function transformToColumnFormat(
     //   ? parseInt(highestLiquidityADex.split('-')[2])
     //   : 3000
 
-    let feeTier = 3000; // Default fee tier
+    let feeTier = 3000 // Default fee tier
     if (highestLiquidityADex.startsWith('uniswap-v3')) {
       feeTier = parseInt(highestLiquidityADex.split('-')[2])
     } else if (
       highestLiquidityADex.startsWith('balancer-') ||
       highestLiquidityADex === 'balancer'
     ) {
-      feeTier = 0; // Balancer pools don't use fee tiers like Uniswap V3
+      feeTier = 0 // Balancer pools don't use fee tiers like Uniswap V3
     } else if (
       highestLiquidityADex.startsWith('curve-') ||
       highestLiquidityADex === 'curve'
     ) {
-      feeTier = 0; // Curve pools don't use fee tiers
+      feeTier = 0 // Curve pools don't use fee tiers
     } else if (
       highestLiquidityADex === 'uniswap-v2' ||
       highestLiquidityADex === 'sushiswap'
     ) {
-      feeTier = 3000; // Use 0.3% fee for V2-style AMMs
+      feeTier = 3000 // Use 0.3% fee for V2-style AMMs
     }
 
     console.log('feeTier =====>', feeTier)
@@ -1549,7 +1549,7 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
       console.log(`Already processed ${processedAddresses.size} tokens`)
     }
 
-    const limit = 250; // 250
+    const limit = 250 // 250
 
     // Fetch top tokens
     const topTokens = await fetchTopTokensByMarketCap(limit)
@@ -1869,18 +1869,18 @@ export async function analyzeTokenPairLiquidityComprehensive(
     )
 
     // Calculate fee tier based on DEX type
-    let feeTier = 3000; // Default fee tier
+    let feeTier = 3000 // Default fee tier
     if (bestDex.name.startsWith('uniswap-v3')) {
       feeTier = parseInt(bestDex.name.split('-')[2])
     } else if (
       bestDex.name.startsWith('balancer-') ||
       bestDex.name === 'balancer'
     ) {
-      feeTier = 0; // Balancer pools don't use fee tiers like Uniswap V3
+      feeTier = 0 // Balancer pools don't use fee tiers like Uniswap V3
     } else if (bestDex.name.startsWith('curve-') || bestDex.name === 'curve') {
-      feeTier = 0; // Curve pools don't use fee tiers
+      feeTier = 0 // Curve pools don't use fee tiers
     } else if (bestDex.name === 'uniswap-v2' || bestDex.name === 'sushiswap') {
-      feeTier = 3000; // Use 0.3% fee for V2-style AMMs
+      feeTier = 3000 // Use 0.3% fee for V2-style AMMs
     }
 
     // OLD LOGIC (commented out): Sweet spot should pass in reserve A and reserve B of dex with highest liquidity instead of total reserves

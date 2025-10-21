@@ -42,7 +42,9 @@ const HotPairs = () => {
   // Update win amount and slippage savings when calculation completes (only from user volume change)
   useEffect(() => {
     if (volumeCalculation.result) {
-      setWinAmount(Number(volumeCalculation.result.percentageSavings.toFixed(2)) || 0)
+      setWinAmount(
+        Number(volumeCalculation.result.percentageSavings.toFixed(2)) || 0
+      )
       setSlippageSavingsUsd(volumeCalculation.result.slippageSavingsUsd || 0)
     }
   }, [volumeCalculation.result])
@@ -137,8 +139,7 @@ const HotPairs = () => {
 
     setVolumeAmount(amount)
     setVolumeLoading(false)
-    
-    // Call the debounced calculation from the hook
+
     volumeCalculation.calculate(amount)
   }
 
