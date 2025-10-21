@@ -1197,12 +1197,10 @@ async function transformToColumnFormat(
 
     // Calculate sweet spot
 
-    const sweetSpot = calculateSweetSpot(
-      BigInt(record.reserveAtotaldepthWei), // Total reserves A
-      BigInt(highestLiquidityAReserve), // BEST DEX reserves A
-      BigInt(highestLiquidityBReserve), // BEST DEX reserves B
-      record.tokenADecimals, // TokenA decimals
-      record.tokenBDecimals // TokenB decimals
+    const sweetSpot = calculateSweetSpotV2(
+      BigInt(record.reserveAtotaldepthWei), // Total reserves A (trade volume)
+      BigInt(highestLiquidityAReserve), // BEST DEX reserves A (reserveIn)
+      BigInt(highestLiquidityBReserve) // BEST DEX reserves B (reserveOut)
     )
 
     console.log('sweetSpot =====>', sweetSpot)
@@ -1290,72 +1288,172 @@ async function transformToColumnFormat(
   return transformedRecords
 }
 
-function calculateSweetSpot(
-  tradeVolume: bigint,
-  reserveA: bigint,
-  reserveB: bigint,
-  decimalsA: number,
-  decimalsB: number
+function calculateSlippageV4(
+  volumeIn: bigint,
+  reserveIn: bigint,
+  reserveOut: bigint
 ): number {
-  // Sweet spot formula: N = sqrt(alpha * V^2)
-  // where:
-  // N = number of streams
-  // V = trade volume
-  // alpha = reserveA/reserveB^2 (or reserveB/reserveA^2 depending on the magnitude of the reserves)
-
-  console.log('==========Calculating Sweet Spot==========')
-
-  // Convert all values to ETH format (not wei)
-  const scaledReserveA = Number(reserveA) / 10 ** decimalsA
-  const scaledReserveB = Number(reserveB) / 10 ** decimalsB
-  const scaledVolume = Number(tradeVolume) / 10 ** decimalsA
-
-  console.log('scaledReserveA', scaledReserveA)
-  console.log('scaledReserveB', scaledReserveB)
-  console.log('tradeVolume', scaledVolume)
-
-  // Calculate alpha based on which reserve is larger
-  const alpha =
-    scaledReserveA > scaledReserveB
-      ? scaledReserveA / (scaledReserveB * scaledReserveB)
-      : scaledReserveB / (scaledReserveA * scaledReserveA)
-  console.log('alpha', alpha)
-
-  // Calculate V^2 using ETH format values
-  const volumeSquared = scaledVolume * scaledVolume
-  console.log('volumeSquared', volumeSquared)
-
-  let streamCount = 0
-
-  // Check if reserve ratio is less than 0.001
-  const reserveRatio = (scaledReserveB / scaledReserveA) * 100
-  console.log('reserveRatio', reserveRatio)
-
-  // TODO: review reserve ratio selection logic later
-
-  if (reserveRatio < 0.001) {
-    // Calculate N = sqrt(alpha * V^2)
-    streamCount = Math.sqrt(alpha * volumeSquared)
-    console.log('Reserve ratio less than 0.001, streamCount = ', streamCount)
-  } else {
-    // Calculate N = sqrt(V^2 / Rin)
-    streamCount = Math.sqrt(volumeSquared / scaledReserveA)
-    console.log('Reserve ratio greater than 0.001, streamCount = ', streamCount)
+  if (volumeIn === 0n || reserveIn === 0n || reserveOut === 0n) {
+    return 0;
   }
 
-  // If pool depth < 0.2%, set streamCount to 4
-  let poolDepth = scaledVolume / scaledReserveA
-  console.log('poolDepth%', poolDepth)
-  if (poolDepth < 0.2) {
-    console.log('Pool depth less than 0.2%, streamCount = 4')
-    streamCount = 4
+  // k = reserveIn * reserveOut
+  const k = reserveIn * reserveOut;
+  const denominator = reserveIn + volumeIn;
+  if (denominator === 0n) {
+    return 0;
   }
 
-  console.log('streamCount', streamCount)
+  // volumeOut = reserveOut - (k / (reserveIn + volumeIn))
+  const volumeOut = reserveOut - (k / denominator);
 
-  // Round to nearest integer and ensure minimum value of 4
-  return Math.max(4, Math.round(streamCount))
+  // priceRatio = (volumeOut * reserveIn * 10000) / (volumeIn * reserveOut)
+  // clamp negative slippage (better price) to 0
+  const numerator = volumeOut * reserveIn * 10000n;
+  const denom = volumeIn * reserveOut;
+  if (denom === 0n) {
+    return 0;
+  }
+  const priceRatio = Number(numerator / denom); // integer division, basis points
+  if (priceRatio > 10000) {
+    return 0;
+  }
+  return 10000 - priceRatio;
 }
+
+export function calculateSweetSpotV2(
+  tradeVolume: bigint,
+  reserveIn: bigint,
+  reserveOut: bigint
+): number {
+  // Mirror StreamDaemon _sweetSpotAlgo v4
+  if (reserveIn === 0n || reserveOut === 0n) {
+    return 4;
+  }
+
+  let sweetSpot = 1;
+  let effectiveVolume = tradeVolume / BigInt(sweetSpot);
+  let slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+
+  // Alpha testing behavior: minimum sweet spot of 4 if already within 10 bps
+  if (slippage <= 10) {
+    return 4;
+  }
+
+  let lastSweetSpot = sweetSpot;
+  let lastSlippage = slippage;
+
+  // Iteratively double sweet spot until slippage <= 10 bps or cap
+  while (slippage > 10 && sweetSpot < 1000) {
+    lastSweetSpot = sweetSpot;
+    lastSlippage = slippage;
+
+    sweetSpot = sweetSpot * 2;
+    effectiveVolume = tradeVolume / BigInt(sweetSpot);
+    if (effectiveVolume === 0n) {
+      break;
+    }
+    slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+  }
+
+  // Binary refinement if threshold crossed
+  if (lastSlippage > 10 && slippage <= 10) {
+    let low = lastSweetSpot;
+    let high = sweetSpot;
+
+    for (let i = 0; i < 5; i++) {
+      const mid = Math.floor((low + high) / 2);
+      const midVolume = tradeVolume / BigInt(mid);
+      if (midVolume === 0n) {
+        break;
+      }
+      const midSlippage = calculateSlippageV4(midVolume, reserveIn, reserveOut);
+      if (midSlippage <= 10) {
+        high = mid;
+        sweetSpot = mid;
+      } else {
+        low = mid;
+      }
+    }
+  }
+
+  // Alpha testing constraints: clamp between 4 and 500
+  if (sweetSpot <= 4) {
+    sweetSpot = 4;
+  }
+  if (sweetSpot > 500) {
+    sweetSpot = 500;
+  }
+  return sweetSpot;
+}
+
+// OLD SWEETSPOT ALGORITHM
+// function calculateSweetSpot(
+//   tradeVolume: bigint,
+//   reserveA: bigint,
+//   reserveB: bigint,
+//   decimalsA: number,
+//   decimalsB: number
+// ): number {
+//   // Sweet spot formula: N = sqrt(alpha * V^2)
+//   // where:
+//   // N = number of streams
+//   // V = trade volume
+//   // alpha = reserveA/reserveB^2 (or reserveB/reserveA^2 depending on the magnitude of the reserves)
+
+//   console.log('==========Calculating Sweet Spot==========')
+
+//   // Convert all values to ETH format (not wei)
+//   const scaledReserveA = Number(reserveA) / 10 ** decimalsA
+//   const scaledReserveB = Number(reserveB) / 10 ** decimalsB
+//   const scaledVolume = Number(tradeVolume) / 10 ** decimalsA
+
+//   console.log('scaledReserveA', scaledReserveA)
+//   console.log('scaledReserveB', scaledReserveB)
+//   console.log('tradeVolume', scaledVolume)
+
+//   // Calculate alpha based on which reserve is larger
+//   const alpha =
+//     scaledReserveA > scaledReserveB
+//       ? scaledReserveA / (scaledReserveB * scaledReserveB)
+//       : scaledReserveB / (scaledReserveA * scaledReserveA)
+//   console.log('alpha', alpha)
+
+//   // Calculate V^2 using ETH format values
+//   const volumeSquared = scaledVolume * scaledVolume
+//   console.log('volumeSquared', volumeSquared)
+
+//   let streamCount = 0
+
+//   // Check if reserve ratio is less than 0.001
+//   const reserveRatio = (scaledReserveB / scaledReserveA) * 100
+//   console.log('reserveRatio', reserveRatio)
+
+//   // TODO: review reserve ratio selection logic later
+
+//   if (reserveRatio < 0.001) {
+//     // Calculate N = sqrt(alpha * V^2)
+//     streamCount = Math.sqrt(alpha * volumeSquared)
+//     console.log('Reserve ratio less than 0.001, streamCount = ', streamCount)
+//   } else {
+//     // Calculate N = sqrt(V^2 / Rin)
+//     streamCount = Math.sqrt(volumeSquared / scaledReserveA)
+//     console.log('Reserve ratio greater than 0.001, streamCount = ', streamCount)
+//   }
+
+//   // If pool depth < 0.2%, set streamCount to 4
+//   let poolDepth = scaledVolume / scaledReserveA
+//   console.log('poolDepth%', poolDepth)
+//   if (poolDepth < 0.2) {
+//     console.log('Pool depth less than 0.2%, streamCount = 4')
+//     streamCount = 4
+//   }
+
+//   console.log('streamCount', streamCount)
+
+//   // Round to nearest integer and ensure minimum value of 4
+//   return Math.max(4, Math.round(streamCount))
+// }
 
 export async function calculateSlippageSavings(
   tradeVolume: bigint,
@@ -2495,12 +2593,10 @@ export async function analyzeTokenPairLiquidityComprehensive(
 
     // NEW LOGIC: Sweet spot calculation with reversed token pairs
     // Now tokenA = resultToken, tokenB = baseToken
-    const sweetSpot = calculateSweetSpot(
-      totalReservesA, // Total reserves of resultToken (now tokenA)
-      BigInt(bestDex.reserves.tokenA), // Best DEX reserves of resultToken (now tokenA)
-      BigInt(bestDex.reserves.tokenB), // Best DEX reserves of baseToken (now tokenB)
-      tokenAInfo.decimals, // ResultToken decimals (now tokenA)
-      tokenBInfo.decimals // BaseToken decimals (now tokenB)
+    const sweetSpot = calculateSweetSpotV2(
+      totalReservesA, // Total reserves of resultToken (now tokenA) - trade volume
+      BigInt(bestDex.reserves.tokenA), // Best DEX reserves of resultToken (now tokenA) - reserveIn
+      BigInt(bestDex.reserves.tokenB) // Best DEX reserves of baseToken (now tokenB) - reserveOut
     )
 
     console.log(`Sweet spot: ${sweetSpot} streams`)
