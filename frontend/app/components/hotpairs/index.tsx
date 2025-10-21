@@ -13,12 +13,7 @@ import WinSection from './WinSection'
 import { HeroBgImage } from './hotpairs-icons'
 import Button from '../button'
 import TokenPairsSection from './TokenPairsSection'
-import {
-  calculateSlippageSavings,
-  calculateSweetSpot,
-  normalizeAmount,
-} from '@/app/lib/gas-calculations'
-import { DexCalculatorFactory } from '@/app/lib/dex/calculators'
+import { useDebouncedVolumeCalculation } from '@/app/lib/hooks/hotpairs/useEnhancedTokens'
 
 const HotPairs = () => {
   const router = useRouter()
@@ -27,14 +22,30 @@ const HotPairs = () => {
   const [activeHotPair, setActiveHotPair] = useState<any>(null)
   const [volumeActive, setVolumeActive] = useState(true)
   const [winActive, setWinActive] = useState(true)
-  const [winLoading, setWinLoading] = useState(false)
   const [volumeLoading, setVolumeLoading] = useState(false)
 
   const [selectedBaseToken, setSelectedBaseToken] = useState<any>(null)
   const [selectedOtherToken, setSelectedOtherToken] = useState<any>(null)
-  const [slippageSavingsUsd, setSlippageSavingsUsd] = useState<any>(null)
+  const [slippageSavingsUsd, setSlippageSavingsUsd] = useState<number>(0)
 
   const controls = useAnimation()
+
+  // Use the debounced volume calculation hook
+  const volumeCalculation = useDebouncedVolumeCalculation({
+    tokenA: activeHotPair?.tokenAAddress,
+    tokenB: activeHotPair?.tokenBAddress,
+    volume: volumeAmount,
+    tokenBUsdPrice: activeHotPair?.tokenBUsdPrice || 1,
+    debounceMs: 500,
+  })
+
+  // Update win amount and slippage savings when calculation completes (only from user volume change)
+  useEffect(() => {
+    if (volumeCalculation.result) {
+      setWinAmount(Number(volumeCalculation.result.percentageSavings.toFixed(2)) || 0)
+      setSlippageSavingsUsd(volumeCalculation.result.slippageSavingsUsd || 0)
+    }
+  }, [volumeCalculation.result])
 
   // Dynamic height for icons area (from top to cards section)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -77,7 +88,7 @@ const HotPairs = () => {
     setVolumeAmount(pair?.reserveAtotaldepth)
     // setVolumeAmount(pair?.reserveAtotaldepthWei)
     setWinAmount(pair?.percentageSavings || 0)
-    setSlippageSavingsUsd(pair?.slippageSavingsUsd)
+    setSlippageSavingsUsd(pair?.slippageSavingsUsd || 0)
 
     setVolumeActive(true)
     setWinActive(true)
@@ -121,82 +132,18 @@ const HotPairs = () => {
     setActiveHotPair(newPair)
   }
 
-  const handleVolumeAmountChange = async (amount: number) => {
-    // if (!activeHotPair || amount === activeHotPair?.reserveAtotaldepthWei)
-    //   return
+  const handleVolumeAmountChange = (amount: number) => {
     if (!activeHotPair || amount === activeHotPair?.reserveAtotaldepth) return
 
     setVolumeAmount(amount)
-    setWinLoading(true)
     setVolumeLoading(false)
-
-    const calculator = DexCalculatorFactory.createCalculator(
-      activeHotPair?.highestLiquidityADex || 'uniswap-v2',
-      undefined,
-      '1'
-    )
-
-    const tradeVolumeBN = normalizeAmount(
-      amount.toString(),
-      activeHotPair?.tokenADecimals
-    )
-
-    console.log('tradeVolumeBN ===>', tradeVolumeBN)
-    console.log(
-      'reserveAtotaldepthWei ===>',
-      activeHotPair?.reserveAtotaldepthWei
-    )
-    console.log(
-      'reserveBtotaldepthWei ===>',
-      activeHotPair?.reserveBtotaldepthWei
-    )
-    console.log('tokenADecimals ===>', activeHotPair?.tokenADecimals)
-    console.log('tokenBDecimals ===>', activeHotPair?.tokenBDecimals)
-
-    const sweetSpot = calculateSweetSpot(
-      tradeVolumeBN,
-      BigInt(activeHotPair?.reserveAtotaldepthWei),
-      BigInt(activeHotPair?.reserveBtotaldepthWei),
-      activeHotPair?.tokenADecimals,
-      activeHotPair?.tokenBDecimals,
-      0
-    )
-
-    const feeTier = activeHotPair?.highestLiquidityADex
-      ? activeHotPair?.highestLiquidityADex?.startsWith('uniswap-v3')
-        ? parseInt(activeHotPair?.highestLiquidityADex.split('-')[2])
-        : 3000
-      : 3000
-
-    const { savings, percentageSavings } = await calculateSlippageSavings(
-      calculator.getProvider(),
-      tradeVolumeBN,
-      activeHotPair?.highestLiquidityADex || 'uniswap-v2',
-      feeTier,
-      BigInt(activeHotPair?.reserveAtotaldepthWei),
-      BigInt(activeHotPair?.reserveBtotaldepthWei),
-      activeHotPair?.tokenADecimals,
-      activeHotPair?.tokenBDecimals,
-      activeHotPair?.tokenAAddress,
-      activeHotPair?.tokenBAddress,
-      sweetSpot
-    )
-    console.log('savings ===>', savings)
-
-    const savingsInUSD = savings * (activeHotPair?.tokenBUsdPrice || 1)
-    setWinAmount(Number(percentageSavings.toFixed(2)) || 0)
-    setSlippageSavingsUsd(savingsInUSD)
-    setWinLoading(false)
-
-    // After one seond set volume loading to false
-    // setTimeout(() => {
-    //   setWinLoading(false)
-    // }, 1000)
+    
+    // Call the debounced calculation from the hook
+    volumeCalculation.calculate(amount)
   }
 
   const handleWinAmountChange = (amount: number) => {
     setWinAmount(amount)
-    setWinLoading(false)
     // setVolumeLoading(true)
 
     // After one seond set volume loading to false
@@ -337,7 +284,7 @@ const HotPairs = () => {
                 <WinSection
                   amount={winAmount}
                   setAmount={handleWinAmountChange}
-                  isLoading={winLoading}
+                  isLoading={volumeCalculation.isLoading}
                   inValidAmount={false}
                   // active={winActive}
                   handleActive={() => {
