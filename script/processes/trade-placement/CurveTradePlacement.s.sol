@@ -3,21 +3,23 @@ pragma solidity ^0.8.13;
 
 import "../../SingleDexProtocol.s.sol";
 import "../../../src/Utils.sol";
-import "../../../src/adapters/CurveFetcher.sol";
+import "../../../src/adapters/CurveMetaFetcher.sol";
 import "../../../src/interfaces/dex/ICurvePool.sol";
+import "../../../src/interfaces/dex/ICurveMetaRegistry.sol";
 
 contract CurveTradePlacement is SingleDexProtocol {
     // Use the CURVE_POOL constant from SingleDexProtocol
     // For now, we'll test basic Curve functionality using USDC only
 
     function setUp() public {
-        // Deploy CurveFetcher with CURVE_POOL
-        CurveFetcher curveFetcher = new CurveFetcher(CURVE_POOL);
+        // Deploy CurveMetaFetcher with Curve MetaRegistry
+        address curveMetaRegistry = 0xF98B45FA17DE75FB1aD0e7aFD971b0ca00e379fC;
+        CurveMetaFetcher curveFetcher = new CurveMetaFetcher(curveMetaRegistry);
 
-        // Set up protocol with only Curve
-        setUpSingleDex(address(curveFetcher), CURVE_POOL);
+        // Set up protocol with CurveMeta (using the fetcher as router)
+        setUpSingleDex(address(curveFetcher), address(curveFetcher));
 
-        console.log("Curve test setup complete - using USDC only for initial testing");
+        console.log("CurveMeta test setup complete - using dynamic pool discovery");
     }
 
     function run() external {
@@ -28,8 +30,8 @@ contract CurveTradePlacement is SingleDexProtocol {
     function testCurveBasicFunctionality() public {
         console.log("Starting basic Curve functionality test");
 
-        // For now, just test that we can get reserves without making a trade
-        CurveFetcher curveFetcher = CurveFetcher(dexFetcher);
+        // Test that we can get reserves without making a trade
+        CurveMetaFetcher curveFetcher = CurveMetaFetcher(dexFetcher);
 
         try curveFetcher.getReserves(USDC, USDT) returns (uint256 reserveUSDC, uint256 reserveUSDT) {
             console.log("Curve USDC reserves:", reserveUSDC);
@@ -39,27 +41,27 @@ contract CurveTradePlacement is SingleDexProtocol {
             console.log("Basic Curve functionality test passed");
         } catch Error(string memory reason) {
             console.log("Failed to get reserves:", reason);
-            console.log("This is expected for now - Curve integration needs token index mapping");
+            console.log("This might indicate no pools found for USDC/USDT pair");
         }
     }
 
     function testCurveSpecificFeatures() public {
         console.log("Testing Curve-specific features");
 
-        // Test that CurveFetcher can be deployed and has correct properties
-        CurveFetcher curveFetcher = CurveFetcher(dexFetcher);
+        // Test that CurveMetaFetcher can be deployed and has correct properties
+        CurveMetaFetcher curveFetcher = CurveMetaFetcher(dexFetcher);
 
         // Test DEX type identification
         string memory dexType = curveFetcher.getDexType();
-        assertEq(dexType, "Curve", "DEX type should be Curve");
+        assertEq(dexType, "CurveMeta", "DEX type should be CurveMeta");
 
-        // Test pool address retrieval
+        // Test pool address retrieval (should return a valid pool address)
         address poolAddress = curveFetcher.getPoolAddress(USDC, USDT);
-        assertEq(poolAddress, CURVE_POOL, "Pool address should match CURVE_POOL");
+        assertTrue(poolAddress != address(0), "Pool address should not be zero");
 
         // Test version
         string memory version = curveFetcher.getDexVersion();
-        assertEq(version, "V2", "DEX version should be V2");
+        assertEq(version, "MetaRegistry", "DEX version should be MetaRegistry");
 
         console.log("Curve-specific features test passed");
         console.log("Pool address:", poolAddress);
@@ -70,30 +72,30 @@ contract CurveTradePlacement is SingleDexProtocol {
     function testCurveIntegrationSetup() public {
         console.log("Testing Curve integration setup");
 
-        // Verify that the CurveFetcher is properly configured
-        CurveFetcher curveFetcher = CurveFetcher(dexFetcher);
+        // Verify that the CurveMetaFetcher is properly configured
+        CurveMetaFetcher curveFetcher = CurveMetaFetcher(dexFetcher);
 
-        // Check that the fetcher has the correct pool address
-        assertEq(curveFetcher.pool(), CURVE_POOL, "Pool address should match");
+        // Check that the fetcher has the correct meta registry address
+        assertEq(address(curveFetcher.metaRegistry()), 0xF98B45FA17DE75FB1aD0e7aFD971b0ca00e379fC, "Meta registry address should match");
 
-        // Verify that the Registry is configured for Curve
-        string memory dexType = "Curve";
+        // Verify that the Registry is configured for CurveMeta
+        string memory dexType = "CurveMeta";
         address router = registry.getRouter(dexType);
-        assertEq(router, CURVE_POOL, "Registry should have Curve router configured");
+        assertEq(router, address(curveFetcher), "Registry should have CurveMeta router configured");
 
         // Verify that the Core contract can identify Curve as a DEX
         address firstDex = streamDaemon.dexs(0); // Get the first DEX address
         bool curveFound = false;
 
-        // Check if the first DEX is our CurveFetcher
+        // Check if the first DEX is our CurveMetaFetcher
         if (firstDex == address(curveFetcher)) {
             curveFound = true;
         }
 
-        assertTrue(curveFound, "CurveFetcher should be registered in StreamDaemon");
+        assertTrue(curveFound, "CurveMetaFetcher should be registered in StreamDaemon");
 
         console.log("Curve integration setup test passed");
-        console.log("Pool address:", curveFetcher.pool());
+        console.log("Meta registry address:", address(curveFetcher.metaRegistry()));
         console.log("Router from registry:", router);
         console.log("First DEX address:", firstDex);
     }
@@ -143,7 +145,7 @@ contract CurveTradePlacement is SingleDexProtocol {
     function testPlaceTradeUSDCDAI() public {
         console.log("Testing USDC to DAI trade on Curve");
 
-        CurveFetcher curveFetcher = CurveFetcher(dexFetcher);
+        CurveMetaFetcher curveFetcher = CurveMetaFetcher(dexFetcher);
 
         // Get initial balances
         uint256 initialUSDC = getTokenBalance(USDC, address(this));
@@ -183,7 +185,9 @@ contract CurveTradePlacement is SingleDexProtocol {
             tradeAmount,
             minOut,
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         core.placeTrade(coreTradeData);
@@ -217,7 +221,7 @@ contract CurveTradePlacement is SingleDexProtocol {
     function testPlaceTradeDAIUSDC() public {
         console.log("Testing DAI to USDC trade on Curve");
 
-        CurveFetcher curveFetcher = CurveFetcher(dexFetcher);
+        CurveMetaFetcher curveFetcher = CurveMetaFetcher(dexFetcher);
 
         // Get initial balances
         uint256 initialUSDC = getTokenBalance(USDC, address(this));
@@ -262,7 +266,8 @@ contract CurveTradePlacement is SingleDexProtocol {
             tradeAmount,
             minOut,
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100 // instasettleBps - default value
         );
 
         core.placeTrade(coreTradeData);
