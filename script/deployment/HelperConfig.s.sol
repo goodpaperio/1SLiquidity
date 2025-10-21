@@ -6,7 +6,7 @@ import { UniswapV2Fetcher } from "src/adapters/UniswapV2Fetcher.sol";
 import { UniswapV3Fetcher } from "src/adapters/UniswapV3Fetcher.sol";
 import { SushiswapFetcher } from "src/adapters/SushiswapFetcher.sol";
 import { CurveFetcher } from "src/adapters/CurveFetcher.sol";
-import { BalancerFetcher } from "src/adapters/BalancerFetcher.sol";
+import { BalancerV2Fetcher } from "src/adapters/BalancerV2Fetcher.sol";
 
 import { MockFetcher1, MockFetcher2 } from "test/mock/MockFetcher.sol";
 
