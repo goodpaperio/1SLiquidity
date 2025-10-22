@@ -54,6 +54,9 @@ jobs:
             cat local-monitor/localData.json
           else
             echo "❌ No local data file found, will start fresh"
+            echo "Creating default localData.json..."
+            echo '{"lastRun": 0, "outstandingTrades": [], "lastUpdated": 0}' > local-monitor/localData.json
+            echo "✅ Default localData.json created"
           fi
 
       - name: Install dependencies
