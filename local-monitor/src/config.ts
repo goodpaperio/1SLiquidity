@@ -51,9 +51,11 @@ export const TOKEN_ADDRESSES: Record<string, string> = {
   "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e": "USDC", // Another USDC variant
 };
 
-export const RPC_URL =
-  process.env.MAINNET_RPC_URL ||
-  "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY";
+export const RPC_URL = process.env.RPC_HTTP_URL;
+
+if (!RPC_URL) {
+  throw new Error("RPC_HTTP_URL environment variable is required");
+}
 
 export function getProvider(): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(RPC_URL);
