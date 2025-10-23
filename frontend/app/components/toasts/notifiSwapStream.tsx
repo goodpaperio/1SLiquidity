@@ -94,7 +94,7 @@ const NotifiSwapStream: React.FC<Props> = ({
         <div className="w-full h-[3px] bg-white005 mt-[12px] relative">
           <div
             className={`h-[3px] ${progressBarColor} absolute top-0 left-0 transition-all duration-500 ease-out`}
-            style={{ width: `${Math.min(progress, 100)}%` }}
+            style={{ width: `${isError ? 100 : Math.min(progress, 100)}%` }}
           />
         </div>
 
@@ -114,9 +114,11 @@ const NotifiSwapStream: React.FC<Props> = ({
         </div> */}
         <div className="mt-[8px] flex justify-between items-center gap-2 text-white52">
           <p className="text-sm">
-            {currentStep}/{totalSteps} {step}
+            {isError
+              ? 'Transaction Failed'
+              : `${currentStep}/${totalSteps} ${step}`}
           </p>
-          {progress < 100 && !isError && (
+          {!isError && progress < 100 && (
             <div className="flex items-center gap-1">
               <div
                 className={`w-3 h-3 border-t-2 ${spinnerColor} animate-spin rounded-full`}

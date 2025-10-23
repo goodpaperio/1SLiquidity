@@ -4,8 +4,11 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import Navbar from '../navbar'
 import SELSection from '../home/SELSection'
+import { useScreenSize } from '@/app/lib/hooks/useScreenSize'
 
 export default function HeroSection() {
+  const { isMobile, isXl, isDesktop, isTablet } = useScreenSize()
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Background image for hero section only */}
@@ -74,20 +77,22 @@ export default function HeroSection() {
         />
       </div>
 
-      <motion.div
-        className="absolute bottom-[-60%] left-1/2 transform -translate-x-1/2 w-full h-full pointer-events-none z-0"
-        initial={{ bottom: '-100%', opacity: 0 }}
-        animate={{ bottom: '-60%', opacity: 1 }}
-        transition={{ duration: 1.2, ease: 'easeOut' }}
-      >
-        <Image
-          src="/heros/circle.svg"
-          alt="hero background"
-          fill
-          className="object-contain object-bottom"
-          priority
-        />
-      </motion.div>
+      {isXl && (
+        <motion.div
+          className="absolute bottom-[-60%] left-1/2 transform -translate-x-1/2 w-full h-full pointer-events-none z-0"
+          initial={{ bottom: '-100%', opacity: 0 }}
+          animate={{ bottom: '-60%', opacity: 1 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+        >
+          <Image
+            src="/heros/circle.svg"
+            alt="hero background"
+            fill
+            className="object-contain object-bottom"
+            priority
+          />
+        </motion.div>
+      )}
 
       <div
         className="absolute inset-0 bg-black/50"
