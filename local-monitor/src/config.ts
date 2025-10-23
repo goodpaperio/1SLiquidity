@@ -69,5 +69,5 @@ export function getProvider(): ethers.JsonRpcProvider {
 
 export function getSigner(): ethers.Wallet {
   const provider = getProvider();
-  return new ethers.Wallet(PRIVATE_KEY, provider);
+  return new ethers.Wallet(PRIVATE_KEY!, provider);
 }
