@@ -95,7 +95,7 @@ export default function TokenPairsSection({
   handleActiveHotPair: (pair: any) => void
   clearBaseAndOtherTokens: () => void
 }) {
-  const baseTokensSymbol = ['USDT', 'USDC', 'WBTC', 'WETH']
+  const baseTokensSymbol = ['USDT', 'USDC', 'WBTC', 'WETH', 'DAI']
 
   const queryClient = useQueryClient()
   const { enhanceTokenPair, isLoadingTokenList, coinGeckoTokens } =
@@ -175,9 +175,9 @@ export default function TokenPairsSection({
 
   return (
     <div className="flex flex-col items-center w-full justify-center gap-8">
-      <div className="flex flex-col md:flex-row items-center w-full justify-center gap-8 max-w-[45rem]">
+      <div className="flex flex-col md:flex-row items-center w-full justify-center gap-8 max-w-[50rem]">
         {/* Left Section -> Other Tokens: 2x2 Grid */}
-        <div className="flex flex-wrap justify-center md:grid md:grid-cols-2 gap-4 md:min-w-[9rem]">
+        <div className="flex flex-wrap justify-center md:grid md:grid-cols-3 gap-4 md:min-w-[13rem]">
           {tokensList
             .filter((token) =>
               baseTokensSymbol.includes(token.symbol.toUpperCase())

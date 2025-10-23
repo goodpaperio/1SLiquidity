@@ -425,8 +425,8 @@ export const tokensList = [
   },
   {
     id: 5,
-    icon: '/tokens/bnb.svg',
-    tokenAddress: '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
-    symbol: 'BNB',
+    icon: '/tokens/dai.webp',
+    tokenAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    symbol: 'DAI',
   },
 ]
