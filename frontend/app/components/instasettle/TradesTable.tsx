@@ -30,6 +30,7 @@ import ImageFallback from '@/app/shared/ImageFallback'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useAccount } from 'wagmi'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import { useSidebar } from '@/app/lib/context/sidebarContext'
 
 // Constants
 const LIMIT = 10
@@ -117,6 +118,7 @@ const TradesTable = ({
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
   const { address } = useAccount()
   const { placeTrade, loading, instasettle } = useCoreTrading()
+  const { showGlobalStreamSidebar, isGlobalStreamSidebarOpen } = useSidebar()
 
   // Memoize token addresses to prevent unnecessary re-renders
   const tokenFromAddress = useMemo(
@@ -378,6 +380,10 @@ const TradesTable = ({
   ])
 
   const handleStreamClick = (item: ExtendedTrade) => {
+    // Close the global sidebar if it's open
+    if (isGlobalStreamSidebarOpen) {
+      showGlobalStreamSidebar(false)
+    }
     setInitialStream(item)
     setIsSidebarOpen(true)
   }
