@@ -15,7 +15,7 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { RefreshIcon, TypewriterIcon } from '@/app/lib/icons'
 import { Button } from '@/components/ui/button'
 import { useAppKitAccount } from '@reown/appkit/react'
-import { X } from 'lucide-react'
+import { X, ChevronDown, XIcon, CheckCircle2 } from 'lucide-react'
 
 type GlobalStreamSidebarProps = {
   isOpen: boolean
@@ -27,6 +27,9 @@ type GlobalStreamSidebarProps = {
 
 // Define the toggle tabs for global vs user trades
 const TRADE_TABS = [{ title: 'Global Trades' }, { title: 'My Trades' }]
+
+// Pagination constants
+const PAST_TRADES_PER_PAGE = 10
 
 const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
   isOpen,
@@ -40,6 +43,13 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
     initialStream || null
   )
   const [activeTab, setActiveTab] = useState(TRADE_TABS[0])
+  const [isPastTradesExpanded, setIsPastTradesExpanded] = useState(false)
+  const [pastTradesPage, setPastTradesPage] = useState(1)
+  const [tradeFilters, setTradeFilters] = useState({
+    normal: true,
+    instasettled: true,
+    cancelled: true,
+  })
   const { address } = useAppKitAccount()
 
   // Reset to default state when sidebar opens
@@ -49,6 +59,17 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
       setSelectedStream(initialStream || null)
     }
   }, [isOpen, initialStream])
+
+  // Reset pagination when switching tabs
+  useEffect(() => {
+    setPastTradesPage(1)
+    setIsPastTradesExpanded(false)
+    setTradeFilters({
+      normal: true,
+      instasettled: true,
+      cancelled: true,
+    })
+  }, [activeTab])
 
   // Fetch trades data with Apollo's 30s polling
   const { trades, isLoading, error, isRefetching } = useTrades({
@@ -96,8 +117,35 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
         isTradeCompleted(trade)
       )
     }
-    return []
+    // For global trades, return all completed trades
+    return isTradeCompleted(trade)
   })
+
+  // Determine trade type for filtering
+  const getTradeType = (trade: any): 'normal' | 'instasettled' | 'cancelled' => {
+    if (trade.cancellations?.length > 0) return 'cancelled'
+    if (trade.isInstasettlable) return 'instasettled'
+    return 'normal'
+  }
+
+  // Filter past trades based on selected filters (only for Global Trades)
+  const filteredPastTrades =
+    activeTab.title === 'Global Trades'
+      ? pastTrades.filter((trade) => {
+          const tradeType = getTradeType(trade)
+          return tradeFilters[tradeType]
+        })
+      : pastTrades
+
+  // Toggle filter
+  const toggleFilter = (filterType: 'normal' | 'instasettled' | 'cancelled') => {
+    setTradeFilters((prev) => ({
+      ...prev,
+      [filterType]: !prev[filterType],
+    }))
+    // Reset to page 1 when filters change
+    setPastTradesPage(1)
+  }
 
   // Fetch token list for price data
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
@@ -364,6 +412,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                   )}
                 </div>
 
+                {/* Past Trades - My Trades (always visible) */}
                 {activeTab.title === 'My Trades' && pastTrades.length > 0 && (
                   <div className="mt-8">
                     <p className="text-[20px] pb-3.5">Past Trades</p>
@@ -383,6 +432,215 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Past Trades - Global Trades (expandable & paginated) */}
+                {activeTab.title === 'Global Trades' &&
+                  pastTrades.length > 0 && (
+                    <div className="mt-8">
+                      <button
+                        onClick={() =>
+                          setIsPastTradesExpanded(!isPastTradesExpanded)
+                        }
+                        className="w-full flex items-center justify-between text-[20px] pb-3.5 hover:text-primary transition-colors"
+                      >
+                        <span>Past Trades ({pastTrades.length})</span>
+                        <ChevronDown
+                          className={cn(
+                            'w-5 h-5 transition-transform duration-300',
+                            isPastTradesExpanded && 'rotate-180'
+                          )}
+                        />
+                      </button>
+
+                      <div
+                        className={cn(
+                          'grid transition-all duration-300 ease-in-out',
+                          isPastTradesExpanded
+                            ? 'grid-rows-[1fr] opacity-100'
+                            : 'grid-rows-[0fr] opacity-0'
+                        )}
+                      >
+                        <div className="overflow-hidden">
+                          {/* Filter Pills */}
+                          <div className="mb-4">
+                            <p className="text-white52 text-xs mb-2">Filter by status:</p>
+                            <div className="flex gap-2">
+                              {/* Regular/Normal trades pill */}
+                              <button
+                                onClick={() => toggleFilter('normal')}
+                                className={cn(
+                                  'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
+                                  tradeFilters.normal
+                                    ? 'bg-zinc-900 text-white'
+                                    : 'bg-white005 text-white52'
+                                )}
+                              >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span className="text-xs">Regular</span>
+                            </button>
+
+                            {/* Instasettled pill */}
+                            <button
+                              onClick={() => toggleFilter('instasettled')}
+                              className={cn(
+                                'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
+                                tradeFilters.instasettled
+                                  ? 'bg-zinc-900 text-primary'
+                                  : 'bg-white005 text-white52'
+                              )}
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  d="M13 2L6 14H11V22L18 10H13V2Z"
+                                  fill={
+                                    tradeFilters.instasettled
+                                      ? '#40f798'
+                                      : 'currentColor'
+                                  }
+                                  fillOpacity="0.72"
+                                />
+                              </svg>
+                              <span className="text-xs">Instasettled</span>
+                            </button>
+
+                            {/* Cancelled pill */}
+                            <button
+                              onClick={() => toggleFilter('cancelled')}
+                              className={cn(
+                                'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
+                                tradeFilters.cancelled
+                                  ? 'bg-zinc-900 text-red-700'
+                                  : 'bg-white005 text-white52'
+                              )}
+                            >
+                              <XIcon className="w-3.5 h-3.5" />
+                              <span className="text-xs">Cancelled</span>
+                            </button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            {filteredPastTrades.length === 0 ? (
+                              <div className="text-white52 text-center py-8 text-sm">
+                                No trades match the selected filters
+                              </div>
+                            ) : (
+                              filteredPastTrades
+                                .slice(
+                                  (pastTradesPage - 1) * PAST_TRADES_PER_PAGE,
+                                  pastTradesPage * PAST_TRADES_PER_PAGE
+                                )
+                                .map((trade, index) => (
+                                  <div
+                                    key={trade.id}
+                                    className={cn(
+                                      'transition-all duration-300 ease-out',
+                                      isPastTradesExpanded
+                                        ? 'translate-y-0 opacity-100'
+                                        : 'translate-y-[-10px] opacity-0'
+                                    )}
+                                    style={{
+                                      transitionDelay: isPastTradesExpanded
+                                        ? `${index * 50}ms`
+                                        : '0ms',
+                                    }}
+                                  >
+                                    <SwapStream
+                                      onClick={() => {
+                                        setIsStreamSelected(true)
+                                        setSelectedStream(trade)
+                                      }}
+                                      trade={trade}
+                                      isLoading={isLoading}
+                                      isUser={false}
+                                    />
+                                  </div>
+                                ))
+                            )}
+                          </div>
+
+                          {/* Pagination controls */}
+                          {filteredPastTrades.length > PAST_TRADES_PER_PAGE && (
+                            <div
+                              className={cn(
+                                'flex items-center justify-between mt-4 px-2 transition-all duration-300 ease-out',
+                                isPastTradesExpanded
+                                  ? 'translate-y-0 opacity-100'
+                                  : 'translate-y-[-10px] opacity-0'
+                              )}
+                              style={{
+                                transitionDelay: isPastTradesExpanded
+                                  ? `${
+                                      Math.min(
+                                        filteredPastTrades.slice(
+                                          (pastTradesPage - 1) *
+                                            PAST_TRADES_PER_PAGE,
+                                          pastTradesPage * PAST_TRADES_PER_PAGE
+                                        ).length,
+                                        PAST_TRADES_PER_PAGE
+                                      ) * 50
+                                    }ms`
+                                  : '0ms',
+                              }}
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setPastTradesPage((prev) =>
+                                    Math.max(1, prev - 1)
+                                  )
+                                }
+                                disabled={pastTradesPage === 1}
+                                className="text-xs"
+                              >
+                                Previous
+                              </Button>
+                              <span className="text-sm text-white52">
+                                Page {pastTradesPage} of{' '}
+                                {Math.ceil(
+                                  filteredPastTrades.length /
+                                    PAST_TRADES_PER_PAGE
+                                )}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setPastTradesPage((prev) =>
+                                    Math.min(
+                                      Math.ceil(
+                                        filteredPastTrades.length /
+                                          PAST_TRADES_PER_PAGE
+                                      ),
+                                      prev + 1
+                                    )
+                                  )
+                                }
+                                disabled={
+                                  pastTradesPage ===
+                                  Math.ceil(
+                                    filteredPastTrades.length /
+                                      PAST_TRADES_PER_PAGE
+                                  )
+                                }
+                                className="text-xs"
+                              >
+                                Next
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           </>
