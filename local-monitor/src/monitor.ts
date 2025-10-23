@@ -1,7 +1,12 @@
 import { ethers } from "ethers";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
-import { CONTRACT_ADDRESSES, TOKEN_ADDRESSES, getProvider } from "./config";
+import {
+  CONTRACT_ADDRESSES,
+  TOKEN_ADDRESSES,
+  getProvider,
+  getSigner,
+} from "./config";
 import {
   Trade,
   TradeDisplay,
@@ -19,15 +24,23 @@ import CoreABI from "./abi/Core.json";
 
 export class TradeMonitor {
   private provider: ethers.JsonRpcProvider;
+  private signer: ethers.Wallet;
   private coreContract: ethers.Contract;
+  private coreContractWithSigner: ethers.Contract;
   private localDataPath: string;
 
   constructor() {
     this.provider = getProvider();
+    this.signer = getSigner();
     this.coreContract = new ethers.Contract(
       CONTRACT_ADDRESSES.core,
       CoreABI,
       this.provider
+    );
+    this.coreContractWithSigner = new ethers.Contract(
+      CONTRACT_ADDRESSES.core,
+      CoreABI,
+      this.signer
     );
     this.localDataPath = join(process.cwd(), "localData.json");
   }
@@ -742,8 +755,8 @@ export class TradeMonitor {
     try {
       console.log(`🚀 Executing trades for pairId: ${pairId}`);
 
-      // Call the executeTrades function on the contract
-      const tx = await this.coreContract.executeTrades(pairId);
+      // Call the executeTrades function on the contract using signer
+      const tx = await this.coreContractWithSigner.executeTrades(pairId);
       console.log(`📝 Transaction submitted: ${tx.hash}`);
 
       // Wait for transaction to be mined
