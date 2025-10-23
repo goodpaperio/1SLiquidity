@@ -9,37 +9,38 @@ import {
 
 const provider = createProvider();
 
+
 function calculateSlippageV4(
   volumeIn: bigint,
   reserveIn: bigint,
   reserveOut: bigint
 ): number {
   if (volumeIn === 0n || reserveIn === 0n || reserveOut === 0n) {
-    return 0;
+    return 0
   }
 
   // k = reserveIn * reserveOut
-  const k = reserveIn * reserveOut;
-  const denominator = reserveIn + volumeIn;
+  const k = reserveIn * reserveOut
+  const denominator = reserveIn + volumeIn
   if (denominator === 0n) {
-    return 0;
+    return 0
   }
 
   // volumeOut = reserveOut - (k / (reserveIn + volumeIn))
-  const volumeOut = reserveOut - k / denominator;
+  const volumeOut = reserveOut - k / denominator
 
   // priceRatio = (volumeOut * reserveIn * 10000) / (volumeIn * reserveOut)
   // clamp negative slippage (better price) to 0
-  const numerator = volumeOut * reserveIn * 10000n;
-  const denom = volumeIn * reserveOut;
+  const numerator = volumeOut * reserveIn * 10000n
+  const denom = volumeIn * reserveOut
   if (denom === 0n) {
-    return 0;
+    return 0
   }
-  const priceRatio = Number(numerator / denom); // integer division, basis points
+  const priceRatio = Number(numerator / denom) // integer division, basis points
   if (priceRatio > 10000) {
-    return 0;
+    return 0
   }
-  return 10000 - priceRatio;
+  return 10000 - priceRatio
 }
 
 export function calculateSweetSpotV2(
@@ -49,63 +50,63 @@ export function calculateSweetSpotV2(
 ): number {
   // Mirror StreamDaemon _sweetSpotAlgo v4
   if (reserveIn === 0n || reserveOut === 0n) {
-    return 4;
+    return 4
   }
 
-  let sweetSpot = 1;
-  let effectiveVolume = tradeVolume / BigInt(sweetSpot);
-  let slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+  let sweetSpot = 1
+  let effectiveVolume = tradeVolume / BigInt(sweetSpot)
+  let slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut)
 
   // Alpha testing behavior: minimum sweet spot of 4 if already within 10 bps
   if (slippage <= 10) {
-    return 4;
+    return 4
   }
 
-  let lastSweetSpot = sweetSpot;
-  let lastSlippage = slippage;
+  let lastSweetSpot = sweetSpot
+  let lastSlippage = slippage
 
   // Iteratively double sweet spot until slippage <= 10 bps or cap
   while (slippage > 10 && sweetSpot < 1000) {
-    lastSweetSpot = sweetSpot;
-    lastSlippage = slippage;
+    lastSweetSpot = sweetSpot
+    lastSlippage = slippage
 
-    sweetSpot = sweetSpot * 2;
-    effectiveVolume = tradeVolume / BigInt(sweetSpot);
+    sweetSpot = sweetSpot * 2
+    effectiveVolume = tradeVolume / BigInt(sweetSpot)
     if (effectiveVolume === 0n) {
-      break;
+      break
     }
-    slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+    slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut)
   }
 
   // Binary refinement if threshold crossed
   if (lastSlippage > 10 && slippage <= 10) {
-    let low = lastSweetSpot;
-    let high = sweetSpot;
+    let low = lastSweetSpot
+    let high = sweetSpot
 
     for (let i = 0; i < 5; i++) {
-      const mid = Math.floor((low + high) / 2);
-      const midVolume = tradeVolume / BigInt(mid);
+      const mid = Math.floor((low + high) / 2)
+      const midVolume = tradeVolume / BigInt(mid)
       if (midVolume === 0n) {
-        break;
+        break
       }
-      const midSlippage = calculateSlippageV4(midVolume, reserveIn, reserveOut);
+      const midSlippage = calculateSlippageV4(midVolume, reserveIn, reserveOut)
       if (midSlippage <= 10) {
-        high = mid;
-        sweetSpot = mid;
+        high = mid
+        sweetSpot = mid
       } else {
-        low = mid;
+        low = mid
       }
     }
   }
 
   // Alpha testing constraints: clamp between 4 and 500
   if (sweetSpot <= 4) {
-    sweetSpot = 4;
+    sweetSpot = 4
   }
   if (sweetSpot > 500) {
-    sweetSpot = 500;
+    sweetSpot = 500
   }
-  return sweetSpot;
+  return sweetSpot
 }
 
 export async function calculateSlippageSavings(

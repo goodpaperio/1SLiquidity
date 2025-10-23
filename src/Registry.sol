@@ -48,6 +48,10 @@ contract Registry is IRegistry, Ownable {
         // Balancer
         dexExecutors["Balancer"] = Executor.executeBalancerTrade.selector;
         dexParameterEncoders["Balancer"] = _getBalancerParameterEncoder();
+        
+        // BalancerV2 (new dynamic approach)
+        dexExecutors["BalancerV2"] = Executor.executeBalancerTrade.selector;
+        dexParameterEncoders["BalancerV2"] = _getBalancerParameterEncoder();
 
         // Curve
         dexExecutors["Curve"] = Executor.executeCurveTrade.selector;

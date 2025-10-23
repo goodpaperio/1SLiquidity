@@ -44,6 +44,7 @@ const BASE_TOKENS = {
   USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Ethereum USDC
   USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // Ethereum USDT
   WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // Ethereum WBTC
+  DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F', // Ethereum DAI
 }
 
 // Function to check if a token is an ERC20 token
@@ -106,22 +107,22 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-      'reservesAUniswapV2',
-      'reservesASushiswap',
-      'reservesACurve',
-      'reservesABalancer',
-      'reservesAUniswapV3_500',
-      'reservesAUniswapV3_3000',
-      'reservesAUniswapV3_10000',
+        'reservesAUniswapV2',
+        'reservesASushiswap',
+        'reservesACurve',
+        'reservesABalancer',
+        'reservesAUniswapV3_500',
+        'reservesAUniswapV3_3000',
+        'reservesAUniswapV3_10000',
       ]
     : [
-      'reservesBUniswapV2',
-      'reservesBSushiswap',
-      'reservesBCurve',
-      'reservesBBalancer',
-      'reservesBUniswapV3_500',
-      'reservesBUniswapV3_3000',
-      'reservesBUniswapV3_10000',
+        'reservesBUniswapV2',
+        'reservesBSushiswap',
+        'reservesBCurve',
+        'reservesBBalancer',
+        'reservesBUniswapV3_500',
+        'reservesBUniswapV3_3000',
+        'reservesBUniswapV3_10000',
       ]
 
   let totalWei = BigInt(0)
@@ -325,6 +326,21 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
       if (seenPairs.has(pairKey)) {
         console.log(
           `  Skipping duplicate pair: ${baseTokenSymbol}/${token.tokenName.toUpperCase()}`
+        )
+        continue
+      }
+
+      // Skip if both tokens are base tokens (base-to-base pairs should not be created)
+      const isBaseTokenA = Object.values(BASE_TOKENS).some(
+        (addr) => addr.toLowerCase() === baseTokenAddress.toLowerCase()
+      )
+      const isBaseTokenB = Object.values(BASE_TOKENS).some(
+        (addr) => addr.toLowerCase() === token.tokenAddress.toLowerCase()
+      )
+
+      if (isBaseTokenA && isBaseTokenB) {
+        console.log(
+          `  🚫 Skipping base-to-base pair: ${baseTokenSymbol}/${token.tokenName.toUpperCase()}`
         )
         continue
       }
@@ -813,12 +829,32 @@ async function saveTokenToJson(
     }
   }
 
-  // Add new token result (or update if it already exists)
+  // Add new token result (or merge liquidity pairs if it already exists)
   const existingIndex = existingData.findIndex(
     (item) => item.tokenAddress === tokenResult.tokenAddress
   )
   if (existingIndex >= 0) {
-    existingData[existingIndex] = tokenResult
+    // Merge liquidity pairs instead of replacing the entire token object
+    const existingToken = existingData[existingIndex]
+    const existingPairAddresses = new Set(
+      existingToken.liquidityPairs.map((pair) => pair.pairAddress)
+    )
+
+    // Add only new liquidity pairs that don't already exist
+    const newPairs = tokenResult.liquidityPairs.filter(
+      (pair) => !existingPairAddresses.has(pair.pairAddress)
+    )
+
+    if (newPairs.length > 0) {
+      existingToken.liquidityPairs.push(...newPairs)
+      console.log(
+        `  🔄 Merged ${newPairs.length} new liquidity pairs for ${tokenResult.tokenSymbol}`
+      )
+    } else {
+      console.log(
+        `  ℹ️  No new liquidity pairs to add for ${tokenResult.tokenSymbol}`
+      )
+    }
   } else {
     existingData.push(tokenResult)
   }
@@ -906,6 +942,7 @@ async function transformToColumnFormat(
     '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
     '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
     '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599', // WBTC
+    '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
   ])
 
   // Group by token pair (tokenA + tokenB combination)

@@ -10,6 +10,7 @@ A comprehensive monitoring and execution system for 1SLiquidity smart contracts 
 - **Local Data Storage**: Maintains `localData.json` with trade metadata and execution state
 - **GitHub Actions**: Automated cron job execution every 5 minutes
 - **Forge Script Integration**: Direct mainnet execution via forge scripts
+- **Cold Start Protection**: Bootstrap `localData.json` included for immediate community use
 
 ## 📊 Commands
 
@@ -50,6 +51,36 @@ PAIR_ID=<pairId> CORE_ADDRESS=0x3875b8b82e58733c1667224eb8bf5f449d7dbb74 npm run
 export MAINNET_RPC_URL="https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
 export PRIVATE_KEY="0xYOUR_PRIVATE_KEY"
 ```
+
+## 🏁 First Run Setup
+
+### For Community Members
+
+The system includes a bootstrap `localData.json` file, so you can start immediately:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd 1SLiquidity/local-monitor
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+export MAINNET_RPC_URL="your-rpc-url"
+export PRIVATE_KEY="your-private-key"
+
+# Run immediately - no cold start issues!
+npm run historical
+```
+
+### For GitHub Actions
+
+The workflow automatically handles cold starts:
+
+- **First run**: Creates default `localData.json` if no artifact exists
+- **Subsequent runs**: Downloads previous state from artifacts
+- **Cron schedule**: Runs every 5 minutes automatically
 
 ## 🏗️ Mainnet Execution via Forge Scripts
 

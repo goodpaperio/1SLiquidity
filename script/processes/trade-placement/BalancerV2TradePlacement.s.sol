@@ -11,8 +11,7 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
     // Balancer pool address for BAL/WETH
     address constant BAL_WETH_POOL = 0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56;
 
-    // Token addresses
-    address constant BAL = 0xba100000625a3754423978a60c9317c58a424e3D;
+    // Token addresses (BAL is now defined in SingleDexProtocol)
 
     // Real whale addresses that actually have tokens
     address constant BAL_WHALE = 0xBA12222222228d8Ba445958a75a0704d566BF2C8; // Balancer Vault
@@ -184,7 +183,7 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
 
         // Test DEX type identification
         string memory dexType = balancerFetcher.getDexType();
-        assertEq(dexType, "Balancer", "DEX type should be Balancer");
+        assertEq(dexType, "BalancerV2", "DEX type should be BalancerV2");
 
         string memory dexVersion = balancerFetcher.getDexVersion();
         assertEq(dexVersion, "V2", "DEX version should be V2");
@@ -264,8 +263,8 @@ contract BalancerV2TradePlacement is SingleDexProtocol {
         assertEq(address(balancerFetcher.vault()), BALANCER_VAULT, "Vault address should match");
         assertEq(address(balancerFetcher.registry()), address(balancerRegistry), "Registry address should match");
 
-        // Verify that the Registry is configured for Balancer
-        string memory dexType = "Balancer";
+        // Verify that the Registry is configured for BalancerV2
+        string memory dexType = "BalancerV2";
         address router = registry.getRouter(dexType);
         assertEq(router, address(balancerFetcher), "Registry should have BalancerV2Fetcher as router");
 
