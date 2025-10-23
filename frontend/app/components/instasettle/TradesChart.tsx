@@ -697,7 +697,7 @@ export default function TradesChart({
             )}
             {/* Edge fade effect */}
             <div
-              className="absolute left-0 top-0 bottom-[35px] w-28 z-10 pointer-events-none"
+              className="absolute left-[-10px] top-0 bottom-[35px] w-28 z-10 pointer-events-none"
               style={{
                 background:
                   'linear-gradient(to right, black, rgba(0, 0, 0, 0.99) 5%, rgba(0, 0, 0, 0.97) 10%, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.8) 40%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.2) 85%, transparent)',
@@ -814,7 +814,7 @@ export default function TradesChart({
                       tick={{ fill: '#888', fontSize: 11 }}
                       tickFormatter={(value, index) => {
                         const data = indexedChartData[value]
-                        return data ? `$${Number(data.cost).toFixed(0)}` : ''
+                        return data ? `$${Number(data.cost).toFixed(2)}` : ''
                       }}
                       label={{
                         value: 'Cost (USD)',
@@ -830,9 +830,9 @@ export default function TradesChart({
                     <YAxis
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: '#888', fontSize: 11 }}
+                      tick={{ fill: '#e0e0e0', fontSize: 11 }}
                       width={45}
-                      tickFormatter={(value) => `$${Number(value).toFixed(0)}`}
+                      tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
                     />
                     <Bar
                       dataKey="savings"
