@@ -1,6 +1,6 @@
 // hooks/useEnhancedTokens.ts
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMemo, useCallback, useRef } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useTokenList } from '../useTokenList'
 
 // Constants
@@ -108,6 +108,39 @@ export interface UseSpecificPairParams {
   enabled?: boolean
 }
 
+// Volume calculation interfaces
+export interface VolumeCalculationResponse {
+  success: boolean
+  data: {
+    volume: number
+    volumeInWei: string
+    sweetSpot: number
+    bestDex: string
+    slippageSavings: number
+    percentageSavings: number
+    priceAccuracyNODECA: number
+    priceAccuracyDECA: number
+    tokenA: {
+      address: string
+      symbol: string
+      decimals: number
+    }
+    tokenB: {
+      address: string
+      symbol: string
+      decimals: number
+    }
+  }
+}
+
+export interface UseVolumeCalculationParams {
+  tokenA: string | null | undefined
+  tokenB: string | null | undefined
+  volume: number
+  tokenBUsdPrice?: number
+  debounceMs?: number
+}
+
 // API fetch functions (same as before)
 const fetchTokenPairs = async ({
   address,
@@ -161,6 +194,24 @@ export const fetchSpecificPair = async ({
 
   if (!response.ok) {
     throw new Error(`Failed to fetch specific pair: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+const fetchVolumeCalculation = async ({
+  tokenA,
+  tokenB,
+  volume,
+}: {
+  tokenA: string
+  tokenB: string
+  volume: string
+}): Promise<VolumeCalculationResponse> => {
+  const response = await fetch(`/api/pairs/${tokenA}/${tokenB}/calculate?volume=${volume}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to calculate volume metrics: ${response.statusText}`)
   }
 
   return response.json()
@@ -358,12 +409,76 @@ export const useEnhancedSpecificPair = (params: UseSpecificPairParams) => {
   }
 }
 
+// Debounced volume calculation hook
+export const useDebouncedVolumeCalculation = (params: UseVolumeCalculationParams) => {
+  const { tokenA, tokenB, volume, tokenBUsdPrice = 1, debounceMs = 500 } = params
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const mutation = useMutation({
+    mutationFn: (volumeValue: string) =>
+      fetchVolumeCalculation({
+        tokenA: tokenA!,
+        tokenB: tokenB!,
+        volume: volumeValue,
+      }),
+    onError: (error) => {
+      console.error('Error calculating volume metrics:', error)
+    },
+  })
+
+  // Debounced calculate function
+  const debouncedCalculate = useCallback(
+    (newVolume: number) => {
+      // Clear existing timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+
+      // Set new timer
+      debounceTimerRef.current = setTimeout(() => {
+        if (tokenA && tokenB && newVolume > 0) {
+          mutation.mutate(newVolume.toString())
+        }
+      }, debounceMs)
+    },
+    [tokenA, tokenB, debounceMs, mutation]
+  )
+
+  // Calculate slippage savings in USD
+  const slippageSavingsUsd = useMemo(() => {
+    if (mutation.data?.success) {
+      return mutation.data.data.slippageSavings * tokenBUsdPrice
+    }
+    return null
+  }, [mutation.data, tokenBUsdPrice])
+
+  // Format response for easy consumption
+  const result = useMemo(() => {
+    if (!mutation.data?.success) return null
+    
+    return {
+      ...mutation.data.data,
+      slippageSavingsUsd,
+    }
+  }, [mutation.data, slippageSavingsUsd])
+
+  return {
+    calculate: debouncedCalculate,
+    result,
+    isLoading: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error,
+    data: mutation.data,
+  }
+}
+
 // Unified hook that provides all enhanced methods
 export const useEnhancedTokens = () => {
   return {
     useEnhancedTokenPairs,
     useEnhancedTopTokens,
     useEnhancedSpecificPair,
+    useDebouncedVolumeCalculation,
   }
 }
 
@@ -372,4 +487,5 @@ export {
   useEnhancedTokenPairs as useTokenPairsWithIcons,
   useEnhancedTopTokens as useTopTokensWithIcons,
   useEnhancedSpecificPair as useSpecificPairWithIcons,
+  useDebouncedVolumeCalculation as useVolumeCalculation,
 }
