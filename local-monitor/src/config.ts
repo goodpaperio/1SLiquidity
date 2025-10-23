@@ -59,15 +59,16 @@ if (!RPC_URL) {
 
 export const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
-if (!PRIVATE_KEY) {
-  throw new Error("PRIVATE_KEY environment variable is required");
-}
-
 export function getProvider(): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(RPC_URL);
 }
 
 export function getSigner(): ethers.Wallet {
+  if (!PRIVATE_KEY) {
+    throw new Error(
+      "PRIVATE_KEY environment variable is required for write operations"
+    );
+  }
   const provider = getProvider();
   return new ethers.Wallet(PRIVATE_KEY!, provider);
 }

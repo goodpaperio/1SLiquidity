@@ -31,17 +31,26 @@ export class TradeMonitor {
 
   constructor() {
     this.provider = getProvider();
-    this.signer = getSigner();
     this.coreContract = new ethers.Contract(
       CONTRACT_ADDRESSES.core,
       CoreABI,
       this.provider
     );
-    this.coreContractWithSigner = new ethers.Contract(
-      CONTRACT_ADDRESSES.core,
-      CoreABI,
-      this.signer
-    );
+
+    // Only create signer if private key is available
+    try {
+      this.signer = getSigner();
+      this.coreContractWithSigner = new ethers.Contract(
+        CONTRACT_ADDRESSES.core,
+        CoreABI,
+        this.signer
+      );
+    } catch (error) {
+      // No private key available - only read operations allowed
+      this.signer = null as any;
+      this.coreContractWithSigner = null as any;
+    }
+
     this.localDataPath = join(process.cwd(), "localData.json");
   }
 
@@ -114,12 +123,16 @@ export class TradeMonitor {
   }
 
   /**
-   * Calculate pair ID (keccak256 hash of token addresses)
+   * Calculate pair ID (keccak256 hash of token addresses) - matches contract logic
    */
   private calculatePairId(tokenIn: string, tokenOut: string): string {
-    // For now, we'll use a simple concatenation since we don't have the exact keccak256 implementation
-    // In a real implementation, you'd want to use the same keccak256 logic as the smart contract
-    return ethers.keccak256(ethers.toUtf8Bytes(`${tokenIn}-${tokenOut}`));
+    // Use the same calculation as the smart contract: keccak256(abi.encode(tokenIn, tokenOut))
+    return ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "address"],
+        [tokenIn, tokenOut]
+      )
+    );
   }
 
   /**
@@ -753,6 +766,10 @@ export class TradeMonitor {
    */
   async executeTrades(pairId: string): Promise<string> {
     try {
+      if (!this.coreContractWithSigner) {
+        throw new Error("Private key not available - cannot execute trades");
+      }
+
       console.log(`🚀 Executing trades for pairId: ${pairId}`);
 
       // Call the executeTrades function on the contract using signer
