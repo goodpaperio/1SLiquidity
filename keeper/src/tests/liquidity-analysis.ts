@@ -103,23 +103,23 @@ function calculateTotalReserves(
 ): { weiTotal: string; normalTotal: number } {
   const reserveFields = isTokenA
     ? [
-      'reservesAUniswapV2',
-      'reservesASushiswap',
-      'reservesACurve',
-      'reservesABalancer',
-      'reservesAUniswapV3_500',
-      'reservesAUniswapV3_3000',
-      'reservesAUniswapV3_10000',
-    ]
+        'reservesAUniswapV2',
+        'reservesASushiswap',
+        'reservesACurve',
+        'reservesABalancer',
+        'reservesAUniswapV3_500',
+        'reservesAUniswapV3_3000',
+        'reservesAUniswapV3_10000',
+      ]
     : [
-      'reservesBUniswapV2',
-      'reservesBSushiswap',
-      'reservesBCurve',
-      'reservesBBalancer',
-      'reservesBUniswapV3_500',
-      'reservesBUniswapV3_3000',
-      'reservesBUniswapV3_10000',
-    ]
+        'reservesBUniswapV2',
+        'reservesBSushiswap',
+        'reservesBCurve',
+        'reservesBBalancer',
+        'reservesBUniswapV3_500',
+        'reservesBUniswapV3_3000',
+        'reservesBUniswapV3_10000',
+      ]
 
   let totalWei = BigInt(0)
 
@@ -322,6 +322,21 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
       if (seenPairs.has(pairKey)) {
         console.log(
           `  Skipping duplicate pair: ${baseTokenSymbol}/${token.tokenName.toUpperCase()}`
+        )
+        continue
+      }
+
+      // Skip if both tokens are base tokens (base-to-base pairs should not be created)
+      const isBaseTokenA = Object.values(BASE_TOKENS).some(
+        (addr) => addr.toLowerCase() === baseTokenAddress.toLowerCase()
+      )
+      const isBaseTokenB = Object.values(BASE_TOKENS).some(
+        (addr) => addr.toLowerCase() === token.tokenAddress.toLowerCase()
+      )
+
+      if (isBaseTokenA && isBaseTokenB) {
+        console.log(
+          `  🚫 Skipping base-to-base pair: ${baseTokenSymbol}/${token.tokenName.toUpperCase()}`
         )
         continue
       }
@@ -530,7 +545,8 @@ async function fetchTopTokensByMarketCap(
     })
 
     console.log(
-      `Filtered ${enrichedTokens.length - erc20Tokens.length
+      `Filtered ${
+        enrichedTokens.length - erc20Tokens.length
       } non-ERC20 tokens out of ${enrichedTokens.length} total tokens`
     )
 
@@ -769,9 +785,10 @@ async function getAllReservesForPair(
 
         results.push(liquidityResult)
         console.log(
-          `      Found ${dex.name} liquidity${reserves.pairAddress
-            ? ` (Pool Address: ${reserves.pairAddress})`
-            : ''
+          `      Found ${dex.name} liquidity${
+            reserves.pairAddress
+              ? ` (Pool Address: ${reserves.pairAddress})`
+              : ''
           }`
         )
       }
@@ -806,12 +823,32 @@ async function saveTokenToJson(
     }
   }
 
-  // Add new token result (or update if it already exists)
+  // Add new token result (or merge liquidity pairs if it already exists)
   const existingIndex = existingData.findIndex(
     (item) => item.tokenAddress === tokenResult.tokenAddress
   )
   if (existingIndex >= 0) {
-    existingData[existingIndex] = tokenResult
+    // Merge liquidity pairs instead of replacing the entire token object
+    const existingToken = existingData[existingIndex]
+    const existingPairAddresses = new Set(
+      existingToken.liquidityPairs.map((pair) => pair.pairAddress)
+    )
+
+    // Add only new liquidity pairs that don't already exist
+    const newPairs = tokenResult.liquidityPairs.filter(
+      (pair) => !existingPairAddresses.has(pair.pairAddress)
+    )
+
+    if (newPairs.length > 0) {
+      existingToken.liquidityPairs.push(...newPairs)
+      console.log(
+        `  🔄 Merged ${newPairs.length} new liquidity pairs for ${tokenResult.tokenSymbol}`
+      )
+    } else {
+      console.log(
+        `  ℹ️  No new liquidity pairs to add for ${tokenResult.tokenSymbol}`
+      )
+    }
   } else {
     existingData.push(tokenResult)
   }
@@ -1243,7 +1280,7 @@ async function transformToColumnFormat(
       priceAccuracyNODECA,
       priceAccuracyDECA,
     } = sweetSpot
-        ? await calculateSlippageSavings(
+      ? await calculateSlippageSavings(
           BigInt(record.reserveAtotaldepthWei), // Total reserves A
           highestLiquidityADex, // Best DEX name
           feeTier, // Fee tier
@@ -1256,7 +1293,7 @@ async function transformToColumnFormat(
           sweetSpot,
           bestDexPairAddress
         )
-        : {
+      : {
           slippageSavings: 0,
           percentageSavings: 0,
           priceAccuracyNODECA: 0,
@@ -1283,7 +1320,8 @@ async function transformToColumnFormat(
     `📋 Grouped ${results.reduce(
       (sum, r) => sum + r.liquidityPairs.length,
       0
-    )} individual DEX pairs into ${transformedRecords.length
+    )} individual DEX pairs into ${
+      transformedRecords.length
     } token pair records with total depth calculations`
   )
 
@@ -1296,31 +1334,31 @@ function calculateSlippageV4(
   reserveOut: bigint
 ): number {
   if (volumeIn === 0n || reserveIn === 0n || reserveOut === 0n) {
-    return 0;
+    return 0
   }
 
   // k = reserveIn * reserveOut
-  const k = reserveIn * reserveOut;
-  const denominator = reserveIn + volumeIn;
+  const k = reserveIn * reserveOut
+  const denominator = reserveIn + volumeIn
   if (denominator === 0n) {
-    return 0;
+    return 0
   }
 
   // volumeOut = reserveOut - (k / (reserveIn + volumeIn))
-  const volumeOut = reserveOut - (k / denominator);
+  const volumeOut = reserveOut - k / denominator
 
   // priceRatio = (volumeOut * reserveIn * 10000) / (volumeIn * reserveOut)
   // clamp negative slippage (better price) to 0
-  const numerator = volumeOut * reserveIn * 10000n;
-  const denom = volumeIn * reserveOut;
+  const numerator = volumeOut * reserveIn * 10000n
+  const denom = volumeIn * reserveOut
   if (denom === 0n) {
-    return 0;
+    return 0
   }
-  const priceRatio = Number(numerator / denom); // integer division, basis points
+  const priceRatio = Number(numerator / denom) // integer division, basis points
   if (priceRatio > 10000) {
-    return 0;
+    return 0
   }
-  return 10000 - priceRatio;
+  return 10000 - priceRatio
 }
 
 export function calculateSweetSpotV2(
@@ -1330,63 +1368,63 @@ export function calculateSweetSpotV2(
 ): number {
   // Mirror StreamDaemon _sweetSpotAlgo v4
   if (reserveIn === 0n || reserveOut === 0n) {
-    return 4;
+    return 4
   }
 
-  let sweetSpot = 1;
-  let effectiveVolume = tradeVolume / BigInt(sweetSpot);
-  let slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+  let sweetSpot = 1
+  let effectiveVolume = tradeVolume / BigInt(sweetSpot)
+  let slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut)
 
   // Alpha testing behavior: minimum sweet spot of 4 if already within 10 bps
   if (slippage <= 10) {
-    return 4;
+    return 4
   }
 
-  let lastSweetSpot = sweetSpot;
-  let lastSlippage = slippage;
+  let lastSweetSpot = sweetSpot
+  let lastSlippage = slippage
 
   // Iteratively double sweet spot until slippage <= 10 bps or cap
   while (slippage > 10 && sweetSpot < 1000) {
-    lastSweetSpot = sweetSpot;
-    lastSlippage = slippage;
+    lastSweetSpot = sweetSpot
+    lastSlippage = slippage
 
-    sweetSpot = sweetSpot * 2;
-    effectiveVolume = tradeVolume / BigInt(sweetSpot);
+    sweetSpot = sweetSpot * 2
+    effectiveVolume = tradeVolume / BigInt(sweetSpot)
     if (effectiveVolume === 0n) {
-      break;
+      break
     }
-    slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut);
+    slippage = calculateSlippageV4(effectiveVolume, reserveIn, reserveOut)
   }
 
   // Binary refinement if threshold crossed
   if (lastSlippage > 10 && slippage <= 10) {
-    let low = lastSweetSpot;
-    let high = sweetSpot;
+    let low = lastSweetSpot
+    let high = sweetSpot
 
     for (let i = 0; i < 5; i++) {
-      const mid = Math.floor((low + high) / 2);
-      const midVolume = tradeVolume / BigInt(mid);
+      const mid = Math.floor((low + high) / 2)
+      const midVolume = tradeVolume / BigInt(mid)
       if (midVolume === 0n) {
-        break;
+        break
       }
-      const midSlippage = calculateSlippageV4(midVolume, reserveIn, reserveOut);
+      const midSlippage = calculateSlippageV4(midVolume, reserveIn, reserveOut)
       if (midSlippage <= 10) {
-        high = mid;
-        sweetSpot = mid;
+        high = mid
+        sweetSpot = mid
       } else {
-        low = mid;
+        low = mid
       }
     }
   }
 
   // Alpha testing constraints: clamp between 4 and 500
   if (sweetSpot <= 4) {
-    sweetSpot = 4;
+    sweetSpot = 4
   }
   if (sweetSpot > 500) {
-    sweetSpot = 500;
+    sweetSpot = 500
   }
-  return sweetSpot;
+  return sweetSpot
 }
 
 // OLD SWEETSPOT ALGORITHM
@@ -2112,7 +2150,8 @@ async function runLiquidityAnalysisFromJson(
     for (let i = 0; i < totalPairs; i++) {
       const pair = tokenPairs[i]
       console.log(
-        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${pair.tokenSymbol
+        `\n[${i + 1}/${totalPairs}] Processing ${pair.baseTokenSymbol}/${
+          pair.tokenSymbol
         }...`
       )
 
@@ -2297,7 +2336,8 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
     for (let i = 0; i < actualTokensToProcess; i++) {
       const token = tokensToProcess[i]
       console.log(
-        `\n[${i + 1}/${actualTokensToProcess}] Processing ${token.symbol
+        `\n[${i + 1}/${actualTokensToProcess}] Processing ${
+          token.symbol
         } (Market Cap: $${token.market_cap.toLocaleString()})...`
       )
 
@@ -2699,8 +2739,10 @@ export async function analyzeTokenPairLiquidityComprehensive(
     console.log(`\nDEX Analysis:`)
     dexResults.forEach((dex) => {
       console.log(
-        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${tokenAInfo.symbol
-        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${tokenBInfo.symbol
+        `  ${dex.name}: ${dex.reservesNormal.tokenA.toFixed(6)} ${
+          tokenAInfo.symbol
+        } / ${dex.reservesNormal.tokenB.toFixed(6)} ${
+          tokenBInfo.symbol
         } (Total: ${dex.totalLiquidity.toFixed(6)})`
       )
     })
