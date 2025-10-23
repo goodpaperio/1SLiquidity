@@ -180,8 +180,8 @@ export class TradeMonitor {
     return {
       tradeId: trade.tradeId,
       pair: `${tokenInSymbol}/${tokenOutSymbol}`,
-      tokenIn: tokenInSymbol,
-      tokenOut: tokenOutSymbol,
+      tokenIn: trade.tokenIn, // Use actual address, not symbol
+      tokenOut: trade.tokenOut, // Use actual address, not symbol
       amountIn: this.formatTokenAmount(trade.amountIn),
       amountRemaining: this.formatTokenAmount(trade.amountRemaining),
       targetAmountOut: this.formatTokenAmount(trade.targetAmountOut),
