@@ -31,6 +31,8 @@ export interface PlaceTradeParams {
   minAmountOut: string
   isInstasettlable: boolean
   usePriceBased: boolean
+  instasettleBps?: string
+  onlyInstasettle?: boolean
 }
 
 export interface InstasettleParams extends PlaceTradeParams {
@@ -340,6 +342,8 @@ export const useCoreTrading = () => {
           minAmountOut,
           isInstasettlable,
           usePriceBased,
+          instasettleBps,
+          onlyInstasettle,
         } = params
 
         // Step 1: Initialize
@@ -395,6 +399,7 @@ export const useCoreTrading = () => {
         updateToastProgress('Preparing trade data...', 70, 4)
         const contract = getContract(signer)
 
+        // Current encoding (6 parameters) - for deployed contract
         const tradeData = ethers.utils.defaultAbiCoder.encode(
           ['address', 'address', 'uint256', 'uint256', 'bool', 'bool'],
           [
@@ -406,6 +411,22 @@ export const useCoreTrading = () => {
             usePriceBased,
           ]
         )
+
+        // TODO: Uncomment when new contract is deployed with instasettleBps and onlyInstasettle
+        // const instasettleBpsValue = instasettleBps ? parseInt(instasettleBps) : 0
+        // const tradeData = ethers.utils.defaultAbiCoder.encode(
+        //   ['address', 'address', 'uint256', 'uint256', 'bool', 'bool', 'uint256', 'bool'],
+        //   [
+        //     tokenIn,
+        //     tokenOut,
+        //     amountInWei,
+        //     minAmountOutWei,
+        //     isInstasettlable,
+        //     usePriceBased,
+        //     instasettleBpsValue,
+        //     onlyInstasettle || false,
+        //   ]
+        // )
 
         // Estimate gas
         const gasEstimate = await contract.estimateGas.placeTrade(tradeData)

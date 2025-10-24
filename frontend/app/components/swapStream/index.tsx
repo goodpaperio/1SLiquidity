@@ -13,6 +13,7 @@ import ImageFallback from '@/app/shared/ImageFallback'
 import { XIcon } from 'lucide-react'
 import { formatNumberSmart } from '@/app/lib/utils/number'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import InstasettlePill from '@/app/components/shared/InstasettlePill'
 
 type Trade = {
   id: string
@@ -238,28 +239,18 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                 </div>
               )}
               {trade.isInstasettlable && (
-                <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-primary rounded-full leading-none whitespace-nowrap ml-auto">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                  >
-                    <path
-                      d="M13 2L6 14H11V22L18 10H13V2Z"
-                      fill="#40f798"
-                      fillOpacity="0.72"
-                    />
-                  </svg>
-                  <span className="text-xs sm:inline-block hidden">
-                    {trade.settlements.length > 0
-                      ? 'Instasettled'
-                      : 'Instasettle'}
-                  </span>
-                </div>
+                <InstasettlePill
+                  isSettled={trade.settlements.length > 0}
+                  variant="instasettled"
+                />
               )}
+
+              {/* {trade.onlyInstasettlable && (
+                <InstasettlePill
+                  isSettled={trade.settlements.length > 0}
+                  variant="only-instasettlable"
+                />
+              )} */}
 
               {trade.cancellations.length > 0 && (
                 <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none whitespace-nowrap ml-auto">
