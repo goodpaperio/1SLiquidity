@@ -84,7 +84,6 @@ const validatePagination = (
   return { page: pageNum, limit: limitNum }
 }
 
-
 // API Routes
 
 // 1. Health Check
@@ -212,7 +211,10 @@ app.get(
 
     // Validate volume
     if (!volume || isNaN(parseFloat(volume)) || parseFloat(volume) <= 0) {
-      throw { statusCode: 400, message: 'Invalid volume. Must be a positive number.' }
+      throw {
+        statusCode: 400,
+        message: 'Invalid volume. Must be a positive number.',
+      }
     }
 
     // Get pair data from database
@@ -342,6 +344,8 @@ app.get(
         slippageSavings: true,
         percentageSavings: true,
         highestLiquidityADex: true,
+        priceAccuracyDECA: true,
+        priceAccuracyNODECA: true,
       },
     })
 
