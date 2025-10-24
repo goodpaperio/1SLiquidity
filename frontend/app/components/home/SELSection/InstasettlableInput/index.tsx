@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { InfoIcon } from '@/app/lib/icons'
 
 interface InstasettlableInputProps {
   defaultValue?: string
@@ -69,7 +70,7 @@ export default function InstasettlableInput({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+              <InfoIcon className="h-4 w-4 cursor-help block" />
             </TooltipTrigger>
             <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
               <p>

@@ -67,14 +67,7 @@ export default function TopPairsCarousel({
 
   // Enhanced setActiveHotPair that includes slippageSavingsUsd
   const handleSetActiveHotPair = (pair: any) => {
-    const enhancedPair = {
-      ...pair,
-      slippageSavingsUsd: formatNumberAdvanced(
-        pair.slippageSavingsUsd ||
-          pair.slippageSavings * (pair.tokenBUsdPrice || 1)
-      ),
-    }
-    setActiveHotPair(enhancedPair)
+    setActiveHotPair(pair)
   }
 
   return (

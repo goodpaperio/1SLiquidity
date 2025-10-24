@@ -47,7 +47,7 @@ const CHAIN_ID_TO_MORALIS: { [key: string]: string } = {
 }
 
 // Base tokens that will be shown as popular tokens
-const BASE_TOKENS = ['ETH', 'USDC', 'USDT', 'WBTC', 'WETH']
+const BASE_TOKENS = ['ETH', 'USDC', 'USDT', 'WBTC', 'WETH', 'DAI']
 
 // Helper function to get all unique tokens from JSON results (only successful ones)
 const getAllTokensFromJson = (): {

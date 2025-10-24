@@ -237,7 +237,9 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             amount={isCalculating ? undefined : formatSlippageSavings()}
             infoDetail="Estimated"
             isLoading={isCalculating}
+            firstColumnClassName="items-center"
           />
+
           <NetworkFee
             buyAmount={buyAmount}
             tokenToUsdPrice={tokenToUsdPrice}
@@ -267,12 +269,14 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             }
             infoDetail="Estimated"
             isLoading={isCalculating}
+            firstColumnClassName="items-center"
           />
           <AmountTag
             title="Est. Stream Count"
             amount={isCalculating ? undefined : streamCount?.toString()}
             infoDetail="Estimated"
             isLoading={isCalculating}
+            firstColumnClassName="items-center"
           />
           {/* <AmountTag
             title="Est. Time"

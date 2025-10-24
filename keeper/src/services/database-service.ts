@@ -140,6 +140,10 @@ export default class DatabaseService {
           slippageSavings: data.slippageSavings,
           percentageSavings: data.percentageSavings,
 
+          // Price accuracy
+          priceAccuracyDECA: data.priceAccuracyDECA,
+          priceAccuracyNODECA: data.priceAccuracyNODECA,
+
           // Highest liquidity DEX
           highestLiquidityADex: data.highestLiquidityADex,
         },
@@ -206,6 +210,10 @@ export default class DatabaseService {
                 slippageSavings: data.slippageSavings,
                 percentageSavings: data.percentageSavings,
 
+                // Price accuracy
+                priceAccuracyDECA: data.priceAccuracyDECA,
+                priceAccuracyNODECA: data.priceAccuracyNODECA,
+
                 // Highest liquidity DEX
                 highestLiquidityADex: data.highestLiquidityADex,
 
@@ -247,6 +255,10 @@ export default class DatabaseService {
                 // Slippage savings
                 slippageSavings: data.slippageSavings,
                 percentageSavings: data.percentageSavings,
+
+                // Price accuracy
+                priceAccuracyDECA: data.priceAccuracyDECA,
+                priceAccuracyNODECA: data.priceAccuracyNODECA,
 
                 // Highest liquidity DEX
                 highestLiquidityADex: data.highestLiquidityADex,

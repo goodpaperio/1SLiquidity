@@ -679,7 +679,8 @@ export const useCoreTrading = () => {
         tokenInObj?: any,
         tokenOutObj?: any,
         amountIn?: string,
-        amountOut?: string
+        amountOut?: string,
+        isError?: boolean
       ) => {
         const toastContent = (
           <NotifiSwapStream
@@ -693,6 +694,7 @@ export const useCoreTrading = () => {
             progress={progress}
             currentStep={currentStep}
             totalSteps={5}
+            isError={isError}
           />
         )
 
@@ -713,7 +715,16 @@ export const useCoreTrading = () => {
 
         // Check if the trade is instasettlable
         if (!trade.isInstasettlable) {
-          updateToastProgress('Trade is not instasettlable', 0, 1)
+          updateToastProgress(
+            'Trade is not instasettlable',
+            0,
+            1,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true
+          )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
             removeToast('instasettle')
@@ -726,7 +737,16 @@ export const useCoreTrading = () => {
           trade.realisedAmountOut
         )
         if (remainingAmountOut.lte(0)) {
-          updateToastProgress('No remaining amount to settle', 0, 1)
+          updateToastProgress(
+            'No remaining amount to settle',
+            0,
+            1,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true
+          )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
             removeToast('instasettle')
@@ -798,7 +818,8 @@ export const useCoreTrading = () => {
             tokenInObj,
             tokenOutObj,
             amountInFormatted,
-            `Required: ${requiredAmount}`
+            `Required: ${requiredAmount}`,
+            true
           )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
@@ -914,7 +935,16 @@ export const useCoreTrading = () => {
       } catch (error: any) {
         console.error('Error instasettling trade:', error)
         // Show error in custom toast
-        updateToastProgress(`Failed: ${error.reason || error.message}`, 0, 1)
+        updateToastProgress(
+          `Failed: ${error.reason || error.message}`,
+          0,
+          1,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          true
+        )
 
         // Auto-close error toast after 5 seconds
         setTimeout(() => {

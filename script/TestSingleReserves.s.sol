@@ -8,7 +8,8 @@ import {IUniversalDexInterface} from "../src/interfaces/IUniversalDexInterface.s
 import {UniswapV2Fetcher} from "../src/adapters/UniswapV2Fetcher.sol";
 import {SushiswapFetcher} from "../src/adapters/SushiswapFetcher.sol";
 import {UniswapV3Fetcher} from "../src/adapters/UniswapV3Fetcher.sol";
-import {BalancerFetcher} from "../src/adapters/BalancerFetcher.sol";
+import {BalancerV2Fetcher} from "../src/adapters/BalancerV2Fetcher.sol";
+import {BalancerV2PoolRegistry} from "../src/adapters/BalancerV2PoolRegistry.sol";
 import {CurveFetcher} from "../src/adapters/CurveFetcher.sol";
 import {OneInchFetcher} from "../src/adapters/OneInchFetcher.sol";
 
@@ -41,15 +42,15 @@ contract TestReservesScript is Script {
         UniswapV3Fetcher uniswapV3Fetcher = new UniswapV3Fetcher(UNISWAP_V3_FACTORY, feeTiers[1]);
 
         // Create other DEX fetchers with real addresses
-        BalancerFetcher balancerFetcher;
+        BalancerV2Fetcher balancerFetcher;
         CurveFetcher curveFetcher;
         OneInchFetcher oneInchFetcher;
 
-        // Using real Balancer pool address (BAL/WETH pool)
-        try new BalancerFetcher(BALANCER_POOL, BALANCER_VAULT) returns (BalancerFetcher balancer) {
+        // Using Balancer V2 fetcher with a local registry containing BAL/WETH pool
+        try this.setupBalancerFetcher() returns (BalancerV2Fetcher balancer) {
             balancerFetcher = balancer;
         } catch {
-            console.log("BalancerFetcher creation failed");
+            console.log("BalancerV2Fetcher creation failed");
         }
 
         try new CurveFetcher(CURVE_POOL) returns (CurveFetcher curve) {
@@ -155,6 +156,14 @@ contract TestReservesScript is Script {
         console.log("- executeTrade(address token0, address token1, uint256 amount, address dex)");
 
         vm.stopBroadcast();
+    }
+
+    function setupBalancerFetcher() external returns (BalancerV2Fetcher) {
+        BalancerV2PoolRegistry registry = new BalancerV2PoolRegistry(address(this));
+        registry.setKeeper(address(this), true);
+        registry.addPool(0xba100000625a3754423978a60c9317c58a424e3D, 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, 0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56, true);
+        registry.addPool(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, 0xba100000625a3754423978a60c9317c58a424e3D, 0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56, true);
+        return new BalancerV2Fetcher(BALANCER_VAULT, address(registry));
     }
 
     function testReservesForAllPairs(IUniversalDexInterface fetcher, address[][] memory tokenPairs) internal view {

@@ -206,7 +206,7 @@ export default function TradingSettings({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                              <InfoIcon className="h-4 w-4 cursor-help block" />
                             </TooltipTrigger>
                             <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                               <p>Default trading options</p>
@@ -234,7 +234,7 @@ export default function TradingSettings({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                                <InfoIcon className="h-4 w-4 cursor-help block" />
                               </TooltipTrigger>
                               <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                                 <p>Enable UniswapX for better pricing</p>
@@ -384,7 +384,7 @@ export default function TradingSettings({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                            <InfoIcon className="h-3 w-3 cursor-help block" />
                           </TooltipTrigger>
                           <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                             {settlementMode === 'ONLY_INSTASETTLE' ? (
@@ -441,7 +441,7 @@ export default function TradingSettings({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-3 w-3 text-zinc-500 cursor-help" />
+                                <InfoIcon className="h-3 w-3 cursor-help block" />
                               </TooltipTrigger>
                               <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                                 <p>
@@ -472,7 +472,7 @@ export default function TradingSettings({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-3 w-3 text-zinc-500 cursor-help" />
+                                <InfoIcon className="h-3 w-3 cursor-help block" />
                               </TooltipTrigger>
                               <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                                 <p>

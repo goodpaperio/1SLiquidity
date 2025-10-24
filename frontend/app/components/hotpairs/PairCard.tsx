@@ -5,6 +5,12 @@ import Image from 'next/image'
 import Button from '../button'
 import { useRouter } from 'next/navigation'
 import ImageFallback from '@/app/shared/ImageFallback'
+import {
+  calculatePriceAccuracy,
+  formatAccuracy,
+} from '@/app/lib/utils/priceAccuracy'
+import { useMemo } from 'react'
+import { InfoIcon } from '@/app/lib/icons'
 
 export default function PairCard({
   pair,
@@ -16,6 +22,10 @@ export default function PairCard({
   onClick: (pair: any) => void
 }) {
   const router = useRouter()
+
+  const priceAccuracy = useMemo(() => {
+    return calculatePriceAccuracy(pair)
+  }, [pair])
 
   const handleStreamClick = () => {
     // Navigate to swaps page with token symbols as query parameters
@@ -113,6 +123,52 @@ export default function PairCard({
               )}
             </p>
           </div>
+
+          {priceAccuracy && (
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-center">
+                <div className="w-3/4 h-[1px] bg-zinc-700" />
+              </div>
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white text-xs uppercase tracking-wide">
+                    Price Accuracy
+                  </p>
+                  <div className="relative group/tooltip" role="tooltip">
+                    <InfoIcon className="h-3 w-3 cursor-help" />
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/tooltip:block w-56 p-2 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-300 z-50">
+                      <div className="space-y-1">
+                        <div>
+                          <span className="text-[#40f798] font-semibold">
+                            Green
+                          </span>
+                          : With DECASTREAM
+                        </div>
+                        <div>
+                          <span className="text-[#ff6b6b] font-semibold">
+                            Red
+                          </span>
+                          : Without DECASTREAM
+                        </div>
+                        <div className="text-zinc-400 mt-1 pt-1 border-t border-zinc-700">
+                          Lorem ipsum, dolor sit amet consectetur
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[#40f798] font-bold text-sm">
+                    {formatAccuracy(priceAccuracy.aToB)}
+                  </span>
+                  <span className="text-white">/</span>
+                  <span className="text-[#ff6b6b] font-bold text-sm">
+                    {formatAccuracy(priceAccuracy.bToA)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div onClick={(e) => e.stopPropagation()}>
             <Button
