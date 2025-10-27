@@ -6,6 +6,7 @@ import {
   TOKEN_ADDRESSES,
   getProvider,
   getSigner,
+  DEPLOYMENT_BLOCK,
 } from "./config";
 import {
   Trade,
@@ -420,11 +421,11 @@ export class TradeMonitor {
     const currentBlock = await this.provider.getBlockNumber();
 
     // For historical analysis, always scan from deployment block to get complete history
-    // Use a reasonable range to avoid scanning too many blocks at once
-    const fromBlock = Math.max(0, currentBlock - 200000);
+    // Start from the actual deployment block of the Core contract
+    const fromBlock = DEPLOYMENT_BLOCK;
 
     console.log(
-      `📊 Scanning from block ${fromBlock} to ${currentBlock} for complete history`
+      `📊 Scanning from deployment block ${fromBlock} to ${currentBlock} for complete history`
     );
 
     // Scan all events in parallel
@@ -822,10 +823,13 @@ export class TradeMonitor {
 
       for (let i = 0; i < uniquePairIds.length; i++) {
         const pairId = uniquePairIds[i];
+        const tradesInQueue = localData.outstandingTrades.filter(
+          (t) => t.pairId === pairId
+        ).length;
         console.log(
-          `\n🔄 Executing trades ${i + 1}/${
+          `\n🔄 Executing trade queue ${i + 1}/${
             uniquePairIds.length
-          } for pairId: ${pairId}`
+          } (${tradesInQueue} trades in queue) for pairId: ${pairId}`
         );
 
         try {

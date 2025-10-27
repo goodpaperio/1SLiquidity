@@ -15,6 +15,9 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   streamDaemon: "0x655e264166dacec690cbcec8ecb88cc5be68ab21",
 };
 
+// Deployment block for Core contract v1.0.2
+export const DEPLOYMENT_BLOCK = 23291452;
+
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {
   "0x0000000000000000000000000000000000000000": "ETH",
