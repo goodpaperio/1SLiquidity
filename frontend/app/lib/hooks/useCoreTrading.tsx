@@ -31,6 +31,8 @@ export interface PlaceTradeParams {
   minAmountOut: string
   isInstasettlable: boolean
   usePriceBased: boolean
+  instasettleBps?: string
+  onlyInstasettle?: boolean
 }
 
 export interface InstasettleParams extends PlaceTradeParams {
@@ -340,6 +342,8 @@ export const useCoreTrading = () => {
           minAmountOut,
           isInstasettlable,
           usePriceBased,
+          instasettleBps,
+          onlyInstasettle,
         } = params
 
         // Step 1: Initialize
@@ -395,6 +399,7 @@ export const useCoreTrading = () => {
         updateToastProgress('Preparing trade data...', 70, 4)
         const contract = getContract(signer)
 
+        // Current encoding (6 parameters) - for deployed contract
         const tradeData = ethers.utils.defaultAbiCoder.encode(
           ['address', 'address', 'uint256', 'uint256', 'bool', 'bool'],
           [
@@ -406,6 +411,22 @@ export const useCoreTrading = () => {
             usePriceBased,
           ]
         )
+
+        // TODO: Uncomment when new contract is deployed with instasettleBps and onlyInstasettle
+        // const instasettleBpsValue = instasettleBps ? parseInt(instasettleBps) : 0
+        // const tradeData = ethers.utils.defaultAbiCoder.encode(
+        //   ['address', 'address', 'uint256', 'uint256', 'bool', 'bool', 'uint256', 'bool'],
+        //   [
+        //     tokenIn,
+        //     tokenOut,
+        //     amountInWei,
+        //     minAmountOutWei,
+        //     isInstasettlable,
+        //     usePriceBased,
+        //     instasettleBpsValue,
+        //     onlyInstasettle || false,
+        //   ]
+        // )
 
         // Estimate gas
         const gasEstimate = await contract.estimateGas.placeTrade(tradeData)
@@ -658,7 +679,8 @@ export const useCoreTrading = () => {
         tokenInObj?: any,
         tokenOutObj?: any,
         amountIn?: string,
-        amountOut?: string
+        amountOut?: string,
+        isError?: boolean
       ) => {
         const toastContent = (
           <NotifiSwapStream
@@ -672,6 +694,7 @@ export const useCoreTrading = () => {
             progress={progress}
             currentStep={currentStep}
             totalSteps={5}
+            isError={isError}
           />
         )
 
@@ -692,7 +715,16 @@ export const useCoreTrading = () => {
 
         // Check if the trade is instasettlable
         if (!trade.isInstasettlable) {
-          updateToastProgress('Trade is not instasettlable', 0, 1)
+          updateToastProgress(
+            'Trade is not instasettlable',
+            0,
+            1,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true
+          )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
             removeToast('instasettle')
@@ -705,7 +737,16 @@ export const useCoreTrading = () => {
           trade.realisedAmountOut
         )
         if (remainingAmountOut.lte(0)) {
-          updateToastProgress('No remaining amount to settle', 0, 1)
+          updateToastProgress(
+            'No remaining amount to settle',
+            0,
+            1,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true
+          )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
             removeToast('instasettle')
@@ -777,7 +818,8 @@ export const useCoreTrading = () => {
             tokenInObj,
             tokenOutObj,
             amountInFormatted,
-            `Required: ${requiredAmount}`
+            `Required: ${requiredAmount}`,
+            true
           )
           // Auto-close error toast after 5 seconds
           setTimeout(() => {
@@ -893,7 +935,16 @@ export const useCoreTrading = () => {
       } catch (error: any) {
         console.error('Error instasettling trade:', error)
         // Show error in custom toast
-        updateToastProgress(`Failed: ${error.reason || error.message}`, 0, 1)
+        updateToastProgress(
+          `Failed: ${error.reason || error.message}`,
+          0,
+          1,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          true
+        )
 
         // Auto-close error toast after 5 seconds
         setTimeout(() => {

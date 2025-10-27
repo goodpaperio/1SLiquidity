@@ -212,11 +212,14 @@ export class BalancerService {
   }
 
   /**
-   * Get price for a token pair using Balancer's spot price calculation
+   * Get price for a token pair using Balancer's queryBatchSwap
+   * This uses the actual swap calculation considering pool weights, fees, and AMM mechanics
+   * @param amountIn - Amount of tokenA to use for price calculation (default: 1)
    */
   async getPrice(
     tokenA: string,
-    tokenB: string
+    tokenB: string,
+    amountIn: number | string = 1
   ): Promise<{
     price: string;
     dex: string;
@@ -237,33 +240,79 @@ export class BalancerService {
         return null
       }
 
-      // Get balances from vault (only dynamic data we need)
-      const vault = new ethers.Contract(
-        this.vaultAddress,
-        CONTRACT_ABIS.BALANCER.VAULT,
-        this.provider
-      )
-      const [tokens, balances] = await vault.getPoolTokens(this.metadata.poolId)
-
       // Get token decimals
       const [token0Info, token1Info] = await Promise.all([
         this.tokenService.getTokenInfo(tokenA),
         this.tokenService.getTokenInfo(tokenB),
       ])
 
-      // Calculate spot price: balanceB / balanceA
-      const balanceA = BigInt(balances[tokenAIndex])
-      const balanceB = BigInt(balances[tokenBIndex])
+      // Normalize amountIn to proper decimals for tokenA
+      const amountInNormalized = DecimalUtils.normalizeAmount(String(amountIn), token0Info.decimals)
 
-      if (balanceA === 0n) {
-        console.log(`Zero balance for tokenA in pool ${this.poolAddress}`)
+      // Create vault contract
+      const vault = new ethers.Contract(
+        this.vaultAddress,
+        CONTRACT_ABIS.BALANCER.VAULT,
+        this.provider
+      )
+
+      // Assets array must contain all pool tokens in the order they appear in the pool
+      // This is required for Balancer's queryBatchSwap to work correctly
+      const assets = this.metadata.tokens
+
+      // Set up funds struct (not used for query, but required)
+      const funds = {
+        sender: ethers.ZeroAddress,
+        fromInternalBalance: false,
+        recipient: ethers.ZeroAddress,
+        toInternalBalance: false,
+      }
+
+      // Set up swap struct for queryBatchSwap
+      // Note: indices reference positions in the assets array (all pool tokens)
+      const swaps = [
+        {
+          poolId: this.metadata.poolId,
+          assetInIndex: tokenAIndex,
+          assetOutIndex: tokenBIndex,
+          amount: amountInNormalized.toString(),
+          userData: '0x',
+        },
+      ]
+
+      // Encode the function call data
+      const data = vault.interface.encodeFunctionData('queryBatchSwap', [
+        0, // SwapKind.GIVEN_IN
+        swaps,
+        assets,
+        funds,
+      ])
+
+      // Use provider.call() to make a static call instead of sending a transaction
+      const result = await this.provider.call({
+        to: this.vaultAddress,
+        data,
+      })
+
+      // Decode the result
+      const deltas = vault.interface.decodeFunctionResult('queryBatchSwap', result)[0]
+
+      // deltas array corresponds to the assets array indices
+      // The delta at tokenAIndex should be positive (amount in)
+      // The delta at tokenBIndex should be negative (amount out)
+      if (deltas.length < tokenBIndex + 1 || deltas[tokenBIndex] >= 0n) {
+        console.log(`No valid quote from Balancer pool ${this.poolAddress}`)
         return null
       }
 
-      // Use DecimalUtils to properly calculate price with correct decimals
+      // Negate the delta to get positive amount out (as shown in dummy implementation)
+      // deltas[tokenBIndex] will be negative, so multiply by -1 to get positive
+      const amountOut = BigInt(deltas[tokenBIndex]) * BigInt(-1)
+
+      // Calculate price using the quote
       const price = DecimalUtils.calculatePrice(
-        balanceA,
-        balanceB,
+        amountInNormalized,
+        amountOut,
         token0Info.decimals,
         token1Info.decimals
       )

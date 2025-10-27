@@ -4,6 +4,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import DatabaseService from '../services/database-service'
+import { calculateVolumeMetrics } from '../functions/volume-metrics'
 import * as dotenv from 'dotenv'
 
 // Load environment variables
@@ -196,7 +197,44 @@ app.get(
   })
 )
 
-// 4. Get all pairs for a specific token
+// 4. Calculate sweet spot and slippage for custom volume
+app.get(
+  '/api/pairs/:tokenA/:tokenB/calculate',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { tokenA, tokenB } = req.params
+    const volume = req.query.volume as string
+
+    // Validate Ethereum addresses
+    if (!validateEthereumAddress(tokenA) || !validateEthereumAddress(tokenB)) {
+      throw { statusCode: 400, message: 'Invalid Ethereum address format' }
+    }
+
+    // Validate volume
+    if (!volume || isNaN(parseFloat(volume)) || parseFloat(volume) <= 0) {
+      throw {
+        statusCode: 400,
+        message: 'Invalid volume. Must be a positive number.',
+      }
+    }
+
+    // Get pair data from database
+    const pair = await dbService.getLiquidityData(tokenA, tokenB)
+
+    if (!pair) {
+      throw { statusCode: 404, message: 'Liquidity pair not found' }
+    }
+
+    // Use helper function to calculate metrics
+    const data = await calculateVolumeMetrics(pair, volume)
+
+    res.json({
+      success: true,
+      data,
+    })
+  })
+)
+
+// 5. Get all pairs for a specific token
 app.get(
   '/api/tokens/:address/pairs',
   asyncHandler(async (req: Request, res: Response) => {
@@ -257,7 +295,7 @@ app.get(
   })
 )
 
-// 5. Get top tokens by liquidity depth
+// 6. Get top tokens by liquidity depth
 app.get(
   '/api/tokens/top',
   asyncHandler(async (req: Request, res: Response) => {
@@ -311,20 +349,47 @@ app.get(
       },
     })
 
+    // Filter out base-to-base token pairs
+    const baseTokenAddresses = [
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+      '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+      '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+      '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599', // WBTC
+      '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+    ]
+
+    const filteredTokens = topTokens.filter((token: any) => {
+      const tokenAIsBase = baseTokenAddresses.includes(
+        token.tokenAAddress.toLowerCase()
+      )
+      const tokenBIsBase = baseTokenAddresses.includes(
+        token.tokenBAddress.toLowerCase()
+      )
+
+      // Skip if both tokens are base tokens
+      if (tokenAIsBase && tokenBIsBase) {
+        return false
+      }
+
+      return true
+    })
+
+    console.log('filtered tokens:', filteredTokens)
+
     res.json({
       success: true,
-      data: topTokens.map((t: any) => ({
+      data: filteredTokens.map((t: any) => ({
         ...t,
         marketCap: t.marketCap ? t.marketCap.toString() : null,
       })),
-      total: topTokens.length,
+      total: filteredTokens.length,
       metric,
       limit,
     })
   })
 )
 
-// 6. Search tokens by symbol or name
+// 7. Search tokens by symbol or name
 app.get(
   '/api/tokens/search',
   asyncHandler(async (req: Request, res: Response) => {
@@ -387,7 +452,7 @@ app.get(
   })
 )
 
-// 7. Get liquidity statistics
+// 8. Get liquidity statistics
 app.get(
   '/api/stats',
   asyncHandler(async (req: Request, res: Response) => {
@@ -437,7 +502,7 @@ app.get(
   })
 )
 
-// 8. Get DEX breakdown for a specific pair
+// 9. Get DEX breakdown for a specific pair
 app.get(
   '/api/pairs/:tokenA/:tokenB/dex-breakdown',
   asyncHandler(async (req: Request, res: Response) => {
@@ -524,7 +589,7 @@ app.get(
   })
 )
 
-// 9. Get recent updates
+// 10. Get recent updates
 app.get(
   '/api/recent',
   asyncHandler(async (req: Request, res: Response) => {
@@ -595,6 +660,7 @@ app.use('/{*splat}', (req: Request, res: Response) => {
       'GET /api/health',
       'GET /api/pairs',
       'GET /api/pairs/:tokenA/:tokenB',
+      'GET /api/pairs/:tokenA/:tokenB/calculate?volume=<value>',
       'GET /api/tokens/:address/pairs',
       'GET /api/tokens/top',
       'GET /api/tokens/search',

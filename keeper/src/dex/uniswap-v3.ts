@@ -141,7 +141,8 @@ export class UniswapV3Service {
   async getPrice(
     tokenA: string,
     tokenB: string,
-    feeTier: number
+    feeTier: number,
+    amountIn: number | string = 1
   ): Promise<PriceResult | null> {
     try {
       const [token0Info, token1Info] = await Promise.all([
@@ -156,10 +157,10 @@ export class UniswapV3Service {
       }
 
       // Calculate price using quoter
-      const amountIn = DecimalUtils.normalizeAmount('1', token0Info.decimals)
+      const amountInNormalized = DecimalUtils.normalizeAmount(String(amountIn), token0Info.decimals)
       const data = this.quoter.interface.encodeFunctionData(
         'quoteExactInputSingle',
-        [tokenA, tokenB, feeTier, amountIn, 0]
+        [tokenA, tokenB, feeTier, amountInNormalized, 0]
       )
       const result = await this.provider.call({
         to: CONTRACT_ADDRESSES.UNISWAP_V3.QUOTER,
@@ -167,7 +168,7 @@ export class UniswapV3Service {
       })
       const amountOut = ethers.getBigInt(result)
       const price = DecimalUtils.calculatePrice(
-        amountIn,
+        amountInNormalized,
         amountOut,
         token0Info.decimals,
         token1Info.decimals
