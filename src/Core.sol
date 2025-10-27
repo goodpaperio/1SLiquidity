@@ -11,8 +11,6 @@ import "./interfaces/IRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-// import "forge-std/console.sol";
-
 contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     using SafeERC20 for IERC20;
 
@@ -185,21 +183,6 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
         require(trade.owner != address(0), "Trade not found");
         require(trade.isInstasettlable, "Trade not instasettlable");
-
-        // If lastSweetSpot == 1, just settle the amountRemaining
-        // if (trade.lastSweetSpot == 1) {
-            // delete trades[tradeId];
-            // IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, trade.realisedAmountOut);
-            // IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
-            // emit TradeSettled(
-            //     trade.tradeId,
-            //     msg.sender,
-            //     trade.amountRemaining,
-            //     trade.realisedAmountOut,
-            //     0 // totalFees is 0 in this case
-            // );
-            
-        // }
         
         // otheriwse, remove trade from storage and settle amounts
         _removeTradeFromStorage(pairId, tradeId);
