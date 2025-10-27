@@ -115,8 +115,9 @@ export class CurveService {
 
   /**
    * Get price for a token pair using Curve's get_dy function
+   * @param amountIn - Amount of tokenA to use for price calculation (default: 1)
    */
-  async getPrice(tokenA: string, tokenB: string): Promise<PriceResult | null> {
+  async getPrice(tokenA: string, tokenB: string, amountIn: number | string = 1): Promise<PriceResult | null> {
     try {
       // Get token indices from metadata (no blockchain call needed)
       const [tokenAIndex, tokenBIndex] = this.getTokenIndices(tokenA, tokenB)
@@ -132,16 +133,16 @@ export class CurveService {
         this.tokenService.getTokenInfo(tokenB),
       ])
 
-      // Calculate price using 1 unit of tokenA
-      const amountIn = DecimalUtils.normalizeAmount('1', tokenAInfo.decimals)
+      // Calculate price using specified amount of tokenA
+      const amountInNormalized = DecimalUtils.normalizeAmount(String(amountIn), tokenAInfo.decimals)
       const amountOut = await this.pool.get_dy(
         tokenAIndex,
         tokenBIndex,
-        amountIn
+        amountInNormalized
       )
 
       const price = DecimalUtils.calculatePrice(
-        amountIn,
+        amountInNormalized,
         amountOut,
         tokenAInfo.decimals,
         tokenBInfo.decimals

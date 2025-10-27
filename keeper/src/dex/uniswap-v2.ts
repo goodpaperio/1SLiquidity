@@ -96,7 +96,7 @@ export class UniswapV2Service {
     }
   }
 
-  async getPrice(tokenA: string, tokenB: string): Promise<PriceResult | null> {
+  async getPrice(tokenA: string, tokenB: string, amountIn: number | string = 1): Promise<PriceResult | null> {
     try {
       const pairAddress = await this.factory.getPair(tokenA, tokenB)
       if (pairAddress === COMMON.ZERO_ADDRESS) {
@@ -108,13 +108,13 @@ export class UniswapV2Service {
         this.tokenService.getTokenInfo(tokenB),
       ])
 
-      const amountIn = DecimalUtils.normalizeAmount('1', token0Info.decimals)
-      const amounts = await this.router.getAmountsOut(amountIn, [
+      const amountInNormalized = DecimalUtils.normalizeAmount(String(amountIn), token0Info.decimals)
+      const amounts = await this.router.getAmountsOut(amountInNormalized, [
         tokenA,
         tokenB,
       ])
       const price = DecimalUtils.calculatePrice(
-        amounts[0],
+        amountInNormalized,
         amounts[1],
         token0Info.decimals,
         token1Info.decimals
