@@ -48,19 +48,29 @@ contract TradeCancel is TradePlacement {
         uint256 initialWethBalance = getTokenBalance(WETH, address(this));
         uint256 initialUsdcBalance = getTokenBalance(USDC, address(this));
 
+        // return the trade details
+        Utils.Trade memory trade = core.getTrade(tradeId);
+        console.log("Trade details before cancellation:");
+        console.log("Trade ID:", tradeId);
+        console.log("Amount Remaining:", trade.amountRemaining);
+        console.log("Realised Amount Out:", trade.realisedAmountOut);
+        console.log("initial sweetSpot:", trade.lastSweetSpot);
+
         console.log("Balances after trade placement but before cancellation:");
         console.log("WETH:", initialWethBalance);
         console.log("USDC:", initialUsdcBalance);
 
         // Get trade details before cancellation
-        Utils.Trade memory trade = core.getTrade(tradeId);
+        // Utils.Trade memory trade = core.getTrade(tradeId);
         uint256 amountRemaining = trade.amountRemaining;
         uint256 realisedAmountOut = trade.realisedAmountOut;
 
         // Cancel trade
         bool success = core.cancelTrade(tradeId);
         assertTrue(success, "Trade cancellation failed");
+      
 
+        console.log("Trade cancelled successfully");
         // Verify balances after cancellation
         uint256 finalWethBalance = getTokenBalance(WETH, address(this));
         uint256 finalUsdcBalance = getTokenBalance(USDC, address(this));
