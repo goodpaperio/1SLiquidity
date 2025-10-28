@@ -10,21 +10,28 @@ This repository contains the smart contract implementation for the **DECAStream 
 
 Ever gone through the laborious process of checking each DEX to get the best trade? What if you don't care and just send it on whichever DEX you happen to be used to? This exposure to front running, pool manipulation and unpredictable slippage rates will be a thing of the past.
 
-One click and the **DECAStream Protocol** will route your trade across the DEX with the optimum trade conditions and '**Stream**' it out chunk by chunk, block by block. As market conditions change, we adapt, finding the best performing DEX on this stream by stream basis. When your trade is fully settled, you receive your tokens in precisely the threshold you defined. Taking too long? **Cancel** the trade at any time and return tokens exchanged to that point.
+**NOW RUNNING AGAINST 6 DEXs!!!**
+
+One click and the **DECAStream Protocol** will route your trade across the DEXs with the optimum trade conditions and '**Stream**' it out chunk by chunk, block by block. As market conditions change, we adapt, finding the best performing DEX on this stream by stream basis. When your trade is fully settled, you receive your tokens in precisely the threshold you defined. Taking too long? **Cancel** the trade at any time and return tokens exchanged to that point.
 
 **Instasettle** furthermore allows anyone to instantly settle a trade across the contract in full. Users get to define thresholds in BPS and viewing traders can settle at these rates in one click. Both maker and taker get instant (block) settling.
 
+**Hot Pairs** lists vetter token pairs which yield the maximum savings by using the protocol. Stream out highly illliquid tokens chunk by trunk to experience less than **10BPS** in splippage and experience up to 99% price accuracy across **massive volumes**.
+
+_What makes DECAStream epic..._
+
 - **Automated DEX Routing**: Automatically finds the best DEX for each trade based on price, liquidity, and gas costs
-- **Stream Execution**: Breaks large trades into optimal chunks executed block-by-block
-- **Dynamic Adaptation**: Continuously monitors market conditions and adjusts execution strategy
-- **Instasettle**: Allows instant settlement of trades at predefined thresholds
-- **Cancellation**: Enables trade cancellation at any time with partial token returns
+- **Stream Execution**: Breaks large trades into optimal chunks executed block-by-block to yield price accuracy up to **99%**
+- **Dynamic Adaptation**: Continuously monitors market conditions and adjusts execution strategy which can yield **millions of dollars** worth of savings
+- **Instasettle**: Allows instant settlement of trades at predefined thresholds in OTC style. Define your settlement price and experience **ZERO** slippage.
+- **Cancellation**: Enables trade cancellation at any time with full return of settled and unsettled tokens.
+- **Network Fees**: Network fee of just **0.2%** across all trade environments.
 
 ## ✨ Key Features
 
 ### 🎯 Smart Trade Routing
 
-- **Multi-DEX Support**: Integrates with UniswapV2, UniswapV3, Sushiswap, Balancer, Curve, and 1inch
+- **Multi-DEX Support**: Integrates with UniswapV2, UniswapV3 (all fee tiers now included!), Sushiswap, Balancer and Curve
 - **Price Optimization**: Automatically selects the DEX offering the best price for each trade
 - **Liquidity Analysis**: Evaluates pool depths to determine optimal trade sizes
 
@@ -38,7 +45,6 @@ One click and the **DECAStream Protocol** will route your trade across the DEX w
 
 - **Instant Settlement**: Anyone can instantly settle a trade at predefined BPS thresholds
 - **Maker-Taker Benefits**: Both parties benefit from instant, predictable settlement
-- **Fee Optimization**: Reduces overall trading costs through efficient execution
 
 ### 🛡️ Security & Control
 
@@ -243,18 +249,13 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ### Development Workflow
 
+Feel free to jump in, propose enhancements, fixes and features! Just:
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-### Code Standards
-
-- Follow Solidity style guide
-- Include comprehensive tests
-- Update documentation as needed
-- Ensure all tests pass
 
 ## 📄 License
 
