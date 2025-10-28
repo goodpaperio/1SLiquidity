@@ -40,7 +40,7 @@ const SELSection = () => {
   const [forceRefreshKey, setForceRefreshKey] = useState(0) // Add this to force recalculation
 
   const [tradingSettings, setTradingSettings] = useState({
-    usePriceBased: true,
+    usePriceBased: false, // Always false - only reserve-based trading is supported
     instasettlableValue: null as string | null,
     isInstasettlable: false,
     onlyInstasettle: false,
@@ -463,7 +463,7 @@ const SELSection = () => {
             amountIn: sellAmount.toString(),
             minAmountOut: buyAmount.toString(),
             isInstasettlable: tradingSettings.isInstasettlable,
-            usePriceBased: tradingSettings.usePriceBased,
+            usePriceBased: false,
             instasettleBps: tradingSettings.instasettlableValue || '0',
             onlyInstasettle: tradingSettings.onlyInstasettle,
           },

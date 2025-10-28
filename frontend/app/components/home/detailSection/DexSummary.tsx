@@ -219,9 +219,10 @@ const DexSummary: React.FC<DexSummaryProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-4 py-4">
-      <div className="grid grid-cols-[3fr_0.8fr_1.8fr] sm:grid-cols-[2fr_1.2fr_2.5fr] gap-0.5 sm:gap-2 text-[14px] font-medium">
+      <div className="grid grid-cols-[3fr_1.8fr] sm:grid-cols-[2fr_2.5fr] gap-0.5 sm:gap-2 text-[14px] font-medium">
         <div className="text-white72">DEX Sources</div>
-        <div
+        {/* Price column commented out - only showing reserves now */}
+        {/* <div
           className={`text-center ${
             usePriceBased
               ? 'bg-gradient-to-r from-[#00ff85] to-[#00ccff] bg-clip-text text-transparent'
@@ -229,7 +230,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
           }`}
         >
           Price
-        </div>
+        </div> */}
         <div
           className={`text-right ${
             !usePriceBased
@@ -245,7 +246,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
         {dexData.map((dex, index) => (
           <div
             key={index}
-            className="grid grid-cols-[3fr_0.8fr_1.8fr] sm:grid-cols-[2fr_1.2fr_2.5fr] gap-0.5 sm:gap-2 items-center"
+            className="grid grid-cols-[3fr_1.8fr] sm:grid-cols-[2fr_2.5fr] gap-0.5 sm:gap-2 items-center"
           >
             <div className="flex items-center gap-1.5">
               {dex.isBest && (
@@ -269,13 +270,14 @@ const DexSummary: React.FC<DexSummaryProps> = ({
               </span>
             </div>
 
-            <div
+            {/* Price display commented out - only showing reserves now */}
+            {/* <div
               className={`text-center text-[14px] ${
                 dex.isBest ? 'text-[#40f798]' : 'text-white'
               }`}
             >
               {dex.price}
-            </div>
+            </div> */}
 
             <div
               className={`text-right text-[14px] leading-tight ${
