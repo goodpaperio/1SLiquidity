@@ -72,7 +72,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
   }, [activeTab])
 
   // Fetch trades data with Apollo's 30s polling
-  const { trades, isLoading, error, isRefetching } = useTrades({
+  const { trades, isLoading, error, isRefetching, refetch } = useTrades({
     first: 100,
     skip: 0,
   })
@@ -269,6 +269,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                 selectedStream?.user?.toLowerCase() === address?.toLowerCase()
               }
               showBackIcon={showBackIcon}
+              onRefetch={refetch}
             />
           </>
         ) : (

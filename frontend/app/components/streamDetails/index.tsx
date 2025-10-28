@@ -39,6 +39,7 @@ type StreamDetailsProps = {
   isLoading?: boolean
   onClose: () => void
   showBackIcon?: boolean
+  onRefetch?: () => void
 }
 
 const TIMER_DURATION = 10 // 10 seconds
@@ -51,6 +52,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   onClose,
   showBackIcon = true,
   walletAddress,
+  onRefetch,
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
   const {
@@ -63,6 +65,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
   const [showCompleted, setShowCompleted] = useState(true)
+  const [tradeOperationLoading, setTradeOperationLoading] = useState(false)
 
   // Fetch contract info on component mount if not already available
   useEffect(() => {
@@ -305,36 +308,47 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     if (isConnectedWallet) {
       const signer = getSigner()
 
-      if (signer) {
-        const res = await instasettle(
-          {
-            tradeId: Number(selectedStream.tradeId),
-            tokenInObj: tokenIn,
-            tokenOutObj: tokenOut,
-            tokenIn: selectedStream.tokenIn || '',
-            tokenOut: selectedStream.tokenOut || '',
-            // amountIn: Number(
-            //   formatUnits(
-            //     BigInt(selectedStream.amountIn),
-            //     tokenIn?.decimals || 18
-            //   )
-            // ).toString(),
-            minAmountOut: Number(
-              formatUnits(
-                BigInt(selectedStream.minAmountOut),
-                tokenOut?.decimals || 18
-              )
-            ).toString(),
-            amountIn: formatNumberSmart(remainingAmountIn || '0') || '0',
-            isInstasettlable: true,
-            usePriceBased: false,
-            signer: signer,
-          },
-          signer
-        )
-        if (res.success) {
-          onClose()
+      try {
+        if (signer) {
+          setTradeOperationLoading(true)
+          const res = await instasettle(
+            {
+              tradeId: Number(selectedStream.tradeId),
+              tokenInObj: tokenIn,
+              tokenOutObj: tokenOut,
+              tokenIn: selectedStream.tokenIn || '',
+              tokenOut: selectedStream.tokenOut || '',
+              // amountIn: Number(
+              //   formatUnits(
+              //     BigInt(selectedStream.amountIn),
+              //     tokenIn?.decimals || 18
+              //   )
+              // ).toString(),
+              minAmountOut: Number(
+                formatUnits(
+                  BigInt(selectedStream.minAmountOut),
+                  tokenOut?.decimals || 18
+                )
+              ).toString(),
+              amountIn: formatNumberSmart(remainingAmountIn || '0') || '0',
+              isInstasettlable: true,
+              usePriceBased: false,
+              signer: signer,
+            },
+            signer
+          )
+          if (res.success) {
+            // Refetch trades to update the list
+            if (onRefetch) {
+              await onRefetch()
+            }
+            onClose()
+          }
         }
+      } catch (error) {
+        console.error('Error instasettling trade:', error)
+      } finally {
+        setTradeOperationLoading(false)
       }
     }
   }
@@ -343,11 +357,22 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     if (isConnectedWallet) {
       const signer = getSigner()
 
-      if (signer) {
-        const res = await cancelTrade(Number(selectedStream.tradeId), signer)
-        if (res.success) {
-          onClose()
+      try {
+        if (signer) {
+          setTradeOperationLoading(true)
+          const res = await cancelTrade(Number(selectedStream.tradeId), signer)
+          if (res.success) {
+            // Refetch trades to update the list
+            if (onRefetch) {
+              await onRefetch()
+            }
+            onClose()
+          }
         }
+      } catch (error) {
+        console.error('Error cancelling trade:', error)
+      } finally {
+        setTradeOperationLoading(false)
       }
     }
   }
@@ -1142,7 +1167,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                     disabled={
                       isLoading ||
                       selectedStream.settlements.length > 0 ||
-                      !walletAddress
+                      !walletAddress ||
+                      tradeOperationLoading
                     }
                     loading={isLoading}
                     onClick={() => handleInstasettleClick(selectedStream)}
@@ -1166,7 +1192,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
               isEnabled={isUser}
               isUser={isUser}
-              isLoading={isLoading || loading}
+              isLoading={isLoading || loading || tradeOperationLoading}
               selectedStream={selectedStream}
               handleInstasettleClick={handleInstasettleClick}
               handleCancelClick={handleCancelClick}
