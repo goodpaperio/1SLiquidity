@@ -11,6 +11,7 @@ import {
   Rectangle,
 } from 'recharts'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Select,
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import InstasettlePill from '@/app/components/shared/InstasettlePill'
 
 import {
   type ChartConfig,
@@ -46,6 +48,7 @@ interface ExtendedTrade extends Trade {
   formattedAmountRemaining: string
   cost: number
   savings: number
+  onlyInstasettlable?: boolean
 }
 
 // Define ChartDataPoint interface for the real GraphQL Trade
@@ -76,9 +79,15 @@ export default function TradesChart({
   const [isChartReady, setIsChartReady] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const chartContainerRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  const scrollAnimationRef = useRef<number | null>(null)
+  const activeArrowRef = useRef<'left' | 'right' | null>(null)
+  const [activeArrow, setActiveArrow] = useState<'left' | 'right' | null>(null)
 
   // Filter states - default to 'all'
   const [selectedTopN, setSelectedTopN] = useState<string>('all')
+  const [selectedType, setSelectedType] = useState<string>('all')
 
   // Use real trades data instead of dummy API
   const limit =
@@ -117,7 +126,81 @@ export default function TradesChart({
       )
     }
 
-    return filteredTrades.map((trade: Trade): ChartDataPoint => {
+    // Add mock "Only Instasettlable" trades
+    const mockOnlyInstasettlableTrades: Trade[] = [
+      {
+        id: 'mock-only-1',
+        amountIn: '3000000000000000000', // 3 tokens
+        amountRemaining: '3000000000000000000',
+        minAmountOut: '3000000000000000000',
+        tokenIn:
+          selectedTokenFrom?.token_address ||
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        tokenOut:
+          selectedTokenTo?.token_address ||
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        isInstasettlable: true,
+        realisedAmountOut: '0',
+        lastSweetSpot: '0',
+        executions: [],
+        settlements: [],
+        cancellations: [],
+        instasettleBps: '167', // ~1.67% for $0.05 savings on $3
+        createdAt: new Date().toISOString(),
+        tradeId: 'mock-trade-1',
+        user: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        id: 'mock-only-2',
+        amountIn: '3000000000000000000',
+        amountRemaining: '3000000000000000000',
+        minAmountOut: '3000000000000000000',
+        tokenIn:
+          selectedTokenFrom?.token_address ||
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        tokenOut:
+          selectedTokenTo?.token_address ||
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        isInstasettlable: true,
+        realisedAmountOut: '0',
+        lastSweetSpot: '0',
+        executions: [],
+        settlements: [],
+        cancellations: [],
+        instasettleBps: '167',
+        createdAt: new Date().toISOString(),
+        tradeId: 'mock-trade-2',
+        user: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        id: 'mock-only-3',
+        amountIn: '3000000000000000000',
+        amountRemaining: '3000000000000000000',
+        minAmountOut: '3000000000000000000',
+        tokenIn:
+          selectedTokenFrom?.token_address ||
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        tokenOut:
+          selectedTokenTo?.token_address ||
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        isInstasettlable: true,
+        realisedAmountOut: '0',
+        lastSweetSpot: '0',
+        executions: [],
+        settlements: [],
+        cancellations: [],
+        instasettleBps: '167',
+        createdAt: new Date().toISOString(),
+        tradeId: 'mock-trade-3',
+        user: '0x0000000000000000000000000000000000000000',
+      },
+    ]
+
+    // Combine real and mock trades
+    const allTrades = [...filteredTrades, ...mockOnlyInstasettlableTrades]
+
+    return allTrades.map((trade: Trade, index: number): ChartDataPoint => {
+      const isOnlyInstasettlable = trade.id.startsWith('mock-only')
       try {
         // Find token information for this trade (same logic as TradesTable)
         // const tokenIn = tokenList.find(
@@ -246,8 +329,23 @@ export default function TradesChart({
           formattedAmountRemaining: formattedAmountRemaining,
           cost: isFinite(costInUsd) ? costInUsd : 0,
           savings: isFinite(savingsInUsd) ? savingsInUsd : 0,
+          onlyInstasettlable: isOnlyInstasettlable,
         }
-        console.log('ivan instasettle extendedTrade', extendedTrade)
+
+        // Override values for mock "Only Instasettlable" trades
+        if (isOnlyInstasettlable) {
+          return {
+            cost: 3.0, // $3 cost
+            volume: 3.0, // 3 tokens volume
+            savings: 0.05, // $0.05 savings
+            trade: {
+              ...extendedTrade,
+              cost: 3.0,
+              savings: 0.05,
+              amountInUsd: 3.0,
+            },
+          }
+        }
 
         return {
           cost: isFinite(costInUsd) ? costInUsd : 0, // Cost in USD for X-axis
@@ -280,9 +378,21 @@ export default function TradesChart({
     })
   }, [trades, selectedTokenFrom, selectedTokenTo, tokenList])
 
+  // Apply type filter
+  const typeFilteredData = useMemo(() => {
+    if (selectedType === 'all') {
+      return chartData
+    } else if (selectedType === 'instasettlable') {
+      return chartData.filter((d) => !d.trade.onlyInstasettlable)
+    } else if (selectedType === 'only-instasettlable') {
+      return chartData.filter((d) => d.trade.onlyInstasettlable)
+    }
+    return chartData
+  }, [chartData, selectedType])
+
   // Sort chart data by cost (descending) and limit based on selectedTopN
   const sortedChartData = useMemo(() => {
-    const sorted = [...chartData].sort((a, b) => b.cost - a.cost) // Sort by cost descending
+    const sorted = [...typeFilteredData].sort((a, b) => b.cost - a.cost) // Sort by cost descending
 
     // Apply the top N limit if not 'all'
     if (selectedTopN !== 'all') {
@@ -291,24 +401,62 @@ export default function TradesChart({
     }
 
     return sorted
-  }, [chartData, selectedTopN])
+  }, [typeFilteredData, selectedTopN])
 
-  // Calculate container width based on data length
+  // Add index to chart data for even spacing
+  const indexedChartData = useMemo(() => {
+    return sortedChartData.map((data, index) => ({
+      ...data,
+      index,
+    }))
+  }, [sortedChartData])
+
+  // Calculate container width based on data length with dynamic spacing
   const containerWidth = useMemo(() => {
-    const minWidth = 1200
-    const barWidth = 25 // width per bar
-    const padding = 200 // padding for better visualization
+    const dataLength = sortedChartData.length
+
+    // Dynamic bar width and spacing based on number of trades
+    let barWidth = 25
+    let spacing = 25 // Space between bars
+    let minWidth = 800
+
+    if (dataLength <= 2) {
+      barWidth = 80
+      spacing = 100
+      minWidth = 400
+    } else if (dataLength <= 5) {
+      barWidth = 60
+      spacing = 60
+      minWidth = 600
+    } else if (dataLength <= 10) {
+      barWidth = 45
+      spacing = 40
+      minWidth = 600
+    } else if (dataLength <= 20) {
+      barWidth = 35
+      spacing = 30
+    }
+
+    const padding = 200
+    // Use 50vw as absolute minimum width
+    const viewportMinWidth =
+      typeof window !== 'undefined' ? window.innerWidth * 0.5 : minWidth
     const calculatedWidth = Math.max(
+      viewportMinWidth,
       minWidth,
-      sortedChartData.length * barWidth + padding
+      dataLength * (barWidth + spacing) + padding
     )
     return calculatedWidth
   }, [sortedChartData.length])
 
   const getBarProps = useCallback(
-    (index: number) => ({
+    (index: number, isOnlyInstasettlable: boolean) => ({
       fill:
-        activeBar === index || selectedBar === index ? '#00e0ff' : '#41fcb4',
+        activeBar === index || selectedBar === index
+          ? '#00e0ff'
+          : isOnlyInstasettlable
+          ? '#FAEE40'
+          : '#41fcb4',
       style: {
         transition: 'fill 0.2s ease',
       },
@@ -336,31 +484,114 @@ export default function TradesChart({
     }
   }, [isLoading, trades])
 
-  // Handle value change for the dropdown
-  const handleValueChange = (value: string) => {
+  // Handle value change for the dropdowns
+  const handleCountChange = (value: string) => {
     setSelectedBar(null) // Reset selected bar when changing view
     setActiveBar(null) // Reset active bar when changing view
     setSelectedTopN(value)
   }
 
+  const handleTypeChange = (value: string) => {
+    setSelectedBar(null) // Reset selected bar when changing view
+    setActiveBar(null) // Reset active bar when changing view
+    setSelectedType(value)
+  }
+
   // Handle scroll event
-  const handleScroll = useCallback(() => {
+
+  const updateScrollability = useCallback(() => {
     if (!containerRef.current) return
+
     const { scrollLeft, scrollWidth, clientWidth } = containerRef.current
-    const scrollPercentage = (scrollLeft / (scrollWidth - clientWidth)) * 100
-    // setScrollPosition(scrollPercentage) // This state is no longer needed
+    const maxScroll = scrollWidth - clientWidth
+
+    setCanScrollLeft(scrollLeft > 5)
+    setCanScrollRight(scrollLeft < maxScroll - 5)
   }, [])
 
-  // Add scroll event listener
+  // Scroll with animation
+  const scrollInDirection = useCallback(
+    (direction: 'left' | 'right') => {
+      if (!containerRef.current) return
+
+      activeArrowRef.current = direction
+      setActiveArrow(direction)
+
+      const container = containerRef.current
+      const scrollAmount = direction === 'left' ? -37.5 : 37.5
+
+      const animate = () => {
+        if (!containerRef.current || activeArrowRef.current !== direction)
+          return
+
+        const { scrollLeft, scrollWidth, clientWidth } = container
+        const maxScroll = scrollWidth - clientWidth
+
+        // Stop if we've reached the boundary
+        if (
+          (direction === 'left' && scrollLeft <= 0) ||
+          (direction === 'right' && scrollLeft >= maxScroll)
+        ) {
+          activeArrowRef.current = null
+          setActiveArrow(null)
+          updateScrollability()
+          return
+        }
+
+        container.scrollLeft += scrollAmount
+        updateScrollability()
+
+        scrollAnimationRef.current = requestAnimationFrame(animate)
+      }
+
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current)
+      }
+
+      scrollAnimationRef.current = requestAnimationFrame(animate)
+    },
+    [updateScrollability]
+  )
+
+  const stopScrolling = useCallback(() => {
+    activeArrowRef.current = null
+    setActiveArrow(null)
+
+    if (scrollAnimationRef.current) {
+      cancelAnimationFrame(scrollAnimationRef.current)
+      scrollAnimationRef.current = null
+    }
+
+    updateScrollability()
+  }, [updateScrollability])
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    container.addEventListener('scroll', handleScroll)
+    const handleScroll = () => {
+      updateScrollability()
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+
+    updateScrollability()
+
+    const timeoutId = setTimeout(updateScrollability, 100)
+
     return () => {
       container.removeEventListener('scroll', handleScroll)
+      clearTimeout(timeoutId)
     }
-  }, [handleScroll])
+  }, [updateScrollability, sortedChartData.length, containerWidth])
+
+  useEffect(() => {
+    return () => {
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current)
+      }
+    }
+  }, [])
 
   // Show loading state
   if (isLoading || isLoadingTokenList) {
@@ -370,37 +601,64 @@ export default function TradesChart({
           <div className="w-full bg-background text-foreground">
             <div className="mb-6 flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center">
               <h2 className="text-2xl font-bold">Loading Trades...</h2>
-              <Select value={selectedTopN} onValueChange={handleValueChange}>
-                <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
-                  <SelectValue placeholder="Select trades" />
-                </SelectTrigger>
-                <SelectContent className="bg-black border border-primary">
-                  <SelectItem
-                    value="10"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 10 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="20"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 20 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="50"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 50 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="all"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    All Trades (100)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={selectedType} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                    <SelectValue placeholder="Type Filter" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border border-primary">
+                    <SelectItem
+                      value="all"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      All Types
+                    </SelectItem>
+                    <SelectItem
+                      value="instasettlable"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Instasettlable
+                    </SelectItem>
+                    <SelectItem
+                      value="only-instasettlable"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Only Instasettlable
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedTopN} onValueChange={handleCountChange}>
+                  <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                    <SelectValue placeholder="Select trades" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border border-primary">
+                    <SelectItem
+                      value="10"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 10 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="20"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 20 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="50"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 50 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      All Trades (100)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="relative" style={{ height: '500px' }}>
               <div className="flex items-center justify-center h-full">
@@ -435,37 +693,64 @@ export default function TradesChart({
                   ? `No Trades Found for ${selectedTokenFrom.symbol}/${selectedTokenTo.symbol}`
                   : 'No Trades Available'}
               </h2>
-              <Select value={selectedTopN} onValueChange={handleValueChange}>
-                <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
-                  <SelectValue placeholder="Select trades" />
-                </SelectTrigger>
-                <SelectContent className="bg-black border border-primary">
-                  <SelectItem
-                    value="10"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 10 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="20"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 20 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="50"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    Top 50 Trades
-                  </SelectItem>
-                  <SelectItem
-                    value="all"
-                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                  >
-                    All Trades (100)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={selectedType} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                    <SelectValue placeholder="Type Filter" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border border-primary">
+                    <SelectItem
+                      value="all"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      All Types
+                    </SelectItem>
+                    <SelectItem
+                      value="instasettlable"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Instasettlable
+                    </SelectItem>
+                    <SelectItem
+                      value="only-instasettlable"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Only Instasettlable
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedTopN} onValueChange={handleCountChange}>
+                  <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                    <SelectValue placeholder="Select trades" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border border-primary">
+                    <SelectItem
+                      value="10"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 10 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="20"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 20 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="50"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      Top 50 Trades
+                    </SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                    >
+                      All Trades (100)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="relative" style={{ height: '500px' }}>
               <div className="flex flex-col items-center justify-center h-full text-center">
@@ -500,50 +785,132 @@ export default function TradesChart({
       <div className="dark">
         <div className="w-full bg-background text-foreground">
           <div className="mb-6 flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center">
-            <h2 className="text-2xl font-bold">
-              Top Trades ($
-              {Math.min(...sortedChartData.map((d) => d.cost)).toFixed(2)} - $
-              {Math.max(...sortedChartData.map((d) => d.cost)).toFixed(2)})
-            </h2>
+            <div className="flex flex-col gap-3">
+              <h2 className="text-2xl font-bold">
+                Top Trades ($
+                {Math.min(...indexedChartData.map((d) => d.cost)).toFixed(2)} -
+                ${Math.max(...indexedChartData.map((d) => d.cost)).toFixed(2)})
+              </h2>
+              <div className="flex items-center gap-2">
+                <InstasettlePill
+                  isSettled={false}
+                  variant="instasettled"
+                  showTextOnMobile={true}
+                />
+                <InstasettlePill
+                  isSettled={false}
+                  variant="only-instasettlable"
+                  showTextOnMobile={true}
+                />
+              </div>
+            </div>
 
-            <Select value={selectedTopN} onValueChange={handleValueChange}>
-              <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
-                <SelectValue placeholder="Select trades" />
-              </SelectTrigger>
-              <SelectContent className="bg-black border border-primary">
-                <SelectItem
-                  value="10"
-                  className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                >
-                  Top 10 Trades
-                </SelectItem>
-                <SelectItem
-                  value="20"
-                  className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                >
-                  Top 20 Trades
-                </SelectItem>
-                <SelectItem
-                  value="50"
-                  className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                >
-                  Top 50 Trades
-                </SelectItem>
-                <SelectItem
-                  value="all"
-                  className="hover:bg-tabsGradient hover:text-white cursor-pointer"
-                >
-                  All Trades (100)
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={selectedType} onValueChange={handleTypeChange}>
+                <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                  <SelectValue placeholder="Type Filter" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border border-primary">
+                  <SelectItem
+                    value="all"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    All Types
+                  </SelectItem>
+                  <SelectItem
+                    value="instasettlable"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    Instasettlable
+                  </SelectItem>
+                  <SelectItem
+                    value="only-instasettlable"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    Only Instasettlable
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedTopN} onValueChange={handleCountChange}>
+                <SelectTrigger className="w-[180px] bg-transparent border border-primary hover:bg-tabsGradient transition-colors">
+                  <SelectValue placeholder="Select trades" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border border-primary">
+                  <SelectItem
+                    value="10"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    Top 10 Trades
+                  </SelectItem>
+                  <SelectItem
+                    value="20"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    Top 20 Trades
+                  </SelectItem>
+                  <SelectItem
+                    value="50"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    Top 50 Trades
+                  </SelectItem>
+                  <SelectItem
+                    value="all"
+                    className="hover:bg-tabsGradient hover:text-white cursor-pointer"
+                  >
+                    All Trades (100)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Chart Container */}
           <div className="relative" ref={chartContainerRef}>
+            {/* Navigation Arrows - positioned below the Y-axis label */}
+            {canScrollLeft && (
+              <button
+                onMouseDown={() => scrollInDirection('left')}
+                onMouseUp={stopScrolling}
+                onMouseLeave={stopScrolling}
+                onTouchStart={() => scrollInDirection('left')}
+                onTouchEnd={stopScrolling}
+                className={`absolute left-4 top-[60%] -translate-y-1/2 z-20 border rounded-full p-1.5 transition-all duration-150 backdrop-blur-sm ${
+                  activeArrow === 'left'
+                    ? 'bg-primary/30 border-primary/70 shadow-lg shadow-primary/50 scale-90'
+                    : 'bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 border-primary/40 shadow-md shadow-primary/20'
+                }`}
+                aria-label="Scroll left"
+              >
+                <ChevronLeft
+                  className="w-4 h-4 text-primary"
+                  strokeWidth={2.5}
+                />
+              </button>
+            )}
+            {canScrollRight && (
+              <button
+                onMouseDown={() => scrollInDirection('right')}
+                onMouseUp={stopScrolling}
+                onMouseLeave={stopScrolling}
+                onTouchStart={() => scrollInDirection('right')}
+                onTouchEnd={stopScrolling}
+                className={`absolute right-4 top-[60%] -translate-y-1/2 z-20 border rounded-full p-1.5 transition-all duration-150 backdrop-blur-sm ${
+                  activeArrow === 'right'
+                    ? 'bg-primary/30 border-primary/70 shadow-lg shadow-primary/50 scale-90'
+                    : 'bg-gradient-to-l from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 border-primary/40 shadow-md shadow-primary/20'
+                }`}
+                aria-label="Scroll right"
+              >
+                <ChevronRight
+                  className="w-4 h-4 text-primary"
+                  strokeWidth={2.5}
+                />
+              </button>
+            )}
             {/* Edge fade effect */}
             <div
-              className="absolute left-0 top-0 bottom-[35px] w-28 z-10 pointer-events-none"
+              className="absolute left-[-10px] top-0 bottom-[35px] w-28 z-10 pointer-events-none"
               style={{
                 background:
                   'linear-gradient(to right, black, rgba(0, 0, 0, 0.99) 5%, rgba(0, 0, 0, 0.97) 10%, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.8) 40%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.2) 85%, transparent)',
@@ -573,6 +940,22 @@ export default function TradesChart({
                 maskSize: 'cover',
               }}
             />
+
+            {/* Fixed Y-axis label - positioned higher to avoid arrow overlap */}
+            <div
+              className="absolute left-2 top-[35%] -translate-y-1/2 z-10 pointer-events-none"
+              style={{
+                writingMode: 'vertical-rl',
+                transform: 'translateY(-50%) rotate(180deg)',
+              }}
+            >
+              <span
+                className="text-xs font-medium"
+                style={{ color: '#41fcb4' }}
+              >
+                Savings (USD)
+              </span>
+            </div>
 
             <div
               ref={containerRef}
@@ -612,11 +995,11 @@ export default function TradesChart({
                   className="h-full w-full relative"
                 >
                   <BarChart
-                    data={sortedChartData}
+                    data={indexedChartData}
                     margin={{
                       top: 20,
-                      right: 50,
-                      left: 80,
+                      right: 30,
+                      left: 50,
                       bottom: 20,
                     }}
                     onMouseMove={(state) => {
@@ -630,46 +1013,64 @@ export default function TradesChart({
                     onClick={(data) => {
                       if (data && data.activeTooltipIndex !== undefined) {
                         handleBarClick(
-                          sortedChartData[data.activeTooltipIndex],
+                          indexedChartData[data.activeTooltipIndex],
                           data.activeTooltipIndex
                         )
                       }
                     }}
                   >
                     <XAxis
-                      dataKey="cost"
+                      dataKey="index"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={20}
-                      tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
+                      tickMargin={8}
+                      tick={{ fill: '#888', fontSize: 11 }}
+                      tickFormatter={(value, index) => {
+                        const data = indexedChartData[value]
+                        return data ? `$${Number(data.cost).toFixed(2)}` : ''
+                      }}
                       label={{
-                        bps: 'Cost',
+                        value: 'Cost (USD)',
                         position: 'insideBottom',
-                        offset: -10,
+                        offset: -8,
+                        style: {
+                          fill: '#41fcb4',
+                          fontSize: 12,
+                          fontWeight: 500,
+                        },
                       }}
                     />
-                    {/* <YAxis
+                    <YAxis
                       tickLine={false}
                       axisLine={false}
+                      tick={{ fill: '#e0e0e0', fontSize: 11 }}
+                      width={45}
                       tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
-                      label={{
-                        value: 'Savings',
-                        angle: -90,
-                        position: 'insideLeft',
-                      }}
-                    /> */}
+                    />
                     <Bar
                       dataKey="savings"
                       radius={8}
-                      maxBarSize={sortedChartData.length <= 10 ? 60 : undefined}
+                      maxBarSize={
+                        indexedChartData.length <= 10 ? 60 : undefined
+                      }
                       minPointSize={5}
                       activeIndex={(selectedBar || activeBar) ?? undefined}
                     >
-                      {sortedChartData.map((entry, index) => (
+                      {indexedChartData.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={getBarProps(index).fill}
-                          style={getBarProps(index).style}
+                          fill={
+                            getBarProps(
+                              index,
+                              entry.trade.onlyInstasettlable || false
+                            ).fill
+                          }
+                          style={
+                            getBarProps(
+                              index,
+                              entry.trade.onlyInstasettlable || false
+                            ).style
+                          }
                         />
                       ))}
                     </Bar>
@@ -677,6 +1078,7 @@ export default function TradesChart({
                       cursor={false}
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
+                          const dataPoint = indexedChartData[Number(label)]
                           return (
                             <div className="rounded-lg border border-white005 bg-black p-3 shadow-md">
                               <div className="grid gap-2">
@@ -685,7 +1087,10 @@ export default function TradesChart({
                                     Cost:
                                   </span>
                                   <span className="text-sm font-bold">
-                                    ${Number(label).toFixed(2)}
+                                    $
+                                    {dataPoint
+                                      ? Number(dataPoint.cost).toFixed(2)
+                                      : '0.00'}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-2">
@@ -712,10 +1117,10 @@ export default function TradesChart({
       </div>
       <TradesTable
         selectedTrade={
-          selectedBar !== null ? sortedChartData[selectedBar].trade : null
+          selectedBar !== null ? indexedChartData[selectedBar].trade : null
         }
         selectedVolume={
-          selectedBar !== null ? sortedChartData[selectedBar].volume : null
+          selectedBar !== null ? indexedChartData[selectedBar].volume : null
         }
         isChartFiltered={selectedBar !== null}
         onClearSelection={() => setSelectedBar(null)}

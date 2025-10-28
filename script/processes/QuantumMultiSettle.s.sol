@@ -176,7 +176,9 @@ contract MultiSettle is Protocol {
             amountIn, // amountIn
             amountOutMin, // amountOutMin
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         // Place trade

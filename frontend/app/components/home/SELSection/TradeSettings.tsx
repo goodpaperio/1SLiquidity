@@ -23,6 +23,7 @@ interface TradingSettingsProps {
     usePriceBased: boolean
     instasettlableValue: string | null
     isInstasettlable: boolean
+    onlyInstasettle: boolean
   }) => void
 }
 
@@ -44,6 +45,9 @@ export default function TradingSettings({
     null
   )
   const [isInstasettlable, setIsInstasettlable] = useState(false)
+  const [settlementMode, setSettlementMode] = useState<
+    'STANDARD' | 'ONLY_INSTASETTLE'
+  >('STANDARD')
 
   const { isMobile, isXl, isDesktop, isTablet } = useScreenSize()
 
@@ -56,9 +60,16 @@ export default function TradingSettings({
         usePriceBased: tradingMode === 'PRICE_BASED',
         instasettlableValue,
         isInstasettlable,
+        onlyInstasettle: settlementMode === 'ONLY_INSTASETTLE',
       })
     }
-  }, [tradingMode, instasettlableValue, isInstasettlable, onSettingsChange])
+  }, [
+    tradingMode,
+    instasettlableValue,
+    isInstasettlable,
+    settlementMode,
+    onSettingsChange,
+  ])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -195,7 +206,7 @@ export default function TradingSettings({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                              <InfoIcon className="h-4 w-4 cursor-help block" />
                             </TooltipTrigger>
                             <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                               <p>Default trading options</p>
@@ -223,7 +234,7 @@ export default function TradingSettings({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                                <InfoIcon className="h-4 w-4 cursor-help block" />
                               </TooltipTrigger>
                               <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                                 <p>Enable UniswapX for better pricing</p>
@@ -312,73 +323,166 @@ export default function TradingSettings({
                     defaultValue="100"
                     onValueChange={(value, confirmed) => {
                       // Only enable instasettlable when the tick is clicked (confirmed)
-                      setIsInstasettlable(
+                      const isEnabled =
                         confirmed &&
-                          value !== null &&
-                          value !== '' &&
-                          value !== '0'
-                      )
+                        value !== null &&
+                        value !== '' &&
+                        value !== '0'
+                      setIsInstasettlable(isEnabled)
                       setInstasettlableValue(confirmed ? value : null)
+
+                      // Reset settlement mode to STANDARD when instasettlable is disabled
+                      if (!isEnabled) {
+                        setSettlementMode('STANDARD')
+                      }
                     }}
                   />
 
-                  {/* Trading Mode Toggle */}
-                  <div className="flex items-center justify-center">
-                    <div className="relative p-[2px] border-[2px] border-zinc-700 flex rounded-[7px] w-[280px] overflow-hidden">
-                      <div
-                        className="absolute top-0 left-0 h-full bg-[#3b3a3a] rounded-[7px] transition-all duration-300 border-[2px] border-black"
-                        style={{
-                          width: '50%',
-                          transform: `translateX(${
-                            tradingMode === 'RESERVE_BASED' ? '0%' : '100%'
-                          })`,
-                        }}
-                      />
-                      <div
-                        onClick={() => setTradingMode('RESERVE_BASED')}
-                        className={`relative z-10 ${
-                          tradingMode === 'RESERVE_BASED'
-                            ? 'text-white'
-                            : 'text-gray-500'
-                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
-                      >
-                        RESERVE BASED
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
-                              <p>
-                                Execute trades based on liquidity pool reserves
-                                and availability
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                  {/* Settlement Mode Toggle - Only show when instasettlable is enabled with a value */}
+                  {isInstasettlable && instasettlableValue && (
+                    <div className="flex items-center justify-center">
+                      <div className="relative p-[2px] border-[2px] border-zinc-700 flex rounded-[7px] w-[280px] overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full bg-[#3b3a3a] rounded-[7px] transition-all duration-300 border-[2px] border-black"
+                          style={{
+                            width: '50%',
+                            transform: `translateX(${
+                              settlementMode === 'STANDARD' ? '0%' : '100%'
+                            })`,
+                          }}
+                        />
+                        <div
+                          onClick={() => setSettlementMode('STANDARD')}
+                          className={`relative z-10 ${
+                            settlementMode === 'STANDARD'
+                              ? 'text-white'
+                              : 'text-gray-500'
+                          } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                        >
+                          STANDARD
+                        </div>
+                        <div
+                          onClick={() => setSettlementMode('ONLY_INSTASETTLE')}
+                          className={`relative z-10 ${
+                            settlementMode === 'ONLY_INSTASETTLE'
+                              ? 'text-white'
+                              : 'text-gray-500'
+                          } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                        >
+                          ONLY INSTASETTLE
+                        </div>
                       </div>
-                      <div
-                        onClick={() => setTradingMode('PRICE_BASED')}
-                        className={`relative z-10 ${
-                          tradingMode === 'PRICE_BASED'
-                            ? 'text-white'
-                            : 'text-gray-500'
-                        } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] cursor-pointer text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
-                      >
-                        PRICE BASED
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 text-zinc-500 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                    </div>
+                  )}
+
+                  {/* Trade Style Section with Title and Tooltip */}
+                  <div className="space-y-3 mt-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm font-medium text-zinc-300">
+                        Trade Style
+                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <InfoIcon className="h-3 w-3 cursor-help block" />
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                            {settlementMode === 'ONLY_INSTASETTLE' ? (
                               <p>
-                                Execute trades based on price movements and
-                                market conditions
+                                Trade style is disabled when ONLY INSTASETTLE is
+                                selected.
                               </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                            ) : (
+                              <p>
+                                Choose between reserve-based or price-based
+                                trading strategies
+                              </p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    {/* Trading Mode Toggle */}
+                    <div className="flex items-center justify-center">
+                      <div
+                        className={`relative p-[2px] border-[2px] ${
+                          settlementMode === 'ONLY_INSTASETTLE'
+                            ? 'border-zinc-800 opacity-50'
+                            : 'border-zinc-700'
+                        } flex rounded-[7px] w-[280px] overflow-hidden transition-all duration-300`}
+                      >
+                        <div
+                          className="absolute top-0 left-0 h-full bg-[#3b3a3a] rounded-[7px] transition-all duration-300 border-[2px] border-black"
+                          style={{
+                            width: '50%',
+                            transform: `translateX(${
+                              tradingMode === 'RESERVE_BASED' ? '0%' : '100%'
+                            })`,
+                          }}
+                        />
+                        <div
+                          onClick={() => {
+                            if (settlementMode !== 'ONLY_INSTASETTLE') {
+                              setTradingMode('RESERVE_BASED')
+                            }
+                          }}
+                          className={`relative z-10 ${
+                            tradingMode === 'RESERVE_BASED'
+                              ? 'text-white'
+                              : 'text-gray-500'
+                          } ${
+                            settlementMode === 'ONLY_INSTASETTLE'
+                              ? 'cursor-not-allowed'
+                              : 'cursor-pointer'
+                          } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                        >
+                          RESERVE BASED
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <InfoIcon className="h-3 w-3 cursor-help block" />
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                                <p>
+                                  Execute trades based on liquidity pool
+                                  reserves and availability
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div
+                          onClick={() => {
+                            if (settlementMode !== 'ONLY_INSTASETTLE') {
+                              setTradingMode('PRICE_BASED')
+                            }
+                          }}
+                          className={`relative z-10 ${
+                            tradingMode === 'PRICE_BASED'
+                              ? 'text-white'
+                              : 'text-gray-500'
+                          } ${
+                            settlementMode === 'ONLY_INSTASETTLE'
+                              ? 'cursor-not-allowed'
+                              : 'cursor-pointer'
+                          } h-[28px] min-w-fit w-full px-[8px] rounded-[7px] text-xs flex justify-center items-center gap-1 transition-colors duration-300`}
+                        >
+                          PRICE BASED
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <InfoIcon className="h-3 w-3 cursor-help block" />
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                                <p>
+                                  Execute trades based on price movements and
+                                  market conditions
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </div>
                     </div>
                   </div>

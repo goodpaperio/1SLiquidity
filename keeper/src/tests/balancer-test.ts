@@ -19,10 +19,10 @@ async function testBalancerSubgraphIntegration() {
   console.log('1. Testing ReservesAggregator with Balancer subgraph data...')
   try {
     const reservesAggregator = new ReservesAggregator(provider)
-    
+
     // Initialize Balancer smart filtering
     reservesAggregator.initializeBalancerPoolFilter(BALANCER_POOL_METADATA)
-    
+
     const wbtcAddress = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599' // WBTC
     const wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' // WETH
 
@@ -54,10 +54,10 @@ async function testBalancerSubgraphIntegration() {
   console.log('\n3. Testing PriceAggregator with Balancer subgraph data...')
   try {
     const priceAggregator = new PriceAggregator(provider)
-    
+
     // Initialize Balancer smart filtering
     priceAggregator.initializeBalancerPoolFilter(BALANCER_POOL_METADATA)
-    
+
     const wbtcAddress = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599' // WBTC
     const wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' // WETH
 
@@ -71,9 +71,11 @@ async function testBalancerSubgraphIntegration() {
 
     // Test getAllPrices
     console.log('\n4. Testing getAllPrices with Balancer subgraph data...')
-    const allPrices = await priceAggregator.getAllPrices(wbtcAddress, wethAddress)
-    if (allPrices && allPrices.length > 0) {
-      console.log('✓ All prices (with subgraph data):', allPrices)
+    const priceResults = await priceAggregator.getAllPrices(wbtcAddress, wethAddress)
+    if (priceResults && priceResults.allPrices.length > 0) {
+      console.log('✓ All prices (with subgraph data):', priceResults.allPrices)
+      console.log('✓ Other Curve pools:', priceResults.otherCurvePools)
+      console.log('✓ Other Balancer pools:', priceResults.otherBalancerPools)
     } else {
       console.log('✗ No prices found with subgraph data')
     }

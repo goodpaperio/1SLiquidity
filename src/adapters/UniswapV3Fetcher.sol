@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IUniversalDexInterface.sol";
+import "forge-std/console.sol";
 
 interface IUniswapV3Factory {
     function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address pool);
@@ -170,16 +171,65 @@ contract UniswapV3Fetcher is IUniversalDexInterface {
     }
 
     function getPrice(address tokenIn, address tokenOut, uint256 amountIn) external view override returns (uint256) {
-        // For UniswapV3, calculate price based on reserves
+        // Get reserves using the default fee tier
         (uint256 reserveIn, uint256 reserveOut) = this.getReserves(tokenIn, tokenOut);
-
-        if (reserveIn == 0 || reserveOut == 0) {
+        
+        if (reserveIn == 0 || reserveOut == 0 || amountIn == 0) {
             return 0;
         }
 
-        // Simple price calculation based on reserves ratio
-        // This is a simplified version - UniswapV3 has more complex pricing with concentrated liquidity
-        return (amountIn * reserveOut) / reserveIn;
+        // Get pool address for additional state
+        address pool = this.getPoolAddress(tokenIn, tokenOut);
+        if (pool == address(0)) {
+            // Fallback to simple linear calculation
+            return (amountIn * reserveOut) / reserveIn;
+        }
+
+        // Get pool state for more accurate pricing
+        (uint160 sqrtPriceX96,,,,,,) = IUniswapV3Pool(pool).slot0();
+        uint128 liquidity = IUniswapV3Pool(pool).liquidity();
+        
+        if (sqrtPriceX96 == 0 || liquidity == 0) {
+            // Fallback to simple linear calculation
+            return (amountIn * reserveOut) / reserveIn;
+        }
+
+        // Calculate a more realistic price with slippage approximation
+        // This is a simplified model that approximates UniswapV3's concentrated liquidity
+        // The slippage increases with the square of the trade size relative to liquidity
+        
+        // Calculate the impact factor based on trade size vs liquidity
+        uint256 liquidityFactor = (amountIn * 1e18) / reserveIn; // Trade as fraction of reserves
+        
+        // Debug logging
+        console.log("DEBUG UniswapV3Fetcher: amountIn:", amountIn);
+        console.log("DEBUG UniswapV3Fetcher: reserveIn:", reserveIn);
+        console.log("DEBUG UniswapV3Fetcher: liquidityFactor:", liquidityFactor);
+        
+        // More aggressive slippage calculation that better reflects UniswapV3's concentrated liquidity
+        // Use a higher power relationship to make slippage more significant for larger trades
+        uint256 slippageFactor = (liquidityFactor * liquidityFactor * liquidityFactor) / (1e18 * 1e18); // Cubic relationship
+        
+        console.log("DEBUG UniswapV3Fetcher: slippageFactor:", slippageFactor);
+        
+        // Apply slippage (more aggressive model)
+        uint256 basePrice = (amountIn * reserveOut) / reserveIn;
+        
+        // Fix: Use a more sensitive slippage calculation
+        // Scale up the slippage factor to make it more sensitive to small changes
+        uint256 slippageBps = (slippageFactor * 10000 * 1000) / 1e18; // Multiply by 1000 for more sensitivity
+        if (slippageBps > 10000) slippageBps = 10000; // Cap at 100% slippage
+        
+        console.log("DEBUG UniswapV3Fetcher: slippageBps:", slippageBps);
+        
+        // Reduce output by slippage
+        uint256 slippageReduction = (basePrice * slippageBps) / 10000;
+        uint256 finalPrice = basePrice > slippageReduction ? basePrice - slippageReduction : basePrice / 10;
+        
+        console.log("DEBUG UniswapV3Fetcher: basePrice:", basePrice);
+        console.log("DEBUG UniswapV3Fetcher: finalPrice:", finalPrice);
+        
+        return finalPrice;
     }
 
     // ======= Internal math helpers =======

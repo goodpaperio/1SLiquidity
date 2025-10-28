@@ -1,0 +1,18 @@
+{
+  "name": "decastream-config-tools",
+  "version": "1.0.0",
+  "description": "Generation and maintenance scripts for liquidity configuration files",
+  "private": true,
+  "scripts": {
+    "generate:pairs": "node generate-pairs.js",
+    "generate": "npm run generate:pairs"
+  },
+  "keywords": [
+    "decastream",
+    "liquidity",
+    "pairs",
+    "dex"
+  ],
+  "author": "Decastream Labs",
+  "license": "MIT"
+}

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import React, { useMemo, useCallback } from 'react'
 import { ReserveData } from '@/app/lib/dex/calculators'
+import { formatNumberSmart } from '@/app/lib/utils/number'
 
 interface DexData {
   name: string
@@ -27,7 +28,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
       curve: '/assets/curve.png',
       uniswap: '/assets/uniswap.png',
       sushiswap: '/assets/sushiswap.png',
-      balancer: '/assets/balancer.png',
+      balancer: '/assets/balancer-dex.png',
     }),
     []
   )
@@ -137,7 +138,8 @@ const DexSummary: React.FC<DexSummaryProps> = ({
       const mainDexPrice = reserves?.price || 0
       dexDataArray.push({
         name: getCleanDexName(reserves.dex),
-        price: mainDexPrice > 0 ? `$${mainDexPrice.toFixed(6)}` : '$0.00',
+        price:
+          mainDexPrice > 0 ? `$${formatNumberSmart(mainDexPrice)}` : '$0.00',
         reserves: formatReserves(reserves.reserves, reserves.decimals),
         priceValue: mainDexPrice,
         isBest: true, // Main dex is always the best
@@ -185,7 +187,7 @@ const DexSummary: React.FC<DexSummaryProps> = ({
     Object.entries(otherDexGroups).forEach(([name, data]) => {
       dexDataArray.push({
         name,
-        price: `$${data.bestPrice.toFixed(6)}`,
+        price: `$${formatNumberSmart(data.bestPrice)}`,
         reserves: formatReserves(data.reserves, data.decimals),
         priceValue: data.bestPrice,
         isBest: false,

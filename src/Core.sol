@@ -11,8 +11,6 @@ import "./interfaces/IRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-// import "forge-std/console.sol";
-
 contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     using SafeERC20 for IERC20;
 
@@ -35,14 +33,15 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         bool isInstasettlable,
         uint256 instasettleBps,
         uint256 lastSweetSpot,
-        bool usePriceBased
+        bool usePriceBased,
+        bool onlyInstasettle
     );
 
     event TradeStreamExecuted(
         uint256 indexed tradeId, uint256 amountIn, uint256 realisedAmountOut, uint256 lastSweetSpot
     );
 
-    event TradeCancelled(uint256 indexed tradeId, uint256 amountRemaining, uint256 realisedAmountOut);
+    event TradeCancelled(bool isAutocancelled, uint256 indexed tradeId, uint256 amountRemaining, uint256 realisedAmountOut);
 
     event TradeSettled(
         uint256 indexed tradeId,
@@ -81,6 +80,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     // trades
     uint256 public lastTradeId;
     mapping(bytes32 => uint256[]) public pairIdTradeIds;
+    mapping(uint256 => uint256) public tradeIndicies;
     mapping(uint256 => Utils.Trade) public trades;
 
     // balances
@@ -118,19 +118,24 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         emit StreamFeesTaken(tradeId, bot, tokenOut, protocolFee, botFee);
     }
 
-    function _removeTradeIdFromArray(bytes32 pairId, uint256 tradeId) internal {
+    function _removeTradeFromStorage(bytes32 pairId, uint256 tradeId) internal {
         uint256[] storage tradeIds = pairIdTradeIds[pairId];
-        for (uint256 i = 0; i < tradeIds.length; i++) {
-            if (tradeIds[i] == tradeId) {
-                // Remove the trade ID by moving the last element to this position and popping
-                if (i < tradeIds.length - 1) {
-                    tradeIds[i] = tradeIds[tradeIds.length - 1];
-                }
-                tradeIds.pop();
-                break;
-            }
-        }
+        uint256 tradeIndex = tradeIndicies[tradeId];
+        uint256 lastTradeId = tradeIds[tradeIds.length - 1]; 
+        tradeIds[tradeIndex] = lastTradeId;
+        tradeIds.pop();
+        tradeIndicies[lastTradeId] = tradeIndex; 
+        delete tradeIndicies[tradeId];
+        delete trades[tradeId];
     }
+
+    // function _swapAndPopPairIdTradeId(bytes32 pairId, uint256 tradeId) internal {
+    //     uint256[] storage tradeIds = pairIdTradeIds[pairId];
+    //     uint256 tradeIndex = tradeIndicies[tradeId];
+    //     tradeIds[tradeIndex] = tradeIds[tradeIds.length - 1];
+    //     tradeIds.pop();
+    //     delete tradeIndicies[tradeId];
+    // }
 
     function setStreamProtocolFeeBps(uint16 bps) external onlyOwner {
         require(bps <= MAX_FEE_CAP_BPS, "fee cap");
@@ -175,25 +180,13 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
 
     function instasettle(uint256 tradeId) external nonReentrant {
         Utils.Trade memory trade = trades[tradeId];
+        bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
         require(trade.owner != address(0), "Trade not found");
         require(trade.isInstasettlable, "Trade not instasettlable");
-
-        // If lastSweetSpot == 1, just settle the amountRemaining
-        if (trade.lastSweetSpot == 1) {
-            delete trades[tradeId];
-            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, trade.realisedAmountOut);
-            IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
-            emit TradeSettled(
-                trade.tradeId,
-                msg.sender,
-                trade.amountRemaining,
-                trade.realisedAmountOut,
-                0 // totalFees is 0 in this case
-            );
-            return;
-        }
+        
         // otheriwse, remove trade from storage and settle amounts
-        delete trades[tradeId];
+        _removeTradeFromStorage(pairId, tradeId);
+        // Note: _removeTradeFromStorage already handles deletion of all three storage locations
         // Calculate remaining amount that needs to be settled
         uint256 remainingAmountOut = trade.targetAmountOut - trade.realisedAmountOut;
         require(remainingAmountOut > 0, "No remaining amount to settle");
@@ -239,8 +232,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             uint256 amountIn,
             uint256 amountOutMin,
             bool isInstasettlable,
-            bool usePriceBased
-        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool));
+            bool usePriceBased,
+            uint256 instasettleBps,
+            bool onlyInstasettle
+        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool, uint256, bool));
         // @audit may be better to abstract sweetSpot algo to here and pass the value along, since small (<0.001% pool depth) trades shouldn't be split at all and would save hefty logic
         // @audit edge cases wrt pool depths (specifically extremely small volume to volume reserves) create anomalies in the algo output
         // @audit similarly for the sake of OPTIMISTIC and DETERMINISTIC placement patterns, we should abstract the calculation of sweetSpot nad the definition of appropriate DEX into seperated, off contract functions
@@ -260,13 +255,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             targetAmountOut: amountOutMin,
             realisedAmountOut: 0,
             tradeId: tradeId,
-            instasettleBps: 100,
+            instasettleBps: instasettleBps,
             lastSweetSpot: 0, // @audit check that we need to speficially evaluate this here
             isInstasettlable: isInstasettlable,
-            usePriceBased: usePriceBased
+            usePriceBased: usePriceBased,
+            onlyInstasettle: onlyInstasettle
         });
+        
 
         pairIdTradeIds[pairId].push(tradeId);
+        uint256 tradeIndex = pairIdTradeIds[pairId].length - 1;
+        tradeIndicies[tradeId] = tradeIndex;
 
         Utils.Trade storage trade = trades[tradeId];
         uint256 realisedBefore = trade.realisedAmountOut;
@@ -288,29 +287,32 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             amountOutMin,
             updatedTrade.realisedAmountOut, // Use actual realised amount after stream
             isInstasettlable,
-            100, // instasettleBps default
+            instasettleBps, // Use the passed instasettleBps parameter
             updatedTrade.lastSweetSpot, // Use actual sweet spot utilized
-            usePriceBased
+            usePriceBased,
+            onlyInstasettle
         );
     }
 
-    function cancelTrade(uint256 tradeId) public nonReentrant returns (bool) {
+    function cancelTrade(uint256 tradeId) public returns (bool) {
         // @audit It is essential that this authority may be granted by a bot, therefore meaning if the msg.sender is
         // Core.
         // @audit Similarly, when the Router is implemented, we mnust forward the msg.sender in the function call /
         // veridy signed message
         Utils.Trade memory trade = trades[tradeId];
         if (trade.owner == address(0)) {
-            revert("Trade does not exist");
+            revert("Trade inexistent or being called from null address");
         }
         if (trade.owner == msg.sender || msg.sender == address(this)) {
             bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
             delete trades[tradeId];
-            _removeTradeIdFromArray(pairId, tradeId);
+            _removeTradeFromStorage(pairId, tradeId);
             IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
             IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
 
-            emit TradeCancelled(tradeId, trade.amountRemaining, trade.realisedAmountOut);
+            bool autoCancelled = msg.sender == address(this) ? true : false;
+
+            emit TradeCancelled(autoCancelled, tradeId, trade.amountRemaining, trade.realisedAmountOut);
 
             return true;
         } else {
@@ -323,11 +325,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 botFeesAccrued = 0;
         address tokenOutForRun = address(0);
 
-        for (uint256 i = 0; i < tradeIds.length; i++) {
-            Utils.Trade storage trade = trades[tradeIds[i]];
+        // Cap the number of trades processed to prevent out of gas errors
+        uint256 maxTradesToProcess = 20;
+        uint256 tradesToProcess = tradeIds.length > maxTradesToProcess ? maxTradesToProcess : tradeIds.length;
+
+        // Process trades in reverse order to avoid array index issues when trades are deleted
+        for (uint256 i = tradesToProcess; i > 0; i--) {
+            uint256 index = i - 1; // Convert to 0-based index
+            Utils.Trade storage trade = trades[tradeIds[index]];
             if (trade.attempts >= 3) {
                 // we delete the trade from storage
-                cancelTrade(trade.tradeId);
+                this.cancelTrade(trade.tradeId);
             } else {
                 uint256 realisedBefore = trade.realisedAmountOut;
                 try this.executeStream(trade.tradeId) returns (Utils.Trade memory updatedTrade) {
@@ -342,8 +350,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                     }
                     if (updatedTrade.lastSweetSpot == 0) {
                         IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-                        delete trades[tradeIds[i]];
-                        _removeTradeIdFromArray(pairId, tradeIds[i]);
+                        delete trades[tradeIds[index]];
+                        _removeTradeFromStorage(pairId, tradeIds[index]);
                     }
                 } catch Error(string memory reason) {
                     trade.attempts++;
@@ -361,10 +369,11 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             emit FeesClaimed(msg.sender, tokenOutForRun, botFeesAccrued, false);
         }
     }
+    
 
     function executeStream(uint256 tradeId) public returns (Utils.Trade memory updatedTrade) {
         Utils.Trade storage storageTrade = trades[tradeId];
-        Utils.Trade memory trade = trades[tradeId];
+        Utils.Trade memory trade = trades[tradeId]; 
 
         // security measure @audit may need review
         // if (trade.realisedAmountOut > trade.targetAmountOut) {
@@ -393,6 +402,9 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             streamVolume = trade.amountRemaining / sweetSpot;
         } else {
             targetAmountOut = trade.realisedAmountOut - trade.targetAmountOut;
+
+            // ! @audit maybe we need to do some smart maths here to determine the exchange rate at time of trade placement and propogate that
+            // if the amount remaining is really tiny and the target amount out is large the tradde will fail, esp due to changing market conditions?
             sweetSpot = 1;
             streamVolume = trade.amountRemaining;
         }

@@ -15,6 +15,9 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   streamDaemon: "0x655e264166dacec690cbcec8ecb88cc5be68ab21",
 };
 
+// Deployment block for Core contract v1.0.2
+export const DEPLOYMENT_BLOCK = 23291452;
+
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {
   "0x0000000000000000000000000000000000000000": "ETH",
@@ -51,10 +54,24 @@ export const TOKEN_ADDRESSES: Record<string, string> = {
   "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e": "USDC", // Another USDC variant
 };
 
-export const RPC_URL =
-  process.env.MAINNET_RPC_URL ||
-  "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY";
+export const RPC_URL = process.env.RPC_HTTP_URL;
+
+if (!RPC_URL) {
+  throw new Error("RPC_HTTP_URL environment variable is required");
+}
+
+export const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 export function getProvider(): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(RPC_URL);
+}
+
+export function getSigner(): ethers.Wallet {
+  if (!PRIVATE_KEY) {
+    throw new Error(
+      "PRIVATE_KEY environment variable is required for write operations"
+    );
+  }
+  const provider = getProvider();
+  return new ethers.Wallet(PRIVATE_KEY!, provider);
 }

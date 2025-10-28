@@ -20,7 +20,7 @@ jobs:
     # Removed working-directory to avoid conflicts with cd commands
     env:
       # secrets — set these in GitHub → Settings → Secrets → Actions
-      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+      RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
       PRIVATE_KEY: ${{ secrets.DFGSDFGTEH_PRIVATE_KEY }}
       CHAIN_ID: "1"
 
@@ -54,6 +54,9 @@ jobs:
             cat local-monitor/localData.json
           else
             echo "❌ No local data file found, will start fresh"
+            echo "Creating default localData.json..."
+            echo '{"lastRun": 0, "outstandingTrades": [], "lastUpdated": 0}' > local-monitor/localData.json
+            echo "✅ Default localData.json created"
           fi
 
       - name: Install dependencies
@@ -87,7 +90,11 @@ jobs:
           cd local-monitor
           echo "🔍 Step 1: Running historical analysis to cache outstanding trades..."
           echo "Running in $(pwd)"
+          echo "RPC_HTTP_URL is set: $RPC_HTTP_URL"
           npm run historical
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.DFGSDFGTEH_PRIVATE_KEY }}
 
       - name: Execute outstanding trades (Step 2)
         run: |
@@ -95,6 +102,9 @@ jobs:
           echo "🚀 Step 2: Executing outstanding trades..."
           echo "Running in $(pwd)"
           npm run execute-trades
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.DFGSDFGTEH_PRIVATE_KEY }}
 
       - name: Wait for transactions to be mined (Step 3)
         run: |
@@ -107,6 +117,9 @@ jobs:
           echo "🔍 Step 4: Running historical analysis to check updated state..."
           echo "Running in $(pwd)"
           npm run historical
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.DFGSDFGTEH_PRIVATE_KEY }}
 
       - name: Upload local data artifact
         if: always()

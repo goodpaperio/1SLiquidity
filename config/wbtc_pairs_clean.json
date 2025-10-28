@@ -1,8 +1,8 @@
 {
-  "description": "Toutes les paires de liquidité contenant le token WBTC avec réserves non-nulles (incluant tous les tokens de base)",
-  "totalCount": 25,
-  "extractedAt": "2025-08-06T09:24:51.093Z",
-  "filterCriteria": "Réserves token0 > 0 ET token1 > 0",
+  "description": "All liquidity pairs containing WBTC token with non-zero reserves (including all base tokens)",
+  "totalCount": 30,
+  "extractedAt": "2025-10-05T12:39:39.252Z",
+  "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
   "pairs": [
     {
       "name": "1inch",
@@ -13,6 +13,10 @@
       "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
     },
     {
+      "name": "axs",
+      "address": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
       "name": "cbbtc",
       "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf"
     },
@@ -21,16 +25,20 @@
       "address": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
     },
     {
+      "name": "comp",
+      "address": "0xc00e94cb662c3520282e6f5717214004a7f26888"
+    },
+    {
       "name": "cro",
       "address": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
     },
     {
-      "name": "dai",
-      "address": "0x6b175474e89094c44da98b954eedeac495271d0f"
+      "name": "crv",
+      "address": "0xd533a949740bb3306d119cc777fa900ba034cd52"
     },
     {
-      "name": "ebtc",
-      "address": "0x657e8c867d8b37dcc18fa4caead9c45eb088c642"
+      "name": "dai",
+      "address": "0x6b175474e89094c44da98b954eedeac495271d0f"
     },
     {
       "name": "fet",
@@ -45,12 +53,12 @@
       "address": "0x8236a87084f8b84306f72007f36f2618a5634494"
     },
     {
-      "name": "link",
-      "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
+      "name": "ldo",
+      "address": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
     },
     {
-      "name": "matic",
-      "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+      "name": "link",
+      "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
     },
     {
       "name": "paxg",
@@ -63,6 +71,14 @@
     {
       "name": "qnt",
       "address": "0x4a220e6096b25eadb88358cb44068a3248254675"
+    },
+    {
+      "name": "shib",
+      "address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "name": "snx",
+      "address": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
     },
     {
       "name": "solvbtc",
@@ -86,7 +102,7 @@
     },
     {
       "name": "usdc",
-      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     },
     {
       "name": "usdt",
@@ -99,6 +115,10 @@
     {
       "name": "weth",
       "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    {
+      "name": "wsteth",
+      "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
     },
     {
       "name": "xaut",

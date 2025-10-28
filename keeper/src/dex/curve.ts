@@ -5,15 +5,31 @@ import { CONTRACT_ADDRESSES, CONTRACT_ABIS, COMMON } from '../config/dex'
 import { DecimalUtils } from '../utils/decimals'
 import { TokenService } from '../services/token-service'
 
+interface CurvePoolMetadata {
+  name: string
+  isMeta: boolean
+  tokens: string[]
+  underlyingTokens: string[]
+  A: string
+  fee: string
+  adminFee: string
+}
+
 export class CurveService {
   private pool: ethers.Contract
   private provider: ethers.Provider
   private tokenService: TokenService
   private poolAddress: string
+  private metadata: CurvePoolMetadata
 
-  constructor(provider: ethers.Provider, poolAddress: string) {
+  constructor(
+    provider: ethers.Provider,
+    poolAddress: string,
+    metadata: CurvePoolMetadata
+  ) {
     this.provider = provider
     this.poolAddress = poolAddress
+    this.metadata = metadata
     this.tokenService = TokenService.getInstance(provider)
     this.pool = new ethers.Contract(
       poolAddress,
@@ -38,11 +54,8 @@ export class CurveService {
     tokenB: string
   ): Promise<ReserveResult | null> {
     try {
-      // Get token indices in the pool
-      const [tokenAIndex, tokenBIndex] = await this.getTokenIndices(
-        tokenA,
-        tokenB
-      )
+      // Get token indices from metadata (no blockchain call needed)
+      const [tokenAIndex, tokenBIndex] = this.getTokenIndices(tokenA, tokenB)
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
         console.log('One or both tokens not found in Curve pool')
@@ -89,6 +102,10 @@ export class CurveService {
         },
         price: price,
         timestamp: Date.now(),
+        tokenIndices: {
+          token0Index: tokenAIndex,
+          token1Index: tokenBIndex,
+        },
       } as ReserveResult
     } catch (error) {
       console.error('Error fetching Curve reserves:', error)
@@ -98,14 +115,12 @@ export class CurveService {
 
   /**
    * Get price for a token pair using Curve's get_dy function
+   * @param amountIn - Amount of tokenA to use for price calculation (default: 1)
    */
-  async getPrice(tokenA: string, tokenB: string): Promise<PriceResult | null> {
+  async getPrice(tokenA: string, tokenB: string, amountIn: number | string = 1): Promise<PriceResult | null> {
     try {
-      // Get token indices in the pool
-      const [tokenAIndex, tokenBIndex] = await this.getTokenIndices(
-        tokenA,
-        tokenB
-      )
+      // Get token indices from metadata (no blockchain call needed)
+      const [tokenAIndex, tokenBIndex] = this.getTokenIndices(tokenA, tokenB)
 
       if (tokenAIndex === -1 || tokenBIndex === -1) {
         console.log('One or both tokens not found in Curve pool')
@@ -118,16 +133,16 @@ export class CurveService {
         this.tokenService.getTokenInfo(tokenB),
       ])
 
-      // Calculate price using 1 unit of tokenA
-      const amountIn = DecimalUtils.normalizeAmount('1', tokenAInfo.decimals)
+      // Calculate price using specified amount of tokenA
+      const amountInNormalized = DecimalUtils.normalizeAmount(String(amountIn), tokenAInfo.decimals)
       const amountOut = await this.pool.get_dy(
         tokenAIndex,
         tokenBIndex,
-        amountIn
+        amountInNormalized
       )
 
       const price = DecimalUtils.calculatePrice(
-        amountIn,
+        amountInNormalized,
         amountOut,
         tokenAInfo.decimals,
         tokenBInfo.decimals
@@ -137,6 +152,10 @@ export class CurveService {
         dex: 'curve',
         price,
         timestamp: Date.now(),
+        tokenIndices: {
+          token0Index: tokenAIndex,
+          token1Index: tokenBIndex,
+        },
       }
     } catch (error) {
       console.error('Curve price fetch failed:', error)
@@ -145,71 +164,39 @@ export class CurveService {
   }
 
   /**
-   * Get token indices in the Curve pool
+   * Get token indices in the Curve pool using metadata
    * Returns [tokenAIndex, tokenBIndex] or [-1, -1] if not found
    */
-  private async getTokenIndices(
-    tokenA: string,
-    tokenB: string
-  ): Promise<[number, number]> {
-    try {
-      // Get all coins in the pool (up to 8 tokens)
-      const coins: string[] = []
-      for (let i = 0; i < 8; i++) {
-        try {
-          const coin = await this.pool.coins(i)
-          if (coin === COMMON.ZERO_ADDRESS) break
-          coins.push(coin.toLowerCase())
-        } catch (error) {
-          // Reached end of coins
-          break
-        }
-      }
+  private getTokenIndices(tokenA: string, tokenB: string): [number, number] {
+    // Use metadata tokens (already contains the token addresses)
+    const coins = this.metadata.tokens.map((t) => t.toLowerCase())
 
-      const tokenAIndex = coins.findIndex(
-        (coin) => coin === tokenA.toLowerCase()
-      )
-      const tokenBIndex = coins.findIndex(
-        (coin) => coin === tokenB.toLowerCase()
-      )
+    const tokenAIndex = coins.findIndex((coin) => coin === tokenA.toLowerCase())
+    const tokenBIndex = coins.findIndex((coin) => coin === tokenB.toLowerCase())
 
-      return [tokenAIndex, tokenBIndex]
-    } catch (error) {
-      console.error('Error getting token indices:', error)
-      return [-1, -1]
-    }
+    return [tokenAIndex, tokenBIndex]
   }
 
   /**
-   * Get pool information
+   * Get pool information from metadata (no blockchain call needed)
    */
-  async getPoolInfo(): Promise<{
+  getPoolInfo(): {
+    name: string
     coins: string[]
-    A: bigint
-    fee: bigint
-  } | null> {
-    try {
-      const coins: string[] = []
-      for (let i = 0; i < 8; i++) {
-        try {
-          const coin = await this.pool.coins(i)
-          if (coin === COMMON.ZERO_ADDRESS) break
-          coins.push(coin)
-        } catch (error) {
-          break
-        }
-      }
-
-      const [A, fee] = await Promise.all([this.pool.A(), this.pool.fee()])
-
-      return {
-        coins,
-        A,
-        fee,
-      }
-    } catch (error) {
-      console.error('Error getting pool info:', error)
-      return null
+    underlyingTokens: string[]
+    isMeta: boolean
+    A: string
+    fee: string
+    adminFee: string
+  } {
+    return {
+      name: this.metadata.name,
+      coins: this.metadata.tokens,
+      underlyingTokens: this.metadata.underlyingTokens,
+      isMeta: this.metadata.isMeta,
+      A: this.metadata.A,
+      fee: this.metadata.fee,
+      adminFee: this.metadata.adminFee,
     }
   }
 }

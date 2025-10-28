@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Test WBTC pairs with chunking
+# Usage: ./test-wbtc [chunk-size] [output-file]
+
+CHUNK_SIZE=${1:-10}
+OUTPUT_FILE=${2:-"test-results-wbtc-$(date +%Y%m%d_%H%M%S).json"}
+
+echo "🧪 Running WBTC trade tests..."
+echo "📦 Chunk size: $CHUNK_SIZE tokens"
+echo "📁 Output: $OUTPUT_FILE"
+echo ""
+
+# Get pair count
+WBTC_COUNT=$(jq '.totalCount' config/wbtc_pairs_clean.json)
+NUM_CHUNKS=$(( (WBTC_COUNT + CHUNK_SIZE - 1) / CHUNK_SIZE ))
+
+echo "📊 WBTC: $WBTC_COUNT pairs → $NUM_CHUNKS chunks"
+echo ""
+
+# Temporary file for logs
+TEMP_LOG=$(mktemp)
+
+# Run chunks
+for ((chunk=0; chunk<NUM_CHUNKS; chunk++)); do
+    start=$((chunk * CHUNK_SIZE))
+    end=$((start + CHUNK_SIZE))
+    if [ $end -gt $WBTC_COUNT ]; then
+        end=$WBTC_COUNT
+    fi
+    
+    echo "   Chunk $((chunk+1))/$NUM_CHUNKS: tokens $start-$end"
+    START_INDEX=$start END_INDEX=$end forge test --match-test "test_PlaceTradeWithWBTCTokens" -vv 2>&1 | tee -a "$TEMP_LOG"
+done
+
+echo ""
+echo "📊 Extracting results..."
+bash ./scripts/extract-events-to-json.sh "$OUTPUT_FILE" < "$TEMP_LOG"
+
+# Cleanup
+rm -f "$TEMP_LOG"
+
+echo "✅ WBTC tests completed!"

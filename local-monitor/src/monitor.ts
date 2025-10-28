@@ -1,7 +1,13 @@
 import { ethers } from "ethers";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
-import { CONTRACT_ADDRESSES, TOKEN_ADDRESSES, getProvider } from "./config";
+import {
+  CONTRACT_ADDRESSES,
+  TOKEN_ADDRESSES,
+  getProvider,
+  getSigner,
+  DEPLOYMENT_BLOCK,
+} from "./config";
 import {
   Trade,
   TradeDisplay,
@@ -19,7 +25,9 @@ import CoreABI from "./abi/Core.json";
 
 export class TradeMonitor {
   private provider: ethers.JsonRpcProvider;
+  private signer: ethers.Wallet;
   private coreContract: ethers.Contract;
+  private coreContractWithSigner: ethers.Contract;
   private localDataPath: string;
 
   constructor() {
@@ -29,6 +37,21 @@ export class TradeMonitor {
       CoreABI,
       this.provider
     );
+
+    // Only create signer if private key is available
+    try {
+      this.signer = getSigner();
+      this.coreContractWithSigner = new ethers.Contract(
+        CONTRACT_ADDRESSES.core,
+        CoreABI,
+        this.signer
+      );
+    } catch (error) {
+      // No private key available - only read operations allowed
+      this.signer = null as any;
+      this.coreContractWithSigner = null as any;
+    }
+
     this.localDataPath = join(process.cwd(), "localData.json");
   }
 
@@ -101,12 +124,16 @@ export class TradeMonitor {
   }
 
   /**
-   * Calculate pair ID (keccak256 hash of token addresses)
+   * Calculate pair ID (keccak256 hash of token addresses) - matches contract logic
    */
   private calculatePairId(tokenIn: string, tokenOut: string): string {
-    // For now, we'll use a simple concatenation since we don't have the exact keccak256 implementation
-    // In a real implementation, you'd want to use the same keccak256 logic as the smart contract
-    return ethers.keccak256(ethers.toUtf8Bytes(`${tokenIn}-${tokenOut}`));
+    // Use the same calculation as the smart contract: keccak256(abi.encode(tokenIn, tokenOut))
+    return ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "address"],
+        [tokenIn, tokenOut]
+      )
+    );
   }
 
   /**
@@ -154,8 +181,8 @@ export class TradeMonitor {
     return {
       tradeId: trade.tradeId,
       pair: `${tokenInSymbol}/${tokenOutSymbol}`,
-      tokenIn: tokenInSymbol,
-      tokenOut: tokenOutSymbol,
+      tokenIn: trade.tokenIn, // Use actual address, not symbol
+      tokenOut: trade.tokenOut, // Use actual address, not symbol
       amountIn: this.formatTokenAmount(trade.amountIn),
       amountRemaining: this.formatTokenAmount(trade.amountRemaining),
       targetAmountOut: this.formatTokenAmount(trade.targetAmountOut),
@@ -394,11 +421,11 @@ export class TradeMonitor {
     const currentBlock = await this.provider.getBlockNumber();
 
     // For historical analysis, always scan from deployment block to get complete history
-    // Use a reasonable range to avoid scanning too many blocks at once
-    const fromBlock = Math.max(0, currentBlock - 200000);
+    // Start from the actual deployment block of the Core contract
+    const fromBlock = DEPLOYMENT_BLOCK;
 
     console.log(
-      `📊 Scanning from block ${fromBlock} to ${currentBlock} for complete history`
+      `📊 Scanning from deployment block ${fromBlock} to ${currentBlock} for complete history`
     );
 
     // Scan all events in parallel
@@ -740,10 +767,14 @@ export class TradeMonitor {
    */
   async executeTrades(pairId: string): Promise<string> {
     try {
+      if (!this.coreContractWithSigner) {
+        throw new Error("Private key not available - cannot execute trades");
+      }
+
       console.log(`🚀 Executing trades for pairId: ${pairId}`);
 
-      // Call the executeTrades function on the contract
-      const tx = await this.coreContract.executeTrades(pairId);
+      // Call the executeTrades function on the contract using signer
+      const tx = await this.coreContractWithSigner.executeTrades(pairId);
       console.log(`📝 Transaction submitted: ${tx.hash}`);
 
       // Wait for transaction to be mined
@@ -792,10 +823,13 @@ export class TradeMonitor {
 
       for (let i = 0; i < uniquePairIds.length; i++) {
         const pairId = uniquePairIds[i];
+        const tradesInQueue = localData.outstandingTrades.filter(
+          (t) => t.pairId === pairId
+        ).length;
         console.log(
-          `\n🔄 Executing trades ${i + 1}/${
+          `\n🔄 Executing trade queue ${i + 1}/${
             uniquePairIds.length
-          } for pairId: ${pairId}`
+          } (${tradesInQueue} trades in queue) for pairId: ${pairId}`
         );
 
         try {

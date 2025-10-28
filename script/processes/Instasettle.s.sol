@@ -147,6 +147,10 @@ contract Instasettle is TradePlacement {
 
         // Place a trade using inherited function
         uint256 tradeId = placeTradeWETHUSDC(true);
+        
+        // Verify the trade exists before proceeding
+        Utils.Trade memory trade = core.getTrade(tradeId);
+        require(trade.tradeId == tradeId, "Trade not found after placement");
 
         // Drain this contract's USDC balance
         uint256 balance = IERC20(USDC).balanceOf(address(this));
@@ -162,6 +166,11 @@ contract Instasettle is TradePlacement {
     function test_RevertWhen_NonInstasettlableTrade() public {
         // Place a non-instasettlable trade
         uint256 tradeId = placeTradeWETHUSDC(false);
+        
+        // Verify the trade exists before proceeding
+        Utils.Trade memory trade = core.getTrade(tradeId);
+        require(trade.tradeId == tradeId, "Trade not found after placement");
+        require(!trade.isInstasettlable, "Trade should not be instasettlable");
 
         // Try to instasettle - should revert
         vm.startPrank(address(this));
@@ -184,7 +193,7 @@ contract Instasettle is TradePlacement {
 
         // Setup initial balances
         uint256 amountIn = formatTokenAmount(WETH, 1); // 1 WETH
-        uint256 amountOutMin = formatTokenAmount(USDC, 1800); // Expected USDC output with 0.1% slippage
+        uint256 amountOutMin = formatTokenAmount(USDC, 4000); // Reduced minimum USDC output to allow for slippage
 
         // Log WETH balance before approval
         uint256 wethBalance = getTokenBalance(WETH, tradeOwner);
@@ -201,14 +210,25 @@ contract Instasettle is TradePlacement {
             amountIn,
             amountOutMin,
             isInstasettlable, // Use the parameter instead of hardcoding true
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
         core.placeTrade(tradeData);
 
         // Verify trade was placed
         bytes32 pairId = keccak256(abi.encode(WETH, USDC));
         uint256[] memory tradeIds = core.getPairIdTradeIds(pairId);
-        tradeId = tradeIds[0];
+        require(tradeIds.length > 0, "No trades found for pair");
+        
+        // Get the most recent trade (last in the array)
+        tradeId = tradeIds[tradeIds.length - 1];
+        
+        // Verify the trade exists and has correct details
+        Utils.Trade memory trade = core.getTrade(tradeId);
+        require(trade.tradeId == tradeId, "Trade ID mismatch");
+        require(trade.tokenIn == WETH, "Wrong tokenIn");
+        require(trade.tokenOut == USDC, "Wrong tokenOut");
 
         vm.stopPrank();
 

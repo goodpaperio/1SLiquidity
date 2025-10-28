@@ -3,10 +3,12 @@ pragma solidity 0.8.30;
 
 import {Deploys} from "test/shared/Deploys.sol";
 import {MockERC20} from "test/mock/MockERC20.sol";
+import {AMockFetcher} from "test/mock/MockFetcher.sol";
 
 contract SweetSpotAlgo_Fuzz_Test is Deploys {
     MockERC20 tokenIn;
     MockERC20 tokenOut;
+    AMockFetcher mockFetcher;
 
     function setUp() public override {
         super.setUp();
@@ -14,21 +16,26 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
         // Deploy mock tokens with different decimals
         tokenIn = new MockERC20("Token In", "TKI", 18);
         tokenOut = new MockERC20("Token Out", "TKO", 18);
+        
+        // Get the first mock fetcher from the deployed DEXes
+        mockFetcher = AMockFetcher(dexes[0]);
     }
 
     // Test fuzz pour les paramètres valides de sweetSpotAlgo
-    function testFuzz_SweetSpotAlgo_ValidInputs(uint96 reserveIn, uint96 reserveOut, uint96 volume, uint96 effectiveGas)
+    function testFuzz_SweetSpotAlgo_ValidInputs(uint96 reserveIn, uint96 reserveOut, uint96 volume)
         public
     {
         // Utiliser bound pour contrôler les plages de valeurs
         uint256 boundedReserveIn = bound(uint256(reserveIn), 10 ** 18, type(uint96).max);
         uint256 boundedReserveOut = bound(uint256(reserveOut), 10 ** 18, type(uint96).max);
         uint256 boundedVolume = bound(uint256(volume), 10 ** 18, type(uint96).max);
-        uint256 boundedEffectiveGas = bound(uint256(effectiveGas), 1, 1e6);
+
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(boundedReserveIn, boundedReserveOut);
 
         // Appeler la fonction
         uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), boundedVolume, boundedReserveIn, boundedReserveOut, boundedEffectiveGas
+            address(tokenIn), address(tokenOut), boundedVolume, address(mockFetcher)
         );
 
         // Vérifications invariantes
@@ -36,35 +43,37 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
         assertTrue(sweetSpot <= 500, "Sweet spot should be at most 500");
     }
 
-    // Test fuzz pour vérifier que les reverts fonctionnent correctement
-    function testFuzz_SweetSpotAlgo_RevertOnInvalidInputs(
+    // Test fuzz pour vérifier le comportement avec des réserves nulles
+    function testFuzz_SweetSpotAlgo_ZeroReserves(
         uint256 reserveIn,
         uint256 reserveOut,
-        uint256 volume,
-        uint256 effectiveGas
+        uint256 volume
     ) public {
         // Test avec reserveIn = 0
-        if (reserveIn == 0 && reserveOut > 0 && effectiveGas > 0) {
-            vm.expectRevert("No reserves or appropriate gas estimation");
-            streamDaemon._sweetSpotAlgo(
-                address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+        if (reserveIn == 0 && reserveOut > 0) {
+            mockFetcher.setReserves(reserveIn, reserveOut);
+            uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
+                address(tokenIn), address(tokenOut), volume, address(mockFetcher)
             );
+            assertEq(sweetSpot, 4, "Should return fallback sweet spot of 4 for zero reserveIn");
         }
 
         // Test avec reserveOut = 0
-        if (reserveOut == 0 && reserveIn > 0 && effectiveGas > 0) {
-            vm.expectRevert("No reserves or appropriate gas estimation");
-            streamDaemon._sweetSpotAlgo(
-                address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+        if (reserveOut == 0 && reserveIn > 0) {
+            mockFetcher.setReserves(reserveIn, reserveOut);
+            uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
+                address(tokenIn), address(tokenOut), volume, address(mockFetcher)
             );
+            assertEq(sweetSpot, 4, "Should return fallback sweet spot of 4 for zero reserveOut");
         }
 
-        // Test avec effectiveGas = 0
-        if (effectiveGas == 0 && reserveIn > 0 && reserveOut > 0) {
-            vm.expectRevert("No reserves or appropriate gas estimation");
-            streamDaemon._sweetSpotAlgo(
-                address(tokenIn), address(tokenOut), volume, reserveIn, reserveOut, effectiveGas
+        // Test avec les deux réserves nulles
+        if (reserveIn == 0 && reserveOut == 0) {
+            mockFetcher.setReserves(reserveIn, reserveOut);
+            uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
+                address(tokenIn), address(tokenOut), volume, address(mockFetcher)
             );
+            assertEq(sweetSpot, 4, "Should return fallback sweet spot of 4 for zero reserves");
         }
     }
 
@@ -73,15 +82,13 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
         uint96 reserveIn,
         uint96 reserveOut,
         uint96 volume1,
-        uint96 volume2,
-        uint96 effectiveGas
+        uint96 volume2
     ) public {
         // Utiliser bound pour contrôler les plages de valeurs
         uint256 boundedReserveIn = bound(uint256(reserveIn), 10 ** 18, type(uint96).max);
         uint256 boundedReserveOut = bound(uint256(reserveOut), 10 ** 18, type(uint96).max);
         uint256 boundedVolume1 = bound(uint256(volume1), 10 ** 18, type(uint96).max);
         uint256 boundedVolume2 = bound(uint256(volume2), 10 ** 18, type(uint96).max);
-        uint256 boundedEffectiveGas = bound(uint256(effectiveGas), 1, 1e6);
 
         // S'assurer que volume1 < volume2
         if (boundedVolume1 >= boundedVolume2) {
@@ -90,22 +97,21 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
             boundedVolume2 = temp;
         }
 
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(boundedReserveIn, boundedReserveOut);
+
         uint256 sweetSpot1 = streamDaemon._sweetSpotAlgo(
             address(tokenIn),
             address(tokenOut),
             boundedVolume1,
-            boundedReserveIn,
-            boundedReserveOut,
-            boundedEffectiveGas
+            address(mockFetcher)
         );
 
         uint256 sweetSpot2 = streamDaemon._sweetSpotAlgo(
             address(tokenIn),
             address(tokenOut),
             boundedVolume2,
-            boundedReserveIn,
-            boundedReserveOut,
-            boundedEffectiveGas
+            address(mockFetcher)
         );
 
         // Avec un volume plus grand, le sweet spot devrait être plus grand
@@ -116,17 +122,18 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
     function testFuzz_SweetSpotAlgo_BoundaryConditions(
         uint96 reserveIn,
         uint96 reserveOut,
-        uint96 volume,
-        uint96 effectiveGas
+        uint96 volume
     ) public {
         // Utiliser bound pour contrôler les plages de valeurs
         uint256 boundedReserveIn = bound(uint256(reserveIn), 10 ** 18, type(uint96).max);
         uint256 boundedReserveOut = bound(uint256(reserveOut), 10 ** 18, type(uint96).max);
         uint256 boundedVolume = bound(uint256(volume), 10 ** 18, type(uint96).max);
-        uint256 boundedEffectiveGas = bound(uint256(effectiveGas), 1, 1e6);
+
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(boundedReserveIn, boundedReserveOut);
 
         uint256 sweetSpot = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), boundedVolume, boundedReserveIn, boundedReserveOut, boundedEffectiveGas
+            address(tokenIn), address(tokenOut), boundedVolume, address(mockFetcher)
         );
 
         // Vérifier les bornes
@@ -142,30 +149,29 @@ contract SweetSpotAlgo_Fuzz_Test is Deploys {
     function testFuzz_SweetSpotAlgo_TokenDecimals(
         uint96 reserveIn,
         uint96 reserveOut,
-        uint96 volume,
-        uint96 effectiveGas
+        uint96 volume
     ) public {
         // Utiliser bound pour contrôler les plages de valeurs
         uint256 boundedReserveIn = bound(uint256(reserveIn), 10 ** 18, type(uint96).max);
         uint256 boundedReserveOut = bound(uint256(reserveOut), 10 ** 18, type(uint96).max);
         uint256 boundedVolume = bound(uint256(volume), 10 ** 18, type(uint96).max);
-        uint256 boundedEffectiveGas = bound(uint256(effectiveGas), 1, 1e6);
 
         // Créer des tokens avec différentes décimales pour tester le scaling
         MockERC20 tokenIn8 = new MockERC20("Token In 8", "TKI8", 8);
         MockERC20 tokenOut12 = new MockERC20("Token Out 12", "TKO12", 12);
 
+        // Set reserves on the mock fetcher
+        mockFetcher.setReserves(boundedReserveIn, boundedReserveOut);
+
         uint256 sweetSpotOriginal = streamDaemon._sweetSpotAlgo(
-            address(tokenIn), address(tokenOut), boundedVolume, boundedReserveIn, boundedReserveOut, boundedEffectiveGas
+            address(tokenIn), address(tokenOut), boundedVolume, address(mockFetcher)
         );
 
         uint256 sweetSpotDifferentDecimals = streamDaemon._sweetSpotAlgo(
             address(tokenIn8),
             address(tokenOut12),
             boundedVolume,
-            boundedReserveIn,
-            boundedReserveOut,
-            boundedEffectiveGas
+            address(mockFetcher)
         );
 
         // Les sweet spots devraient être dans les mêmes bornes

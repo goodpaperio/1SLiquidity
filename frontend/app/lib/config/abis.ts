@@ -453,6 +453,17 @@ export const CurvePoolABI = [
     type: 'function',
   },
   {
+    name: 'get_dy_underlying',
+    outputs: [{ type: 'uint256', name: '' }],
+    inputs: [
+      { type: 'int128', name: 'i' },
+      { type: 'int128', name: 'j' },
+      { type: 'uint256', name: 'dx' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     name: 'balances',
     outputs: [{ type: 'uint256', name: '' }],
     inputs: [{ type: 'uint256', name: 'arg0' }],
@@ -463,6 +474,13 @@ export const CurvePoolABI = [
     name: 'coins',
     outputs: [{ type: 'address', name: '' }],
     inputs: [{ type: 'uint256', name: 'i' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    name: 'is_meta',
+    outputs: [{ type: 'bool', name: '' }],
+    inputs: [],
     stateMutability: 'view',
     type: 'function',
   },
@@ -486,6 +504,7 @@ export const CurvePoolABI = [
 export const BalancerVaultABI = [
   'function getPoolTokens(bytes32 poolId) external view returns (address[] memory tokens, uint256[] memory balances, uint256 lastChangeBlock)',
   'function getPool(bytes32 poolId) external view returns (address, uint8)',
+  'function queryBatchSwap(uint8 kind, tuple(bytes32 poolId, uint256 assetInIndex, uint256 assetOutIndex, uint256 amount, bytes userData)[] swaps, address[] assets, tuple(address sender, bool fromInternalBalance, address recipient, bool toInternalBalance) funds) external view returns (int256[] assetDeltas)',
 ]
 
 export const BalancerPoolABI = [

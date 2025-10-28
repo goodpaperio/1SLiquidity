@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../../Protocol.s.sol";
 import "../../../src/Utils.sol";
+import "../../../src/interfaces/IUniversalDexInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TradePlacement is Protocol {
@@ -31,9 +32,7 @@ contract TradePlacement is Protocol {
 
     function run() external virtual override {
         console.log("TradePlacement: run() start");
-        testPlaceTradeWETHUSDC();
-        test_RevertWhen_InsufficientAllowance();
-        test_RevertWhen_InsufficientBalance();
+        testSweetSpotAlgoWithDifferentAmounts();
         console.log("TradePlacement: run() end");
     }
 
@@ -41,7 +40,7 @@ contract TradePlacement is Protocol {
         console.log("TradePlacement: testPlaceTradeWETHUSDC() start");
 
         uint256 amountIn = formatTokenAmount(WETH, 1);
-        uint256 amountOutMin = formatTokenAmount(USDC, 1800);
+        uint256 amountOutMin = formatTokenAmount(USDC, 4000);
 
         approveToken(WETH, address(core), amountIn);
 
@@ -51,7 +50,9 @@ contract TradePlacement is Protocol {
             amountIn,
             amountOutMin,
             false,
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         core.placeTrade(tradeData);
@@ -109,7 +110,7 @@ contract TradePlacement is Protocol {
     function placeTradeWETHUSDC(bool isInstasettlable) public virtual returns (uint256 tradeId) {
         // Setup initial balances
         uint256 amountIn = formatTokenAmount(WETH, 1); // 1 WETH
-        uint256 amountOutMin = formatTokenAmount(USDC, 1800); // Expected USDC output with 0.1% slippage
+        uint256 amountOutMin = formatTokenAmount(USDC, 4000); // Reduced minimum USDC output to allow for slippage
         uint256 botGasAllowance = 0.0005 ether;
 
         // Log WETH balance before approval
@@ -256,4 +257,74 @@ contract TradePlacement is Protocol {
     //     bytes32 pairId = keccak256(abi.encode(WETH, USDC));
     //     core.executeTrades(pairId);
     // }
+
+    function testSweetSpotAlgoWithDifferentAmounts() public {
+        console.log("=== Testing SweetSpotAlgo v3 with Different WETH Amounts ===");
+        
+        // Test amounts: 1, 3, 10, 30, 100 WETH
+        uint256[] memory testAmounts = new uint256[](5);
+        testAmounts[0] = 1 * 1e18;   // 1 WETH
+        testAmounts[1] = 3 * 1e18;   // 3 WETH
+        testAmounts[2] = 10 * 1e18;  // 10 WETH
+        testAmounts[3] = 30 * 1e18;  // 30 WETH
+        testAmounts[4] = 100 * 1e18; // 100 WETH
+        
+        for (uint256 i = 0; i < testAmounts.length; i++) {
+            uint256 amountIn = testAmounts[i];
+            console.log("\n--- Testing with", amountIn / 1e18, "WETH ---");
+            
+            // Test both price-based and reserve-based selection
+            testSweetSpotForAmount(amountIn, false, "Reserve-based");
+            testSweetSpotForAmount(amountIn, true, "Price-based");
+        }
+    }
+    
+    function testSweetSpotForAmount(uint256 amountIn, bool usePriceBased, string memory selectionType) internal {
+        console.log("Testing %s selection for %d WETH", selectionType, amountIn / 1e18);
+        
+        // Get sweet spot evaluation without placing actual trade
+        try streamDaemon.evaluateSweetSpotAndDex(
+            WETH,
+            USDC,
+            amountIn,
+            0, // effectiveGas
+            usePriceBased
+        ) returns (uint256 sweetSpot, address bestFetcher, address router) {
+            console.log("  Sweet Spot: %d", sweetSpot);
+            console.log("  Best Fetcher: %s", bestFetcher);
+            console.log("  Router: %s", router);
+            
+            // Get some additional info about the selected DEX
+            try IUniversalDexInterface(bestFetcher).getDexType() returns (string memory dexType) {
+                console.log("  DEX Type: %s", dexType);
+            } catch {
+                console.log("  DEX Type: Unknown");
+            }
+            
+            // Get reserves for context
+            try IUniversalDexInterface(bestFetcher).getReserves(WETH, USDC) returns (uint256 reserveIn, uint256 reserveOut) {
+                console.log("  WETH Reserve: %d WETH", reserveIn / 1e18);
+                console.log("  USDC Reserve: %d USDC", reserveOut / 1e6);
+                
+                // Calculate what percentage of the pool this trade represents
+                uint256 poolPercentage = (amountIn * 10000) / reserveIn; // in basis points
+                console.log("  Trade as %% of pool: %d%%", poolPercentage / 100);
+            } catch {
+                console.log("  Could not get reserves");
+            }
+            
+            // Get a price quote for context
+            try IUniversalDexInterface(bestFetcher).getPrice(WETH, USDC, amountIn) returns (uint256 amountOut) {
+                console.log("  Expected USDC out: %d USDC", amountOut / 1e6);
+                console.log("  Effective rate: %d USDC per WETH", (amountOut * 1e18) / amountIn);
+            } catch {
+                console.log("  Could not get price quote");
+            }
+            
+        } catch Error(string memory reason) {
+            console.log("  Error: %s", reason);
+        } catch {
+            console.log("  Unknown error occurred");
+        }
+    }
 }

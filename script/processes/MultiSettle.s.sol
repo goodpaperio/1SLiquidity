@@ -35,8 +35,8 @@ contract MultiSettle is Protocol {
     function testSettleSingleTrade() public {
         console.log("MultiSettle: testSettleSmallTrade() start");
 
-        // Place 1 WETH trade from test contract
-        uint256 trade1Id = placeTradeFromEOA(address(this), 1);
+        // Place 1 WETH trade from EOA2
+        uint256 trade1Id = placeTradeFromEOA(EOA2, 1);
         console.log("Placed 1 WETH trade with ID: %s", trade1Id);
 
         // Execute trades 4 times as bot
@@ -111,8 +111,8 @@ contract MultiSettle is Protocol {
     function testSettleBothTrades() public {
         console.log("MultiSettle: testSettleBothTrades() start");
 
-        // Place 1 WETH trade from test contract
-        uint256 trade1Id = placeTradeFromEOA(address(this), 1);
+        // Place 1 WETH trade from EOA2
+        uint256 trade1Id = placeTradeFromEOA(EOA2, 1);
         console.log("Placed 1 WETH trade with ID: %s", trade1Id);
 
         // Place 10 WETH trade from EOA2
@@ -276,8 +276,8 @@ contract MultiSettle is Protocol {
         console.log("MultiSettle: testBotFeeAccrualAndPayout() start");
 
         // Place a single trade to test fee accrual - use EOA2 instead of test contract
-        uint256 tradeId = placeTradeFromEOA(EOA2, 2); // 2 WETH trade from EOA2
-        console.log("Placed 2 WETH trade with ID: %s", tradeId);
+        uint256 tradeId = placeTradeFromEOA(EOA2, 1); // 1 WETH trade from EOA2
+        console.log("Placed 1 WETH trade with ID: %s", tradeId);
 
         // Get initial balances
         uint256 botUsdcBalanceBefore = IERC20(USDC).balanceOf(BOT_EOA);
@@ -410,7 +410,9 @@ contract MultiSettle is Protocol {
             amountIn, // amountIn
             amountOutMin, // amountOutMin
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         // Place trade

@@ -44,6 +44,28 @@ export const GET_TRADES = gql`
   }
 `
 
+export const GET_INSTASETTLE_TRADES = gql`
+  query MyQuery($first: Int = 200, $skip: Int = 0) {
+    trades(
+      first: $first
+      orderBy: createdAt
+      orderDirection: desc
+      skip: $skip
+    ) {
+      id
+      isInstasettlable
+      tokenIn
+      tokenOut
+      settlements(first: 100) {
+        id
+      }
+      cancellations(first: 100) {
+        id
+      }
+    }
+  }
+`
+
 // export const GET_TRADES = gql`
 //   query MyQuery($first: Int = 10, $skip: Int = 0) {
 //     trades(first: $first, orderBy: id, orderDirection: asc, skip: $skip) {

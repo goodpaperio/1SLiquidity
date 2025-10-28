@@ -16,6 +16,8 @@ import { Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { ethers } from 'ethers'
+import ImageFallback from '@/app/shared/ImageFallback'
+import { InfoIcon } from '@/app/lib/icons'
 
 type Props = {
   amountReceived: string
@@ -31,6 +33,7 @@ type Props = {
   tokenIn?: any
   tokenOut?: any
   formattedAmountIn?: string
+  remainingAmountIn?: string
 }
 
 const ConfigTrade: React.FC<Props> = ({
@@ -47,6 +50,7 @@ const ConfigTrade: React.FC<Props> = ({
   tokenIn,
   tokenOut,
   formattedAmountIn,
+  remainingAmountIn,
 }) => {
   const [showDetails, setShowDetails] = useState(false)
   const toggleDetails = () => setShowDetails(!showDetails)
@@ -61,13 +65,13 @@ const ConfigTrade: React.FC<Props> = ({
   const { getTradeInfo } = useCoreTrading()
 
   const getTradeInfoCallback = useCallback(async () => {
-    const tradeInfo = await getTradeInfo(selectedStream.tradeId)
+    const tradeInfo = await getTradeInfo(selectedStream.tradeId, true)
     setTradeInfo(tradeInfo)
   }, [getTradeInfo, selectedStream.tradeId])
 
   const settlerPaymentFormatted = tradeInfo?.settlerPayment
     ? parseFloat(
-        ethers.utils.formatUnits(tradeInfo.settlerPayment, tokenOut.decimals)
+        ethers.utils.formatUnits(tradeInfo.settlerPayment, tokenOut?.decimals)
       ).toFixed(4)
     : '0'
 
@@ -87,7 +91,9 @@ const ConfigTrade: React.FC<Props> = ({
     >
       <div
         className={`w-full flex justify-center gap-1 duration-300 ease-in-out ${
-          isEnabled ? 'text-white cursor-pointer' : 'text-white/50'
+          isEnabled
+            ? 'text-white cursor-pointer'
+            : 'text-white/50 cursor-not-allowed'
         }`}
         onClick={isEnabled ? toggleDetails : undefined}
       >
@@ -102,7 +108,7 @@ const ConfigTrade: React.FC<Props> = ({
             : 'max-h-0'
         }`}
       >
-        {selectedStream.isInstasettlable ? (
+        {/* {selectedStream.isInstasettlable ? (
           <>
             <div
               className={cn(
@@ -133,7 +139,7 @@ const ConfigTrade: React.FC<Props> = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-zinc-500 cursor-help" />
+                        <InfoIcon className="h-4 w-4 cursor-help block" />
                       </TooltipTrigger>
                       <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
                         <p>
@@ -160,7 +166,6 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -179,9 +184,9 @@ const ConfigTrade: React.FC<Props> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <p className="text-[14px]">
-                      {Number(formattedAmountIn)} {tokenIn.symbol}
+                      {remainingAmountIn} {tokenIn.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenIn?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -190,7 +195,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenIn?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
@@ -203,14 +208,13 @@ const ConfigTrade: React.FC<Props> = ({
                         <Image
                           src="/icons/info.svg"
                           alt="info"
-                          className="w-4 h-4 cursor-pointer"
+                          className="w-3.5 h-3.5 cursor-pointer"
                           width={20}
                           height={20}
                           priority // Add priority to load the image faster
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -233,13 +237,13 @@ const ConfigTrade: React.FC<Props> = ({
                         ? parseFloat(
                             ethers.utils.formatUnits(
                               tradeInfo.settlerPayment,
-                              tokenOut.decimals
+                              tokenOut?.decimals
                             )
                           ).toFixed(4)
                         : 0}{' '}
-                      {tokenOut.symbol}
+                      {tokenOut?.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenOut?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -248,29 +252,12 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenOut?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
 
-                {/* <div className="w-full">
-                  <AmountTag
-                    title="Fee"
-                    amount={
-                      tradeInfo?.protocolFee
-                        ? parseFloat(
-                            ethers.utils.formatUnits(
-                              tradeInfo.protocolFee,
-                              tokenOut.decimals
-                            )
-                          ).toFixed(4)
-                        : '0'
-                    }
-                    infoDetail="Estimated"
-                    isLoading={false}
-                    className="w-full"
-                  />
-                </div> */}
+               
 
                 <div className="flex justify-between items-center w-full">
                   <div className="flex items-center gap-1">
@@ -287,7 +274,6 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
-                        {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
                           typesetting industry. Lorem Ipsum has been the
@@ -310,13 +296,12 @@ const ConfigTrade: React.FC<Props> = ({
                         ? parseFloat(
                             ethers.utils.formatUnits(
                               tradeInfo.protocolFee,
-                              tokenOut.decimals
+                              tokenOut?.decimals
                             )
                           ).toFixed(4)
                         : '0'}{' '}
-                      {/* {tokenOut.symbol} */}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenOut?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -325,7 +310,7 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenOut?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
@@ -378,6 +363,74 @@ const ConfigTrade: React.FC<Props> = ({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
+                        <p>
+                          Lorem Ipsum is simply dummy text of the printing and
+                          typesetting industry. Lorem Ipsum has been the
+                          industry's standard dummy text ever since the 1500
+                          &nbsp;{' '}
+                          <a
+                            href="https://www.lipsum.com/"
+                            target="_blank"
+                            className="text-[#aeabab] underline"
+                          >
+                            Learn more
+                          </a>
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[14px]">
+                      {remainingAmountIn} {tokenIn.symbol}
+                    </p>
+                    <ImageFallback
+                      src={
+                        (tokenIn?.symbol.toLowerCase() === 'usdt'
+                          ? '/tokens/usdt.svg'
+                          : tokenIn?.icon) || '/icons/default-token.svg'
+                      }
+                      alt={tokenIn?.symbol || 'token'}
+                      width={40}
+                      height={40}
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {isUser && (
+              <Button
+                text="CANCEL TRADE"
+                theme="destructive"
+                className="h-[2.25rem]"
+                disabled={isLoading || !isCancellable || !walletAddress}
+                loading={isLoading}
+                onClick={() => handleCancelClick(selectedStream)}
+              />
+            )}
+          </>
+        )} */}
+
+        <>
+          {!selectedStream.isInstasettlable && (
+            <div className={cn('w-full flex flex-col gap-2 py-4')}>
+              <div className="flex items-start w-full flex-col justify-between gap-1.5">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-1">
+                    <p className={cn('text-[14px]')}>Amount Received</p>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Image
+                          src="/icons/info.svg"
+                          alt="info"
+                          className="w-4 h-4 cursor-pointer"
+                          width={20}
+                          height={20}
+                          priority // Add priority to load the image faster
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#0D0D0D] z-50 max-w-[280px] border-[2px] border-white12">
                         {/* <p>{infoDetail || 'Additional information'}</p> */}
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and
@@ -397,9 +450,9 @@ const ConfigTrade: React.FC<Props> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <p className="text-[14px]">
-                      {Number(formattedAmountIn)} {tokenIn.symbol}
+                      {remainingAmountIn} {tokenIn.symbol}
                     </p>
-                    <Image
+                    <ImageFallback
                       src={
                         (tokenIn?.symbol.toLowerCase() === 'usdt'
                           ? '/tokens/usdt.svg'
@@ -408,25 +461,28 @@ const ConfigTrade: React.FC<Props> = ({
                       alt={tokenIn?.symbol || 'token'}
                       width={40}
                       height={40}
-                      className="border-[1.5px] border-black w-[20px] rounded-full"
+                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
                     />
                   </div>
                 </div>
               </div>
             </div>
+          )}
 
-            {isUser && (
-              <Button
-                text="CANCEL TRADE"
-                theme="destructive"
-                className="h-[2.25rem]"
-                disabled={isLoading || !isCancellable || !walletAddress}
-                loading={isLoading}
-                onClick={() => handleCancelClick(selectedStream)}
-              />
-            )}
-          </>
-        )}
+          {isUser && (
+            <Button
+              text="CANCEL TRADE"
+              theme="destructive"
+              className={cn(
+                'h-[2.25rem]',
+                selectedStream.isInstasettlable && 'mt-3'
+              )}
+              disabled={isLoading || !isCancellable || !walletAddress}
+              loading={isLoading}
+              onClick={() => handleCancelClick(selectedStream)}
+            />
+          )}
+        </>
       </div>
     </div>
   )

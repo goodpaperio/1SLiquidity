@@ -33,7 +33,9 @@ contract TradeCancel is TradePlacement {
             amountIn,
             amountOutMin,
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
         core.placeTrade(tradeData);
 
@@ -46,19 +48,29 @@ contract TradeCancel is TradePlacement {
         uint256 initialWethBalance = getTokenBalance(WETH, address(this));
         uint256 initialUsdcBalance = getTokenBalance(USDC, address(this));
 
+        // return the trade details
+        Utils.Trade memory trade = core.getTrade(tradeId);
+        console.log("Trade details before cancellation:");
+        console.log("Trade ID:", tradeId);
+        console.log("Amount Remaining:", trade.amountRemaining);
+        console.log("Realised Amount Out:", trade.realisedAmountOut);
+        console.log("initial sweetSpot:", trade.lastSweetSpot);
+
         console.log("Balances after trade placement but before cancellation:");
         console.log("WETH:", initialWethBalance);
         console.log("USDC:", initialUsdcBalance);
 
         // Get trade details before cancellation
-        Utils.Trade memory trade = core.getTrade(tradeId);
+        // Utils.Trade memory trade = core.getTrade(tradeId);
         uint256 amountRemaining = trade.amountRemaining;
         uint256 realisedAmountOut = trade.realisedAmountOut;
 
         // Cancel trade
         bool success = core.cancelTrade(tradeId);
         assertTrue(success, "Trade cancellation failed");
+      
 
+        console.log("Trade cancelled successfully");
         // Verify balances after cancellation
         uint256 finalWethBalance = getTokenBalance(WETH, address(this));
         uint256 finalUsdcBalance = getTokenBalance(USDC, address(this));
@@ -77,7 +89,7 @@ contract TradeCancel is TradePlacement {
     }
 
     function test_RevertWhen_CancellingNonExistentTrade() public {
-        vm.expectRevert("Trade does not exist");
+        vm.expectRevert("Trade inexistent or being called from null address");
         core.cancelTrade(999_999);
     }
 
@@ -95,7 +107,9 @@ contract TradeCancel is TradePlacement {
             amountIn,
             amountOutMin,
             false, // isInstasettlable
-            false // usePriceBased - set to false for backward compatibility
+            false, // usePriceBased - set to false for backward compatibility
+            100, // instasettleBps - default value
+            false // onlyInstasettle - default value
         );
 
         // Place trade
