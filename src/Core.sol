@@ -70,6 +70,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     uint16 public streamBotFeeBps = 10; // 10 bps
     uint16 public instasettleProtocolFeeBps = 10; // 10 bps
 
+    uint256 EXECUTE_STREAM_TRADE_CAP = 20; // 20 stream execution cap on executeTrades set at deployment
+
     // Protocol fee balances by token
     mapping(address => uint256) public protocolFees;
 
@@ -152,6 +154,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     //     delete tradeIndicies[tradeId];
     // }
 
+    function setExecuteStreamCap(uint256 _newCap) public onlyOwner {
+        EXECUTE_STREAM_TRADE_CAP = _newCap;
+    }
+    
     function setStreamProtocolFeeBps(uint16 bps) external onlyOwner {
         require(bps <= MAX_FEE_CAP_BPS, "fee cap");
         streamProtocolFeeBps = bps;
@@ -368,8 +374,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         address tokenOutForRun = address(0);
 
         // Cap the number of trades processed to prevent out of gas errors
-        uint256 maxTradesToProcess = 20;
-        uint256 tradesToProcess = tradeIds.length > maxTradesToProcess ? maxTradesToProcess : tradeIds.length;
+        // uint256 maxTradesToProcess = EXECUTE_STREAM_TRADE_CAP;
+        uint256 tradesToProcess = tradeIds.length > EXECUTE_STREAM_TRADE_CAP ? EXECUTE_STREAM_TRADE_CAP : tradeIds.length;
 
         // Process trades in reverse order to avoid array index issues when trades are deleted
         for (uint256 i = tradesToProcess; i > 0; i--) {
