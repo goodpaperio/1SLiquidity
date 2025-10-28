@@ -40,7 +40,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
         address tokenOut,
         uint256 minAmountOut,
         bool isInstasettlable,
-        bool usePriceBased
+        bool usePriceBased,
+        uint256 instasettleBps,
+        bool onlyInstasettle
     );
 
     event ETHReceived(address indexed user, uint256 amount);
@@ -73,13 +75,17 @@ contract ETHSupport is Ownable, ReentrancyGuard {
      * @param amountOutMin Minimum amount of output tokens expected
      * @param isInstasettlable Whether the trade can be instantly settled
      * @param usePriceBased Whether to use price-based DEX selection
+     * @param instasettleBps Basis points for instasettle discount
+     * @param onlyInstasettle Whether the trade should only be instasettled
      * @return tradeId The ID of the created trade
      */
     function placeTradeWithETH(
         address tokenOut,
         uint256 amountOutMin,
         bool isInstasettlable,
-        bool usePriceBased
+        bool usePriceBased,
+        uint256 instasettleBps,
+        bool onlyInstasettle
     ) external payable nonReentrant returns (uint256) {
         if (msg.value == 0) revert InvalidETHAmount();
 
@@ -90,14 +96,16 @@ contract ETHSupport is Ownable, ReentrancyGuard {
         if (postBalance < preBalance || postBalance - preBalance != msg.value) revert WETHWrapFailed();
 
         // Prepare trade data for Core contract
-        // The Core contract expects: (address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin, bool isInstasettlable, bool usePriceBased)
+        // The Core contract expects: (address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin, bool isInstasettlable, bool usePriceBased, uint256 instasettleBps, bool onlyInstasettle)
         bytes memory tradeData = abi.encode(
             address(weth),  // tokenIn (WETH)
             tokenOut,       // tokenOut
             msg.value,      // amountIn (same as ETH amount)
             amountOutMin,   // amountOutMin
             isInstasettlable,
-            usePriceBased
+            usePriceBased,
+            instasettleBps,
+            onlyInstasettle
         );
 
         // Call Core contract's placeTrade function
@@ -112,7 +120,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
             tokenOut,
             amountOutMin,
             isInstasettlable,
-            usePriceBased
+            usePriceBased,
+            instasettleBps,
+            onlyInstasettle
         );
 
         return 0; // Trade ID is managed by Core contract
@@ -143,8 +153,10 @@ contract ETHSupport is Ownable, ReentrancyGuard {
                 uint256 amountIn,
                 uint256 amountOutMin,
                 bool isInstasettlable,
-                bool usePriceBased
-            ) = abi.decode(data, (address, address, uint256, uint256, bool, bool));
+                bool usePriceBased,
+                uint256 instasettleBps,
+                bool onlyInstasettle
+            ) = abi.decode(data, (address, address, uint256, uint256, bool, bool, uint256, bool));
 
             if (amountIn != msg.value) revert InvalidETHAmount();
 
@@ -154,7 +166,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
                 msg.value,
                 amountOutMin,
                 isInstasettlable,
-                usePriceBased
+                usePriceBased,
+                instasettleBps,
+                onlyInstasettle
             );
 
             core.placeTrade(newTradeData);
@@ -165,7 +179,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
                 tokenOut,
                 amountOutMin,
                 isInstasettlable,
-                usePriceBased
+                usePriceBased,
+                instasettleBps,
+                onlyInstasettle
             );
             return 0;
         }
@@ -242,6 +258,7 @@ contract ETHSupport is Ownable, ReentrancyGuard {
     /**
      * @notice Unwrap WETH to ETH for the caller
      * @param amount The amount of WETH to unwrap
+     * @param destination The address to receive the unwrapped ETH
      */
     function unwrap(uint256 amount, address destination) external nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
