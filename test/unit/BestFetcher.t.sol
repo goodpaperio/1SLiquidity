@@ -104,16 +104,19 @@ contract BestFetcherTest is Deploys {
 
     function test_FindHighestReserves_OppositeDirection() public {
         // Test reserves in opposite direction (tokenOut -> tokenIn)
+        // Reserve format is (tokenOut, tokenIn) so first value is for tokenOut (6 decimals)
+        // and second value is for tokenIn (18 decimals)
         dex1.setReserves(1000 * 10 ** 6, 1000 * 10 ** 18);
         dex2.setReserves(2000 * 10 ** 6, 2000 * 10 ** 18);
 
-        // Find highest reserves
+        // Find highest reserves - calling with (tokenOut, tokenIn)
+        // expects reserves in that order (tokenOut decimals, then tokenIn decimals)
         (address bestFetcher, uint256 maxReserveIn, uint256 maxReserveOut) =
             streamDaemon.findHighestReservesForTokenPair(address(tokenOut), address(tokenIn));
 
         // Should still find the highest reserves in the correct direction
         assertEq(bestFetcher, address(dex2), "DEX2 should have highest reserves");
-        assertEq(maxReserveIn, 2000 * 10 ** 18, "Incorrect maxReserveIn");
-        assertEq(maxReserveOut, 2000 * 10 ** 6, "Incorrect maxReserveOut");
+        assertEq(maxReserveIn, 2000 * 10 ** 6, "Incorrect maxReserveIn"); // tokenOut has 6 decimals
+        assertEq(maxReserveOut, 2000 * 10 ** 18, "Incorrect maxReserveOut"); // tokenIn has 18 decimals
     }
 }

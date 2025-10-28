@@ -12,5 +12,4 @@ interface IETHSupport {
     function getETHBalance() external view returns (uint256);
     function unwrap(uint256 amount, address destination) external;
     function unwrapAndRoute(address token, address to, bytes calldata data) external;
-    
 }

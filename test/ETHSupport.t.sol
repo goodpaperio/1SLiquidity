@@ -81,7 +81,8 @@ contract MockCore {
         bool isInstasettlable,
         uint256 instasettleBps,
         uint256 lastSweetSpot,
-        bool usePriceBased
+        bool usePriceBased,
+        bool onlyInstasettle
     );
 
     function placeTrade(bytes calldata tradeData) external payable {
@@ -112,7 +113,8 @@ contract MockCore {
             instasettleBps: 100,
             lastSweetSpot: 0,
             isInstasettlable: isInstasettlable,
-            usePriceBased: usePriceBased
+            usePriceBased: usePriceBased,
+            onlyInstasettle: false
         });
 
         emit TradeCreated(
@@ -127,7 +129,8 @@ contract MockCore {
             isInstasettlable,
             100,
             0,
-            usePriceBased
+            usePriceBased,
+            false
         );
     }
 

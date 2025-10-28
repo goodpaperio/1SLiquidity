@@ -1,83 +1,226 @@
 {
-  "lastRun": 23419727,
+  "lastRun": 23675945,
   "outstandingTrades": [
     {
       "tradeId": 2,
-      "pairId": "0xaf6b746f77c055a846b64dcac5db6158b1d14e2a292a024b0ba5cf0ccac086d0",
+      "pairId": "0xd8b0157236e021723bfe25e787f4b908e6322287c47ddab28b511cd76b1f018c",
       "lastSweetSpot": 3,
-      "tokenIn": "WETH",
-      "tokenOut": "USDC",
+      "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "tokenOut": "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E",
       "pair": "WETH/USDC",
       "owner": "0xBFC6...592C",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
     },
     {
       "tradeId": 3,
-      "pairId": "0x0b211adefcf2f5c7057e9b620a13a97bc40305f2489e711cdf63a1ee50fe0fdb",
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
       "lastSweetSpot": 3,
-      "tokenIn": "USDC",
-      "tokenOut": "WETH",
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "pair": "USDC/WETH",
       "owner": "0xBFC6...592C",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
     },
     {
       "tradeId": 4,
-      "pairId": "0x0b211adefcf2f5c7057e9b620a13a97bc40305f2489e711cdf63a1ee50fe0fdb",
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
       "lastSweetSpot": 3,
-      "tokenIn": "USDC",
-      "tokenOut": "WETH",
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "pair": "USDC/WETH",
       "owner": "0x9B1a...8D84",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
     },
     {
       "tradeId": 5,
-      "pairId": "0x0b211adefcf2f5c7057e9b620a13a97bc40305f2489e711cdf63a1ee50fe0fdb",
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
       "lastSweetSpot": 3,
-      "tokenIn": "USDC",
-      "tokenOut": "WETH",
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "pair": "USDC/WETH",
       "owner": "0x9B1a...8D84",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
     },
     {
       "tradeId": 6,
-      "pairId": "0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba",
+      "pairId": "0x1f160fb6b5eff44c72397d5a5dca127da716ebbf5efe6a024a6a09031fb359f4",
       "lastSweetSpot": 2,
-      "tokenIn": "WETH",
-      "tokenOut": "USDT",
+      "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "tokenOut": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
       "pair": "WETH/USDT",
       "owner": "0x8eE0...84E6",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
-    },
-    {
-      "tradeId": 7,
-      "pairId": "0x682fcb0b85ad8d571c628700b4276918f1669f0c7a1a6dac0a60a9bec56e34e4",
-      "lastSweetSpot": 1,
-      "tokenIn": "WETH",
-      "tokenOut": "WBTC",
-      "pair": "WETH/WBTC",
-      "owner": "0x9B1a...8D84",
-      "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
     },
     {
       "tradeId": 8,
-      "pairId": "0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba",
+      "pairId": "0x1f160fb6b5eff44c72397d5a5dca127da716ebbf5efe6a024a6a09031fb359f4",
       "lastSweetSpot": 2,
-      "tokenIn": "WETH",
-      "tokenOut": "USDT",
+      "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "tokenOut": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
       "pair": "WETH/USDT",
       "owner": "0x538e...65b0",
       "isInstasettlable": false,
-      "lastUpdated": 1758558135
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 13,
+      "pairId": "0x358484c2a974d5a47260a9016e4e8bb7e9d5f88f41b8fdc74351bba825e62b4c",
+      "lastSweetSpot": 2,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "pair": "USDC/DAI",
+      "owner": "0x33eA...8fFb",
+      "isInstasettlable": true,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 14,
+      "pairId": "0x358484c2a974d5a47260a9016e4e8bb7e9d5f88f41b8fdc74351bba825e62b4c",
+      "lastSweetSpot": 3,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "pair": "USDC/DAI",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 19,
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
+      "lastSweetSpot": 16,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "pair": "USDC/WETH",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 20,
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
+      "lastSweetSpot": 81,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "pair": "USDC/WETH",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 21,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 97,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 22,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 29,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": true,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 23,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 500,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 24,
+      "pairId": "0x358484c2a974d5a47260a9016e4e8bb7e9d5f88f41b8fdc74351bba825e62b4c",
+      "lastSweetSpot": 2,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "pair": "USDC/DAI",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 25,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 234,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x9B1a...8D84",
+      "isInstasettlable": true,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 27,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 500,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": true,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 30,
+      "pairId": "0x358484c2a974d5a47260a9016e4e8bb7e9d5f88f41b8fdc74351bba825e62b4c",
+      "lastSweetSpot": 1,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "pair": "USDC/DAI",
+      "owner": "0x8eE0...84E6",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 31,
+      "pairId": "0x379e3f15ba85265a5d620aa566658c3467e5c77199c65e8454a8ba19261289f0",
+      "lastSweetSpot": 353,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair": "USDC/0x6982...",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 32,
+      "pairId": "0x67473c1c5d8e363fc53cda9e2096594a2aa64846b3868c33c6363fcb6bc5b340",
+      "lastSweetSpot": 365,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+      "pair": "USDC/SHIB",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
+    },
+    {
+      "tradeId": 34,
+      "pairId": "0x358484c2a974d5a47260a9016e4e8bb7e9d5f88f41b8fdc74351bba825e62b4c",
+      "lastSweetSpot": 0,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "pair": "USDC/DAI",
+      "owner": "0x8eE0...84E6",
+      "isInstasettlable": false,
+      "lastUpdated": 1761654795
     }
   ],
-  "lastUpdated": 1758558135
+  "lastUpdated": 1761654795
 }

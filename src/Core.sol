@@ -317,7 +317,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             
             _removeTradeFromStorage(pairId, tradeId);
         if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
-            ethSupport.unwrap(settlerPayment, trade.owner);
+            ethSupport.unwrap(settlerPayment, trade.owner); // @ethsupport ensure that unwrap is payable in interface
         } else {
             IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
         }
@@ -381,8 +381,14 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         }
 
         if (botFeesAccrued > 0) {
-            require(tokenOutForRun != address(0), "fee token unset");
+            // require(tokenOutForRun != address(0), "fee token unset");
+            if (tokenOutForRun == 0x0000000000000000000000000000000000000000 || tokenOutForRun == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+                // transfer ETH to the bot address (msg.sender)
+                (bool success, ) = payable(msg.sender).call{value: botFeesAccrued}("");
+                require(success, "ETH transfer failed");
+            } else {
             IERC20(tokenOutForRun).safeTransfer(msg.sender, botFeesAccrued);
+            }
             emit FeesClaimed(msg.sender, tokenOutForRun, botFeesAccrued, false);
         }
     }
@@ -426,9 +432,18 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             streamVolume = trade.amountRemaining;
         }
 
+        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+            // this sets the trading currency to WETH if the desired tokenOut is native ETH
+            IRegistry.TradeData memory tradeData = registry.prepareTradeData(
+                bestDex, trade.tokenIn, address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2), streamVolume, targetAmountOut, address(this)
+            );
+            
+        } else {
         IRegistry.TradeData memory tradeData = registry.prepareTradeData(
             bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
         );
+        }
+
 
         IERC20(trade.tokenIn).forceApprove(tradeData.router, streamVolume);
 
