@@ -101,16 +101,6 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         registry = IRegistry(_registry);
         ethSupport = IETHSupport(_ethSupport);
     }
-    
-    /**
-     * @notice Set the ETHSupport contract address
-     * @dev Only callable by owner, needed to resolve circular dependency during deployment
-     * @param _ethSupport The ETHSupport contract address
-     */
-    function setETHSupport(address _ethSupport) external onlyOwner {
-        require(_ethSupport != address(0), "ETHSupport cannot be zero address");
-        ethSupport = IETHSupport(_ethSupport);
-    }
 
     function _computeFee(uint256 amount, uint16 bps) internal pure returns (uint256) {
         return (amount * bps) / MAX_BPS;
@@ -146,13 +136,15 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         delete trades[tradeId];
     }
 
-    // function _swapAndPopPairIdTradeId(bytes32 pairId, uint256 tradeId) internal {
-    //     uint256[] storage tradeIds = pairIdTradeIds[pairId];
-    //     uint256 tradeIndex = tradeIndicies[tradeId];
-    //     tradeIds[tradeIndex] = tradeIds[tradeIds.length - 1];
-    //     tradeIds.pop();
-    //     delete tradeIndicies[tradeId];
-    // }
+    /**
+     * @notice Set the ETHSupport contract address
+     * @dev Only callable by owner, needed to resolve circular dependency during deployment
+     * @param _ethSupport The ETHSupport contract address
+     */
+    function setETHSupport(address _ethSupport) external onlyOwner {
+        require(_ethSupport != address(0), "ETHSupport cannot be zero address");
+        ethSupport = IETHSupport(_ethSupport);
+    }
 
     function setExecuteStreamCap(uint256 _newCap) public onlyOwner {
         EXECUTE_STREAM_TRADE_CAP = _newCap;
