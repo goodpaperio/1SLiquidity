@@ -41,5 +41,5 @@ export function calculatePriceAccuracy(pair: any): PriceAccuracyResult | null {
  * Formats accuracy percentage for display
  */
 export function formatAccuracy(accuracy: number): string {
-  return `${accuracy.toFixed(0)}%`
+  return `${Math.floor(accuracy)}%`
 }
