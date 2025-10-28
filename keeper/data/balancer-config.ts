@@ -1,10 +1,6 @@
 // Generated Balancer pool metadata from subgraph
 // Total pools: 1688
-<<<<<<< Updated upstream
 // Generated at: 2025-09-29T12:26:14.776Z
-=======
-// Generated at: 2025-09-29T13:06:21.898Z
->>>>>>> Stashed changes
 
 export const BALANCER_POOL_METADATA: Record<string, any> = {
   // 2-token pools (1321 pools)
