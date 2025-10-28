@@ -77,6 +77,7 @@
     "test:curve-reserves-script-anvil": "forge script script/TestCurveReserves.s.sol:TestCurveReservesScript --via-ir --rpc-url http://localhost:8545 -vvvv",
     "test:multi:anvil": "forge script script/processes/MultiSettle.s.sol:MultiSettle --via-ir --rpc-url http://localhost:8545 -vvvv",
     "test:insta-anvil": "forge test --match-path script/processes/Instasettle.s.sol --fork-url http://localhost:8545 --via-ir -vvv",
+    "test:ethsupport-anvil": "forge test --match-path script/processes/ETHSupport.s.sol --fork-url http://localhost:8545 --via-ir -vvv",
     "test:trade-cancel-test-anvil": "FOUNDRY_PROFILE=via_ir forge test --match-path script/processes/TradeCancel.s.sol -vvv --fork-url http://localhost:8545",
     "# Deployment Scripts": "# Scripts for deploying to different networks",
     "deploy:mainnet": "forge script script/processes/deployment/DeployMainnet.s.sol:DeployMainnet --rpc-url $MAINNET_RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY --account deployKey --sender 0x538e5e9797fa86ee25e97289439b6a3aba0165b0 -vvvv",

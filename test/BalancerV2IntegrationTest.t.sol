@@ -73,7 +73,7 @@ contract BalancerV2IntegrationTest is Test {
         registry.setRouter("Balancer", BALANCER_VAULT);
         
         // Deploy core
-        core = new Core(address(streamDaemon), address(executor), address(registry));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
     }
 
     function testProtocolIntegration() public {

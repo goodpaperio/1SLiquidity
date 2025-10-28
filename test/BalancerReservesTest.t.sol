@@ -54,7 +54,7 @@ contract BalancerReservesTest is Test {
         routers[0] = address(balancerFetcher);
         
         streamDaemon = new StreamDaemon(dexs, routers);
-        core = new Core(address(registry), address(executor), address(streamDaemon));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
         
         // Set up test tokens
         deal(BAL, address(this), 1000 * 10**18);
