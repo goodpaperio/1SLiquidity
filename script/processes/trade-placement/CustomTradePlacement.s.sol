@@ -72,7 +72,7 @@ contract CustomTradePlacement is Test {
         registry.setRouter("Sushiswap", SUSHISWAP_ROUTER);
         
         console.log("Deploying Core...");
-        core = new Core(address(streamDaemon), address(executor), address(registry));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
         
         // Fund this contract with USDC and DAI
         console.log("Funding contract with USDC...");

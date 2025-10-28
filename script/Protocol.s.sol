@@ -111,8 +111,8 @@ contract Protocol is Test {
         console.log("DEX routers configured");
 
         console.log("Deploying Core...");
-        // Deploy Core
-        core = new Core(address(streamDaemon), address(executor), address(registry));
+        // Deploy Core (passing address(0) for ethSupport for now, tests will redeploy with real ETHSupport)
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
         console.log("Core deployed");
 
         // Log deployment addresses

@@ -148,7 +148,7 @@ contract DeployBarebones is Script {
         console.log("StreamDaemon deployed at:", address(streamDaemon));
 
         console.log("Deploying Core...");
-        core = new Core(address(registry), address(executor), address(streamDaemon));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
         console.log("Core deployed at:", address(core));
 
         // Configure QuoterV2 for UniswapV3 fetchers

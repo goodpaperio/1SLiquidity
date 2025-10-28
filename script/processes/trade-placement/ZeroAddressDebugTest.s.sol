@@ -59,7 +59,7 @@ contract ZeroAddressDebugTest is Test {
         registry.setRouter("UniswapV2", UNISWAP_V2_ROUTER);
         registry.setRouter("Sushiswap", SUSHISWAP_ROUTER);
         
-        core = new Core(address(streamDaemon), address(executor), address(registry));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
         
         // Fund contract
         vm.startPrank(USDC_WHALE);

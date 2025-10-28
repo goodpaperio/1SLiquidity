@@ -34,6 +34,6 @@ contract DeployCore is Script {
     }
 
     function createNewCore(address streamDaemon, address executor, address registry) public returns (Core) {
-        return new Core(streamDaemon, executor, registry);
+        return new Core(streamDaemon, executor, registry, address(0));
     }
 }

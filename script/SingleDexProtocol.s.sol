@@ -129,7 +129,7 @@ contract SingleDexProtocol is Test {
         }
 
         console.log("SingleDexProtocol: Deploying Core...");
-        core = new Core(address(streamDaemon), address(executor), address(registry));
+        core = new Core(address(streamDaemon), address(executor), address(registry), address(0));
 
         vm.startPrank(WETH_WHALE);
         IERC20(WETH).transfer(address(this), 100 * 1e18); // 100 WETH
