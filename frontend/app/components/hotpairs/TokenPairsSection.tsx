@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Button from '../button'
 import { useRouter } from 'next/navigation'
 import { tokensList } from './pairs-data'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import {
   fetchSpecificPair,
@@ -96,6 +96,8 @@ export default function TokenPairsSection({
   clearBaseAndOtherTokens: () => void
 }) {
   const baseTokensSymbol = ['USDT', 'USDC', 'WBTC', 'WETH', 'DAI']
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const tokenRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const queryClient = useQueryClient()
   const { enhanceTokenPair, isLoadingTokenList, coinGeckoTokens } =
@@ -173,6 +175,47 @@ export default function TokenPairsSection({
 
   const filteredBaseTokens = getFilteredBaseTokens()
 
+  // Auto-scroll to center the selected base token when it changes
+  useEffect(() => {
+    if (
+      selectedBaseToken &&
+      scrollContainerRef.current &&
+      filteredBaseTokens.length > 0
+    ) {
+      // Small delay to ensure DOM is updated and refs are set
+      setTimeout(() => {
+        const selectedTokenAddress =
+          selectedBaseToken.tokenAddress?.toLowerCase()
+        const tokenElement = tokenRefs.current.get(selectedTokenAddress)
+
+        if (tokenElement && scrollContainerRef.current) {
+          const container = scrollContainerRef.current
+
+          // Use getBoundingClientRect to get actual visual positions
+          const containerRect = container.getBoundingClientRect()
+          const tokenRect = tokenElement.getBoundingClientRect()
+
+          // Calculate the token's center position relative to the container's left edge
+          const tokenCenterRelativeToContainer =
+            tokenRect.left - containerRect.left + container.scrollLeft
+
+          // Calculate how much to scroll to center the token
+          // Token's center position minus half of the visible container width
+          const scrollPosition =
+            tokenCenterRelativeToContainer +
+            tokenRect.width / 2 -
+            containerRect.width / 2
+
+          // Smooth scroll to center the token
+          container.scrollTo({
+            left: Math.max(0, scrollPosition),
+            behavior: 'smooth',
+          })
+        }
+      }, 150)
+    }
+  }, [selectedBaseToken, filteredBaseTokens])
+
   return (
     <div className="flex flex-col items-center w-full justify-center gap-8">
       <div className="flex flex-col md:flex-row items-center w-full justify-center gap-8 max-w-[50rem]">
@@ -202,7 +245,10 @@ export default function TokenPairsSection({
 
         {/* Right Section -> Base Tokens: 4x2 Grid */}
         {filteredBaseTokens.length > 0 ? (
-          <div className="grid grid-rows-2 grid-flow-col gap-4 overflow-x-auto py-2 px-2 auto-cols-max max-w-[90%] md:min-w-[30rem]">
+          <div
+            ref={scrollContainerRef}
+            className="grid grid-rows-2 grid-flow-col gap-4 overflow-x-auto py-2 px-2 auto-cols-max w-full md:max-w-[90%] md:min-w-[30rem]"
+          >
             {filteredBaseTokens.map((token) => (
               <TokenIcon
                 key={token.id}
@@ -215,6 +261,7 @@ export default function TokenPairsSection({
                 refetchSpecificPair={refetchSpecificPair}
                 disabled={!selectedOtherToken} // Disable if no other token selected
                 clearBaseAndOtherTokens={clearBaseAndOtherTokens}
+                tokenRefs={tokenRefs}
               />
             ))}
           </div>
@@ -283,6 +330,7 @@ function TokenIcon({
   refetchSpecificPair,
   disabled = false,
   clearBaseAndOtherTokens,
+  tokenRefs,
 }: {
   token: any
   isBaseToken?: boolean
@@ -293,9 +341,15 @@ function TokenIcon({
   refetchSpecificPair: (baseToken: any, otherToken: any) => void
   disabled?: boolean
   clearBaseAndOtherTokens: () => void
+  tokenRefs?: React.MutableRefObject<Map<string, HTMLDivElement>>
 }) {
   return (
     <div
+      ref={(el) => {
+        if (el && isBaseToken && tokenRefs && token.tokenAddress) {
+          tokenRefs.current.set(token.tokenAddress.toLowerCase(), el)
+        }
+      }}
       className={cn(
         'md:w-16 md:h-16 w-12 h-12 rounded-full flex items-center justify-center border-4 border-neutral-700 transition-all duration-300 group hover:scale-110 overflow-hidden',
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',

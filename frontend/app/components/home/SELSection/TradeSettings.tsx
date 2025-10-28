@@ -375,8 +375,8 @@ export default function TradingSettings({
                     </div>
                   )}
 
-                  {/* Trade Style Section with Title and Tooltip */}
-                  <div className="space-y-3 mt-2">
+                  {/* Trade Style Section - COMMENTED OUT: Price based is no longer an option, only reserve based */}
+                  {/* <div className="space-y-3 mt-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-sm font-medium text-zinc-300">
                         Trade Style
@@ -403,7 +403,6 @@ export default function TradingSettings({
                       </TooltipProvider>
                     </div>
 
-                    {/* Trading Mode Toggle */}
                     <div className="flex items-center justify-center">
                       <div
                         className={`relative p-[2px] border-[2px] ${
@@ -485,7 +484,7 @@ export default function TradingSettings({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

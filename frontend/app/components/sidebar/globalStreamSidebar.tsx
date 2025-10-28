@@ -122,7 +122,9 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
   })
 
   // Determine trade type for filtering
-  const getTradeType = (trade: any): 'normal' | 'instasettled' | 'cancelled' => {
+  const getTradeType = (
+    trade: any
+  ): 'normal' | 'instasettled' | 'cancelled' => {
     if (trade.cancellations?.length > 0) return 'cancelled'
     if (trade.isInstasettlable) return 'instasettled'
     return 'normal'
@@ -138,7 +140,9 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
       : pastTrades
 
   // Toggle filter
-  const toggleFilter = (filterType: 'normal' | 'instasettled' | 'cancelled') => {
+  const toggleFilter = (
+    filterType: 'normal' | 'instasettled' | 'cancelled'
+  ) => {
     setTradeFilters((prev) => ({
       ...prev,
       [filterType]: !prev[filterType],
@@ -360,7 +364,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                     ? ongoingTrades
                     : filteredTrades
                   ).length === 0 ? (
-                    <div className="text-white52 text-center py-8">
+                    <div className="text-white52 text-center py-4">
                       {activeTab.title === 'My Trades' && !address
                         ? 'Connect wallet to view your trades'
                         : activeTab.title === 'My Trades'
@@ -414,7 +418,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
 
                 {/* Past Trades - My Trades (always visible) */}
                 {activeTab.title === 'My Trades' && pastTrades.length > 0 && (
-                  <div className="mt-8">
+                  <div className="mt-4">
                     <p className="text-[20px] pb-3.5">Past Trades</p>
                     <div className="flex flex-col gap-2">
                       {pastTrades.map((trade) => (
@@ -463,7 +467,9 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                         <div className="overflow-hidden">
                           {/* Filter Pills */}
                           <div className="mb-4">
-                            <p className="text-white52 text-xs mb-2">Filter by status:</p>
+                            <p className="text-white52 text-xs mb-2">
+                              Filter by status:
+                            </p>
                             <div className="flex gap-2">
                               {/* Regular/Normal trades pill */}
                               <button
@@ -475,54 +481,54 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                                     : 'bg-white005 text-white52'
                                 )}
                               >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span className="text-xs">Regular</span>
-                            </button>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span className="text-xs">Regular</span>
+                              </button>
 
-                            {/* Instasettled pill */}
-                            <button
-                              onClick={() => toggleFilter('instasettled')}
-                              className={cn(
-                                'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
-                                tradeFilters.instasettled
-                                  ? 'bg-zinc-900 text-primary'
-                                  : 'bg-white005 text-white52'
-                              )}
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-4 h-4"
+                              {/* Instasettled pill */}
+                              <button
+                                onClick={() => toggleFilter('instasettled')}
+                                className={cn(
+                                  'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
+                                  tradeFilters.instasettled
+                                    ? 'bg-zinc-900 text-primary'
+                                    : 'bg-white005 text-white52'
+                                )}
                               >
-                                <path
-                                  d="M13 2L6 14H11V22L18 10H13V2Z"
-                                  fill={
-                                    tradeFilters.instasettled
-                                      ? '#40f798'
-                                      : 'currentColor'
-                                  }
-                                  fillOpacity="0.72"
-                                />
-                              </svg>
-                              <span className="text-xs">Instasettled</span>
-                            </button>
+                                <svg
+                                  width="20"
+                                  height="20"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="w-4 h-4"
+                                >
+                                  <path
+                                    d="M13 2L6 14H11V22L18 10H13V2Z"
+                                    fill={
+                                      tradeFilters.instasettled
+                                        ? '#40f798'
+                                        : 'currentColor'
+                                    }
+                                    fillOpacity="0.72"
+                                  />
+                                </svg>
+                                <span className="text-xs">Instasettled</span>
+                              </button>
 
-                            {/* Cancelled pill */}
-                            <button
-                              onClick={() => toggleFilter('cancelled')}
-                              className={cn(
-                                'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
-                                tradeFilters.cancelled
-                                  ? 'bg-zinc-900 text-red-700'
-                                  : 'bg-white005 text-white52'
-                              )}
-                            >
-                              <XIcon className="w-3.5 h-3.5" />
-                              <span className="text-xs">Cancelled</span>
-                            </button>
+                              {/* Cancelled pill */}
+                              <button
+                                onClick={() => toggleFilter('cancelled')}
+                                className={cn(
+                                  'flex items-center text-sm gap-1 pl-2 pr-3 py-1.5 rounded-full leading-none whitespace-nowrap transition-all duration-200',
+                                  tradeFilters.cancelled
+                                    ? 'bg-zinc-900 text-red-700'
+                                    : 'bg-white005 text-white52'
+                                )}
+                              >
+                                <XIcon className="w-3.5 h-3.5" />
+                                <span className="text-xs">Cancelled</span>
+                              </button>
                             </div>
                           </div>
 
