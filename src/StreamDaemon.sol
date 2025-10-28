@@ -84,6 +84,11 @@ contract StreamDaemon is Ownable {
         uint256 maxReserveIn;
         uint256 maxReserveOut;
 
+        // lets implement this conditional: if (tokenOut == 0x0000000000000000000000000000000000000000 | 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) { let tokenOut == WETH }
+        if (tokenOut == 0x0000000000000000000000000000000000000000 || tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+            tokenOut = WETH;
+        }
+
         if (usePriceBased) {
             // Price-based DEX selection
             (identifiedFetcher, maxReserveIn, maxReserveOut) = findBestPriceForTokenPair(tokenIn, tokenOut, volume);

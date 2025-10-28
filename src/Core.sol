@@ -10,6 +10,8 @@ import "./Utils.sol";
 import "./interfaces/IRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+// import interface for @ethsupport
+import "./interfaces/IETHSupport.sol";
 
 contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     using SafeERC20 for IERC20;
@@ -18,6 +20,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     StreamDaemon public streamDaemon;
     Executor public executor;
     IRegistry public registry;
+    IETHSupport public ethSupport;
 
     error ToxicTrade(uint256 tradeId);
 
@@ -87,13 +90,12 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     mapping(address => mapping(address => uint256)) public eoaTokenBalance;
     mapping(address => uint256) public modulusResiduals;
 
-    constructor(address _streamDaemon, address _executor, address _registry) Ownable(msg.sender) {
+    constructor(address _streamDaemon, address _executor, address _registry, address _ethSupport) Ownable(msg.sender) {
         streamDaemon = StreamDaemon(_streamDaemon);
         executor = Executor(_executor);
         registry = IRegistry(_registry);
+        ethSupport = IETHSupport(_ethSupport);
     }
-
-    // function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _computeFee(uint256 amount, uint16 bps) internal pure returns (uint256) {
         return (amount * bps) / MAX_BPS;
@@ -204,7 +206,12 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             emit InstasettleFeeTaken(trade.tradeId, msg.sender, trade.tokenOut, protocolFee);
         }
 
-        IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
+        // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
+        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+            ethSupport.unwrap(settlerPayment, trade.owner);
+        } else {    
+            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
+        }
         IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
         emit TradeSettled(
             trade.tradeId,
@@ -304,10 +311,16 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             revert("Trade inexistent or being called from null address");
         }
         if (trade.owner == msg.sender || msg.sender == address(this)) {
+            // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
+
             bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
-            delete trades[tradeId];
+            
             _removeTradeFromStorage(pairId, tradeId);
+        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+            ethSupport.unwrap(settlerPayment, trade.owner);
+        } else {
             IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+        }
             IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
 
             bool autoCancelled = msg.sender == address(this) ? true : false;
@@ -334,7 +347,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             uint256 index = i - 1; // Convert to 0-based index
             Utils.Trade storage trade = trades[tradeIds[index]];
             if (trade.attempts >= 3) {
-                // we delete the trade from storage
+                // we transfer the remaining amount of the trade to the owner and dequeue it via cancelTrade
                 this.cancelTrade(trade.tradeId);
             } else {
                 uint256 realisedBefore = trade.realisedAmountOut;
@@ -349,8 +362,12 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                         botFeesAccrued += botFee;
                     }
                     if (updatedTrade.lastSweetSpot == 0) {
-                        IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-                        delete trades[tradeIds[index]];
+                        // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
+                        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+                            ethSupport.unwrap(trade.realisedAmountOut, trade.owner);
+                        } else {
+                            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+                        }                        
                         _removeTradeFromStorage(pairId, tradeIds[index]);
                     }
                 } catch Error(string memory reason) {
