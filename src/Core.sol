@@ -70,7 +70,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     uint16 public streamBotFeeBps = 10; // 10 bps
     uint16 public instasettleProtocolFeeBps = 10; // 10 bps
 
-    uint256 EXECUTE_STREAM_TRADE_CAP = 20; // 20 stream execution cap on executeTrades set at deployment
+    uint256 public EXECUTE_STREAM_TRADE_CAP = 20; // 20 stream execution cap on executeTrades set at deployment
 
     // Protocol fee balances by token
     mapping(address => uint256) public protocolFees;
