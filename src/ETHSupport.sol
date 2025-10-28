@@ -108,6 +108,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
             onlyInstasettle
         );
 
+        // Approve Core to spend the wrapped WETH from this contract
+        weth.approve(address(core), msg.value);
+
         // Call Core contract's placeTrade function
         core.placeTrade(tradeData);
 
@@ -130,7 +133,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
 
     /**
      * @notice Place a trade using ETH with custom trade data
-     * @param tradeData The encoded trade data (excluding tokenIn which will be WETH)
+     * @param data The encoded trade data (excluding tokenIn which will be WETH)
+     * @param includeForwarding Whether to forward the call to another contract
+     * @param forwardingTarget The target address for forwarding
      * @return tradeId The ID of the created trade
      */
     function placeTradeWithETHCustom(
@@ -148,7 +153,7 @@ contract ETHSupport is Ownable, ReentrancyGuard {
             if (postBalance < preBalance || postBalance - preBalance != msg.value) revert WETHWrapFailed();
 
             (
-                address, // originalTokenIn (ignored)
+                address tokenInOriginal, // originalTokenIn (ignored but named to avoid syntax error)
                 address tokenOut,
                 uint256 amountIn,
                 uint256 amountOutMin,
@@ -170,6 +175,9 @@ contract ETHSupport is Ownable, ReentrancyGuard {
                 instasettleBps,
                 onlyInstasettle
             );
+
+            // Approve Core to spend the wrapped WETH from this contract
+            weth.approve(address(core), msg.value);
 
             core.placeTrade(newTradeData);
 

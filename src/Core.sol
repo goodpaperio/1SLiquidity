@@ -21,6 +21,9 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     Executor public executor;
     IRegistry public registry;
     IETHSupport public ethSupport;
+    
+    // WETH address on mainnet
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     error ToxicTrade(uint256 tradeId);
 
@@ -94,6 +97,16 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         streamDaemon = StreamDaemon(_streamDaemon);
         executor = Executor(_executor);
         registry = IRegistry(_registry);
+        ethSupport = IETHSupport(_ethSupport);
+    }
+    
+    /**
+     * @notice Set the ETHSupport contract address
+     * @dev Only callable by owner, needed to resolve circular dependency during deployment
+     * @param _ethSupport The ETHSupport contract address
+     */
+    function setETHSupport(address _ethSupport) external onlyOwner {
+        require(_ethSupport != address(0), "ETHSupport cannot be zero address");
         ethSupport = IETHSupport(_ethSupport);
     }
 
@@ -198,16 +211,29 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 settlerPayment =
             ((trade.targetAmountOut - trade.realisedAmountOut) * (10_000 - trade.instasettleBps)) / 10_000;
 
+        // Check if tokenOut is ETH sentinel
+        bool isETHSentinel = (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+        
         // Take protocol fee from settler on instasettle
         uint256 protocolFee = _computeFee(settlerPayment, instasettleProtocolFeeBps);
         if (protocolFee > 0) {
-            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, address(this), protocolFee);
-            protocolFees[trade.tokenOut] += protocolFee;
+            if (isETHSentinel) {
+                // For ETH output, require ETH payment for protocol fee
+                // Note: Core will receive WETH from the user, we need to handle this differently
+                // For now, reduce the settler payment by the protocol fee and add to Core's balance
+                IERC20(WETH).safeTransferFrom(msg.sender, address(this), protocolFee);
+                protocolFees[address(WETH)] += protocolFee;
+            } else {
+                IERC20(trade.tokenOut).safeTransferFrom(msg.sender, address(this), protocolFee);
+                protocolFees[trade.tokenOut] += protocolFee;
+            }
             emit InstasettleFeeTaken(trade.tradeId, msg.sender, trade.tokenOut, protocolFee);
         }
 
-        // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
-        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+        // Unwrap and transfer to owner if ETH sentinel, otherwise transfer token
+        if (isETHSentinel) {
+            // For ETH output: unwrap the settlerPayment amount to send to owner
+            // The settler should have sent WETH already which is in Core
             ethSupport.unwrap(settlerPayment, trade.owner);
         } else {    
             IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
@@ -316,11 +342,14 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
             
             _removeTradeFromStorage(pairId, tradeId);
-        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
-            ethSupport.unwrap(settlerPayment, trade.owner); // @ethsupport ensure that unwrap is payable in interface
-        } else {
-            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-        }
+            
+            // If tokenOut is ETH sentinel, unwrap WETH to ETH before transferring
+            if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                ethSupport.unwrap(trade.realisedAmountOut, trade.owner); // @ethsupport ensure that unwrap is payable in interface
+            } else {
+                IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+            }
+            
             IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
 
             bool autoCancelled = msg.sender == address(this) ? true : false;
@@ -363,7 +392,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                     }
                     if (updatedTrade.lastSweetSpot == 0) {
                         // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
-                        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+                        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
                             ethSupport.unwrap(trade.realisedAmountOut, trade.owner);
                         } else {
                             IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
@@ -382,7 +411,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
 
         if (botFeesAccrued > 0) {
             // require(tokenOutForRun != address(0), "fee token unset");
-            if (tokenOutForRun == 0x0000000000000000000000000000000000000000 || tokenOutForRun == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+            if (tokenOutForRun == 0x0000000000000000000000000000000000000000 || tokenOutForRun == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
                 // transfer ETH to the bot address (msg.sender)
                 (bool success, ) = payable(msg.sender).call{value: botFeesAccrued}("");
                 require(success, "ETH transfer failed");
@@ -432,18 +461,20 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             streamVolume = trade.amountRemaining;
         }
 
-        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee) {
+        // Declare tradeData outside the if-else block so it's in scope
+        IRegistry.TradeData memory tradeData;
+        
+        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
             // this sets the trading currency to WETH if the desired tokenOut is native ETH
-            IRegistry.TradeData memory tradeData = registry.prepareTradeData(
+            tradeData = registry.prepareTradeData(
                 bestDex, trade.tokenIn, address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2), streamVolume, targetAmountOut, address(this)
             );
             
         } else {
-        IRegistry.TradeData memory tradeData = registry.prepareTradeData(
-            bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
-        );
+            tradeData = registry.prepareTradeData(
+                bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
+            );
         }
-
 
         IERC20(trade.tokenIn).forceApprove(tradeData.router, streamVolume);
 
