@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Core.sol";
 import "./Utils.sol";
+import "./interfaces/ICore.sol";
 
 // WETH interface for wrapping ETH
 interface IWETH {
@@ -18,13 +19,7 @@ interface IWETH {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
-// Core contract interface
-interface ICore {
-    function placeTrade(bytes calldata tradeData) external payable;
-    function cancelTrade(uint256 tradeId) external returns (bool);
-    function getTrade(uint256 tradeId) external view returns (Utils.Trade memory);
-    function trades(uint256 tradeId) external view returns (Utils.Trade memory);
-}
+// ICore interface imported from ./interfaces/ICore.sol
 
 /**
  * @title ETHSupport
@@ -40,13 +35,14 @@ contract ETHSupport is Ownable, ReentrancyGuard {
     
     // Events
     event ETHTradePlaced(
-        uint256 indexed tradeId,
         address indexed user,
         uint256 ethAmount,
         address tokenOut,
         uint256 minAmountOut,
         bool isInstasettlable,
-        bool usePriceBased
+        bool usePriceBased,
+        uint256 instasettleBps,
+        bool onlyInstasettle
     );
 
     event ETHReceived(address indexed user, uint256 amount);
@@ -79,32 +75,37 @@ contract ETHSupport is Ownable, ReentrancyGuard {
      * @param amountOutMin Minimum amount of output tokens expected
      * @param isInstasettlable Whether the trade can be instantly settled
      * @param usePriceBased Whether to use price-based DEX selection
+     * @param instasettleBps Basis points for instasettle discount
+     * @param onlyInstasettle Whether the trade should only be instasettled
      * @return tradeId The ID of the created trade
      */
     function placeTradeWithETH(
         address tokenOut,
         uint256 amountOutMin,
         bool isInstasettlable,
-        bool usePriceBased
+        bool usePriceBased,
+        uint256 instasettleBps,
+        bool onlyInstasettle
     ) external payable nonReentrant returns (uint256) {
         if (msg.value == 0) revert InvalidETHAmount();
 
-        // Wrap ETH to WETH
+        // Measure pre-balance, wrap, then validate delta
+        uint256 preBalance = weth.balanceOf(address(this));
         weth.deposit{value: msg.value}();
-        
-        // Verify WETH was received
-        uint256 wethBalance = weth.balanceOf(address(this));
-        if (wethBalance < msg.value) revert WETHWrapFailed();
+        uint256 postBalance = weth.balanceOf(address(this));
+        if (postBalance < preBalance || postBalance - preBalance != msg.value) revert WETHWrapFailed();
 
         // Prepare trade data for Core contract
-        // The Core contract expects: (address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin, bool isInstasettlable, bool usePriceBased)
+        // The Core contract expects: (address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin, bool isInstasettlable, bool usePriceBased, uint256 instasettleBps, bool onlyInstasettle)
         bytes memory tradeData = abi.encode(
             address(weth),  // tokenIn (WETH)
             tokenOut,       // tokenOut
             msg.value,      // amountIn (same as ETH amount)
             amountOutMin,   // amountOutMin
             isInstasettlable,
-            usePriceBased
+            usePriceBased,
+            instasettleBps,
+            onlyInstasettle
         );
 
         // Call Core contract's placeTrade function
@@ -114,13 +115,14 @@ contract ETHSupport is Ownable, ReentrancyGuard {
         // We need to get the last trade ID, but since we can't directly access it,
         // we'll emit an event with the user's information for tracking
         emit ETHTradePlaced(
-            0, // Trade ID will be determined by Core contract
             msg.sender,
             msg.value,
             tokenOut,
             amountOutMin,
             isInstasettlable,
-            usePriceBased
+            usePriceBased,
+            instasettleBps,
+            onlyInstasettle
         );
 
         return 0; // Trade ID is managed by Core contract
@@ -131,53 +133,74 @@ contract ETHSupport is Ownable, ReentrancyGuard {
      * @param tradeData The encoded trade data (excluding tokenIn which will be WETH)
      * @return tradeId The ID of the created trade
      */
-    function placeTradeWithETHCustom(bytes calldata tradeData) external payable nonReentrant returns (uint256) {
+    function placeTradeWithETHCustom(
+        bytes calldata data,
+        bool includeForwarding,
+        address forwardingTarget
+    ) external payable nonReentrant returns (uint256) {
         if (msg.value == 0) revert InvalidETHAmount();
 
-        // Wrap ETH to WETH
-        weth.deposit{value: msg.value}();
-        
-        // Verify WETH was received
-        uint256 wethBalance = weth.balanceOf(address(this));
-        if (wethBalance < msg.value) revert WETHWrapFailed();
+        if (!includeForwarding) {
+            // Wrap and validate delta, then decode core data and place trade
+            uint256 preBalance = weth.balanceOf(address(this));
+            weth.deposit{value: msg.value}();
+            uint256 postBalance = weth.balanceOf(address(this));
+            if (postBalance < preBalance || postBalance - preBalance != msg.value) revert WETHWrapFailed();
 
-        // Decode the trade data to replace tokenIn with WETH address
-        (
-            address originalTokenIn,
-            address tokenOut,
-            uint256 amountIn,
-            uint256 amountOutMin,
-            bool isInstasettlable,
-            bool usePriceBased
-        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool));
+            (
+                address, // originalTokenIn (ignored)
+                address tokenOut,
+                uint256 amountIn,
+                uint256 amountOutMin,
+                bool isInstasettlable,
+                bool usePriceBased,
+                uint256 instasettleBps,
+                bool onlyInstasettle
+            ) = abi.decode(data, (address, address, uint256, uint256, bool, bool, uint256, bool));
 
-        // Verify the amount matches the ETH sent
-        if (amountIn != msg.value) revert InvalidETHAmount();
+            if (amountIn != msg.value) revert InvalidETHAmount();
 
-        // Create new trade data with WETH as tokenIn
-        bytes memory newTradeData = abi.encode(
-            address(weth),  // tokenIn (WETH)
-            tokenOut,
-            msg.value,      // amountIn
-            amountOutMin,
-            isInstasettlable,
-            usePriceBased
-        );
+            bytes memory newTradeData = abi.encode(
+                address(weth),
+                tokenOut,
+                msg.value,
+                amountOutMin,
+                isInstasettlable,
+                usePriceBased,
+                instasettleBps,
+                onlyInstasettle
+            );
 
-        // Call Core contract's placeTrade function
-        core.placeTrade(newTradeData);
+            core.placeTrade(newTradeData);
 
-        emit ETHTradePlaced(
-            0, // Trade ID will be determined by Core contract
-            msg.sender,
-            msg.value,
-            tokenOut,
-            amountOutMin,
-            isInstasettlable,
-            usePriceBased
-        );
+            emit ETHTradePlaced(
+                msg.sender,
+                msg.value,
+                tokenOut,
+                amountOutMin,
+                isInstasettlable,
+                usePriceBased,
+                instasettleBps,
+                onlyInstasettle
+            );
+            return 0;
+        }
 
-        return 0; // Trade ID is managed by Core contract
+        require(forwardingTarget != address(0), "Invalid forwarding target");
+        // Forward call with ETH value and provided data directly
+        (bool success, bytes memory returndata) = forwardingTarget.call{value: msg.value}(data);
+        if (!success) {
+            // Bubble up revert reason if present
+            if (returndata.length > 0) {
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert("Forwarded call failed");
+            }
+        }
+        return 0;
     }
 
     /**
@@ -230,5 +253,63 @@ contract ETHSupport is Ownable, ReentrancyGuard {
      */
     function getETHBalance() external view returns (uint256) {
         return address(this).balance;
+    }
+
+    /**
+     * @notice Unwrap WETH to ETH for the caller
+     * @param amount The amount of WETH to unwrap
+     */
+    function unwrap(uint256 amount) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to this contract
+        weth.transferFrom(msg.sender, address(this), amount);
+        
+        // Unwrap WETH to ETH
+        weth.withdraw(amount);
+        
+        // Transfer ETH to caller
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "ETH transfer failed");
+    }
+
+    /**
+     * @notice Unwrap WETH to ETH and route to specified address
+     * @param amount The amount of WETH to unwrap
+     * @param to The address to receive the ETH
+     */
+    function unwrapAndRoute(uint256 amount, address to, bytes calldata data) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(to != address(0), "Invalid recipient address");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to this contract
+        weth.transferFrom(msg.sender, address(this), amount);
+        
+        // Unwrap WETH to ETH
+        weth.withdraw(amount);
+        
+        // Call destination with ETH value and forward data payload
+        (bool success, ) = payable(to).call{value: amount}(data);
+        require(success, "ETH transfer failed");
+    }
+
+    /**
+     * @notice Route WETH to specified address
+     * @param amount The amount of WETH to transfer
+     * @param to The address to receive the WETH
+     */
+    function route(uint256 amount, address to, bytes calldata data) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(to != address(0), "Invalid recipient address");
+        require(weth.balanceOf(msg.sender) >= amount, "Insufficient WETH balance");
+        
+        // Transfer WETH from caller to destination first so target sees funds
+        weth.transferFrom(msg.sender, to, amount);
+        
+        // Invoke destination with provided data (no ETH value)
+        (bool success, ) = to.call(data);
+        require(success, "Call failed");
     }
 }
