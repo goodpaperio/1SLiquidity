@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 export function generatePageMetadata({
   title,
   description,
-  ogImagePath = '/og-image.png',
+  ogImagePath = '/opengraph-image.png',
   path = '',
 }: {
   title?: string
