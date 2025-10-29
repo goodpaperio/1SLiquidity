@@ -18,8 +18,71 @@ const afacadVariable = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Decastream',
-  description: '',
+  title: {
+    default: 'Decastream',
+    template: '%s | Decastream', // For page-specific titles
+  },
+  description:
+    'DECAStream intelligently splits large trades into optimized streams across multiple DEXs.',
+  keywords: ['web3', 'defi', 'dex', 'trade', 'streaming'],
+  authors: [{ name: 'Decastream' }],
+  creator: 'Decastream',
+
+  // Open Graph
+  openGraph: {
+    title: 'Decastream',
+    description:
+      'DECAStream intelligently splits large trades into optimized streams across multiple DEXs.',
+    url: 'https://deca.stream',
+    siteName: 'Decastream',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Decastream Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+
+  // Twitter
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Decastream',
+    description:
+      'DECAStream intelligently splits large trades into optimized streams across multiple DEXs.',
+    creator: '@Decastream',
+    images: ['/og-image.png'],
+  },
+
+  // Additional meta tags
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  // Icons
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
+  },
+
+  // Verification (optional)
+  // verification: {
+  //   google: 'your-google-verification-code',
+  //   // yandex: 'your-yandex-verification-code',
+  //   // bing: 'your-bing-verification-code',
+  // },
 }
 
 export default async function RootLayout({
