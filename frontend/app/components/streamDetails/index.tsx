@@ -30,6 +30,7 @@ import {
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { ethers } from 'ethers'
+import { InfoIcon } from '@/app/lib/icons'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -39,6 +40,7 @@ type StreamDetailsProps = {
   isLoading?: boolean
   onClose: () => void
   showBackIcon?: boolean
+  onRefetch?: () => void
 }
 
 const TIMER_DURATION = 10 // 10 seconds
@@ -51,6 +53,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   onClose,
   showBackIcon = true,
   walletAddress,
+  onRefetch,
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
   const {
@@ -63,6 +66,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
   const [showCompleted, setShowCompleted] = useState(true)
+  const [tradeOperationLoading, setTradeOperationLoading] = useState(false)
 
   // Fetch contract info on component mount if not already available
   useEffect(() => {
@@ -154,6 +158,27 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   }
 
   const effectivePrice = calculateEffectivePrice()
+
+  // Calculate desired price: amountOut / amountIn (normalized by decimals, scaled to 1 unit of tokenIn)
+  const calculateDesiredPrice = () => {
+    if (!tokenIn || !tokenOut) return 0
+    try {
+      const amountOutNormalized = Number(
+        formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals)
+      )
+      const amountInNormalized = Number(
+        formatUnits(BigInt(selectedStream.amountIn), tokenIn.decimals)
+      )
+      if (amountInNormalized > 0) {
+        return amountOutNormalized / amountInNormalized
+      }
+      return 0
+    } catch {
+      return 0
+    }
+  }
+
+  const desiredPrice = calculateDesiredPrice()
 
   // Calculate USD values (using token price from tokenList)
   const amountInUsd = tokenIn
@@ -305,36 +330,47 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     if (isConnectedWallet) {
       const signer = getSigner()
 
-      if (signer) {
-        const res = await instasettle(
-          {
-            tradeId: Number(selectedStream.tradeId),
-            tokenInObj: tokenIn,
-            tokenOutObj: tokenOut,
-            tokenIn: selectedStream.tokenIn || '',
-            tokenOut: selectedStream.tokenOut || '',
-            // amountIn: Number(
-            //   formatUnits(
-            //     BigInt(selectedStream.amountIn),
-            //     tokenIn?.decimals || 18
-            //   )
-            // ).toString(),
-            minAmountOut: Number(
-              formatUnits(
-                BigInt(selectedStream.minAmountOut),
-                tokenOut?.decimals || 18
-              )
-            ).toString(),
-            amountIn: formatNumberSmart(remainingAmountIn || '0') || '0',
-            isInstasettlable: true,
-            usePriceBased: false,
-            signer: signer,
-          },
-          signer
-        )
-        if (res.success) {
-          onClose()
+      try {
+        if (signer) {
+          setTradeOperationLoading(true)
+          const res = await instasettle(
+            {
+              tradeId: Number(selectedStream.tradeId),
+              tokenInObj: tokenIn,
+              tokenOutObj: tokenOut,
+              tokenIn: selectedStream.tokenIn || '',
+              tokenOut: selectedStream.tokenOut || '',
+              // amountIn: Number(
+              //   formatUnits(
+              //     BigInt(selectedStream.amountIn),
+              //     tokenIn?.decimals || 18
+              //   )
+              // ).toString(),
+              minAmountOut: Number(
+                formatUnits(
+                  BigInt(selectedStream.minAmountOut),
+                  tokenOut?.decimals || 18
+                )
+              ).toString(),
+              amountIn: formatNumberSmart(remainingAmountIn || '0') || '0',
+              isInstasettlable: true,
+              usePriceBased: false,
+              signer: signer,
+            },
+            signer
+          )
+          if (res.success) {
+            // Refetch trades to update the list
+            if (onRefetch) {
+              await onRefetch()
+            }
+            onClose()
+          }
         }
+      } catch (error) {
+        console.error('Error instasettling trade:', error)
+      } finally {
+        setTradeOperationLoading(false)
       }
     }
   }
@@ -343,11 +379,22 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
     if (isConnectedWallet) {
       const signer = getSigner()
 
-      if (signer) {
-        const res = await cancelTrade(Number(selectedStream.tradeId), signer)
-        if (res.success) {
-          onClose()
+      try {
+        if (signer) {
+          setTradeOperationLoading(true)
+          const res = await cancelTrade(Number(selectedStream.tradeId), signer)
+          if (res.success) {
+            // Refetch trades to update the list
+            if (onRefetch) {
+              await onRefetch()
+            }
+            onClose()
+          }
         }
+      } catch (error) {
+        console.error('Error cancelling trade:', error)
+      } finally {
+        setTradeOperationLoading(false)
       }
     }
   }
@@ -728,6 +775,29 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 </>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <p className="text-[14px]">Desired price:</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <InfoIcon className="h-4 w-4 cursor-help block" />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                    <p>Desired price info</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-[14px]">
+              {isLoading || !tokenIn || !tokenOut || desiredPrice === 0
+                ? '...'
+                : `${desiredPrice.toFixed(6)} ${tokenOut.symbol}/${
+                    tokenIn.symbol
+                  }`}
+            </p>
           </div>
 
           <div
@@ -1142,7 +1212,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                     disabled={
                       isLoading ||
                       selectedStream.settlements.length > 0 ||
-                      !walletAddress
+                      !walletAddress ||
+                      tradeOperationLoading
                     }
                     loading={isLoading}
                     onClick={() => handleInstasettleClick(selectedStream)}
@@ -1166,7 +1237,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
               isEnabled={isUser}
               isUser={isUser}
-              isLoading={isLoading || loading}
+              isLoading={isLoading || loading || tradeOperationLoading}
               selectedStream={selectedStream}
               handleInstasettleClick={handleInstasettleClick}
               handleCancelClick={handleCancelClick}

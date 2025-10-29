@@ -10,6 +10,7 @@ import {
   Web3ModalProvider,
 } from './providers'
 import { Toaster } from 'react-hot-toast'
+import { generatePageMetadata } from '@/utils/metadata'
 
 const afacadVariable = localFont({
   src: './fonts/Afacad-Medium.ttf',
@@ -17,10 +18,10 @@ const afacadVariable = localFont({
   weight: '100 900',
 })
 
-export const metadata: Metadata = {
-  title: 'Decastream',
-  description: '',
-}
+export const metadata: Metadata = generatePageMetadata({
+  description:
+    'DECAStream intelligently splits large trades into optimized streams across multiple DEXs.',
+})
 
 export default async function RootLayout({
   children,
