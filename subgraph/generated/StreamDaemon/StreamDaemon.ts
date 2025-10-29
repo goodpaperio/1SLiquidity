@@ -196,20 +196,16 @@ export class StreamDaemon extends ethereum.SmartContract {
     tokenIn: Address,
     tokenOut: Address,
     volume: BigInt,
-    reserveIn: BigInt,
-    reserveOut: BigInt,
-    effectiveGas: BigInt,
+    bestFetcher: Address,
   ): BigInt {
     let result = super.call(
       "_sweetSpotAlgo",
-      "_sweetSpotAlgo(address,address,uint256,uint256,uint256,uint256):(uint256)",
+      "_sweetSpotAlgo(address,address,uint256,address):(uint256)",
       [
         ethereum.Value.fromAddress(tokenIn),
         ethereum.Value.fromAddress(tokenOut),
         ethereum.Value.fromUnsignedBigInt(volume),
-        ethereum.Value.fromUnsignedBigInt(reserveIn),
-        ethereum.Value.fromUnsignedBigInt(reserveOut),
-        ethereum.Value.fromUnsignedBigInt(effectiveGas),
+        ethereum.Value.fromAddress(bestFetcher),
       ],
     );
 
@@ -220,91 +216,16 @@ export class StreamDaemon extends ethereum.SmartContract {
     tokenIn: Address,
     tokenOut: Address,
     volume: BigInt,
-    reserveIn: BigInt,
-    reserveOut: BigInt,
-    effectiveGas: BigInt,
+    bestFetcher: Address,
   ): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
       "_sweetSpotAlgo",
-      "_sweetSpotAlgo(address,address,uint256,uint256,uint256,uint256):(uint256)",
+      "_sweetSpotAlgo(address,address,uint256,address):(uint256)",
       [
         ethereum.Value.fromAddress(tokenIn),
         ethereum.Value.fromAddress(tokenOut),
         ethereum.Value.fromUnsignedBigInt(volume),
-        ethereum.Value.fromUnsignedBigInt(reserveIn),
-        ethereum.Value.fromUnsignedBigInt(reserveOut),
-        ethereum.Value.fromUnsignedBigInt(effectiveGas),
-      ],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  _sweetSpotAlgo_v1(
-    scaledVolume: BigInt,
-    scaledReserveIn: BigInt,
-    scaledReserveOut: BigInt,
-  ): BigInt {
-    let result = super.call(
-      "_sweetSpotAlgo_v1",
-      "_sweetSpotAlgo_v1(uint256,uint256,uint256):(uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(scaledVolume),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveIn),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveOut),
-      ],
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try__sweetSpotAlgo_v1(
-    scaledVolume: BigInt,
-    scaledReserveIn: BigInt,
-    scaledReserveOut: BigInt,
-  ): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "_sweetSpotAlgo_v1",
-      "_sweetSpotAlgo_v1(uint256,uint256,uint256):(uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(scaledVolume),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveIn),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveOut),
-      ],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  _sweetSpotAlgo_v2(scaledVolume: BigInt, scaledReserveIn: BigInt): BigInt {
-    let result = super.call(
-      "_sweetSpotAlgo_v2",
-      "_sweetSpotAlgo_v2(uint256,uint256):(uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(scaledVolume),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveIn),
-      ],
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try__sweetSpotAlgo_v2(
-    scaledVolume: BigInt,
-    scaledReserveIn: BigInt,
-  ): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "_sweetSpotAlgo_v2",
-      "_sweetSpotAlgo_v2(uint256,uint256):(uint256)",
-      [
-        ethereum.Value.fromUnsignedBigInt(scaledVolume),
-        ethereum.Value.fromUnsignedBigInt(scaledReserveIn),
+        ethereum.Value.fromAddress(bestFetcher),
       ],
     );
     if (result.reverted) {

@@ -22,15 +22,17 @@ dataSources:
         - InstasettleFee
         - FeeClaim
         - FeeRateUpdate
+        - LowLevelError
+        - DataError
       abis:
         - name: Core
           file: ./abis/Core.json
       eventHandlers:
-        - event: TradeCreated(indexed uint256,indexed address,address,address,uint256,uint256,uint256,uint256,bool,uint256,uint256,bool)
+        - event: TradeCreated(indexed uint256,indexed address,address,address,uint256,uint256,uint256,uint256,bool,uint256,uint256,bool,bool)
           handler: handleTradeCreated
         - event: TradeStreamExecuted(indexed uint256,uint256,uint256,uint256)
           handler: handleTradeStreamExecuted
-        - event: TradeCancelled(indexed uint256,uint256,uint256)
+        - event: TradeCancelled(bool,indexed uint256,uint256,uint256)
           handler: handleTradeCancelled
         - event: TradeSettled(indexed uint256,indexed address,uint256,uint256,uint256)
           handler: handleTradeSettled
@@ -42,6 +44,10 @@ dataSources:
           handler: handleFeesClaimed
         - event: FeeRatesUpdated(uint16,uint16,uint16)
           handler: handleFeeRatesUpdated
+        - event: LowLevelError(string)
+          handler: handleLowLevelError
+        - event: DataError(bytes)
+          handler: handleDataError
       file: ./src/mapping.ts
 
   - kind: ethereum/contract

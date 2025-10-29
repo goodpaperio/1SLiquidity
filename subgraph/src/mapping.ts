@@ -43,6 +43,7 @@ export function handleTradeCreated(event: TradeCreated): void {
   trade.instasettleBps = event.params.instasettleBps
   trade.lastSweetSpot = event.params.lastSweetSpot
   trade.usePriceBased = event.params.usePriceBased
+  trade.onlyInstasettle = event.params.onlyInstasettle
   trade.createdAt = event.block.timestamp
   trade.save()
 }
@@ -72,6 +73,7 @@ export function handleTradeCancelled(event: TradeCancelled): void {
 
   let cancellation = new TradeCancellation(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
   cancellation.trade = trade.id
+  cancellation.isAutocancelled = event.params.isAutocancelled
   cancellation.amountRemaining = event.params.amountRemaining
   cancellation.realisedAmountOut = event.params.realisedAmountOut
   cancellation.timestamp = event.block.timestamp

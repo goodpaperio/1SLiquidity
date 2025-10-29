@@ -117,7 +117,8 @@
     "deploy:god-mode:and:extract": "npm run deploy:barebones:god-mode && npm run extract:addresses",
     "deploy:mainnet:verify": "forge verify-contract $CORE_ADDRESS src/Core.sol:Core --etherscan-api-key $ETHERSCAN_API_KEY --chain mainnet --constructor-args $(cast abi-encode 'constructor(address,address,address)' $STREAM_DAEMON_ADDRESS $EXECUTOR_ADDRESS $REGISTRY_ADDRESS)",
     "deploy:mainnet:verify-all": "npm run deploy:mainnet:verify && forge verify-contract $STREAM_DAEMON_ADDRESS src/StreamDaemon.sol:StreamDaemon --etherscan-api-key $ETHERSCAN_API_KEY --chain mainnet && forge verify-contract $EXECUTOR_ADDRESS src/Executor.sol:Executor --etherscan-api-key $ETHERSCAN_API_KEY --chain mainnet && forge verify-contract $REGISTRY_ADDRESS src/Registry.sol:Registry --etherscan-api-key $ETHERSCAN_API_KEY --chain mainnet",
-    "deploy:mainnet:verify-deployment": "forge script script/processes/deployment/VerifyDeployment.s.sol:VerifyDeployment --rpc-url $MAINNET_RPC_URL -vvvv"
+    "deploy:mainnet:verify-deployment": "forge script script/processes/deployment/VerifyDeployment.s.sol:VerifyDeployment --rpc-url $MAINNET_RPC_URL -vvvv",
+    "build:abi": "forge build --extra-output-files abi"
   },
   "repository": {
     "type": "git",

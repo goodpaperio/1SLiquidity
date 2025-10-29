@@ -26,10 +26,13 @@ npm run codegen-mainnet
 # 2. Build subgraph
 npm run build-mainnet
 
-# 3. Authenticate graph node
-npm run auth-mainnet
+# 3. Clear any cached credentials (if needed)
+rm -f ~/.graph/access-token.json ~/.config/graph/access-token.json
 
-# 3. Deploy to mainnet
+# 4. Authenticate graph node
+GRAPH_ACCESS_TOKEN="<YOUR_DEPLOY_KEY>" npx graph auth https://api.studio.thegraph.com/deploy/
+
+# 5. Deploy to mainnet
 npm run deploy-mainnet
 ```
 
@@ -43,11 +46,14 @@ npx graph codegen subgraph-mainnet.yaml
 # 2. Build subgraph
 npx graph build subgraph-mainnet.yaml
 
-# 3. Authenticate graph node
-npx graph auth <GRAPH_ACCESS_TOKEN>
+# 3. Clear any cached credentials (if needed)
+rm -f ~/.graph/access-token.json ~/.config/graph/access-token.json
 
-# 4. Deploy to mainnet
-npx graph deploy --node https://api.thegraph.com/deploy/ decastream-mainnet subgraph-mainnet.yaml
+# 4. Authenticate graph node
+GRAPH_ACCESS_TOKEN="<YOUR_DEPLOY_KEY>" npx graph auth https://api.studio.thegraph.com/deploy/
+
+# 5. Deploy to mainnet
+npx graph deploy --studio decastream-mainnet subgraph-mainnet.yaml
 ```
 
 ## Step 4: Verify Deployment
@@ -61,10 +67,11 @@ npx graph deploy --node https://api.thegraph.com/deploy/ decastream-mainnet subg
 
 ### Common Issues:
 
-#### "Authentication failed"
+#### "Authentication failed" or "Deploy key set" without prompt
+- Clear cached credentials: `rm -f ~/.graph/access-token.json ~/.config/graph/access-token.json`
+- Use explicit environment variable: `GRAPH_ACCESS_TOKEN="<key>" npx graph auth https://api.studio.thegraph.com/deploy/`
 - Make sure your deploy key is correct
 - Ensure the environment variable is set properly
-- Try logging out and back into The Graph Studio
 
 #### "Subgraph already exists"
 - If you get this error on create, the subgraph already exists
@@ -77,6 +84,11 @@ npx graph deploy --node https://api.thegraph.com/deploy/ decastream-mainnet subg
 #### "Invalid start block"
 - Ensure start blocks are not in the future
 - Make sure start blocks are after contract deployment
+
+#### "HTTP error deploying the subgraph 404"
+- The subgraph doesn't exist in Graph Studio yet
+- Create the subgraph manually via https://thegraph.com/studio/ or run `npm run create-mainnet`
+- Make sure the subgraph name matches exactly: `decastream-mainnet`
 
 ### Useful Commands:
 

@@ -10,8 +10,8 @@ import "./Utils.sol";
 import "./interfaces/IRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-// import "forge-std/console.sol";
+// import interface for @ethsupport
+import "./interfaces/IETHSupport.sol";
 
 contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     using SafeERC20 for IERC20;
@@ -20,6 +20,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     StreamDaemon public streamDaemon;
     Executor public executor;
     IRegistry public registry;
+    IETHSupport public ethSupport;
+    
+    // WETH address on mainnet
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     error ToxicTrade(uint256 tradeId);
 
@@ -35,14 +39,15 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         bool isInstasettlable,
         uint256 instasettleBps,
         uint256 lastSweetSpot,
-        bool usePriceBased
+        bool usePriceBased,
+        bool onlyInstasettle
     );
 
     event TradeStreamExecuted(
         uint256 indexed tradeId, uint256 amountIn, uint256 realisedAmountOut, uint256 lastSweetSpot
     );
 
-    event TradeCancelled(uint256 indexed tradeId, uint256 amountRemaining, uint256 realisedAmountOut);
+    event TradeCancelled(bool isAutocancelled, uint256 indexed tradeId, uint256 amountRemaining, uint256 realisedAmountOut);
 
     event TradeSettled(
         uint256 indexed tradeId,
@@ -65,6 +70,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     uint16 public streamBotFeeBps = 10; // 10 bps
     uint16 public instasettleProtocolFeeBps = 10; // 10 bps
 
+    uint256 public EXECUTE_STREAM_TRADE_CAP = 20; // 20 stream execution cap on executeTrades set at deployment
+
     // Protocol fee balances by token
     mapping(address => uint256) public protocolFees;
 
@@ -81,19 +88,19 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     // trades
     uint256 public lastTradeId;
     mapping(bytes32 => uint256[]) public pairIdTradeIds;
+    mapping(uint256 => uint256) public tradeIndicies;
     mapping(uint256 => Utils.Trade) public trades;
 
     // balances
     mapping(address => mapping(address => uint256)) public eoaTokenBalance;
     mapping(address => uint256) public modulusResiduals;
 
-    constructor(address _streamDaemon, address _executor, address _registry) Ownable(msg.sender) {
+    constructor(address _streamDaemon, address _executor, address _registry, address _ethSupport) Ownable(msg.sender) {
         streamDaemon = StreamDaemon(_streamDaemon);
         executor = Executor(_executor);
         registry = IRegistry(_registry);
+        ethSupport = IETHSupport(_ethSupport);
     }
-
-    // function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _computeFee(uint256 amount, uint16 bps) internal pure returns (uint256) {
         return (amount * bps) / MAX_BPS;
@@ -118,20 +125,31 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         emit StreamFeesTaken(tradeId, bot, tokenOut, protocolFee, botFee);
     }
 
-    function _removeTradeIdFromArray(bytes32 pairId, uint256 tradeId) internal {
+    function _removeTradeFromStorage(bytes32 pairId, uint256 tradeId) internal {
         uint256[] storage tradeIds = pairIdTradeIds[pairId];
-        for (uint256 i = 0; i < tradeIds.length; i++) {
-            if (tradeIds[i] == tradeId) {
-                // Remove the trade ID by moving the last element to this position and popping
-                if (i < tradeIds.length - 1) {
-                    tradeIds[i] = tradeIds[tradeIds.length - 1];
-                }
-                tradeIds.pop();
-                break;
-            }
-        }
+        uint256 tradeIndex = tradeIndicies[tradeId];
+        uint256 lastTradeId = tradeIds[tradeIds.length - 1]; 
+        tradeIds[tradeIndex] = lastTradeId;
+        tradeIds.pop();
+        tradeIndicies[lastTradeId] = tradeIndex; 
+        delete tradeIndicies[tradeId];
+        delete trades[tradeId];
     }
 
+    /**
+     * @notice Set the ETHSupport contract address
+     * @dev Only callable by owner, needed to resolve circular dependency during deployment
+     * @param _ethSupport The ETHSupport contract address
+     */
+    function setETHSupport(address _ethSupport) external onlyOwner {
+        require(_ethSupport != address(0), "ETHSupport cannot be zero address");
+        ethSupport = IETHSupport(_ethSupport);
+    }
+
+    function setExecuteStreamCap(uint256 _newCap) public onlyOwner {
+        EXECUTE_STREAM_TRADE_CAP = _newCap;
+    }
+    
     function setStreamProtocolFeeBps(uint16 bps) external onlyOwner {
         require(bps <= MAX_FEE_CAP_BPS, "fee cap");
         streamProtocolFeeBps = bps;
@@ -175,25 +193,13 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
 
     function instasettle(uint256 tradeId) external nonReentrant {
         Utils.Trade memory trade = trades[tradeId];
+        bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
         require(trade.owner != address(0), "Trade not found");
         require(trade.isInstasettlable, "Trade not instasettlable");
-
-        // If lastSweetSpot == 1, just settle the amountRemaining
-        if (trade.lastSweetSpot == 1) {
-            delete trades[tradeId];
-            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, trade.realisedAmountOut);
-            IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
-            emit TradeSettled(
-                trade.tradeId,
-                msg.sender,
-                trade.amountRemaining,
-                trade.realisedAmountOut,
-                0 // totalFees is 0 in this case
-            );
-            return;
-        }
+        
         // otheriwse, remove trade from storage and settle amounts
-        delete trades[tradeId];
+        _removeTradeFromStorage(pairId, tradeId);
+        // Note: _removeTradeFromStorage already handles deletion of all three storage locations
         // Calculate remaining amount that needs to be settled
         uint256 remainingAmountOut = trade.targetAmountOut - trade.realisedAmountOut;
         require(remainingAmountOut > 0, "No remaining amount to settle");
@@ -203,15 +209,33 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 settlerPayment =
             ((trade.targetAmountOut - trade.realisedAmountOut) * (10_000 - trade.instasettleBps)) / 10_000;
 
+        // Check if tokenOut is ETH sentinel
+        bool isETHSentinel = (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+        
         // Take protocol fee from settler on instasettle
         uint256 protocolFee = _computeFee(settlerPayment, instasettleProtocolFeeBps);
         if (protocolFee > 0) {
-            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, address(this), protocolFee);
-            protocolFees[trade.tokenOut] += protocolFee;
+            if (isETHSentinel) {
+                // For ETH output, require ETH payment for protocol fee
+                // Note: Core will receive WETH from the user, we need to handle this differently
+                // For now, reduce the settler payment by the protocol fee and add to Core's balance
+                IERC20(WETH).safeTransferFrom(msg.sender, address(this), protocolFee);
+                protocolFees[address(WETH)] += protocolFee;
+            } else {
+                IERC20(trade.tokenOut).safeTransferFrom(msg.sender, address(this), protocolFee);
+                protocolFees[trade.tokenOut] += protocolFee;
+            }
             emit InstasettleFeeTaken(trade.tradeId, msg.sender, trade.tokenOut, protocolFee);
         }
 
-        IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
+        // Unwrap and transfer to owner if ETH sentinel, otherwise transfer token
+        if (isETHSentinel) {
+            // For ETH output: unwrap the settlerPayment amount to send to owner
+            // The settler should have sent WETH already which is in Core
+            ethSupport.unwrap(settlerPayment, trade.owner);
+        } else {    
+            IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
+        }
         IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
         emit TradeSettled(
             trade.tradeId,
@@ -239,12 +263,14 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             uint256 amountIn,
             uint256 amountOutMin,
             bool isInstasettlable,
-            bool usePriceBased
-        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool));
+            bool usePriceBased,
+            uint256 instasettleBps,
+            bool onlyInstasettle
+        ) = abi.decode(tradeData, (address, address, uint256, uint256, bool, bool, uint256, bool));
         // @audit may be better to abstract sweetSpot algo to here and pass the value along, since small (<0.001% pool depth) trades shouldn't be split at all and would save hefty logic
         // @audit edge cases wrt pool depths (specifically extremely small volume to volume reserves) create anomalies in the algo output
         // @audit similarly for the sake of OPTIMISTIC and DETERMINISTIC placement patterns, we should abstract the calculation of sweetSpot nad the definition of appropriate DEX into seperated, off contract functions
-        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
         uint256 tradeId = lastTradeId++;
         bytes32 pairId = keccak256(abi.encode(tokenIn, tokenOut)); //@audit optimise this
@@ -260,13 +286,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             targetAmountOut: amountOutMin,
             realisedAmountOut: 0,
             tradeId: tradeId,
-            instasettleBps: 100,
+            instasettleBps: instasettleBps,
             lastSweetSpot: 0, // @audit check that we need to speficially evaluate this here
             isInstasettlable: isInstasettlable,
-            usePriceBased: usePriceBased
+            usePriceBased: usePriceBased,
+            onlyInstasettle: onlyInstasettle
         });
+        
 
         pairIdTradeIds[pairId].push(tradeId);
+        uint256 tradeIndex = pairIdTradeIds[pairId].length - 1;
+        tradeIndicies[tradeId] = tradeIndex;
 
         Utils.Trade storage trade = trades[tradeId];
         uint256 realisedBefore = trade.realisedAmountOut;
@@ -288,29 +318,41 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             amountOutMin,
             updatedTrade.realisedAmountOut, // Use actual realised amount after stream
             isInstasettlable,
-            100, // instasettleBps default
+            instasettleBps, // Use the passed instasettleBps parameter
             updatedTrade.lastSweetSpot, // Use actual sweet spot utilized
-            usePriceBased
+            usePriceBased,
+            onlyInstasettle
         );
     }
 
-    function cancelTrade(uint256 tradeId) public nonReentrant returns (bool) {
+    function cancelTrade(uint256 tradeId) public returns (bool) {
         // @audit It is essential that this authority may be granted by a bot, therefore meaning if the msg.sender is
         // Core.
         // @audit Similarly, when the Router is implemented, we mnust forward the msg.sender in the function call /
         // veridy signed message
         Utils.Trade memory trade = trades[tradeId];
         if (trade.owner == address(0)) {
-            revert("Trade does not exist");
+            revert("Trade inexistent or being called from null address");
         }
         if (trade.owner == msg.sender || msg.sender == address(this)) {
+            // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
+
             bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
-            delete trades[tradeId];
-            _removeTradeIdFromArray(pairId, tradeId);
-            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+            
+            _removeTradeFromStorage(pairId, tradeId);
+            
+            // If tokenOut is ETH sentinel, unwrap WETH to ETH before transferring
+            if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                ethSupport.unwrap(trade.realisedAmountOut, trade.owner); // @ethsupport ensure that unwrap is payable in interface
+            } else {
+                IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+            }
+            
             IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
 
-            emit TradeCancelled(tradeId, trade.amountRemaining, trade.realisedAmountOut);
+            bool autoCancelled = msg.sender == address(this) ? true : false;
+
+            emit TradeCancelled(autoCancelled, tradeId, trade.amountRemaining, trade.realisedAmountOut);
 
             return true;
         } else {
@@ -323,11 +365,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 botFeesAccrued = 0;
         address tokenOutForRun = address(0);
 
-        for (uint256 i = 0; i < tradeIds.length; i++) {
-            Utils.Trade storage trade = trades[tradeIds[i]];
+        // Cap the number of trades processed to prevent out of gas errors
+        // uint256 maxTradesToProcess = EXECUTE_STREAM_TRADE_CAP;
+        uint256 tradesToProcess = tradeIds.length > EXECUTE_STREAM_TRADE_CAP ? EXECUTE_STREAM_TRADE_CAP : tradeIds.length;
+
+        // Process trades in reverse order to avoid array index issues when trades are deleted
+        for (uint256 i = tradesToProcess; i > 0; i--) {
+            uint256 index = i - 1; // Convert to 0-based index
+            Utils.Trade storage trade = trades[tradeIds[index]];
             if (trade.attempts >= 3) {
-                // we delete the trade from storage
-                cancelTrade(trade.tradeId);
+                // we transfer the remaining amount of the trade to the owner and dequeue it via cancelTrade
+                this.cancelTrade(trade.tradeId);
             } else {
                 uint256 realisedBefore = trade.realisedAmountOut;
                 try this.executeStream(trade.tradeId) returns (Utils.Trade memory updatedTrade) {
@@ -341,9 +389,13 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                         botFeesAccrued += botFee;
                     }
                     if (updatedTrade.lastSweetSpot == 0) {
-                        IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-                        delete trades[tradeIds[i]];
-                        _removeTradeIdFromArray(pairId, tradeIds[i]);
+                        // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
+                        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                            ethSupport.unwrap(trade.realisedAmountOut, trade.owner);
+                        } else {
+                            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+                        }                        
+                        _removeTradeFromStorage(pairId, tradeIds[index]);
                     }
                 } catch Error(string memory reason) {
                     trade.attempts++;
@@ -356,15 +408,22 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         }
 
         if (botFeesAccrued > 0) {
-            require(tokenOutForRun != address(0), "fee token unset");
+            // require(tokenOutForRun != address(0), "fee token unset");
+            if (tokenOutForRun == 0x0000000000000000000000000000000000000000 || tokenOutForRun == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                // transfer ETH to the bot address (msg.sender)
+                (bool success, ) = payable(msg.sender).call{value: botFeesAccrued}("");
+                require(success, "ETH transfer failed");
+            } else {
             IERC20(tokenOutForRun).safeTransfer(msg.sender, botFeesAccrued);
+            }
             emit FeesClaimed(msg.sender, tokenOutForRun, botFeesAccrued, false);
         }
     }
+    
 
     function executeStream(uint256 tradeId) public returns (Utils.Trade memory updatedTrade) {
         Utils.Trade storage storageTrade = trades[tradeId];
-        Utils.Trade memory trade = trades[tradeId];
+        Utils.Trade memory trade = trades[tradeId]; 
 
         // security measure @audit may need review
         // if (trade.realisedAmountOut > trade.targetAmountOut) {
@@ -393,13 +452,27 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             streamVolume = trade.amountRemaining / sweetSpot;
         } else {
             targetAmountOut = trade.realisedAmountOut - trade.targetAmountOut;
+
+            // ! @audit maybe we need to do some smart maths here to determine the exchange rate at time of trade placement and propogate that
+            // if the amount remaining is really tiny and the target amount out is large the tradde will fail, esp due to changing market conditions?
             sweetSpot = 1;
             streamVolume = trade.amountRemaining;
         }
 
-        IRegistry.TradeData memory tradeData = registry.prepareTradeData(
-            bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
-        );
+        // Declare tradeData outside the if-else block so it's in scope
+        IRegistry.TradeData memory tradeData;
+        
+        if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+            // this sets the trading currency to WETH if the desired tokenOut is native ETH
+            tradeData = registry.prepareTradeData(
+                bestDex, trade.tokenIn, address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2), streamVolume, targetAmountOut, address(this)
+            );
+            
+        } else {
+            tradeData = registry.prepareTradeData(
+                bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
+            );
+        }
 
         IERC20(trade.tokenIn).forceApprove(tradeData.router, streamVolume);
 
