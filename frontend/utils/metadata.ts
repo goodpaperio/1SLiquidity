@@ -30,6 +30,12 @@ export function generatePageMetadata({
     description: descriptionText,
     keywords: ['web3', 'defi', 'dex', 'trade', 'streaming'],
     metadataBase: new URL(baseUrl),
+
+    icons: {
+      icon: '/favicon.ico',
+      shortcut: '/favicon.ico',
+    },
+
     openGraph: {
       title: fullTitle,
       description: descriptionText,
@@ -39,10 +45,11 @@ export function generatePageMetadata({
       siteName: 'Decastream',
       images: [
         {
-          url: absoluteOgImage, // ✅ Use absolute URL
+          url: absoluteOgImage,
           width: 1200,
           height: 630,
           alt: fullTitle,
+          type: 'image/png',
         },
       ],
     },
@@ -52,7 +59,10 @@ export function generatePageMetadata({
       description: descriptionText,
       creator: '@Decastream',
       site: '@Decastream',
-      images: [absoluteOgImage], // ✅ Use absolute URL
+      images: {
+        url: absoluteOgImage,
+        alt: fullTitle,
+      },
     },
   }
 }
