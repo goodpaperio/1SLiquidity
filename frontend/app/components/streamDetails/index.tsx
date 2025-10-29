@@ -30,6 +30,7 @@ import {
 import { TooltipProvider } from '@/components/ui/tooltip'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { ethers } from 'ethers'
+import { InfoIcon } from '@/app/lib/icons'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -157,6 +158,27 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   }
 
   const effectivePrice = calculateEffectivePrice()
+
+  // Calculate desired price: amountOut / amountIn (normalized by decimals, scaled to 1 unit of tokenIn)
+  const calculateDesiredPrice = () => {
+    if (!tokenIn || !tokenOut) return 0
+    try {
+      const amountOutNormalized = Number(
+        formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals)
+      )
+      const amountInNormalized = Number(
+        formatUnits(BigInt(selectedStream.amountIn), tokenIn.decimals)
+      )
+      if (amountInNormalized > 0) {
+        return amountOutNormalized / amountInNormalized
+      }
+      return 0
+    } catch {
+      return 0
+    }
+  }
+
+  const desiredPrice = calculateDesiredPrice()
 
   // Calculate USD values (using token price from tokenList)
   const amountInUsd = tokenIn
@@ -753,6 +775,29 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 </>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <p className="text-[14px]">Desired price:</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <InfoIcon className="h-4 w-4 cursor-help block" />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-zinc-800 text-white border-zinc-700">
+                    <p>Desired price info</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-[14px]">
+              {isLoading || !tokenIn || !tokenOut || desiredPrice === 0
+                ? '...'
+                : `${desiredPrice.toFixed(6)} ${tokenOut.symbol}/${
+                    tokenIn.symbol
+                  }`}
+            </p>
           </div>
 
           <div
