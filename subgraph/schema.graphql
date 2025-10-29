@@ -1,4 +1,4 @@
-type Trade @entity {
+type Trade @entity(immutable: false) {
   id: ID!
   tradeId: BigInt!
   user: Bytes!
@@ -12,6 +12,7 @@ type Trade @entity {
   instasettleBps: BigInt!
   lastSweetSpot: BigInt!
   usePriceBased: Boolean!
+  onlyInstasettle: Boolean!
   createdAt: BigInt!
   executions: [TradeExecution!]! @derivedFrom(field: "trade")
   cancellations: [TradeCancellation!]! @derivedFrom(field: "trade")
@@ -20,7 +21,7 @@ type Trade @entity {
   instasettleFees: [InstasettleFee!]! @derivedFrom(field: "trade")
 }
 
-type TradeExecution @entity {
+type TradeExecution @entity(immutable: true) {
   id: ID!
   trade: Trade!
   amountIn: BigInt!
@@ -29,15 +30,16 @@ type TradeExecution @entity {
   timestamp: BigInt!
 }
 
-type TradeCancellation @entity {
+type TradeCancellation @entity(immutable: true) {
   id: ID!
   trade: Trade!
+  isAutocancelled: Boolean!
   amountRemaining: BigInt!
   realisedAmountOut: BigInt!
   timestamp: BigInt!
 }
 
-type TradeSettlement @entity {
+type TradeSettlement @entity(immutable: true) {
   id: ID!
   trade: Trade!
   settler: Bytes!
@@ -49,7 +51,7 @@ type TradeSettlement @entity {
 
 # InstaSettleConfig entity removed - InstaSettleConfigured event no longer exists
 
-type StreamFee @entity {
+type StreamFee @entity(immutable: true) {
   id: ID!
   trade: Trade!
   bot: Bytes!
@@ -59,7 +61,7 @@ type StreamFee @entity {
   timestamp: BigInt!
 }
 
-type InstasettleFee @entity {
+type InstasettleFee @entity(immutable: true) {
   id: ID!
   trade: Trade!
   settler: Bytes!
@@ -68,7 +70,7 @@ type InstasettleFee @entity {
   timestamp: BigInt!
 }
 
-type DEXRoute @entity {
+type DEXRoute @entity(immutable: false) {
   id: ID!
   dex: Bytes!
   isActive: Boolean!
@@ -76,7 +78,7 @@ type DEXRoute @entity {
   removedAt: BigInt
 }
 
-type FeeClaim @entity {
+type FeeClaim @entity(immutable: true) {
   id: ID!
   recipient: Bytes!
   token: Bytes!
@@ -85,7 +87,7 @@ type FeeClaim @entity {
   timestamp: BigInt!
 }
 
-type FeeRateUpdate @entity {
+type FeeRateUpdate @entity(immutable: true) {
   id: ID!
   streamProtocolFeeBps: Int!
   streamBotFeeBps: Int!
@@ -93,13 +95,13 @@ type FeeRateUpdate @entity {
   timestamp: BigInt!
 }
 
-type LowLevelError @entity {
+type LowLevelError @entity(immutable: true) {
   id: ID!
   error: String!
   timestamp: BigInt!
 }
 
-type DataError @entity {
+type DataError @entity(immutable: true) {
   id: ID!
   error: Bytes!
   timestamp: BigInt!

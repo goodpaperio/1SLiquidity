@@ -401,7 +401,16 @@ export const useCoreTrading = () => {
 
         // Current encoding (6 parameters) - for deployed contract
         const tradeData = ethers.utils.defaultAbiCoder.encode(
-          ['address', 'address', 'uint256', 'uint256', 'bool', 'bool'],
+          [
+            'address',
+            'address',
+            'uint256',
+            'uint256',
+            'bool',
+            'bool',
+            'uint256',
+            'bool',
+          ],
           [
             tokenIn,
             tokenOut,
@@ -409,6 +418,8 @@ export const useCoreTrading = () => {
             minAmountOutWei,
             isInstasettlable,
             usePriceBased,
+            instasettleBps,
+            false,
           ]
         )
 

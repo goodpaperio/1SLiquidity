@@ -201,16 +201,20 @@ export class TradeCancelled__Params {
     this._event = event;
   }
 
-  get tradeId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
+  get isAutocancelled(): boolean {
+    return this._event.parameters[0].value.toBoolean();
   }
 
-  get amountRemaining(): BigInt {
+  get tradeId(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get realisedAmountOut(): BigInt {
+  get amountRemaining(): BigInt {
     return this._event.parameters[2].value.toBigInt();
+  }
+
+  get realisedAmountOut(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
   }
 }
 
@@ -273,6 +277,10 @@ export class TradeCreated__Params {
 
   get usePriceBased(): boolean {
     return this._event.parameters[11].value.toBoolean();
+  }
+
+  get onlyInstasettle(): boolean {
+    return this._event.parameters[12].value.toBoolean();
   }
 }
 
@@ -392,6 +400,10 @@ export class Core__executeStreamResultUpdatedTradeStruct extends ethereum.Tuple 
   get usePriceBased(): boolean {
     return this[12].toBoolean();
   }
+
+  get onlyInstasettle(): boolean {
+    return this[13].toBoolean();
+  }
 }
 
 export class Core__getTradeResultValue0Struct extends ethereum.Tuple {
@@ -446,6 +458,10 @@ export class Core__getTradeResultValue0Struct extends ethereum.Tuple {
   get usePriceBased(): boolean {
     return this[12].toBoolean();
   }
+
+  get onlyInstasettle(): boolean {
+    return this[13].toBoolean();
+  }
 }
 
 export class Core__tradesResult {
@@ -462,6 +478,7 @@ export class Core__tradesResult {
   value10: BigInt;
   value11: boolean;
   value12: boolean;
+  value13: boolean;
 
   constructor(
     value0: Address,
@@ -477,6 +494,7 @@ export class Core__tradesResult {
     value10: BigInt,
     value11: boolean,
     value12: boolean,
+    value13: boolean,
   ) {
     this.value0 = value0;
     this.value1 = value1;
@@ -491,6 +509,7 @@ export class Core__tradesResult {
     this.value10 = value10;
     this.value11 = value11;
     this.value12 = value12;
+    this.value13 = value13;
   }
 
   toMap(): TypedMap<string, ethereum.Value> {
@@ -511,6 +530,7 @@ export class Core__tradesResult {
     map.set("value10", ethereum.Value.fromUnsignedBigInt(this.value10));
     map.set("value11", ethereum.Value.fromBoolean(this.value11));
     map.set("value12", ethereum.Value.fromBoolean(this.value12));
+    map.set("value13", ethereum.Value.fromBoolean(this.value13));
     return map;
   }
 
@@ -565,11 +585,38 @@ export class Core__tradesResult {
   getUsePriceBased(): boolean {
     return this.value12;
   }
+
+  getOnlyInstasettle(): boolean {
+    return this.value13;
+  }
 }
 
 export class Core extends ethereum.SmartContract {
   static bind(address: Address): Core {
     return new Core("Core", address);
+  }
+
+  EXECUTE_STREAM_TRADE_CAP(): BigInt {
+    let result = super.call(
+      "EXECUTE_STREAM_TRADE_CAP",
+      "EXECUTE_STREAM_TRADE_CAP():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_EXECUTE_STREAM_TRADE_CAP(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "EXECUTE_STREAM_TRADE_CAP",
+      "EXECUTE_STREAM_TRADE_CAP():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   MAX_BPS(): i32 {
@@ -608,6 +655,21 @@ export class Core extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
+  WETH(): Address {
+    let result = super.call("WETH", "WETH():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_WETH(): ethereum.CallResult<Address> {
+    let result = super.tryCall("WETH", "WETH():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   cancelTrade(tradeId: BigInt): boolean {
@@ -655,10 +717,25 @@ export class Core extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  ethSupport(): Address {
+    let result = super.call("ethSupport", "ethSupport():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_ethSupport(): ethereum.CallResult<Address> {
+    let result = super.tryCall("ethSupport", "ethSupport():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   executeStream(tradeId: BigInt): Core__executeStreamResultUpdatedTradeStruct {
     let result = super.call(
       "executeStream",
-      "executeStream(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool))",
+      "executeStream(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool))",
       [ethereum.Value.fromUnsignedBigInt(tradeId)],
     );
 
@@ -672,7 +749,7 @@ export class Core extends ethereum.SmartContract {
   ): ethereum.CallResult<Core__executeStreamResultUpdatedTradeStruct> {
     let result = super.tryCall(
       "executeStream",
-      "executeStream(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool))",
+      "executeStream(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool))",
       [ethereum.Value.fromUnsignedBigInt(tradeId)],
     );
     if (result.reverted) {
@@ -727,7 +804,7 @@ export class Core extends ethereum.SmartContract {
   getTrade(tradeId: BigInt): Core__getTradeResultValue0Struct {
     let result = super.call(
       "getTrade",
-      "getTrade(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool))",
+      "getTrade(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool))",
       [ethereum.Value.fromUnsignedBigInt(tradeId)],
     );
 
@@ -739,7 +816,7 @@ export class Core extends ethereum.SmartContract {
   ): ethereum.CallResult<Core__getTradeResultValue0Struct> {
     let result = super.tryCall(
       "getTrade",
-      "getTrade(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool))",
+      "getTrade(uint256):((address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool))",
       [ethereum.Value.fromUnsignedBigInt(tradeId)],
     );
     if (result.reverted) {
@@ -956,10 +1033,33 @@ export class Core extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
+  tradeIndicies(param0: BigInt): BigInt {
+    let result = super.call(
+      "tradeIndicies",
+      "tradeIndicies(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_tradeIndicies(param0: BigInt): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "tradeIndicies",
+      "tradeIndicies(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   trades(param0: BigInt): Core__tradesResult {
     let result = super.call(
       "trades",
-      "trades(uint256):(address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool)",
+      "trades(uint256):(address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool)",
       [ethereum.Value.fromUnsignedBigInt(param0)],
     );
 
@@ -977,13 +1077,14 @@ export class Core extends ethereum.SmartContract {
       result[10].toBigInt(),
       result[11].toBoolean(),
       result[12].toBoolean(),
+      result[13].toBoolean(),
     );
   }
 
   try_trades(param0: BigInt): ethereum.CallResult<Core__tradesResult> {
     let result = super.tryCall(
       "trades",
-      "trades(uint256):(address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool)",
+      "trades(uint256):(address,uint8,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool)",
       [ethereum.Value.fromUnsignedBigInt(param0)],
     );
     if (result.reverted) {
@@ -1005,6 +1106,7 @@ export class Core extends ethereum.SmartContract {
         value[10].toBigInt(),
         value[11].toBoolean(),
         value[12].toBoolean(),
+        value[13].toBoolean(),
       ),
     );
   }
@@ -1037,6 +1139,10 @@ export class ConstructorCall__Inputs {
 
   get _registry(): Address {
     return this._call.inputValues[2].value.toAddress();
+  }
+
+  get _ethSupport(): Address {
+    return this._call.inputValues[3].value.toAddress();
   }
 }
 
@@ -1200,6 +1306,10 @@ export class ExecuteStreamCallUpdatedTradeStruct extends ethereum.Tuple {
   get usePriceBased(): boolean {
     return this[12].toBoolean();
   }
+
+  get onlyInstasettle(): boolean {
+    return this[13].toBoolean();
+  }
 }
 
 export class ExecuteTradesCall extends ethereum.Call {
@@ -1314,6 +1424,66 @@ export class RenounceOwnershipCall__Outputs {
   _call: RenounceOwnershipCall;
 
   constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SetETHSupportCall extends ethereum.Call {
+  get inputs(): SetETHSupportCall__Inputs {
+    return new SetETHSupportCall__Inputs(this);
+  }
+
+  get outputs(): SetETHSupportCall__Outputs {
+    return new SetETHSupportCall__Outputs(this);
+  }
+}
+
+export class SetETHSupportCall__Inputs {
+  _call: SetETHSupportCall;
+
+  constructor(call: SetETHSupportCall) {
+    this._call = call;
+  }
+
+  get _ethSupport(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class SetETHSupportCall__Outputs {
+  _call: SetETHSupportCall;
+
+  constructor(call: SetETHSupportCall) {
+    this._call = call;
+  }
+}
+
+export class SetExecuteStreamCapCall extends ethereum.Call {
+  get inputs(): SetExecuteStreamCapCall__Inputs {
+    return new SetExecuteStreamCapCall__Inputs(this);
+  }
+
+  get outputs(): SetExecuteStreamCapCall__Outputs {
+    return new SetExecuteStreamCapCall__Outputs(this);
+  }
+}
+
+export class SetExecuteStreamCapCall__Inputs {
+  _call: SetExecuteStreamCapCall;
+
+  constructor(call: SetExecuteStreamCapCall) {
+    this._call = call;
+  }
+
+  get _newCap(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetExecuteStreamCapCall__Outputs {
+  _call: SetExecuteStreamCapCall;
+
+  constructor(call: SetExecuteStreamCapCall) {
     this._call = call;
   }
 }

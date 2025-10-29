@@ -206,6 +206,19 @@ export class Trade extends Entity {
     this.set("usePriceBased", Value.fromBoolean(value));
   }
 
+  get onlyInstasettle(): boolean {
+    let value = this.get("onlyInstasettle");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set onlyInstasettle(value: boolean) {
+    this.set("onlyInstasettle", Value.fromBoolean(value));
+  }
+
   get createdAt(): BigInt {
     let value = this.get("createdAt");
     if (!value || value.kind == ValueKind.NULL) {
@@ -421,6 +434,19 @@ export class TradeCancellation extends Entity {
 
   set trade(value: string) {
     this.set("trade", Value.fromString(value));
+  }
+
+  get isAutocancelled(): boolean {
+    let value = this.get("isAutocancelled");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set isAutocancelled(value: boolean) {
+    this.set("isAutocancelled", Value.fromBoolean(value));
   }
 
   get amountRemaining(): BigInt {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3003",
-    "build": "next build",
+    "build": "next build && next-sitemap",
     "start": "next start",
     "lint": "next lint"
   },
@@ -38,6 +38,7 @@
     "moralis": "^2.27.2",
     "next": "15.0.3",
     "next-auth": "^4.24.11",
+    "next-sitemap": "^4.2.3",
     "react": "18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "18.2.0",

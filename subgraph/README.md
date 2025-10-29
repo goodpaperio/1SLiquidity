@@ -188,15 +188,35 @@ docker-compose restart
 6. **Verify**: Check GraphQL queries
 7. **Iterate**: Make changes and repeat
 
-## 9. Production Deployment
+## 9. Production Deployment to Graph Studio
 
-For production deployment:
+For production deployment to The Graph Studio:
 
-1. Update `subgraph.yaml` with production network settings
-2. Use production Graph Node endpoint
-3. Update contract addresses for production deployment
-4. Set appropriate start blocks
-5. Deploy using `graph deploy --product hosted-service <username>/<subgraph-name>`
+1. Get your deploy key from [The Graph Studio](https://thegraph.com/studio/)
+2. Create the subgraph in Graph Studio (or it will be created on first deploy)
+3. Update `subgraph-mainnet.yaml` with production contract addresses and start blocks
+4. Build and authenticate:
+
+```bash
+cd subgraph
+
+# Generate code
+npm run codegen-mainnet
+
+# Build subgraph
+npm run build-mainnet
+
+# Clear any cached credentials (if needed)
+rm -f ~/.graph/access-token.json ~/.config/graph/access-token.json
+
+# Authenticate with your deploy key
+GRAPH_ACCESS_TOKEN="<YOUR_DEPLOY_KEY>" npx graph auth https://api.studio.thegraph.com/deploy/
+
+# Deploy to mainnet
+npm run deploy-mainnet
+```
+
+See `STUDIO_DEPLOYMENT_GUIDE.md` for detailed instructions.
 
 ## 10. Additional Resources
 

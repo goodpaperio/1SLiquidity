@@ -1249,6 +1249,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               remainingAmountIn={
                 formatNumberSmart(remainingAmountIn || '0') || undefined
               }
+              remainingAmountOut={
+                formatNumberSmart(remainingAmountOut || '0') || undefined
+              }
             />
           )}
         </div>
