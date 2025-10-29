@@ -23,6 +23,7 @@ import HotPairBox from './HotPair/HotPairBox'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
+import { useDebouncedVolumeCalculation } from '@/app/lib/hooks/hotpairs/useEnhancedTokens'
 
 const TIMER_DURATION = 10 // 10 seconds
 
@@ -215,7 +216,7 @@ const SELSection = () => {
     botGasLimit,
     streamCount,
     estTime,
-    slippageSavings,
+    slippageSavings: localSlippageSavings,
     setCalculationError,
   } = useSwapCalculator({
     sellAmount,
@@ -226,6 +227,40 @@ const SELSection = () => {
     isRefresh,
     forceRefreshKey, // Add this prop
   })
+
+  // Use API-based slippage calculation with debouncing
+  const volumeCalculation = useDebouncedVolumeCalculation({
+    tokenA: selectedTokenFrom?.token_address,
+    tokenB: selectedTokenTo?.token_address,
+    volume: sellAmount,
+    tokenBUsdPrice: selectedTokenTo?.usd_price || 1,
+    debounceMs: 300,
+  })
+
+  // Use API slippage savings if available, otherwise fall back to local calculation
+  const slippageSavings = useMemo(() => {
+    if (volumeCalculation.result?.slippageSavingsUsd !== undefined) {
+      return volumeCalculation.result.slippageSavingsUsd
+    }
+    return localSlippageSavings
+  }, [volumeCalculation.result, localSlippageSavings])
+
+  // Trigger API calculation when sellAmount changes
+  useEffect(() => {
+    if (
+      sellAmount > 0 &&
+      selectedTokenFrom &&
+      selectedTokenTo &&
+      !isSwapOperation
+    ) {
+      volumeCalculation.calculate(sellAmount)
+    }
+  }, [
+    sellAmount,
+    selectedTokenFrom?.token_address,
+    selectedTokenTo?.token_address,
+    isSwapOperation,
+  ])
 
   // Use React Query to handle periodic reserve refreshing
   // useQuery({
