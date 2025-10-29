@@ -214,7 +214,7 @@ const SELSection = () => {
     isCalculating,
     calculationError: swapError,
     botGasLimit,
-    streamCount,
+    localStreamCount,
     estTime,
     slippageSavings: localSlippageSavings,
     setCalculationError,
@@ -244,6 +244,14 @@ const SELSection = () => {
     }
     return localSlippageSavings
   }, [volumeCalculation.result, localSlippageSavings])
+
+  // Use API sweetSpot as streamCount if available, otherwise fall back to local calculation
+  const streamCount = useMemo(() => {
+    if (volumeCalculation.result?.sweetSpot !== undefined) {
+      return volumeCalculation.result.sweetSpot
+    }
+    return localStreamCount
+  }, [volumeCalculation.result, localStreamCount])
 
   // Trigger API calculation when sellAmount changes
   useEffect(() => {
