@@ -50,6 +50,7 @@ export interface TradeCreatedEvent {
   instasettleBps: number;
   lastSweetSpot: number;
   usePriceBased: boolean;
+  onlyInstasettle: boolean;
   blockNumber: number;
   transactionHash: string;
   timestamp: number;

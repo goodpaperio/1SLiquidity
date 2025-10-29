@@ -327,6 +327,7 @@ export class TradeMonitor {
           instasettleBps: Number(eventLog.args?.instasettleBps),
           lastSweetSpot: Number(eventLog.args?.lastSweetSpot),
           usePriceBased: eventLog.args?.usePriceBased,
+          onlyInstasettle: eventLog.args?.onlyInstasettle,
           blockNumber: eventLog.blockNumber,
           transactionHash: eventLog.transactionHash,
           timestamp: 0, // Will be filled later

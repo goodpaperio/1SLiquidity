@@ -306,6 +306,12 @@
                 "internalType": "bool",
                 "name": "usePriceBased",
                 "type": "bool"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "onlyInstasettle",
+                "type": "bool"
             }
         ],
         "name": "TradeCreated",
