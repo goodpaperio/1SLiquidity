@@ -214,7 +214,7 @@ const SELSection = () => {
     isCalculating,
     calculationError: swapError,
     botGasLimit,
-    localStreamCount,
+    streamCount: localStreamCount,
     estTime,
     slippageSavings: localSlippageSavings,
     setCalculationError,

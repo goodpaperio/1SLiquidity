@@ -32,7 +32,7 @@ export const useSwapCalculator = ({
   const [isCalculating, setIsCalculating] = useState(false)
   const [calculationError, setCalculationError] = useState<string | null>(null)
   const [botGasLimit, setBotGasLimit] = useState<bigint | null>(null)
-  const [localStreamCount, setLocalStreamCount] = useState<number | null>(null)
+  const [streamCount, setStreamCount] = useState<number | null>(null)
   const [estTime, setEstTime] = useState<string>('')
   const [slippageSavings, setSlippageSavings] = useState<number | null>(null)
 
@@ -125,11 +125,11 @@ export const useSwapCalculator = ({
                   currentSellAmount.current
                 )
                 setBotGasLimit(gasResult.botGasLimit)
-                setLocalStreamCount(gasResult.streamCount)
+                setStreamCount(gasResult.streamCount)
               } catch (error) {
                 console.error('Error calculating gas and streams:', error)
                 setBotGasLimit(null)
-                setLocalStreamCount(null)
+                setStreamCount(null)
               }
             }
           }
@@ -161,7 +161,7 @@ export const useSwapCalculator = ({
       // Reset all values immediately
       setBuyAmount(0)
       setBotGasLimit(null)
-      setLocalStreamCount(null)
+      setStreamCount(null)
       setEstTime('')
       setCalculationError(null)
       setIsCalculating(false)
@@ -174,7 +174,7 @@ export const useSwapCalculator = ({
     if (isSwapOperation) {
       setBuyAmount(0)
       setBotGasLimit(null)
-      setLocalStreamCount(null)
+      setStreamCount(null)
       setEstTime('')
       setCalculationError(null)
       setIsCalculating(false)
@@ -242,8 +242,8 @@ export const useSwapCalculator = ({
         )
       }
 
-      // Calculate slippage savings if we have localStreamCount
-      if (localStreamCount && reserveData && selectedTokenTo) {
+      // Calculate slippage savings if we have streamCount
+      if (streamCount && reserveData && selectedTokenTo) {
         try {
           const tradeVolumeBN = BigInt(
             Math.floor(sellAmount * 10 ** reserveData.decimals.token0)
@@ -263,7 +263,7 @@ export const useSwapCalculator = ({
             reserveData.decimals.token1,
             reserveData.token0Address,
             reserveData.token1Address,
-            localStreamCount
+            streamCount
           )
 
           // Convert token savings to USD using token price from selectedTokenTo
@@ -291,22 +291,22 @@ export const useSwapCalculator = ({
     sellAmount,
     dexCalculator,
     reserveData,
-    localStreamCount,
+    streamCount,
     debouncedCalculation,
     selectedTokenTo,
     isRefresh,
     forceRefreshKey, // Add forceRefreshKey to dependencies
   ])
 
-  // Calculate estimated time when localStreamCount changes
+  // Calculate estimated time when streamCount changes
   useEffect(() => {
     const calculateEstTime = async () => {
-      if (localStreamCount && localStreamCount > 0 && dexCalculator) {
+      if (streamCount && streamCount > 0 && dexCalculator) {
         try {
           const avgBlockTime = await getAverageBlockTime(
             dexCalculator.getProvider()
           )
-          const totalSeconds = Math.round(avgBlockTime * 2 * localStreamCount)
+          const totalSeconds = Math.round(avgBlockTime * 2 * streamCount)
 
           let formatted = ''
           if (totalSeconds < 60) {
@@ -330,14 +330,14 @@ export const useSwapCalculator = ({
     }
 
     calculateEstTime()
-  }, [localStreamCount, dexCalculator])
+  }, [streamCount, dexCalculator])
 
   return {
     buyAmount,
     isCalculating,
     calculationError,
     botGasLimit,
-    localStreamCount,
+    streamCount,
     estTime,
     slippageSavings,
     setBuyAmount,
