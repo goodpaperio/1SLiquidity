@@ -123,4 +123,5 @@ export interface LocalData {
   lastRun: number; // block number of last run
   outstandingTrades: TradeMetadata[];
   lastUpdated: number; // timestamp
+  contractAddress?: string; // Core contract address (added for version validation)
 }

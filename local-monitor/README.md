@@ -42,7 +42,7 @@ The recommended approach for testing and execution is using the forge script:
 
 ```bash
 # Execute trades on mainnet using forge script
-PAIR_ID=<pairId> CORE_ADDRESS=0x3875b8b82e58733c1667224eb8bf5f449d7dbb74 npm run execute:trades
+PAIR_ID=<pairId> CORE_ADDRESS=0xde054c37000a639d33b886df0e48b011c2092474 npm run execute:trades
 ```
 
 ### Environment Variables
@@ -104,12 +104,12 @@ npm run historical
 
 # Then execute trades (from project root)
 cd ..
-PAIR_ID=0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba CORE_ADDRESS=0x3875b8b82e58733c1667224eb8bf5f449d7dbb74 npm run execute:trades
+PAIR_ID=0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba CORE_ADDRESS=0xde054c37000a639d33b886df0e48b011c2092474 npm run execute:trades
 ```
 
 #### Contract Addresses
 
-- **Core Contract**: `0x3875b8b82e58733c1667224eb8bf5f449d7dbb74` (from deployment-addresses-mainnet-v1.0.2.json)
+- **Core Contract**: `0xde054c37000a639d33b886df0e48b011c2092474` (from deployment-addresses-mainnet-v1.0.3.json)
 
 #### Finding Pair IDs
 
@@ -148,7 +148,7 @@ cat localData.json
 
    ```bash
    cd ..
-   PAIR_ID=<pairId> CORE_ADDRESS=0x3875b8b82e58733c1667224eb8bf5f449d7dbb74 npm run execute:trades
+   PAIR_ID=<pairId> CORE_ADDRESS=0xde054c37000a639d33b886df0e48b011c2092474 npm run execute:trades
    ```
 
 4. **Verify Execution**
@@ -168,7 +168,7 @@ npm run historical
 
 # 2. Execute the trade
 cd ..
-PAIR_ID=0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba CORE_ADDRESS=0x3875b8b82e58733c1667224eb8bf5f449d7dbb74 npm run execute:trades
+PAIR_ID=0x94510c2b7f4f4640b868d167f49f02f026caee698daf82f63cdedc6c182ab1ba CORE_ADDRESS=0xde054c37000a639d33b886df0e48b011c2092474 npm run execute:trades
 
 # 3. Verify the execution worked
 cd local-monitor

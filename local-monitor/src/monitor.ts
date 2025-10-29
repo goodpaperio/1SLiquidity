@@ -64,18 +64,40 @@ export class TradeMonitor {
         lastRun: 0,
         outstandingTrades: [],
         lastUpdated: 0,
+        contractAddress: CONTRACT_ADDRESSES.core,
       };
     }
 
     try {
       const data = readFileSync(this.localDataPath, "utf8");
-      return JSON.parse(data);
+      const loadedData: LocalData = JSON.parse(data);
+      
+      // Validate contract address - if it changed, clear outstanding trades
+      if (loadedData.contractAddress && loadedData.contractAddress.toLowerCase() !== CONTRACT_ADDRESSES.core.toLowerCase()) {
+        console.warn(
+          `⚠️ Contract address changed from ${loadedData.contractAddress} to ${CONTRACT_ADDRESSES.core}. Clearing outstanding trades from old contract.`
+        );
+        return {
+          lastRun: 0,
+          outstandingTrades: [],
+          lastUpdated: 0,
+          contractAddress: CONTRACT_ADDRESSES.core,
+        };
+      }
+      
+      // Ensure contract address is set for backward compatibility
+      if (!loadedData.contractAddress) {
+        loadedData.contractAddress = CONTRACT_ADDRESSES.core;
+      }
+      
+      return loadedData;
     } catch (error) {
       console.warn("⚠️ Failed to load local data, starting fresh:", error);
       return {
         lastRun: 0,
         outstandingTrades: [],
         lastUpdated: 0,
+        contractAddress: CONTRACT_ADDRESSES.core,
       };
     }
   }
@@ -115,11 +137,12 @@ export class TradeMonitor {
       lastRun: currentBlock,
       outstandingTrades,
       lastUpdated: currentTime,
+      contractAddress: CONTRACT_ADDRESSES.core,
     };
 
     this.saveLocalData(localData);
     console.log(
-      `💾 Updated local data with ${outstandingTrades.length} outstanding trades`
+      `💾 Updated local data with ${outstandingTrades.length} outstanding trades (contract: ${CONTRACT_ADDRESSES.core})`
     );
   }
 
