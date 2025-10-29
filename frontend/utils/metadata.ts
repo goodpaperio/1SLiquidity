@@ -11,7 +11,7 @@ export function generatePageMetadata({
   ogImagePath?: string
   path?: string
 }): Metadata {
-  const isHomePage = !title // Assuming that if no title is passed, it's the home page
+  const isHomePage = !title
   const fullTitle = isHomePage
     ? 'Decastream'
     : `${title ? `${title} | ` : ''}Decastream`
@@ -21,10 +21,15 @@ export function generatePageMetadata({
   const baseUrl = 'https://deca.stream'
   const fullUrl = `${baseUrl}${path}`
 
+  const absoluteOgImage = ogImagePath.startsWith('http')
+    ? ogImagePath
+    : `${baseUrl}${ogImagePath}`
+
   return {
     title: fullTitle,
     description: descriptionText,
     keywords: ['web3', 'defi', 'dex', 'trade', 'streaming'],
+    metadataBase: new URL(baseUrl),
     openGraph: {
       title: fullTitle,
       description: descriptionText,
@@ -34,7 +39,7 @@ export function generatePageMetadata({
       siteName: 'Decastream',
       images: [
         {
-          url: ogImagePath,
+          url: absoluteOgImage, // ✅ Use absolute URL
           width: 1200,
           height: 630,
           alt: fullTitle,
@@ -47,8 +52,7 @@ export function generatePageMetadata({
       description: descriptionText,
       creator: '@Decastream',
       site: '@Decastream',
-      images: [ogImagePath],
+      images: [absoluteOgImage], // ✅ Use absolute URL
     },
-    metadataBase: new URL(baseUrl),
   }
 }
