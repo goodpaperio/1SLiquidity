@@ -196,18 +196,33 @@ const TradesTable = ({
         //     t.token_address?.toLowerCase() === trade.tokenOut?.toLowerCase()
 
         // Special case for ETH/WETH: return the selected token if it matches the address
+        // Otherwise, prefer WETH over ETH since most DeFi protocols use WETH
         const findTokenForTrade = (
           address: string,
           selectedToken: TOKENS_TYPE | null
         ) => {
           const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-          if (
-            address?.toLowerCase() === ethWethAddress &&
-            selectedToken &&
-            (selectedToken.symbol.toLowerCase() === 'eth' ||
-              selectedToken.symbol.toLowerCase() === 'weth')
-          ) {
-            return selectedToken // Return the selected token (ETH or WETH) directly
+          if (address?.toLowerCase() === ethWethAddress) {
+            // If there's a selectedToken that matches, use it
+            if (
+              selectedToken &&
+              (selectedToken.symbol.toLowerCase() === 'eth' ||
+                selectedToken.symbol.toLowerCase() === 'weth')
+            ) {
+              return selectedToken
+            }
+            // Otherwise, prefer WETH over ETH for instasettle trades
+            return (
+              tokenList.find(
+                (t: TOKENS_TYPE) =>
+                  t.token_address?.toLowerCase() === address?.toLowerCase() &&
+                  t.symbol.toLowerCase() === 'weth'
+              ) ||
+              tokenList.find(
+                (t: TOKENS_TYPE) =>
+                  t.token_address?.toLowerCase() === address?.toLowerCase()
+              )
+            )
           }
           // For all other cases, use normal address matching
           return tokenList.find(

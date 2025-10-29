@@ -74,13 +74,30 @@ const mergeTokenData = (
   }[],
   coingeckoTokens: TOKENS_TYPE[]
 ): TOKENS_TYPE[] => {
+  const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+
   return jsonTokens.map((jsonToken) => {
-    // Find matching CoinGecko token by address
-    const coingeckoToken = coingeckoTokens.find(
-      (cgToken) =>
-        cgToken.token_address.toLowerCase() ===
-        jsonToken.tokenAddress.toLowerCase()
-    )
+    const tokenAddress = jsonToken.tokenAddress.toLowerCase()
+
+    // Special handling for ETH/WETH: prefer WETH over ETH
+    let coingeckoToken: TOKENS_TYPE | undefined
+    if (tokenAddress === ethWethAddress.toLowerCase()) {
+      // Prefer WETH when address matches ETH/WETH
+      coingeckoToken =
+        coingeckoTokens.find(
+          (cgToken) =>
+            cgToken.token_address.toLowerCase() === tokenAddress &&
+            cgToken.symbol.toLowerCase() === 'weth'
+        ) ||
+        coingeckoTokens.find(
+          (cgToken) => cgToken.token_address.toLowerCase() === tokenAddress
+        )
+    } else {
+      // Find matching CoinGecko token by address
+      coingeckoToken = coingeckoTokens.find(
+        (cgToken) => cgToken.token_address.toLowerCase() === tokenAddress
+      )
+    }
 
     if (coingeckoToken) {
       // Use CoinGecko data if available
