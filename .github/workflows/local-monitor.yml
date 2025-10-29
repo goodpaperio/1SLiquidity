@@ -24,11 +24,11 @@ jobs:
       PRIVATE_KEY: ${{ secrets.DFGSDFGTEH_PRIVATE_KEY }}
       CHAIN_ID: "1"
 
-      # Contract addresses
-      CORE_CONTRACT: "0x3875b8b82e58733c1667224eb8bf5f449d7dbb74"
-      REGISTRY_CONTRACT: "0xc89239484b23cd68f886964a29d45b9b9c2be63b"
-      EXECUTOR_CONTRACT: "0x5ed2d1846ae1770a61b36b9a1704485f4904361f"
-      STREAM_DAEMON_CONTRACT: "0x655e264166dacec690cbcec8ecb88cc5be68ab21"
+      # Contract addresses (v1.0.3)
+      CORE_CONTRACT: "0xde054c37000a639d33b886df0e48b011c2092474"
+      REGISTRY_CONTRACT: "0x5eaee88b493de2d646a8c29bb5b09a79c5322df4"
+      EXECUTOR_CONTRACT: "0xa03762eff4f98cda57dea0a8eb62ab872c832878"
+      STREAM_DAEMON_CONTRACT: "0xaabc29359629a93c7dc850ae938d4d8460ea5669"
 
     steps:
       - uses: actions/checkout@v4
