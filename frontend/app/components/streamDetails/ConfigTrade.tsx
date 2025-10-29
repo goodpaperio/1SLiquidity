@@ -34,6 +34,7 @@ type Props = {
   tokenOut?: any
   formattedAmountIn?: string
   remainingAmountIn?: string
+  remainingAmountOut?: string
 }
 
 const ConfigTrade: React.FC<Props> = ({
@@ -51,6 +52,7 @@ const ConfigTrade: React.FC<Props> = ({
   tokenOut,
   formattedAmountIn,
   remainingAmountIn,
+  remainingAmountOut,
 }) => {
   const [showDetails, setShowDetails] = useState(false)
   const toggleDetails = () => setShowDetails(!showDetails)
@@ -448,21 +450,39 @@ const ConfigTrade: React.FC<Props> = ({
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <p className="text-[14px]">
-                      {remainingAmountIn} {tokenIn.symbol}
-                    </p>
-                    <ImageFallback
-                      src={
-                        (tokenIn?.symbol.toLowerCase() === 'usdt'
-                          ? '/tokens/usdt.svg'
-                          : tokenIn?.icon) || '/icons/default-token.svg'
-                      }
-                      alt={tokenIn?.symbol || 'token'}
-                      width={40}
-                      height={40}
-                      className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
-                    />
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1">
+                      <p className="text-[14px]">
+                        {remainingAmountIn} {tokenIn.symbol}
+                      </p>
+                      <ImageFallback
+                        src={
+                          (tokenIn?.symbol.toLowerCase() === 'usdt'
+                            ? '/tokens/usdt.svg'
+                            : tokenIn?.icon) || '/icons/default-token.svg'
+                        }
+                        alt={tokenIn?.symbol || 'token'}
+                        width={40}
+                        height={40}
+                        className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <p className="text-[14px]">
+                        {remainingAmountOut} {tokenOut.symbol}
+                      </p>
+                      <ImageFallback
+                        src={
+                          (tokenOut?.symbol.toLowerCase() === 'usdt'
+                            ? '/tokens/usdt.svg'
+                            : tokenOut?.icon) || '/icons/default-token.svg'
+                        }
+                        alt={tokenOut?.symbol || 'token'}
+                        width={40}
+                        height={40}
+                        className="border-[1.5px] border-black w-[20px] h-[20px] overflow-hidden object-cover rounded-full"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
