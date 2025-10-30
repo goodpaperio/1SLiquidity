@@ -801,9 +801,26 @@ export class TradeMonitor {
       const tx = await this.coreContractWithSigner.executeTrades(pairId);
       console.log(`📝 Transaction submitted: ${tx.hash}`);
 
-      // Wait for transaction to be mined
-      const receipt = await tx.wait();
-      console.log(`✅ Transaction confirmed in block: ${receipt.blockNumber}`);
+      // Wait for transaction to be mined with a timeout and fallback
+      const provider = this.signer?.provider ?? this.provider;
+      let receipt: ethers.TransactionReceipt | null = null;
+      try {
+        // ethers v6: waitForTransaction(hash, confirmations?, timeoutMs?)
+        receipt = await provider.waitForTransaction(tx.hash, 1, 60000);
+      } catch (waitErr: any) {
+        const msg = (waitErr?.message || "").toLowerCase();
+        if (msg.includes("canceled") || msg.includes("cancelled") || msg.includes("timeout")) {
+          console.warn(`⏱️ Timeout waiting for tx ${tx.hash}. Moving to next pair.`);
+          return tx.hash; // return hash so caller can log progress and continue
+        }
+        throw waitErr;
+      }
+
+      if (receipt) {
+        console.log(`✅ Transaction confirmed in block: ${receipt.blockNumber}`);
+      } else {
+        console.warn(`⏱️ No receipt for ${tx.hash} within timeout window.`);
+      }
 
       return tx.hash;
     } catch (error) {
