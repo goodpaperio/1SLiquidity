@@ -71,9 +71,13 @@ export class TradeMonitor {
     try {
       const data = readFileSync(this.localDataPath, "utf8");
       const loadedData: LocalData = JSON.parse(data);
-      
+
       // Validate contract address - if it changed, clear outstanding trades
-      if (loadedData.contractAddress && loadedData.contractAddress.toLowerCase() !== CONTRACT_ADDRESSES.core.toLowerCase()) {
+      if (
+        loadedData.contractAddress &&
+        loadedData.contractAddress.toLowerCase() !==
+          CONTRACT_ADDRESSES.core.toLowerCase()
+      ) {
         console.warn(
           `⚠️ Contract address changed from ${loadedData.contractAddress} to ${CONTRACT_ADDRESSES.core}. Clearing outstanding trades from old contract.`
         );
@@ -84,12 +88,12 @@ export class TradeMonitor {
           contractAddress: CONTRACT_ADDRESSES.core,
         };
       }
-      
+
       // Ensure contract address is set for backward compatibility
       if (!loadedData.contractAddress) {
         loadedData.contractAddress = CONTRACT_ADDRESSES.core;
       }
-      
+
       return loadedData;
     } catch (error) {
       console.warn("⚠️ Failed to load local data, starting fresh:", error);
@@ -809,15 +813,23 @@ export class TradeMonitor {
         receipt = await provider.waitForTransaction(tx.hash, 1, 60000);
       } catch (waitErr: any) {
         const msg = (waitErr?.message || "").toLowerCase();
-        if (msg.includes("canceled") || msg.includes("cancelled") || msg.includes("timeout")) {
-          console.warn(`⏱️ Timeout waiting for tx ${tx.hash}. Moving to next pair.`);
+        if (
+          msg.includes("canceled") ||
+          msg.includes("cancelled") ||
+          msg.includes("timeout")
+        ) {
+          console.warn(
+            `⏱️ Timeout waiting for tx ${tx.hash}. Moving to next pair.`
+          );
           return tx.hash; // return hash so caller can log progress and continue
         }
         throw waitErr;
       }
 
       if (receipt) {
-        console.log(`✅ Transaction confirmed in block: ${receipt.blockNumber}`);
+        console.log(
+          `✅ Transaction confirmed in block: ${receipt.blockNumber}`
+        );
       } else {
         console.warn(`⏱️ No receipt for ${tx.hash} within timeout window.`);
       }
@@ -859,9 +871,8 @@ export class TradeMonitor {
         console.log(`  ${index + 1}. ${pairId} (${trades.length} trades)`);
       });
 
-      // Execute trades for each pair ID
-      const executionResults: string[] = [];
-
+      // Stage 1: submit all transactions (sequential sends, no waiting)
+      const submissions: { pairId: string; hash: string }[] = [];
       for (let i = 0; i < uniquePairIds.length; i++) {
         const pairId = uniquePairIds[i];
         const tradesInQueue = localData.outstandingTrades.filter(
@@ -875,27 +886,61 @@ export class TradeMonitor {
 
         try {
           const txHash = await this.executeTrades(pairId);
-          executionResults.push(txHash);
-
-          // Add a small delay between executions to avoid nonce issues
-          if (i < uniquePairIds.length - 1) {
-            console.log("⏳ Waiting 2 seconds before next execution...");
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-          }
+          submissions.push({ pairId, hash: txHash });
         } catch (error) {
           console.error(
-            `❌ Failed to execute trades for pairId ${pairId}:`,
+            `❌ Failed to submit executeTrades for pairId ${pairId}:`,
             error
           );
-          // Continue with other pair IDs even if one fails
         }
       }
 
+      if (submissions.length === 0) {
+        console.log("⚠️ No transactions submitted this round.");
+        return;
+      }
+
+      // Stage 2: poll all receipts concurrently for up to 5 minutes
+      console.log("\n⏳ Waiting for confirmations (up to 5 minutes)...");
+      const deadline = Date.now() + 5 * 60 * 1000;
+      const statuses: Record<string, "confirmed" | "pending"> = {};
+      submissions.forEach((s) => (statuses[s.hash] = "pending"));
+
+      const pollOnce = async (hash: string) => {
+        try {
+          return await this.provider.getTransactionReceipt(hash);
+        } catch {
+          return null;
+        }
+      };
+
+      while (Date.now() < deadline) {
+        const receipts = await Promise.all(
+          submissions.map((s) => pollOnce(s.hash))
+        );
+        let allDone = true;
+        receipts.forEach((r, idx) => {
+          if (r && statuses[submissions[idx].hash] !== "confirmed") {
+            console.log(
+              `✅ ${submissions[idx].hash} confirmed in block ${r.blockNumber}`
+            );
+            statuses[submissions[idx].hash] = "confirmed";
+          }
+          if (!r) allDone = false;
+        });
+        if (allDone) break;
+        await new Promise((res) => setTimeout(res, 10_000));
+      }
+
+      const confirmed = Object.values(statuses).filter(
+        (s) => s === "confirmed"
+      ).length;
+      const pending = submissions.length - confirmed;
       console.log(
-        `\n✅ Execution completed. ${executionResults.length}/${uniquePairIds.length} transactions successful`
+        `\n📊 Execution summary: confirmed=${confirmed}, pending=${pending}, total=${submissions.length}`
       );
-      if (executionResults.length > 0) {
-        console.log("📝 Transaction hashes:", executionResults);
+      if (pending > 0) {
+        console.log("ℹ️ Pending txs will be picked up by the next run.");
       }
     } catch (error) {
       console.error("❌ Error during trade execution:", error);
