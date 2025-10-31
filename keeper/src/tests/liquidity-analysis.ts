@@ -57,6 +57,8 @@ const NATIVE_TOKEN_ADDRESSES = [
 interface JsonTokenResult {
   tokenName: string
   tokenAddress: string
+  tokenDecimals?: number
+  tokenSymbol?: string
   success: boolean
   failureReason: string
 }
@@ -374,9 +376,120 @@ async function loadTokensFromJsonFile(jsonPath: string): Promise<TokenPair[]> {
 
   console.log(`Total unique token pairs loaded: ${tokenPairs.length}`)
   if (seenPairs.size !== tokenPairs.length) {
-    console.log(
-      `Skipped ${seenPairs.size - tokenPairs.length} duplicate pairs`
+    console.log(`Skipped ${seenPairs.size - tokenPairs.length} duplicate pairs`)
+  }
+  return tokenPairs
+}
+
+// New method to load all tokens from results arrays (not just base tokens)
+// This extracts all unique tokens from all results across all base tokens
+async function loadAllTokensFromJsonResults(
+  jsonPath: string
+): Promise<TokenPair[]> {
+  console.log(
+    `Loading all tokens from results arrays in JSON file: ${jsonPath}`
+  )
+
+  if (!fs.existsSync(jsonPath)) {
+    throw new Error(`JSON file not found: ${jsonPath}`)
+  }
+
+  const fileContent = fs.readFileSync(jsonPath, 'utf8')
+  const jsonData: JsonFileStructure = JSON.parse(fileContent)
+
+  const tokenPairs: TokenPair[] = []
+  const seenPairs = new Set<string>() // Track unique pairs to avoid duplicates
+
+  // First, collect all unique tokens from all results arrays
+  const allTokensMap = new Map<
+    string,
+    { symbol: string; address: string; name: string }
+  >()
+
+  // Iterate through all base tokens and their results
+  for (const testResult of jsonData.testResults) {
+    const baseTokenSymbol = testResult.baseToken.toUpperCase()
+    const baseTokenAddress =
+      BASE_TOKENS[baseTokenSymbol as keyof typeof BASE_TOKENS]
+
+    if (!baseTokenAddress) {
+      console.warn(`Unknown base token: ${baseTokenSymbol}, skipping...`)
+      continue
+    }
+
+    // Skip if no results for this base token
+    if (!testResult.results || testResult.results.length === 0) {
+      console.log(`No results for base token ${baseTokenSymbol}, skipping...`)
+      continue
+    }
+
+    // Process only successful tokens
+    const successfulTokens = testResult.results.filter(
+      (result) => result.success === true
     )
+
+    // Collect all unique tokens from results
+    for (const token of successfulTokens) {
+      const tokenAddress = token.tokenAddress.toLowerCase()
+
+      // Skip if this token is actually a base token
+      if (
+        Object.values(BASE_TOKENS).some(
+          (addr) => addr.toLowerCase() === tokenAddress
+        )
+      ) {
+        continue
+      }
+
+      // Add to map if not already present
+      if (!allTokensMap.has(tokenAddress)) {
+        allTokensMap.set(tokenAddress, {
+          symbol: (token.tokenSymbol || token.tokenName).toUpperCase(),
+          address: tokenAddress,
+          name: token.tokenName,
+        })
+      }
+    }
+  }
+
+  console.log(
+    `Found ${allTokensMap.size} unique tokens from all results arrays`
+  )
+
+  // Now create pairs: each token from results -> each base token
+  for (const [tokenAddress, tokenInfo] of allTokensMap.entries()) {
+    for (const [baseSymbol, baseAddress] of Object.entries(BASE_TOKENS)) {
+      // Skip if both are base tokens (already handled by skipping base tokens above)
+      // Create a unique key for this pair
+      const pairKey = `${tokenAddress}-${baseAddress.toLowerCase()}`
+
+      // Skip if we've already seen this pair
+      if (seenPairs.has(pairKey)) {
+        continue
+      }
+
+      // Add to seen pairs set
+      seenPairs.add(pairKey)
+
+      // Create pair: token from results -> base token
+      // tokenInfo becomes baseTokenSymbol/baseTokenAddress, base token becomes tokenSymbol/tokenAddress
+      tokenPairs.push({
+        baseTokenSymbol: tokenInfo.symbol, // Token from results (e.g., "LINK")
+        baseTokenAddress: tokenAddress, // Token address from results
+        tokenSymbol: baseSymbol, // Base token symbol (e.g., "USDC")
+        tokenAddress: baseAddress.toLowerCase(), // Base token address
+        tokenName: baseSymbol, // Use base token symbol as name
+      })
+
+      console.log(`  Added pair: ${tokenInfo.symbol} -> ${baseSymbol}`)
+    }
+  }
+
+  console.log(
+    `Total unique token pairs loaded from results: ${tokenPairs.length}`
+  )
+  if (seenPairs.size !== tokenPairs.length) {
+    console.log(`Skipped ${seenPairs.size - tokenPairs.length} duplicate pairs`)
   }
   return tokenPairs
 }
@@ -471,6 +584,7 @@ async function fetchTokenDetailsFromCoinGecko(
       missingAddresses.forEach((addr) => console.warn(`  - ${addr}`))
     }
 
+    console.log('tokenDetailsMap:', tokenDetailsMap)
     return tokenDetailsMap
   } catch (error) {
     console.error('Error fetching token details:', error)
@@ -878,7 +992,8 @@ async function saveTokenToJson(
 // Database saving function - transforms row-based data to column-based format with upsert functionality
 async function saveToDatabase(
   results: TokenLiquiditySummary[],
-  timestamp: string
+  timestamp: string,
+  tokenDetailsMap?: Map<string, any>
 ): Promise<void> {
   console.log('\nSaving liquidity data to database...')
 
@@ -888,7 +1003,11 @@ async function saveToDatabase(
     await dbService.connect()
 
     // Transform data from row-based (one row per DEX) to column-based (one row per token pair)
-    const transformedData = await transformToColumnFormat(results, timestamp)
+    const transformedData = await transformToColumnFormat(
+      results,
+      timestamp,
+      tokenDetailsMap
+    )
 
     console.log('transformedData =====>', transformedData)
     console.log(
@@ -932,9 +1051,13 @@ async function saveToDatabase(
 // Transform the liquidity data from row-based format to column-based format for database
 async function transformToColumnFormat(
   results: TokenLiquiditySummary[],
-  timestamp: string
+  timestamp: string,
+  tokenDetailsMap?: Map<string, any>
 ): Promise<any[]> {
   const transformedRecords: any[] = []
+
+  // Minimum dollar value threshold for filtering pairs
+  const MIN_DOLLAR_VALUE = 5000
 
   // Define stable coin addresses for filtering - ensure all are lowercase
   const STABLE_COIN_ADDRESSES = new Set([
@@ -1117,6 +1240,39 @@ async function transformToColumnFormat(
     )
     record.reserveAtotaldepthWei = tokenATotals.weiTotal
     record.reserveAtotaldepth = tokenATotals.normalTotal
+
+    // Calculate dollar value of reserveAtotaldepth using CoinGecko price
+    let reserveAtotaldepthUsd: number | null = null
+    if (tokenDetailsMap) {
+      const tokenADetails = tokenDetailsMap.get(
+        record.tokenAAddress.toLowerCase()
+      )
+      if (
+        tokenADetails &&
+        tokenADetails.current_price &&
+        record.reserveAtotaldepth
+      ) {
+        reserveAtotaldepthUsd =
+          record.reserveAtotaldepth * tokenADetails.current_price
+        record.reserveAtotaldepthUsd = reserveAtotaldepthUsd
+
+        // Filter out pairs where dollar value is less than $5000
+        if (reserveAtotaldepthUsd < MIN_DOLLAR_VALUE) {
+          console.log(
+            `🚫 Filtering out pair ${record.tokenASymbol}/${record.tokenBSymbol}: ` +
+              `reserveAtotaldepth USD value (${reserveAtotaldepthUsd.toFixed(
+                2
+              )}) is less than $${MIN_DOLLAR_VALUE}`
+          )
+          continue // Skip this pair
+        }
+      } else {
+        console.warn(
+          `⚠️  Could not get price for token ${record.tokenASymbol} (${record.tokenAAddress}), ` +
+            `skipping dollar value calculation`
+        )
+      }
+    }
 
     // Calculate total depth for token B
     const tokenBTotals = calculateTotalReserves(
@@ -1415,6 +1571,7 @@ async function runLiquidityAnalysisFromJson(
 
     // Load token pairs from JSON file
     const tokenPairs = await loadTokensFromJsonFile(jsonFilePath)
+    // const tokenPairs = await loadAllTokensFromJsonResults(jsonFilePath)
 
     if (tokenPairs.length === 0) {
       console.log('No token pairs found in JSON file, exiting...')
@@ -1422,8 +1579,14 @@ async function runLiquidityAnalysisFromJson(
     }
 
     // Get all unique token addresses to fetch details from CoinGecko
+    // Include both tokenAddress (base tokens) and baseTokenAddress (tokens from results)
     const uniqueTokenAddresses = Array.from(
-      new Set(tokenPairs.map((pair) => pair.tokenAddress.toLowerCase()))
+      new Set(
+        tokenPairs.flatMap((pair) => [
+          pair.tokenAddress.toLowerCase(),
+          pair.baseTokenAddress.toLowerCase(),
+        ])
+      )
     )
 
     console.log(
@@ -1479,7 +1642,7 @@ async function runLiquidityAnalysisFromJson(
     // Save data to database
     if (process.env.DATABASE_URL) {
       try {
-        await saveToDatabase(existingData, timestamp)
+        await saveToDatabase(existingData, timestamp, tokenDetailsMap)
       } catch (error) {
         console.error(
           '⚠️  Failed to save to database, but analysis completed:',
@@ -1610,9 +1773,7 @@ async function runLiquidityAnalysis(jsonFilePath?: string): Promise<void> {
           tokenAddress && !processedAddresses.has(tokenAddress.toLowerCase())
         )
       })
-      console.log(
-        `Found ${tokensToProcess.length} tokens remaining to process`
-      )
+      console.log(`Found ${tokensToProcess.length} tokens remaining to process`)
 
       if (tokensToProcess.length === 0) {
         console.log('All tokens have been processed!')
@@ -2079,4 +2240,8 @@ export function validateTokenAddress(address: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(address)
 }
 
-export { runLiquidityAnalysis, runLiquidityAnalysisFromJson }
+export {
+  runLiquidityAnalysis,
+  runLiquidityAnalysisFromJson,
+  loadAllTokensFromJsonResults,
+}

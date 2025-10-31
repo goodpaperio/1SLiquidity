@@ -62,6 +62,7 @@ model LiquidityData {
   // Total depth fields for Token A (wei format)
   reserveAtotaldepthWei String? // Sum of all Token A reserves across DEXes in wei
   reserveAtotaldepth    Float?  // Sum of all Token A reserves in normal decimal format
+  reserveAtotaldepthUsd Float?  // Dollar value of reserveAtotaldepth (reserveAtotaldepth * current_price)
   
   // Total depth fields for Token B (wei format)
   reserveBtotaldepthWei String? // Sum of all Token B reserves across DEXes in wei

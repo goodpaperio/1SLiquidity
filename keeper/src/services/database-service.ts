@@ -98,6 +98,7 @@ export default class DatabaseService {
           // Total depth fields
           reserveAtotaldepthWei: data.reserveAtotaldepthWei,
           reserveAtotaldepth: data.reserveAtotaldepth,
+          reserveAtotaldepthUsd: data.reserveAtotaldepthUsd,
           reserveBtotaldepthWei: data.reserveBtotaldepthWei,
           reserveBtotaldepth: data.reserveBtotaldepth,
 
@@ -133,6 +134,7 @@ export default class DatabaseService {
           // Total depth fields
           reserveAtotaldepthWei: data.reserveAtotaldepthWei,
           reserveAtotaldepth: data.reserveAtotaldepth,
+          reserveAtotaldepthUsd: data.reserveAtotaldepthUsd,
           reserveBtotaldepthWei: data.reserveBtotaldepthWei,
           reserveBtotaldepth: data.reserveBtotaldepth,
 
@@ -203,6 +205,7 @@ export default class DatabaseService {
                 // Total depth fields
                 reserveAtotaldepthWei: data.reserveAtotaldepthWei,
                 reserveAtotaldepth: data.reserveAtotaldepth,
+                reserveAtotaldepthUsd: data.reserveAtotaldepthUsd,
                 reserveBtotaldepthWei: data.reserveBtotaldepthWei,
                 reserveBtotaldepth: data.reserveBtotaldepth,
 
@@ -249,6 +252,7 @@ export default class DatabaseService {
                 // Total depth fields
                 reserveAtotaldepthWei: data.reserveAtotaldepthWei,
                 reserveAtotaldepth: data.reserveAtotaldepth,
+                reserveAtotaldepthUsd: data.reserveAtotaldepthUsd,
                 reserveBtotaldepthWei: data.reserveBtotaldepthWei,
                 reserveBtotaldepth: data.reserveBtotaldepth,
 
