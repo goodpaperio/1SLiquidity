@@ -24,6 +24,7 @@ import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import { useWallet } from '@/app/lib/hooks/useWallet'
 import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { useDebouncedVolumeCalculation } from '@/app/lib/hooks/hotpairs/useEnhancedTokens'
+import { useTrades } from '@/app/lib/hooks/useTrades'
 
 const TIMER_DURATION = 10 // 10 seconds
 
@@ -59,6 +60,10 @@ const SELSection = () => {
   const [isInsufficientLiquidity, setIsInsufficientLiquidity] = useState(false)
   const { placeTrade, loading, placeTradeDummy } = useCoreTrading()
   const { getSigner, isConnected: isConnectedWallet } = useWallet()
+  const { refetch: refetchTrades } = useTrades({
+    first: 100,
+    skip: 0,
+  })
 
   // Get current chain from AppKit
   const stateData = useAppKitState()
@@ -514,6 +519,10 @@ const SELSection = () => {
         )
         if (res.success) {
           setSellAmount(0)
+          // Refetch trades to update the global sidebar
+          if (refetchTrades) {
+            await refetchTrades()
+          }
         }
       }
     }
