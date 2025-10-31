@@ -31,6 +31,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { ethers } from 'ethers'
 import { InfoIcon } from '@/app/lib/icons'
+import InstasettlePill from '../shared/InstasettlePill'
 
 type StreamDetailsProps = {
   onBack: () => void
@@ -519,35 +520,32 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 : 'bg-zinc-900 text-primary'
             )}
           >
-            {selectedStream.cancellations.length === 0 &&
-              !selectedStream.executions?.some(
-                (execution: any) => execution.lastSweetSpot === '0'
-              ) && (
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                >
-                  <path
-                    d="M13 2L6 14H11V22L18 10H13V2Z"
-                    fill="#40f798"
-                    fillOpacity="0.72"
-                  />
-                </svg>
-              )}
             <span className="text-xs sm:inline-block hidden">
-              {selectedStream.settlements.length > 0
-                ? 'Instasettled'
-                : selectedStream.cancellations.length > 0
-                ? 'Cancelled'
-                : selectedStream.executions?.some(
-                    (execution: any) => execution.lastSweetSpot === '0'
-                  )
-                ? 'Completed'
-                : 'Instasettle'}
+              {selectedStream.settlements.length > 0 ? (
+                <InstasettlePill
+                  isSettled={true}
+                  variant={
+                    selectedStream.onlyInstasettle
+                      ? 'only-instasettlable'
+                      : 'instasettled'
+                  }
+                />
+              ) : selectedStream.cancellations.length > 0 ? (
+                'Cancelled'
+              ) : selectedStream.executions?.some(
+                  (execution: any) => execution.lastSweetSpot === '0'
+                ) ? (
+                'Completed'
+              ) : (
+                <InstasettlePill
+                  isSettled={false}
+                  variant={
+                    selectedStream.onlyInstasettle
+                      ? 'only-instasettlable'
+                      : 'instasettled'
+                  }
+                />
+              )}
             </span>
           </div>
         )}

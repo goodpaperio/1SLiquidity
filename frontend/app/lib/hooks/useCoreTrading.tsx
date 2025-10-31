@@ -398,7 +398,7 @@ export const useCoreTrading = () => {
         // Step 4: Prepare trade
         updateToastProgress('Preparing trade data...', 70, 4)
         const contract = getContract(signer)
-
+        console.log('testinTradedata', onlyInstasettle)
         // Current encoding (6 parameters) - for deployed contract
         const tradeData = ethers.utils.defaultAbiCoder.encode(
           [
@@ -419,25 +419,9 @@ export const useCoreTrading = () => {
             isInstasettlable,
             usePriceBased,
             instasettleBps,
-            false,
+            onlyInstasettle || false,
           ]
         )
-
-        // TODO: Uncomment when new contract is deployed with instasettleBps and onlyInstasettle
-        // const instasettleBpsValue = instasettleBps ? parseInt(instasettleBps) : 0
-        // const tradeData = ethers.utils.defaultAbiCoder.encode(
-        //   ['address', 'address', 'uint256', 'uint256', 'bool', 'bool', 'uint256', 'bool'],
-        //   [
-        //     tokenIn,
-        //     tokenOut,
-        //     amountInWei,
-        //     minAmountOutWei,
-        //     isInstasettlable,
-        //     usePriceBased,
-        //     instasettleBpsValue,
-        //     onlyInstasettle || false,
-        //   ]
-        // )
 
         // Estimate gas
         const gasEstimate = await contract.estimateGas.placeTrade(tradeData)

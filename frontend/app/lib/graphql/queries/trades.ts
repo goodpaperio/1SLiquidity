@@ -21,6 +21,7 @@ export const GET_TRADES = gql`
       user
       realisedAmountOut
       id
+      onlyInstasettle
       executions(first: 50, orderBy: timestamp, orderDirection: desc) {
         amountIn
         id

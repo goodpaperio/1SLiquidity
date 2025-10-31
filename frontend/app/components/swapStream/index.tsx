@@ -28,6 +28,7 @@ type Trade = {
   executions: any[]
   settlements: any[]
   cancellations: any[]
+  onlyInstasettle?: boolean
 }
 
 type Props = {
@@ -42,6 +43,9 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
 
   const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
+  if (trade.id === '12') {
+    console.log('testinivan', trade)
+  }
 
   // Find token information with ETH/WETH handling
   const findTokenForTrade = (address: string) => {
@@ -238,19 +242,19 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                   <p>{estimatedTime || '..'}</p>
                 </div>
               )}
-              {trade.isInstasettlable && (
+              {trade.isInstasettlable && !trade.onlyInstasettle && (
                 <InstasettlePill
                   isSettled={trade.settlements.length > 0}
                   variant="instasettled"
                 />
               )}
 
-              {/* {trade.onlyInstasettlable && (
+              {trade.onlyInstasettle && (
                 <InstasettlePill
                   isSettled={trade.settlements.length > 0}
                   variant="only-instasettlable"
                 />
-              )} */}
+              )}
 
               {trade.cancellations.length > 0 && (
                 <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none whitespace-nowrap ml-auto">
