@@ -15,7 +15,8 @@ import {
   TradeCreatedEvent,
   TradeStreamExecutedEvent,
   TradeCancelledEvent,
-  TradeSettledEvent,
+  TradeInstasettledEvent,
+  TradeCompletedEvent,
   CompletedTrade,
   TradeHistory,
   TradeMetadata,
@@ -259,9 +260,14 @@ export class TradeMonitor {
         isInstasettlable: trade.isInstasettlable,
         usePriceBased: trade.usePriceBased,
       };
-    } catch (error) {
-      console.error(`Error fetching trade ${tradeId}:`, error);
-      return null;
+    } catch (error: any) {
+      // Only log non-"Trade not found" errors since those are handled upstream
+      const errorMsg = error?.reason || error?.message || "";
+      if (!errorMsg.includes("Trade not found")) {
+        console.error(`Error fetching trade ${tradeId}:`, errorMsg);
+      }
+      // Re-throw so caller can handle it
+      throw error;
     }
   }
 
@@ -283,9 +289,21 @@ export class TradeMonitor {
       // Iterate through all possible trade IDs
       for (let tradeId = 0; tradeId <= lastTradeIdNum; tradeId++) {
         if (await this.isTradeActive(tradeId)) {
-          const trade = await this.getTrade(tradeId);
-          if (trade) {
-            activeTrades.push(this.tradeToDisplay(trade));
+          try {
+            const trade = await this.getTrade(tradeId);
+            if (trade) {
+              activeTrades.push(this.tradeToDisplay(trade));
+            }
+          } catch (error: any) {
+            // Trade might have been removed between isTradeActive check and getTrade
+            // This is rare but can happen - skip it
+            const errorMsg = error?.reason || error?.message || "";
+            if (!errorMsg.includes("Trade not found")) {
+              console.warn(
+                `⚠️ Error fetching active trade ${tradeId}:`,
+                errorMsg
+              );
+            }
           }
         }
       }
@@ -401,11 +419,11 @@ export class TradeMonitor {
   /**
    * Scan for TradeSettled events
    */
-  private async scanSettledEvents(
+  private async scanTradeInstasettledEvents(
     fromBlock: number = 0
-  ): Promise<TradeSettledEvent[]> {
+  ): Promise<TradeInstasettledEvent[]> {
     try {
-      const filter = this.coreContract.filters.TradeSettled();
+      const filter = this.coreContract.filters.TradeInstasettled();
       const events = await this.coreContract.queryFilter(filter, fromBlock);
 
       return events.map((event) => {
@@ -415,13 +433,41 @@ export class TradeMonitor {
           settler: eventLog.args?.settler,
           totalAmountIn: eventLog.args?.totalAmountIn.toString(),
           totalAmountOut: eventLog.args?.totalAmountOut.toString(),
+          totalFees: eventLog.args?.totalFees.toString(),
           blockNumber: eventLog.blockNumber,
           transactionHash: eventLog.transactionHash,
           timestamp: 0, // Will be filled later
         };
       });
     } catch (error) {
-      console.error(`❌ Error scanning TradeSettled events:`, error);
+      console.error(`❌ Error scanning TradeInstasettled events:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Scan for TradeCompleted events
+   */
+  private async scanTradeCompletedEvents(
+    fromBlock: number = 0
+  ): Promise<TradeCompletedEvent[]> {
+    try {
+      const filter = this.coreContract.filters.TradeCompleted();
+      const events = await this.coreContract.queryFilter(filter, fromBlock);
+
+      return events.map((event) => {
+        const eventLog = event as ethers.EventLog;
+        return {
+          tradeId: Number(eventLog.args?.tradeId),
+          finalRealisedAmountOut:
+            eventLog.args?.finalRealisedAmountOut.toString(),
+          blockNumber: eventLog.blockNumber,
+          transactionHash: eventLog.transactionHash,
+          timestamp: 0, // Will be filled later
+        };
+      });
+    } catch (error) {
+      console.error(`❌ Error scanning TradeCompleted events:`, error);
       return [];
     }
   }
@@ -457,16 +503,22 @@ export class TradeMonitor {
     );
 
     // Scan all events in parallel
-    const [createdEvents, executionEvents, cancelledEvents, settledEvents] =
-      await Promise.all([
-        this.scanTradeCreatedEvents(fromBlock),
-        this.scanExecutionEvents(fromBlock),
-        this.scanCancelledEvents(fromBlock),
-        this.scanSettledEvents(fromBlock),
-      ]);
+    const [
+      createdEvents,
+      executionEvents,
+      cancelledEvents,
+      instasettledEvents,
+      completedEvents,
+    ] = await Promise.all([
+      this.scanTradeCreatedEvents(fromBlock),
+      this.scanExecutionEvents(fromBlock),
+      this.scanCancelledEvents(fromBlock),
+      this.scanTradeInstasettledEvents(fromBlock),
+      this.scanTradeCompletedEvents(fromBlock),
+    ]);
 
     console.log(
-      `📊 Found events: Created=${createdEvents.length}, Executed=${executionEvents.length}, Cancelled=${cancelledEvents.length}, Settled=${settledEvents.length}`
+      `📊 Found events: Created=${createdEvents.length}, Executed=${executionEvents.length}, Cancelled=${cancelledEvents.length}, Instasettled=${instasettledEvents.length}, Completed=${completedEvents.length}`
     );
 
     // Fill timestamps
@@ -474,7 +526,8 @@ export class TradeMonitor {
       ...createdEvents.map((e) => e.blockNumber),
       ...executionEvents.map((e) => e.blockNumber),
       ...cancelledEvents.map((e) => e.blockNumber),
-      ...settledEvents.map((e) => e.blockNumber),
+      ...instasettledEvents.map((e) => e.blockNumber),
+      ...completedEvents.map((e) => e.blockNumber),
     ]);
 
     const blockTimestamps = new Map<number, number>();
@@ -493,7 +546,10 @@ export class TradeMonitor {
     cancelledEvents.forEach((event) => {
       event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
     });
-    settledEvents.forEach((event) => {
+    instasettledEvents.forEach((event) => {
+      event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
+    });
+    completedEvents.forEach((event) => {
       event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
     });
 
@@ -511,12 +567,17 @@ export class TradeMonitor {
       cancelledMap.set(event.tradeId, event);
     });
 
-    const settledMap = new Map<number, TradeSettledEvent>();
-    settledEvents.forEach((event) => {
-      settledMap.set(event.tradeId, event);
+    const instasettledMap = new Map<number, TradeInstasettledEvent>();
+    instasettledEvents.forEach((event) => {
+      instasettledMap.set(event.tradeId, event);
     });
 
-    // Determine completion status for each created trade
+    const completedMap = new Map<number, TradeCompletedEvent>();
+    completedEvents.forEach((event) => {
+      completedMap.set(event.tradeId, event);
+    });
+
+    // Determine completion status for each created trade (purely event-based)
     const completedTrades: CompletedTrade[] = [];
     const ongoingTrades: TradeDisplay[] = [];
 
@@ -524,7 +585,8 @@ export class TradeMonitor {
       const tradeId = createdEvent.tradeId;
       const executions = executionMap.get(tradeId) || [];
       const cancelled = cancelledMap.get(tradeId);
-      const settled = settledMap.get(tradeId);
+      const instasettled = instasettledMap.get(tradeId);
+      const completed = completedMap.get(tradeId);
 
       const tokenInSymbol = this.getTokenSymbol(createdEvent.tokenIn);
       const tokenOutSymbol = this.getTokenSymbol(createdEvent.tokenOut);
@@ -536,30 +598,43 @@ export class TradeMonitor {
         BigInt(0)
       );
 
-      // Determine completion status
-      let completionType: "executed" | "cancelled" | "settled" | null = null;
+      // Determine completion status (priority: cancelled > instasettled > completed > executed)
+      let completionType:
+        | "executed"
+        | "cancelled"
+        | "instasettled"
+        | "completed"
+        | null = null;
       let completionTime = 0;
+      let finalAmountOut = totalRealized;
 
-      if (settled) {
-        completionType = "settled";
-        completionTime = settled.timestamp;
-      } else if (cancelled) {
+      if (cancelled) {
         completionType = "cancelled";
         completionTime = cancelled.timestamp;
+        finalAmountOut = BigInt(cancelled.realisedAmountOut);
+      } else if (instasettled) {
+        completionType = "instasettled";
+        completionTime = instasettled.timestamp;
+        finalAmountOut = BigInt(instasettled.totalAmountOut);
+      } else if (completed) {
+        completionType = "completed";
+        completionTime = completed.timestamp;
+        finalAmountOut = BigInt(completed.finalRealisedAmountOut);
       } else if (executions.length > 0) {
         // Check if trade is fully executed by comparing with target amount
         const targetAmount = BigInt(createdEvent.minAmountOut);
         if (totalRealized >= targetAmount) {
           completionType = "executed";
           completionTime = executions[executions.length - 1].timestamp;
+          finalAmountOut = totalRealized;
         }
       }
 
       if (completionType) {
-        // Trade is completed
+        // Trade is completed - use event data
         const finalProgress =
           createdEvent.minAmountOut !== "0"
-            ? (Number(totalRealized) / Number(createdEvent.minAmountOut)) * 100
+            ? (Number(finalAmountOut) / Number(createdEvent.minAmountOut)) * 100
             : 0;
 
         completedTrades.push({
@@ -568,7 +643,7 @@ export class TradeMonitor {
           tokenIn: tokenInSymbol,
           tokenOut: tokenOutSymbol,
           amountIn: this.formatTokenAmount(createdEvent.amountIn),
-          finalAmountOut: this.formatTokenAmount(totalRealized.toString()),
+          finalAmountOut: this.formatTokenAmount(finalAmountOut.toString()),
           executionCount: executions.length,
           completionTime,
           completionType,
@@ -578,15 +653,42 @@ export class TradeMonitor {
           finalProgress: Math.min(finalProgress, 100),
         });
       } else {
-        // Trade is ongoing - get current state from contract
-        try {
-          const currentTrade = await this.getTrade(tradeId);
-          if (currentTrade && (await this.isTradeActive(tradeId))) {
-            ongoingTrades.push(this.tradeToDisplay(currentTrade));
-          }
-        } catch (error) {
-          // Trade might not exist anymore, skip
-        }
+        // Trade is ongoing - build state from events
+        // Calculate current state from accumulated executions
+        const lastExecution = executions[executions.length - 1];
+        // Calculate remaining amount by subtracting executed amounts from initial amount
+        const totalExecuted = executions.reduce(
+          (sum, exec) => sum + BigInt(exec.amountIn),
+          BigInt(0)
+        );
+        const estimatedRemaining =
+          BigInt(createdEvent.amountIn) > totalExecuted
+            ? BigInt(createdEvent.amountIn) - totalExecuted
+            : BigInt(0);
+
+        ongoingTrades.push({
+          tradeId: tradeId.toString(),
+          pair,
+          tokenIn: createdEvent.tokenIn,
+          tokenOut: createdEvent.tokenOut,
+          amountIn: this.formatTokenAmount(createdEvent.amountIn),
+          amountRemaining: this.formatTokenAmount(
+            estimatedRemaining.toString()
+          ),
+          targetAmountOut: this.formatTokenAmount(createdEvent.minAmountOut),
+          realisedAmountOut: this.formatTokenAmount(totalRealized.toString()),
+          progress: this.calculateProgress(
+            totalRealized.toString(),
+            createdEvent.minAmountOut
+          ),
+          isInstasettlable: createdEvent.isInstasettlable,
+          lastSweetSpot:
+            lastExecution?.lastSweetSpot?.toString() ||
+            createdEvent.lastSweetSpot.toString(),
+          attempts: executions.length,
+          owner:
+            createdEvent.user.slice(0, 6) + "..." + createdEvent.user.slice(-4),
+        });
       }
     }
 
@@ -791,7 +893,7 @@ export class TradeMonitor {
   }
 
   /**
-   * Execute trades for a specific pair ID
+   * Execute trades for a specific pair ID (submits transaction, returns hash immediately)
    */
   async executeTrades(pairId: string): Promise<string> {
     try {
@@ -801,39 +903,34 @@ export class TradeMonitor {
 
       console.log(`🚀 Executing trades for pairId: ${pairId}`);
 
+      // Get fee data first
+      const feeData = await this.provider.getFeeData();
+
+      // Preflight gas estimate; skip if it reverts
+      let gasLimitEst: bigint;
+      try {
+        gasLimitEst =
+          await this.coreContractWithSigner.executeTrades.estimateGas(pairId);
+      } catch (estErr: any) {
+        console.warn(
+          `⚠️ Gas estimate failed for pairId ${pairId}; skipping this round.`,
+          estErr
+        );
+        throw estErr;
+      }
+
+      // Add 20% padding to gas limit
+      const gasLimit = gasLimitEst + gasLimitEst / BigInt(5);
+
       // Call the executeTrades function on the contract using signer
-      const tx = await this.coreContractWithSigner.executeTrades(pairId);
+      const tx = await this.coreContractWithSigner.executeTrades(pairId, {
+        gasLimit,
+        maxFeePerGas: feeData.maxFeePerGas ?? undefined,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? undefined,
+      });
       console.log(`📝 Transaction submitted: ${tx.hash}`);
 
-      // Wait for transaction to be mined with a timeout and fallback
-      const provider = this.signer?.provider ?? this.provider;
-      let receipt: ethers.TransactionReceipt | null = null;
-      try {
-        // ethers v6: waitForTransaction(hash, confirmations?, timeoutMs?)
-        receipt = await provider.waitForTransaction(tx.hash, 1, 60000);
-      } catch (waitErr: any) {
-        const msg = (waitErr?.message || "").toLowerCase();
-        if (
-          msg.includes("canceled") ||
-          msg.includes("cancelled") ||
-          msg.includes("timeout")
-        ) {
-          console.warn(
-            `⏱️ Timeout waiting for tx ${tx.hash}. Moving to next pair.`
-          );
-          return tx.hash; // return hash so caller can log progress and continue
-        }
-        throw waitErr;
-      }
-
-      if (receipt) {
-        console.log(
-          `✅ Transaction confirmed in block: ${receipt.blockNumber}`
-        );
-      } else {
-        console.warn(`⏱️ No receipt for ${tx.hash} within timeout window.`);
-      }
-
+      // Return hash immediately - confirmation polling handled in executeOutstandingTrades
       return tx.hash;
     } catch (error) {
       console.error(`❌ Failed to execute trades for pairId ${pairId}:`, error);
