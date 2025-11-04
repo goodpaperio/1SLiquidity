@@ -31,18 +31,6 @@ contract StreamDaemon is Ownable {
         DEFAULT_SWEET_SPOT = _defaultSweetSpot;
     }
 
-    // function computeAlpha(uint256 scaledReserveIn, uint256 scaledReserveOut) internal pure returns (uint256 alpha) {
-    //     // alpha = reserveOut / (reserveIn^2)
-    //     require(scaledReserveIn > 0, "Invalid reserve");
-    //     require(scaledReserveOut > 0, "Invalid reserve");
-
-    //     if (scaledReserveIn >= scaledReserveOut) {
-    //         alpha = (scaledReserveIn * 1e32) / (scaledReserveOut * scaledReserveOut);
-    //     } else {
-    //         alpha = (scaledReserveOut * 1e32) / (scaledReserveIn * scaledReserveIn);
-    //     }
-    // }
-
     function sqrt(uint256 y) internal pure returns (uint256 z) {
         if (y > 3) {
             z = y;
@@ -106,12 +94,6 @@ contract StreamDaemon is Ownable {
             router = dexToRouters[bestFetcher];
         }
 
-        // // Ensure effective gas is at least the minimum
-        // if (effectiveGas < MIN_EFFECTIVE_GAS_DOLLARS) {
-        //     effectiveGas = MIN_EFFECTIVE_GAS_DOLLARS;
-        // }
-
-        // Use sweetSpotAlgo_v3 for slippage-based optimization
         sweetSpot = _sweetSpotAlgo(tokenIn, tokenOut, volume, bestFetcher);
     }
 
