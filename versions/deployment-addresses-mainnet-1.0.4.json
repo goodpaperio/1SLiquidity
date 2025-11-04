@@ -1,0 +1,29 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.4",
+  "deploymentDate": "2025-11-03T17:59:00Z",
+  "deploymentBlock": 23720434,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0xb7788ec7e145dab7a854e58ee9833533ba068795751af6890d80770370e17152",
+  "contracts": {
+    "Executor": "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
+    "Registry": "0x5EAee88B493de2D646a8C29Bb5b09a79c5322dF4",
+    "Core": "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2",
+    "StreamDaemon": "0xbf1c6d73db66812eb67af1594587f33487951108",
+    "UniswapV2Fetcher": "0xcDd26C4361AEB4b20f9e5A2119C7aac08B9dA089",
+    "UniswapV3Fetcher_0_05": "0xCB08e56888E59c121AD8745CEA19f75c5cCccF1B",
+    "UniswapV3Fetcher_0_3": "0xa54f8aE895B33814c1F4824dCcBEd6597CCAc518",
+    "UniswapV3Fetcher_1": "0xC319A30E3AEFC844F8eD9ca5DCCDAb592299CB43",
+    "SushiswapFetcher": "0x57cfC5AD0812747afbb3dCD98B23b94883A341BC",
+    "BalancerV2PoolRegistry": "0xDdBbF78b2BF532d1637551a0186b26FbC9bfB5b1",
+    "BalancerV2Fetcher": "0xF9abe8A26EcF289b7e16Ccf88D67252DdA2215A6",
+    "CurveMetaFetcher": "0xdaa78BA8ff44351a7669746209d371bCdD85d062",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5"
+  },
+  "notes": {
+    "changes": "Redeployed Core and StreamDaemon (non-CREATE2) with Curve excluded from StreamDaemon DEX arrays",
+    "streamDaemonChanges": "New StreamDaemon deployed without CREATE2 for proper ownership. Configured with 6 DEXs excluding Curve.",
+    "curveMetaFetcher": "CurveMetaFetcher contract still exists but is excluded from StreamDaemon configuration"
+  }
+}
