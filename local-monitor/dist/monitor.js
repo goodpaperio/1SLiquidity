@@ -329,6 +329,7 @@ class TradeMonitor {
             return events.map((event) => {
                 const eventLog = event;
                 return {
+                    isAutocancelled: Boolean(eventLog.args?.isAutocancelled),
                     tradeId: Number(eventLog.args?.tradeId),
                     amountRemaining: eventLog.args?.amountRemaining.toString(),
                     realisedAmountOut: eventLog.args?.realisedAmountOut.toString(),

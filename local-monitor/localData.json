@@ -1,17 +1,6 @@
 {
-  "lastRun": 23733755,
+  "lastRun": 23733927,
   "outstandingTrades": [
-    {
-      "tradeId": 0,
-      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
-      "lastSweetSpot": 3,
-      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-      "pair": "USDC/WETH",
-      "owner": "0x2f9d...55C4",
-      "isInstasettlable": false,
-      "lastUpdated": 1762353655
-    },
     {
       "tradeId": 1,
       "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
@@ -21,20 +10,9 @@
       "pair": "USDC/WETH",
       "owner": "0x2f9d...55C4",
       "isInstasettlable": true,
-      "lastUpdated": 1762353655
-    },
-    {
-      "tradeId": 2,
-      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
-      "lastSweetSpot": 3,
-      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-      "pair": "USDC/WETH",
-      "owner": "0x2f9d...55C4",
-      "isInstasettlable": true,
-      "lastUpdated": 1762353655
+      "lastUpdated": 1762355790
     }
   ],
-  "lastUpdated": 1762353655,
+  "lastUpdated": 1762355790,
   "contractAddress": "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
 }

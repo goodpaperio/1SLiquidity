@@ -67,6 +67,7 @@ export interface TradeStreamExecutedEvent {
 }
 
 export interface TradeCancelledEvent {
+  isAutocancelled: boolean;
   tradeId: number;
   amountRemaining: string;
   realisedAmountOut: string;

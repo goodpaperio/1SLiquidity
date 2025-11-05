@@ -211,6 +211,12 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "isAutocancelled",
+                "type": "bool"
+            },
+            {
                 "indexed": true,
                 "internalType": "uint256",
                 "name": "tradeId",
