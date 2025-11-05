@@ -6,9 +6,9 @@ dataSources:
     name: Core
     network: mainnet
     source:
-      address: "0xde054c37000a639d33b886df0e48b011c2092474"  # Replace with your mainnet Core contract address
+      address: "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"  # Replace with your mainnet Core contract address
       abi: Core
-      startBlock: 23682597  # Replace with the block number when your Core contract was deployed
+      startBlock: 23720434  # Replace with the block number when your Core contract was deployed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -17,7 +17,8 @@ dataSources:
         - Trade
         - TradeExecution
         - TradeCancellation
-        - TradeSettlement
+        - TradeInstasettlement
+        - TradeCompletion
         - StreamFee
         - InstasettleFee
         - FeeClaim
@@ -34,8 +35,10 @@ dataSources:
           handler: handleTradeStreamExecuted
         - event: TradeCancelled(bool,indexed uint256,uint256,uint256)
           handler: handleTradeCancelled
-        - event: TradeSettled(indexed uint256,indexed address,uint256,uint256,uint256)
-          handler: handleTradeSettled
+        - event: TradeInstasettled(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleTradeInstasettled
+        - event: TradeCompleted(indexed uint256,uint256)
+          handler: handleTradeCompleted
         - event: StreamFeesTaken(indexed uint256,indexed address,indexed address,uint256,uint256)
           handler: handleStreamFeesTaken
         - event: InstasettleFeeTaken(indexed uint256,indexed address,indexed address,uint256)
@@ -54,9 +57,9 @@ dataSources:
     name: StreamDaemon
     network: mainnet
     source:
-      address: "0xaabc29359629a93c7dc850ae938d4d8460ea5669"  # Replace with your mainnet StreamDaemon contract address
+      address: "0xbf1c6d73db66812eb67af1594587f33487951108"  # Replace with your mainnet StreamDaemon contract address
       abi: StreamDaemon
-      startBlock: 23682597  # Replace with the block number when your StreamDaemon contract was deployed
+      startBlock: 23720434  # Replace with the block number when your StreamDaemon contract was deployed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

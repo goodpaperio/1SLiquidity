@@ -17,7 +17,7 @@
   },
   {
     "type": "function",
-    "name": "MIN_EFFECTIVE_GAS_DOLLARS",
+    "name": "DEFAULT_SWEET_SPOT",
     "inputs": [],
     "outputs": [
       {
@@ -265,6 +265,19 @@
     "type": "function",
     "name": "renounceOwnership",
     "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setDefaultSweetSpot",
+    "inputs": [
+      {
+        "name": "_defaultSweetSpot",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },

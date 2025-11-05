@@ -169,20 +169,20 @@ export class StreamDaemon extends ethereum.SmartContract {
     return new StreamDaemon("StreamDaemon", address);
   }
 
-  MIN_EFFECTIVE_GAS_DOLLARS(): BigInt {
+  DEFAULT_SWEET_SPOT(): BigInt {
     let result = super.call(
-      "MIN_EFFECTIVE_GAS_DOLLARS",
-      "MIN_EFFECTIVE_GAS_DOLLARS():(uint256)",
+      "DEFAULT_SWEET_SPOT",
+      "DEFAULT_SWEET_SPOT():(uint256)",
       [],
     );
 
     return result[0].toBigInt();
   }
 
-  try_MIN_EFFECTIVE_GAS_DOLLARS(): ethereum.CallResult<BigInt> {
+  try_DEFAULT_SWEET_SPOT(): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
-      "MIN_EFFECTIVE_GAS_DOLLARS",
-      "MIN_EFFECTIVE_GAS_DOLLARS():(uint256)",
+      "DEFAULT_SWEET_SPOT",
+      "DEFAULT_SWEET_SPOT():(uint256)",
       [],
     );
     if (result.reverted) {
@@ -581,6 +581,36 @@ export class RenounceOwnershipCall__Outputs {
   _call: RenounceOwnershipCall;
 
   constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SetDefaultSweetSpotCall extends ethereum.Call {
+  get inputs(): SetDefaultSweetSpotCall__Inputs {
+    return new SetDefaultSweetSpotCall__Inputs(this);
+  }
+
+  get outputs(): SetDefaultSweetSpotCall__Outputs {
+    return new SetDefaultSweetSpotCall__Outputs(this);
+  }
+}
+
+export class SetDefaultSweetSpotCall__Inputs {
+  _call: SetDefaultSweetSpotCall;
+
+  constructor(call: SetDefaultSweetSpotCall) {
+    this._call = call;
+  }
+
+  get _defaultSweetSpot(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetDefaultSweetSpotCall__Outputs {
+  _call: SetDefaultSweetSpotCall;
+
+  constructor(call: SetDefaultSweetSpotCall) {
     this._call = call;
   }
 }

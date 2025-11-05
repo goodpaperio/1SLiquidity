@@ -49,12 +49,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
 
     event TradeCancelled(bool isAutocancelled, uint256 indexed tradeId, uint256 amountRemaining, uint256 realisedAmountOut);
 
-    event TradeSettled(
+    event TradeInstasettled(
         uint256 indexed tradeId,
         address indexed settler,
         uint256 totalAmountIn,
         uint256 totalAmountOut,
         uint256 totalFees
+    );
+
+    event TradeCompleted(
+        uint256 indexed tradeId,
+        uint256 finalRealisedAmountOut
     );
 
     event LowLevelError(string error);
@@ -128,8 +133,8 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     function _removeTradeFromStorage(bytes32 pairId, uint256 tradeId) internal {
         uint256[] storage tradeIds = pairIdTradeIds[pairId];
         uint256 tradeIndex = tradeIndicies[tradeId];
-        uint256 lastTradeId = tradeIds[tradeIds.length - 1]; 
-        tradeIds[tradeIndex] = lastTradeId;
+        Utils.Trade memory lastTrade = trades[tradeIds.length - 1]; 
+        trades[tradeIndex] = lastTrade;
         tradeIds.pop();
         tradeIndicies[lastTradeId] = tradeIndex; 
         delete tradeIndicies[tradeId];
@@ -237,7 +242,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             IERC20(trade.tokenOut).safeTransferFrom(msg.sender, trade.owner, settlerPayment);
         }
         IERC20(trade.tokenIn).safeTransfer(msg.sender, trade.amountRemaining);
-        emit TradeSettled(
+        emit TradeInstasettled(
             trade.tradeId,
             msg.sender,
             trade.amountRemaining,
@@ -287,7 +292,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             realisedAmountOut: 0,
             tradeId: tradeId,
             instasettleBps: instasettleBps,
-            lastSweetSpot: 0, // @audit check that we need to speficially evaluate this here
+            lastSweetSpot: onlyInstasettle ? type(uint256).max : 0, 
             isInstasettlable: isInstasettlable,
             usePriceBased: usePriceBased,
             onlyInstasettle: onlyInstasettle
@@ -391,10 +396,11 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
                     if (updatedTrade.lastSweetSpot == 0) {
                         // @ethsupport here we would unwrap if tokenOut == 0x0.000 // function unwrap
                         if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                            ethSupport.unwrap(trade.realisedAmountOut, trade.owner);
+                            ethSupport.unwrap(trades[trade.tradeId].realisedAmountOut, trade.owner);
                         } else {
-                            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
-                        }                        
+                            IERC20(trade.tokenOut).safeTransfer(trade.owner, trades[trade.tradeId].realisedAmountOut);
+                        }
+                        emit TradeCompleted(trade.tradeId, trades[trade.tradeId].realisedAmountOut);
                         _removeTradeFromStorage(pairId, tradeIds[index]);
                     }
                 } catch Error(string memory reason) {
@@ -423,7 +429,13 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
 
     function executeStream(uint256 tradeId) public returns (Utils.Trade memory updatedTrade) {
         Utils.Trade storage storageTrade = trades[tradeId];
-        Utils.Trade memory trade = trades[tradeId]; 
+        Utils.Trade memory trade = trades[tradeId];
+
+        // Early return for onlyInstasettle trades - they should only be settled via instasettle()
+        if (trade.onlyInstasettle) {
+            // Set lastSweetSpot to sentinel value to prevent auto-settlement in executeTrades
+            return storageTrade;
+        }
 
         // security measure @audit may need review
         // if (trade.realisedAmountOut > trade.targetAmountOut) {
@@ -484,9 +496,18 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         uint256 amountOut = abi.decode(returnData, (uint256));
         require(amountOut > 0, "No tokens received from swap");
 
+        // @dev protection for the case that an EOA has called executeStream
+        if (sweetSpot == 1 && msg.sender != address(this)) {
+            bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
+            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);                        
+            _removeTradeFromStorage(pairId, trade.tradeId);
+            return storageTrade;
+        }
+
         if (sweetSpot == 1 || sweetSpot == 2 || sweetSpot == 3 || sweetSpot == 4) {
             sweetSpot--;
         }
+
 
         storageTrade.amountRemaining = trade.amountRemaining - streamVolume;
         storageTrade.realisedAmountOut += amountOut;

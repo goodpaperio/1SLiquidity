@@ -248,11 +248,19 @@ export class Trade extends Entity {
     );
   }
 
-  get settlements(): TradeSettlementLoader {
-    return new TradeSettlementLoader(
+  get instasettlements(): TradeInstasettlementLoader {
+    return new TradeInstasettlementLoader(
       "Trade",
       this.get("id")!.toString(),
-      "settlements",
+      "instasettlements",
+    );
+  }
+
+  get completions(): TradeCompletionLoader {
+    return new TradeCompletionLoader(
+      "Trade",
+      this.get("id")!.toString(),
+      "completions",
     );
   }
 
@@ -489,7 +497,7 @@ export class TradeCancellation extends Entity {
   }
 }
 
-export class TradeSettlement extends Entity {
+export class TradeInstasettlement extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -497,24 +505,26 @@ export class TradeSettlement extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save TradeSettlement entity without an ID");
+    assert(id != null, "Cannot save TradeInstasettlement entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type TradeSettlement must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+        `Entities of type TradeInstasettlement must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
       );
-      store.set("TradeSettlement", id.toString(), this);
+      store.set("TradeInstasettlement", id.toString(), this);
     }
   }
 
-  static loadInBlock(id: string): TradeSettlement | null {
-    return changetype<TradeSettlement | null>(
-      store.get_in_block("TradeSettlement", id),
+  static loadInBlock(id: string): TradeInstasettlement | null {
+    return changetype<TradeInstasettlement | null>(
+      store.get_in_block("TradeInstasettlement", id),
     );
   }
 
-  static load(id: string): TradeSettlement | null {
-    return changetype<TradeSettlement | null>(store.get("TradeSettlement", id));
+  static load(id: string): TradeInstasettlement | null {
+    return changetype<TradeInstasettlement | null>(
+      store.get("TradeInstasettlement", id),
+    );
   }
 
   get id(): string {
@@ -593,6 +603,87 @@ export class TradeSettlement extends Entity {
 
   set totalFees(value: BigInt) {
     this.set("totalFees", Value.fromBigInt(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+}
+
+export class TradeCompletion extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TradeCompletion entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TradeCompletion must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("TradeCompletion", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): TradeCompletion | null {
+    return changetype<TradeCompletion | null>(
+      store.get_in_block("TradeCompletion", id),
+    );
+  }
+
+  static load(id: string): TradeCompletion | null {
+    return changetype<TradeCompletion | null>(store.get("TradeCompletion", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get trade(): string {
+    let value = this.get("trade");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set trade(value: string) {
+    this.set("trade", Value.fromString(value));
+  }
+
+  get finalRealisedAmountOut(): BigInt {
+    let value = this.get("finalRealisedAmountOut");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set finalRealisedAmountOut(value: BigInt) {
+    this.set("finalRealisedAmountOut", Value.fromBigInt(value));
   }
 
   get timestamp(): BigInt {
@@ -1299,7 +1390,7 @@ export class TradeCancellationLoader extends Entity {
   }
 }
 
-export class TradeSettlementLoader extends Entity {
+export class TradeInstasettlementLoader extends Entity {
   _entity: string;
   _field: string;
   _id: string;
@@ -1311,9 +1402,27 @@ export class TradeSettlementLoader extends Entity {
     this._field = field;
   }
 
-  load(): TradeSettlement[] {
+  load(): TradeInstasettlement[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
-    return changetype<TradeSettlement[]>(value);
+    return changetype<TradeInstasettlement[]>(value);
+  }
+}
+
+export class TradeCompletionLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): TradeCompletion[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<TradeCompletion[]>(value);
   }
 }
 

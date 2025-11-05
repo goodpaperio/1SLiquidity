@@ -2,7 +2,8 @@ import {
   TradeCreated,
   TradeStreamExecuted,
   TradeCancelled,
-  TradeSettled,
+  TradeInstasettled,
+  TradeCompleted,
   StreamFeesTaken,
   InstasettleFeeTaken,
   FeesClaimed,
@@ -18,7 +19,8 @@ import {
   Trade,
   TradeExecution,
   TradeCancellation,
-  TradeSettlement,
+  TradeInstasettlement,
+  TradeCompletion,
   StreamFee,
   InstasettleFee,
   DEXRoute,
@@ -85,18 +87,18 @@ export function handleTradeCancelled(event: TradeCancelled): void {
   trade.save()
 }
 
-export function handleTradeSettled(event: TradeSettled): void {
+export function handleTradeInstasettled(event: TradeInstasettled): void {
   let trade = Trade.load(event.params.tradeId.toString())
   if (trade == null) return
 
-  let settlement = new TradeSettlement(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
-  settlement.trade = trade.id
-  settlement.settler = event.params.settler
-  settlement.totalAmountIn = event.params.totalAmountIn
-  settlement.totalAmountOut = event.params.totalAmountOut
-  settlement.totalFees = event.params.totalFees
-  settlement.timestamp = event.block.timestamp
-  settlement.save()
+  let instasettlement = new TradeInstasettlement(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  instasettlement.trade = trade.id
+  instasettlement.settler = event.params.settler
+  instasettlement.totalAmountIn = event.params.totalAmountIn
+  instasettlement.totalAmountOut = event.params.totalAmountOut
+  instasettlement.totalFees = event.params.totalFees
+  instasettlement.timestamp = event.block.timestamp
+  instasettlement.save()
 
   // Update trade state
   trade.amountRemaining = BigInt.fromI32(0)
@@ -104,7 +106,20 @@ export function handleTradeSettled(event: TradeSettled): void {
   trade.save()
 }
 
-// InstaSettleConfigured handler removed - event no longer exists
+export function handleTradeCompleted(event: TradeCompleted): void {
+  let trade = Trade.load(event.params.tradeId.toString())
+  if (trade == null) return
+
+  let completion = new TradeCompletion(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  completion.trade = trade.id
+  completion.finalRealisedAmountOut = event.params.finalRealisedAmountOut
+  completion.timestamp = event.block.timestamp
+  completion.save()
+
+  // Update trade state
+  trade.realisedAmountOut = event.params.finalRealisedAmountOut
+  trade.save()
+}
 
 export function handleStreamFeesTaken(event: StreamFeesTaken): void {
   let trade = Trade.load(event.params.tradeId.toString())
@@ -182,4 +197,4 @@ export function handleDataError(event: DataError): void {
   dataError.error = event.params.error
   dataError.timestamp = event.block.timestamp
   dataError.save()
-} 
+}
