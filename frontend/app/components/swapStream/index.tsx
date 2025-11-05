@@ -14,6 +14,7 @@ import { XIcon } from 'lucide-react'
 import { formatNumberSmart } from '@/app/lib/utils/number'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
+import { Cancellation } from '@/app/lib/graphql/types/trade'
 
 type Trade = {
   id: string
@@ -27,7 +28,7 @@ type Trade = {
   lastSweetSpot: string
   executions: any[]
   instasettlements: any[]
-  cancellations: any[]
+  cancellations: Cancellation[]
   onlyInstasettle?: boolean
 }
 
@@ -40,12 +41,8 @@ type Props = {
 
 const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
-
   const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
-  if (trade.id === '12') {
-    console.log('testinivan', trade)
-  }
 
   // Find token information with ETH/WETH handling
   const findTokenForTrade = (address: string) => {
@@ -265,7 +262,9 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
                 <div className="flex items-center text-sm gap-1 bg-zinc-900 pl-1 pr-1.5 text-red-700 rounded-full leading-none whitespace-nowrap ml-auto">
                   <XIcon className="w-3.5 h-3.5" />
                   <span className="text-xs sm:inline-block hidden">
-                    Cancelled
+                    {trade.cancellations[0].isAutocancelled
+                      ? 'Failed'
+                      : 'User Cancelled'}
                   </span>
                 </div>
               )}

@@ -223,6 +223,15 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   // Get execution hashes count (if available)
   const executionsCount = selectedStream.executions?.length || 0
 
+  // Get lastSweetSpot from the most recent execution (or 0 if no executions)
+  const lastSweetSpot =
+    selectedStream.executions && selectedStream.executions.length > 0
+      ? Number(
+          selectedStream.executions[selectedStream.executions.length - 1]
+            .lastSweetSpot || 0
+        )
+      : Number(selectedStream.lastSweetSpot || 0)
+
   // Format execution amounts and calculate their times
   const formattedExecutions =
     selectedStream.executions
@@ -280,6 +289,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
           tokenIn.decimals
         ) // Show actually swapped amount
     : '0'
+
   const swappedAmountInUsd = tokenIn
     ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
     : 0
@@ -418,11 +428,8 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       BigInt(0)
     )
 
-    // Existing realisedAmountOut reported on trade (if any)
-    const existingRealisedOut = BigInt(trade.realisedAmountOut ?? '0')
-
-    // Final realisedAmountOut = existing + executions sum
-    const finalRealisedAmountOut = existingRealisedOut + totalExecRealisedOut
+    // Use only the sum from executions, don't add existingRealisedOut as it may already include these
+    const finalRealisedAmountOut = totalExecRealisedOut
 
     // amountIn (original) and recalculated amountRemaining
     const amountIn = BigInt(trade.amountIn ?? '0')
@@ -432,6 +439,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       amountIn: amountIn.toString(),
       amountRemaining: recalculatedAmountRemaining.toString(),
       realisedAmountOut: finalRealisedAmountOut.toString(),
+      totalExecRealisedOut: totalExecRealisedOut.toString(),
     }
   }
 
@@ -533,7 +541,11 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                   }
                 />
               ) : selectedStream.cancellations.length > 0 ? (
-                'Cancelled'
+                selectedStream.cancellations[0].isAutocancelled ? (
+                  'Failed'
+                ) : (
+                  'User Cancelled'
+                )
               ) : selectedStream.executions?.some(
                   (execution: any) => execution.lastSweetSpot === '0'
                 ) ? (
@@ -839,11 +851,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               title="Streams Completed"
               amount={
                 isLoading
-                  ? '0'
+                  ? '0 / 0'
                   : selectedStream.instasettlements.length > 0 ||
                     selectedStream.cancellations.length > 0
-                  ? (Number(executionsCount) + 1).toString()
-                  : executionsCount.toString()
+                  ? `${Number(executionsCount) + 1} / ${
+                      Number(executionsCount) + 1
+                    }`
+                  : `${executionsCount} / ${executionsCount + lastSweetSpot}`
               }
               infoDetail="Info"
               titleClassName="text-white52"

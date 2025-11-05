@@ -778,6 +778,10 @@ const SELSection = () => {
               isFetchingReserves={isFetchingReserves}
               slippageSavings={slippageSavings}
               usePriceBased={tradingSettings.usePriceBased}
+              priceAccuracyNODECA={
+                volumeCalculation.result?.priceAccuracyNODECA
+              }
+              priceAccuracyDECA={volumeCalculation.result?.priceAccuracyDECA}
             />
           )}
 

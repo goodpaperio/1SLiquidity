@@ -32,6 +32,7 @@ export const GET_TRADES = gql`
       cancellations {
         id
         timestamp
+        isAutocancelled
       }
       instasettlements {
         id
