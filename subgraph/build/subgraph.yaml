@@ -6,9 +6,9 @@ dataSources:
     name: Core
     network: mainnet
     source:
-      address: "0xde054c37000a639d33b886df0e48b011c2092474"
+      address: "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
       abi: Core
-      startBlock: 23682597
+      startBlock: 23720434
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -17,7 +17,8 @@ dataSources:
         - Trade
         - TradeExecution
         - TradeCancellation
-        - TradeSettlement
+        - TradeInstasettlement
+        - TradeCompletion
         - StreamFee
         - InstasettleFee
         - FeeClaim
@@ -26,7 +27,7 @@ dataSources:
         - DataError
       abis:
         - name: Core
-          file: Core\Core.json
+          file: Core/Core.json
       eventHandlers:
         - event: TradeCreated(indexed uint256,indexed
             address,address,address,uint256,uint256,uint256,uint256,bool,uint256,uint256,bool,bool)
@@ -35,8 +36,10 @@ dataSources:
           handler: handleTradeStreamExecuted
         - event: TradeCancelled(bool,indexed uint256,uint256,uint256)
           handler: handleTradeCancelled
-        - event: TradeSettled(indexed uint256,indexed address,uint256,uint256,uint256)
-          handler: handleTradeSettled
+        - event: TradeInstasettled(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleTradeInstasettled
+        - event: TradeCompleted(indexed uint256,uint256)
+          handler: handleTradeCompleted
         - event: StreamFeesTaken(indexed uint256,indexed address,indexed address,uint256,uint256)
           handler: handleStreamFeesTaken
         - event: InstasettleFeeTaken(indexed uint256,indexed address,indexed address,uint256)
@@ -49,14 +52,14 @@ dataSources:
           handler: handleLowLevelError
         - event: DataError(bytes)
           handler: handleDataError
-      file: Core\Core.wasm
+      file: Core/Core.wasm
   - kind: ethereum/contract
     name: StreamDaemon
     network: mainnet
     source:
-      address: "0xaabc29359629a93c7dc850ae938d4d8460ea5669"
+      address: "0xbf1c6d73db66812eb67af1594587f33487951108"
       abi: StreamDaemon
-      startBlock: 23682597
+      startBlock: 23720434
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -65,10 +68,10 @@ dataSources:
         - DEXRoute
       abis:
         - name: StreamDaemon
-          file: StreamDaemon\StreamDaemon.json
+          file: StreamDaemon/StreamDaemon.json
       eventHandlers:
         - event: DEXRouteAdded(indexed address)
           handler: handleDEXRouteAdded
         - event: DEXRouteRemoved(indexed address)
           handler: handleDEXRouteRemoved
-      file: Core\Core.wasm
+      file: Core/Core.wasm

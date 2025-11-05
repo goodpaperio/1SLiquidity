@@ -218,6 +218,28 @@ export class TradeCancelled__Params {
   }
 }
 
+export class TradeCompleted extends ethereum.Event {
+  get params(): TradeCompleted__Params {
+    return new TradeCompleted__Params(this);
+  }
+}
+
+export class TradeCompleted__Params {
+  _event: TradeCompleted;
+
+  constructor(event: TradeCompleted) {
+    this._event = event;
+  }
+
+  get tradeId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get finalRealisedAmountOut(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
 export class TradeCreated extends ethereum.Event {
   get params(): TradeCreated__Params {
     return new TradeCreated__Params(this);
@@ -284,16 +306,16 @@ export class TradeCreated__Params {
   }
 }
 
-export class TradeSettled extends ethereum.Event {
-  get params(): TradeSettled__Params {
-    return new TradeSettled__Params(this);
+export class TradeInstasettled extends ethereum.Event {
+  get params(): TradeInstasettled__Params {
+    return new TradeInstasettled__Params(this);
   }
 }
 
-export class TradeSettled__Params {
-  _event: TradeSettled;
+export class TradeInstasettled__Params {
+  _event: TradeInstasettled;
 
-  constructor(event: TradeSettled) {
+  constructor(event: TradeInstasettled) {
     this._event = event;
   }
 

@@ -981,6 +981,25 @@
   },
   {
     "type": "event",
+    "name": "TradeCompleted",
+    "inputs": [
+      {
+        "name": "tradeId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "finalRealisedAmountOut",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "TradeCreated",
     "inputs": [
       {
@@ -1066,7 +1085,7 @@
   },
   {
     "type": "event",
-    "name": "TradeSettled",
+    "name": "TradeInstasettled",
     "inputs": [
       {
         "name": "tradeId",
