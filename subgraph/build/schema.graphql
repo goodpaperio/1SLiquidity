@@ -16,7 +16,8 @@ type Trade @entity(immutable: false) {
   createdAt: BigInt!
   executions: [TradeExecution!]! @derivedFrom(field: "trade")
   cancellations: [TradeCancellation!]! @derivedFrom(field: "trade")
-  settlements: [TradeSettlement!]! @derivedFrom(field: "trade")
+  instasettlements: [TradeInstasettlement!]! @derivedFrom(field: "trade")
+  completions: [TradeCompletion!]! @derivedFrom(field: "trade")
   streamFees: [StreamFee!]! @derivedFrom(field: "trade")
   instasettleFees: [InstasettleFee!]! @derivedFrom(field: "trade")
 }
@@ -39,7 +40,7 @@ type TradeCancellation @entity(immutable: true) {
   timestamp: BigInt!
 }
 
-type TradeSettlement @entity(immutable: true) {
+type TradeInstasettlement @entity(immutable: true) {
   id: ID!
   trade: Trade!
   settler: Bytes!
@@ -49,7 +50,12 @@ type TradeSettlement @entity(immutable: true) {
   timestamp: BigInt!
 }
 
-# InstaSettleConfig entity removed - InstaSettleConfigured event no longer exists
+type TradeCompletion @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  finalRealisedAmountOut: BigInt!
+  timestamp: BigInt!
+}
 
 type StreamFee @entity(immutable: true) {
   id: ID!
@@ -105,4 +111,4 @@ type DataError @entity(immutable: true) {
   id: ID!
   error: Bytes!
   timestamp: BigInt!
-} 
+}

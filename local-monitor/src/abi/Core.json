@@ -351,7 +351,26 @@
                 "type": "uint256"
             }
         ],
-        "name": "TradeSettled",
+        "name": "TradeInstasettled",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "finalRealisedAmountOut",
+                "type": "uint256"
+            }
+        ],
+        "name": "TradeCompleted",
         "type": "event"
     },
     {

@@ -14,8 +14,9 @@ contract StreamDaemon is Ownable {
     event DEXRouteRemoved(address indexed dex);
 
     // temporarily efine a constant for minimum effective gas in dollars
-    uint256 public constant MIN_EFFECTIVE_GAS_DOLLARS = 1; // i.e $1 minimum @audit this should be valuated against
+    // uint256 public constant MIN_EFFECTIVE_GAS_DOLLARS = 1; // i.e $1 minimum @audit this should be valuated against
         // TOKEN-USDC value during execution in production
+    uint256 public DEFAULT_SWEET_SPOT = 4;
 
     constructor(address[] memory _dexs, address[] memory _routers) Ownable(msg.sender) {
         for (uint256 i = 0; i < _dexs.length; i++) {
@@ -26,16 +27,8 @@ contract StreamDaemon is Ownable {
         } // @audit make sure to pass the routers in the appropriate order wrt how the dex's are inputted on deployment
     }
 
-    function computeAlpha(uint256 scaledReserveIn, uint256 scaledReserveOut) internal pure returns (uint256 alpha) {
-        // alpha = reserveOut / (reserveIn^2)
-        require(scaledReserveIn > 0, "Invalid reserve");
-        require(scaledReserveOut > 0, "Invalid reserve");
-
-        if (scaledReserveIn >= scaledReserveOut) {
-            alpha = (scaledReserveIn * 1e32) / (scaledReserveOut * scaledReserveOut);
-        } else {
-            alpha = (scaledReserveOut * 1e32) / (scaledReserveIn * scaledReserveIn);
-        }
+    function setDefaultSweetSpot(uint256 _defaultSweetSpot) external onlyOwner {
+        DEFAULT_SWEET_SPOT = _defaultSweetSpot;
     }
 
     function sqrt(uint256 y) internal pure returns (uint256 z) {
@@ -101,12 +94,6 @@ contract StreamDaemon is Ownable {
             router = dexToRouters[bestFetcher];
         }
 
-        // Ensure effective gas is at least the minimum
-        if (effectiveGas < MIN_EFFECTIVE_GAS_DOLLARS) {
-            effectiveGas = MIN_EFFECTIVE_GAS_DOLLARS;
-        }
-
-        // Use sweetSpotAlgo_v3 for slippage-based optimization
         sweetSpot = _sweetSpotAlgo(tokenIn, tokenOut, volume, bestFetcher);
     }
 
@@ -207,7 +194,7 @@ contract StreamDaemon is Ownable {
         // @audit for alpha testing purposes, we minimise sweet spot to 4. In production, this  should be removed
 
         if (slippage <= 10) {
-            sweetSpot = 4;
+            sweetSpot = DEFAULT_SWEET_SPOT;
             return sweetSpot;
         }
 
@@ -258,7 +245,7 @@ contract StreamDaemon is Ownable {
         // @audit for alpha testing purposes, we regulate sweet spot between 4 and 500. In production, this  should be
         // removed
         if (sweetSpot <= 4) {
-            sweetSpot = 4;
+            sweetSpot = DEFAULT_SWEET_SPOT;
         }
         if (sweetSpot > 500) {
             sweetSpot = 500;

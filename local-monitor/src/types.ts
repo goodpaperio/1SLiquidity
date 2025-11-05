@@ -75,11 +75,20 @@ export interface TradeCancelledEvent {
   timestamp: number;
 }
 
-export interface TradeSettledEvent {
+export interface TradeInstasettledEvent {
   tradeId: number;
   settler: string;
   totalAmountIn: string;
   totalAmountOut: string;
+  totalFees: string;
+  blockNumber: number;
+  transactionHash: string;
+  timestamp: number;
+}
+
+export interface TradeCompletedEvent {
+  tradeId: number;
+  finalRealisedAmountOut: string;
   blockNumber: number;
   transactionHash: string;
   timestamp: number;
@@ -94,7 +103,7 @@ export interface CompletedTrade {
   finalAmountOut: string;
   executionCount: number;
   completionTime: number;
-  completionType: "executed" | "cancelled" | "settled";
+  completionType: "executed" | "cancelled" | "instasettled" | "completed";
   owner: string;
   totalExecutions: number;
   finalProgress: number;

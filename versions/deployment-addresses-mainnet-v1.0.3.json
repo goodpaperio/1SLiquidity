@@ -18,6 +18,7 @@
     "SushiswapFetcher": "0x57cfc5ad0812747afbb3dcd98b23b94883a341bc",
     "BalancerV2PoolRegistry": "0xddbbf78b2bf532d1637551a0186b26fbc9bfb5b1",
     "BalancerV2Fetcher": "0xf9abe8a26ecf289b7e16ccf88d67252dda2215a6",
-    "CurveMetaFetcher": "0xdaa78ba8ff44351a7669746209d371bcdd85d062"
+    "CurveMetaFetcher": "0xdaa78ba8ff44351a7669746209d371bcdd85d062",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5"
   }
 }
