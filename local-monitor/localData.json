@@ -1,5 +1,5 @@
 {
-  "lastRun": 23733289,
+  "lastRun": 23733755,
   "outstandingTrades": [
     {
       "tradeId": 0,
@@ -10,7 +10,7 @@
       "pair": "USDC/WETH",
       "owner": "0x2f9d...55C4",
       "isInstasettlable": false,
-      "lastUpdated": 1762348018
+      "lastUpdated": 1762353655
     },
     {
       "tradeId": 1,
@@ -21,7 +21,7 @@
       "pair": "USDC/WETH",
       "owner": "0x2f9d...55C4",
       "isInstasettlable": true,
-      "lastUpdated": 1762348018
+      "lastUpdated": 1762353655
     },
     {
       "tradeId": 2,
@@ -32,9 +32,9 @@
       "pair": "USDC/WETH",
       "owner": "0x2f9d...55C4",
       "isInstasettlable": true,
-      "lastUpdated": 1762348018
+      "lastUpdated": 1762353655
     }
   ],
-  "lastUpdated": 1762348018,
+  "lastUpdated": 1762353655,
   "contractAddress": "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
 }

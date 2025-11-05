@@ -666,6 +666,19 @@ export class TradeMonitor {
             ? BigInt(createdEvent.amountIn) - totalExecuted
             : BigInt(0);
 
+        // Read actual attempts from contract (not just counting events)
+        // This accounts for failed executions that increment attempts but don't emit TradeStreamExecuted
+        let actualAttempts = executions.length;
+        try {
+          const tradeFromContract = await this.coreContract.getTrade(tradeId);
+          actualAttempts = Number(tradeFromContract.attempts);
+        } catch (error) {
+          // If read fails, fall back to event count
+          console.warn(
+            `⚠️ Could not read attempts for trade ${tradeId}, using event count`
+          );
+        }
+
         ongoingTrades.push({
           tradeId: tradeId.toString(),
           pair,
@@ -685,7 +698,7 @@ export class TradeMonitor {
           lastSweetSpot:
             lastExecution?.lastSweetSpot?.toString() ||
             createdEvent.lastSweetSpot.toString(),
-          attempts: executions.length,
+          attempts: actualAttempts,
           owner:
             createdEvent.user.slice(0, 6) + "..." + createdEvent.user.slice(-4),
         });
@@ -893,9 +906,11 @@ export class TradeMonitor {
   }
 
   /**
-   * Execute trades for a specific pair ID (submits transaction, returns hash immediately)
+   * Execute trades for a specific pair ID (submits transaction and returns transaction response)
    */
-  async executeTrades(pairId: string): Promise<string> {
+  async executeTrades(
+    pairId: string
+  ): Promise<ethers.ContractTransactionResponse> {
     try {
       if (!this.coreContractWithSigner) {
         throw new Error("Private key not available - cannot execute trades");
@@ -919,8 +934,12 @@ export class TradeMonitor {
         throw estErr;
       }
 
-      // Add 20% padding to gas limit
-      const gasLimit = gasLimitEst + gasLimitEst / BigInt(5);
+      // Add 50% padding to gas limit with 800k minimum
+      let gasLimit = gasLimitEst + gasLimitEst / BigInt(2);
+      if (gasLimit < BigInt(800000)) {
+        gasLimit = BigInt(800000);
+      }
+      console.log(`⛽ Gas estimate: ${gasLimitEst}, using limit: ${gasLimit}`);
 
       // Call the executeTrades function on the contract using signer
       const tx = await this.coreContractWithSigner.executeTrades(pairId, {
@@ -930,8 +949,8 @@ export class TradeMonitor {
       });
       console.log(`📝 Transaction submitted: ${tx.hash}`);
 
-      // Return hash immediately - confirmation polling handled in executeOutstandingTrades
-      return tx.hash;
+      // Return full transaction object for sequential waiting
+      return tx;
     } catch (error) {
       console.error(`❌ Failed to execute trades for pairId ${pairId}:`, error);
       throw error;
@@ -939,7 +958,7 @@ export class TradeMonitor {
   }
 
   /**
-   * Execute all outstanding trades from local data
+   * Execute all outstanding trades from local data (sequential execution)
    */
   async executeOutstandingTrades(): Promise<void> {
     try {
@@ -968,13 +987,17 @@ export class TradeMonitor {
         console.log(`  ${index + 1}. ${pairId} (${trades.length} trades)`);
       });
 
-      // Stage 1: submit all transactions (sequential sends, no waiting)
-      const submissions: { pairId: string; hash: string }[] = [];
+      // Sequential execution: submit and wait for each transaction
+      let successCount = 0;
+      let failCount = 0;
+      const failedPairIds: string[] = [];
+
       for (let i = 0; i < uniquePairIds.length; i++) {
         const pairId = uniquePairIds[i];
         const tradesInQueue = localData.outstandingTrades.filter(
           (t) => t.pairId === pairId
         ).length;
+
         console.log(
           `\n🔄 Executing trade queue ${i + 1}/${
             uniquePairIds.length
@@ -982,63 +1005,67 @@ export class TradeMonitor {
         );
 
         try {
-          const txHash = await this.executeTrades(pairId);
-          submissions.push({ pairId, hash: txHash });
-        } catch (error) {
-          console.error(
-            `❌ Failed to submit executeTrades for pairId ${pairId}:`,
-            error
-          );
-        }
-      }
+          // Submit transaction
+          const tx = await this.executeTrades(pairId);
 
-      if (submissions.length === 0) {
-        console.log("⚠️ No transactions submitted this round.");
-        return;
-      }
+          // Wait for confirmation with 3-minute timeout
+          console.log(`⏳ Waiting for confirmation (timeout: 3 minutes)...`);
+          const receipt = await tx.wait(1, 180000); // 1 confirmation, 3min timeout
 
-      // Stage 2: poll all receipts concurrently for up to 5 minutes
-      console.log("\n⏳ Waiting for confirmations (up to 5 minutes)...");
-      const deadline = Date.now() + 5 * 60 * 1000;
-      const statuses: Record<string, "confirmed" | "pending"> = {};
-      submissions.forEach((s) => (statuses[s.hash] = "pending"));
-
-      const pollOnce = async (hash: string) => {
-        try {
-          return await this.provider.getTransactionReceipt(hash);
-        } catch {
-          return null;
-        }
-      };
-
-      while (Date.now() < deadline) {
-        const receipts = await Promise.all(
-          submissions.map((s) => pollOnce(s.hash))
-        );
-        let allDone = true;
-        receipts.forEach((r, idx) => {
-          if (r && statuses[submissions[idx].hash] !== "confirmed") {
+          if (receipt && receipt.status === 1) {
             console.log(
-              `✅ ${submissions[idx].hash} confirmed in block ${r.blockNumber}`
+              `✅ Transaction confirmed in block ${receipt.blockNumber}`
             );
-            statuses[submissions[idx].hash] = "confirmed";
+            successCount++;
+          } else {
+            console.error(`❌ Transaction reverted: ${tx.hash}`);
+            failCount++;
+            failedPairIds.push(pairId);
           }
-          if (!r) allDone = false;
-        });
-        if (allDone) break;
-        await new Promise((res) => setTimeout(res, 10_000));
+
+          // Small delay before next transaction (avoid nonce issues)
+          if (i < uniquePairIds.length - 1) {
+            console.log(`⏱️  Waiting 2 seconds before next transaction...`);
+            await new Promise((res) => setTimeout(res, 2000));
+          }
+        } catch (error: any) {
+          // Check if it's a gas-related error
+          if (
+            error.message?.includes("gas required exceeds") ||
+            error.message?.includes("out of gas") ||
+            error.code === "INSUFFICIENT_FUNDS"
+          ) {
+            console.warn(
+              `⚠️ Gas/funds insufficient for pairId ${pairId}, skipping this round`
+            );
+            failCount++;
+            failedPairIds.push(pairId);
+            continue; // Skip to next pairId
+          }
+
+          // For other errors, log and continue
+          console.error(
+            `❌ Failed to execute trades for pairId ${pairId}:`,
+            error.shortMessage || error.message
+          );
+          failCount++;
+          failedPairIds.push(pairId);
+        }
       }
 
-      const confirmed = Object.values(statuses).filter(
-        (s) => s === "confirmed"
-      ).length;
-      const pending = submissions.length - confirmed;
-      console.log(
-        `\n📊 Execution summary: confirmed=${confirmed}, pending=${pending}, total=${submissions.length}`
-      );
-      if (pending > 0) {
-        console.log("ℹ️ Pending txs will be picked up by the next run.");
+      // Final summary
+      console.log(`\n${"=".repeat(80)}`);
+      console.log("📊 Execution Summary:");
+      console.log(`  ✅ Successful: ${successCount}`);
+      console.log(`  ❌ Failed: ${failCount}`);
+      console.log(`  📝 Total: ${uniquePairIds.length}`);
+      if (failedPairIds.length > 0) {
+        console.log(`  ⚠️  Failed pair IDs will be retried in the next run:`);
+        failedPairIds.forEach((id) => console.log(`     - ${id}`));
       }
+      console.log(`${"=".repeat(80)}\n`);
+
+      console.log("✅ Trade execution process completed!");
     } catch (error) {
       console.error("❌ Error during trade execution:", error);
       throw error;
