@@ -106,7 +106,7 @@ const InstasettleSelectTokenModal: React.FC<
     trades.forEach((trade) => {
       if (
         trade.isInstasettlable &&
-        trade.settlements.length === 0 &&
+        trade.instasettlements.length === 0 &&
         trade.cancellations.length === 0
       ) {
         tokenInAddresses.add(trade.tokenIn.toLowerCase())
