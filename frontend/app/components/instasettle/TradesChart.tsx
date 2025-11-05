@@ -108,7 +108,7 @@ export default function TradesChart({
     // Filter trades based on selected tokens
     let filteredTrades = trades.filter(
       (trade) =>
-        trade.isInstasettlable &&
+        (trade.isInstasettlable || trade.onlyInstasettle) &&
         trade.settlements.length === 0 &&
         trade.cancellations.length === 0
     )
@@ -126,81 +126,10 @@ export default function TradesChart({
       )
     }
 
-    // Add mock "Only Instasettlable" trades
-    const mockOnlyInstasettlableTrades: Trade[] = [
-      {
-        id: 'mock-only-1',
-        amountIn: '3000000000000000000', // 3 tokens
-        amountRemaining: '3000000000000000000',
-        minAmountOut: '3000000000000000000',
-        tokenIn:
-          selectedTokenFrom?.token_address ||
-          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-        tokenOut:
-          selectedTokenTo?.token_address ||
-          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        isInstasettlable: true,
-        realisedAmountOut: '0',
-        lastSweetSpot: '0',
-        executions: [],
-        settlements: [],
-        cancellations: [],
-        instasettleBps: '167', // ~1.67% for $0.05 savings on $3
-        createdAt: new Date().toISOString(),
-        tradeId: 'mock-trade-1',
-        user: '0x0000000000000000000000000000000000000000',
-      },
-      {
-        id: 'mock-only-2',
-        amountIn: '3000000000000000000',
-        amountRemaining: '3000000000000000000',
-        minAmountOut: '3000000000000000000',
-        tokenIn:
-          selectedTokenFrom?.token_address ||
-          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-        tokenOut:
-          selectedTokenTo?.token_address ||
-          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        isInstasettlable: true,
-        realisedAmountOut: '0',
-        lastSweetSpot: '0',
-        executions: [],
-        settlements: [],
-        cancellations: [],
-        instasettleBps: '167',
-        createdAt: new Date().toISOString(),
-        tradeId: 'mock-trade-2',
-        user: '0x0000000000000000000000000000000000000000',
-      },
-      {
-        id: 'mock-only-3',
-        amountIn: '3000000000000000000',
-        amountRemaining: '3000000000000000000',
-        minAmountOut: '3000000000000000000',
-        tokenIn:
-          selectedTokenFrom?.token_address ||
-          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-        tokenOut:
-          selectedTokenTo?.token_address ||
-          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        isInstasettlable: true,
-        realisedAmountOut: '0',
-        lastSweetSpot: '0',
-        executions: [],
-        settlements: [],
-        cancellations: [],
-        instasettleBps: '167',
-        createdAt: new Date().toISOString(),
-        tradeId: 'mock-trade-3',
-        user: '0x0000000000000000000000000000000000000000',
-      },
-    ]
-
     // Combine real and mock trades
-    const allTrades = [...filteredTrades, ...mockOnlyInstasettlableTrades]
+    const allTrades = [...filteredTrades]
 
     return allTrades.map((trade: Trade, index: number): ChartDataPoint => {
-      const isOnlyInstasettlable = trade.id.startsWith('mock-only')
       try {
         // Find token information for this trade (same logic as TradesTable)
         // const tokenIn = tokenList.find(
@@ -344,22 +273,7 @@ export default function TradesChart({
           formattedAmountRemaining: formattedAmountRemaining,
           cost: isFinite(costInUsd) ? costInUsd : 0,
           savings: isFinite(savingsInUsd) ? savingsInUsd : 0,
-          onlyInstasettlable: isOnlyInstasettlable,
-        }
-
-        // Override values for mock "Only Instasettlable" trades
-        if (isOnlyInstasettlable) {
-          return {
-            cost: 3.0, // $3 cost
-            volume: 3.0, // 3 tokens volume
-            savings: 0.05, // $0.05 savings
-            trade: {
-              ...extendedTrade,
-              cost: 3.0,
-              savings: 0.05,
-              amountInUsd: 3.0,
-            },
-          }
+          onlyInstasettlable: trade.onlyInstasettle === true,
         }
 
         return {
