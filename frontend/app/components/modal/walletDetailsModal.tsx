@@ -190,7 +190,7 @@ const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                                     isInstasettlable: false,
                                     realisedAmountOut: '0',
                                     executions: [],
-                                    settlements: [],
+                                    instasettlements: [],
                                     cancellations: [],
                                   }}
                                   isLoading={true}

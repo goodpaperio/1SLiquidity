@@ -8,7 +8,7 @@ interface InstasettleTrade {
   isInstasettlable: boolean
   tokenIn: string
   tokenOut: string
-  settlements: { id: string }[]
+  instasettlements: { id: string }[]
   cancellations: { id: string }[]
 }
 
@@ -37,7 +37,7 @@ export function useInstasettleTrades() {
     return data.trades.filter(
       (trade) =>
         trade.isInstasettlable &&
-        trade.settlements.length === 0 &&
+        trade.instasettlements.length === 0 &&
         trade.cancellations.length === 0
     )
   }

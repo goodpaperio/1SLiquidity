@@ -85,7 +85,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
       trade.executions?.some(
         (execution: any) => execution.lastSweetSpot === '0'
       ) ||
-      trade.settlements?.length > 0 ||
+      trade.instasettlements?.length > 0 ||
       trade.cancellations?.length > 0
     )
   }
@@ -406,7 +406,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                                 isInstasettlable: false,
                                 realisedAmountOut: '0',
                                 executions: [],
-                                settlements: [],
+                                instasettlements: [],
                                 cancellations: [],
                               }}
                               isLoading={true}

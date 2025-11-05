@@ -26,7 +26,7 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
-  settlements: any[]
+  instasettlements: any[]
   cancellations: any[]
   onlyInstasettle?: boolean
 }
@@ -181,11 +181,11 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
               )}
               style={{
                 width: `${Math.min(
-                  ((trade.settlements.length > 0
-                    ? trade.settlements.length + trade.executions.length
+                  ((trade.instasettlements.length > 0
+                    ? trade.instasettlements.length + trade.executions.length
                     : trade.executions.length) /
-                    (trade.settlements.length > 0
-                      ? trade.settlements.length + trade.executions.length
+                    (trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
                       : remainingStreams)) *
                     100,
                   100
@@ -211,47 +211,52 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
             </>
           ) : (
             <>
-              <p className="whitespace-nowrap">
-                {trade.settlements.length > 0
-                  ? trade.settlements.length + trade.executions.length
-                  : trade.executions.length}{' '}
-                /{' '}
-                {trade.settlements.length > 0
-                  ? trade.settlements.length + trade.executions.length
-                  : remainingStreams}{' '}
-                completed
-              </p>
-              {trade.settlements.length > 0 ||
-              trade.cancellations.length > 0 ||
-              (trade.settlements.length > 0
-                ? trade.settlements.length + trade.executions.length
-                : trade.executions.length) >=
-                (trade.settlements.length > 0
-                  ? trade.settlements.length + trade.executions.length
-                  : remainingStreams) ? (
-                ''
-              ) : (
-                <div className="flex items-center whitespace-nowrap ml-auto">
-                  <Image
-                    src="/icons/time.svg"
-                    alt="clock"
-                    className="w-5"
-                    width={20}
-                    height={20}
-                  />
-                  <p>{estimatedTime || '..'}</p>
-                </div>
+              {!trade.onlyInstasettle && (
+                <>
+                  <p className="whitespace-nowrap">
+                    {trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
+                      : trade.executions.length}{' '}
+                    /{' '}
+                    {trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
+                      : remainingStreams}{' '}
+                    completed
+                  </p>
+
+                  {trade.instasettlements.length > 0 ||
+                  trade.cancellations.length > 0 ||
+                  (trade.instasettlements.length > 0
+                    ? trade.instasettlements.length + trade.executions.length
+                    : trade.executions.length) >=
+                    (trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
+                      : remainingStreams) ? (
+                    ''
+                  ) : (
+                    <div className="flex items-center whitespace-nowrap ml-auto">
+                      <Image
+                        src="/icons/time.svg"
+                        alt="clock"
+                        className="w-5"
+                        width={20}
+                        height={20}
+                      />
+                      <p>{estimatedTime || '..'}</p>
+                    </div>
+                  )}
+                </>
               )}
               {trade.isInstasettlable && !trade.onlyInstasettle && (
                 <InstasettlePill
-                  isSettled={trade.settlements.length > 0}
+                  isSettled={trade.instasettlements.length > 0}
                   variant="instasettled"
                 />
               )}
 
               {trade.onlyInstasettle && (
                 <InstasettlePill
-                  isSettled={trade.settlements.length > 0}
+                  isSettled={trade.instasettlements.length > 0}
                   variant="only-instasettlable"
                 />
               )}
