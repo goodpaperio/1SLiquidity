@@ -10,6 +10,7 @@ export interface Execution {
 export interface Cancellation {
   id: string
   timestamp: string
+  isAutocancelled: boolean
 }
 
 export interface Settlement {

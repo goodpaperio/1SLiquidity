@@ -25,6 +25,8 @@ interface DetailSectionProps {
   slippageSavings?: number | null
   dexFee?: number | null
   usePriceBased?: boolean
+  priceAccuracyNODECA?: number | null
+  priceAccuracyDECA?: number | null
 }
 
 const DetailSection: React.FC<DetailSectionProps> = ({
@@ -43,6 +45,8 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   slippageSavings = null,
   isFetchingReserves = false,
   usePriceBased = true,
+  priceAccuracyNODECA = null,
+  priceAccuracyDECA = null,
 }) => {
   const [showDetails, setShowDetails] = useState(true)
   const { contractInfo, getContractInfo } = useCoreTrading()
@@ -120,6 +124,28 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     console.log('slippage savings ====>', usdString, percentString)
 
     return `${usdString}`
+  }
+
+  // Format price accuracy comparison
+  const formatPriceAccuracy = () => {
+    console.log('price accuracy ====>', priceAccuracyNODECA, priceAccuracyDECA)
+    if (
+      priceAccuracyNODECA === null ||
+      priceAccuracyDECA === null ||
+      priceAccuracyNODECA === undefined ||
+      priceAccuracyDECA === undefined
+    ) {
+      return null
+    }
+
+    // Convert to percentage
+    const noDECAPercent = (priceAccuracyNODECA * 100).toFixed(2)
+    const withDECAPercent = (priceAccuracyDECA * 100).toFixed(2)
+
+    return {
+      noDECA: `${noDECAPercent}%`,
+      withDECA: `${withDECAPercent}%`,
+    }
   }
 
   const LoadingSkeleton = () => (
@@ -247,6 +273,27 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             contractInfo={contractInfo}
             isCalculating={isCalculating}
           />
+
+          {formatPriceAccuracy() && (
+            <AmountTag
+              title="Price Accuracy"
+              amount={
+                isCalculating ? undefined : (
+                  <div className="flex flex-col items-end">
+                    <p className="">
+                      With DECA: {formatPriceAccuracy()?.withDECA}
+                    </p>
+                    <p className="text-white52 text-[12px]">
+                      Without DECA: {formatPriceAccuracy()?.noDECA}
+                    </p>
+                  </div>
+                )
+              }
+              infoDetail="Estimated"
+              isLoading={isCalculating}
+              firstColumnClassName="items-center"
+            />
+          )}
           {/* <AmountTag
             title="Price Impact"
             amount={'0.25%'}
