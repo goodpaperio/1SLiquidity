@@ -409,3 +409,18 @@ export const DocsIcon = ({ className }: { className?: string }) => {
     </svg>
   )
 }
+
+export const DashboardIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path d="M3.333 11.667h5V3.333h-5v8.334zm0 5h5v-3.334h-5v3.334zm6.667 0h5v-8.334h-5v8.334zm0-13.334v3.334h5V3.333h-5z" />
+    </svg>
+  )
+}
