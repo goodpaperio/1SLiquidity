@@ -179,8 +179,8 @@ export default function TradePage() {
 
   const isLoading = isLoadingTrade || isLoadingTokens
 
-  const tokenIn = trade ? findTokenForTrade(trade.tokenIn) : null
-  const tokenOut = trade ? findTokenForTrade(trade.tokenOut) : null
+  const tokenIn = trade ? findTokenForTrade(trade.tokenIn) : undefined
+  const tokenOut = trade ? findTokenForTrade(trade.tokenOut) : undefined
 
   const formattedAmountIn =
     tokenIn && trade
@@ -546,7 +546,7 @@ export default function TradePage() {
                 sellToken={tokenIn}
                 buyToken={tokenOut}
                 isLoading={isLoading}
-                cancelled={trade?.cancellations?.length > 0}
+                cancelled={(trade?.cancellations?.length ?? 0) > 0}
               />
 
               <div className="flex gap-2 justify-between py-4 border-b border-borderBottom">
@@ -698,7 +698,7 @@ export default function TradePage() {
               <div
                 className={cn(
                   'flex flex-col gap-2 pt-4 pb-4 border-b border-borderBottom',
-                  trade?.cancellations?.length > 0 && 'border-b-0'
+                  (trade?.cancellations?.length ?? 0) > 0 && 'border-b-0'
                 )}
               >
                 <p className="text-[14px] text-white w-full text-center font-medium">
@@ -710,8 +710,8 @@ export default function TradePage() {
                   amount={
                     isLoading
                       ? '0 / 0'
-                      : trade?.instasettlements?.length > 0 ||
-                          trade?.cancellations?.length > 0
+                      : (trade?.instasettlements?.length ?? 0) > 0 ||
+                          (trade?.cancellations?.length ?? 0) > 0
                         ? `${Number(executionsCount) + 1} / ${Number(executionsCount) + 1}`
                         : `${executionsCount} / ${executionsCount + lastSweetSpot}`
                   }
@@ -724,21 +724,21 @@ export default function TradePage() {
                   amount={
                     isLoading
                       ? '0%'
-                      : `${trade?.instasettlements?.length > 0 ? 100 : volumeExecutedPercentage}%`
+                      : `${(trade?.instasettlements?.length ?? 0) > 0 ? 100 : volumeExecutedPercentage}%`
                   }
                   infoDetail="Percentage of trade volume that has been executed"
                   titleClassName="text-white52"
                   isLoading={isLoading}
                 />
                 {!(
-                  trade?.instasettlements?.length > 0 ||
-                  trade?.cancellations?.length > 0 ||
+                  (trade?.instasettlements?.length ?? 0) > 0 ||
+                  (trade?.cancellations?.length ?? 0) > 0 ||
                   trade?.onlyInstasettle
                 ) && (
                   <AmountTag
                     title="Est time"
                     amount={
-                      isLoading || trade?.instasettlements?.length > 0
+                      isLoading || (trade?.instasettlements?.length ?? 0) > 0
                         ? '...'
                         : estimatedTime
                     }
@@ -951,8 +951,8 @@ export default function TradePage() {
               {/* User Actions */}
               {isUser &&
                 !(
-                  trade?.instasettlements?.length > 0 ||
-                  trade?.cancellations?.length > 0
+                  (trade?.instasettlements?.length ?? 0) > 0 ||
+                  (trade?.cancellations?.length ?? 0) > 0
                 ) && (
                   <div className="pt-4">
                     <Button
@@ -1039,7 +1039,7 @@ export default function TradePage() {
             {!isLoading &&
               formattedExecutions.length === 0 &&
               formattedSettlements.length === 0 &&
-              trade?.cancellations?.length === 0 && (
+              (trade?.cancellations?.length ?? 0) === 0 && (
                 <div className="text-white/50 text-center py-8 bg-white005 rounded-[15px]">
                   No streams executed yet
                 </div>
