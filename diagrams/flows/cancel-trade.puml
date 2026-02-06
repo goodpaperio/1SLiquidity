@@ -1,0 +1,31 @@
+@startuml Cancel Trade
+title Trade Cancellation Flow
+
+actor User
+database "UI" as UI
+database "SubGraph" as S
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+
+User -> UI: Initiates trade cancellation
+UI -> R: Cancellation request\nsigned & submitted
+activate R
+R -> R: Router validates\nrequest & signature
+R -> C: Call cancel trade function\nwith tradeId
+deactivate R
+activate C
+C -> C: Validate trade exists\nand can be cancelled
+C -> E: Send trade data to executor\nfor cancellation
+activate E
+E -> E: Validate cancellation\nconditions
+E -> C: Confirm cancellation\nand return metadata
+deactivate E
+C -> C: Update trade status\nto cancelled
+C -> User: Transfer balance back\nto user's EOA
+C -> C: Emit cancellation event
+deactivate C
+S <--> C: Subgraph listens for events
+UI <--> S: UI updates trade status\nto cancelled
+
+@enduml

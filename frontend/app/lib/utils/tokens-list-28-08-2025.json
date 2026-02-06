@@ -1,0 +1,1173 @@
+{
+  "timestamp": "2025-08-28T11:07:15.3NZ",
+  "testResults": [
+    {
+      "baseToken": "USDC",
+      "totalTests": 0,
+      "successCount": 0,
+      "failureCount": 0,
+      "results": []
+    },
+
+    {
+      "baseToken": "USDT",
+      "totalTests": 44,
+      "successCount": 29,
+      "failureCount": 3,
+      "results": [
+        {
+          "tokenName": "usdc",
+          "tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wbtc",
+          "tokenAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "link",
+          "tokenAddress": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "weth",
+          "tokenAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "shib",
+          "tokenAddress": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ton",
+          "tokenAddress": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "uni",
+          "tokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "aave",
+          "tokenAddress": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "cro",
+          "tokenAddress": "0xA0b73E1Ff0B80914AB6fe0444E65848C4C34450b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "near",
+          "tokenAddress": "0x85F17Cf997934a597031b2E18a9aB6ebD4B9f6a4",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "arb",
+          "tokenAddress": "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "fet",
+          "tokenAddress": "0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "qnt",
+          "tokenAddress": "0x4a220E6096B25EADb88358cb44068A3248254675",
+          "success": false,
+          "failureReason": "scaledReserveOut == 0"
+        },
+        {
+          "tokenName": "reth",
+          "tokenAddress": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "crv",
+          "tokenAddress": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "inj",
+          "tokenAddress": "0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "imx",
+          "tokenAddress": "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "grt",
+          "tokenAddress": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ldo",
+          "tokenAddress": "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "paxg",
+          "tokenAddress": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ens",
+          "tokenAddress": "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "jasmy",
+          "tokenAddress": "0x7420B4b9a0110cdC71fB720908340C03F9Bc03EC",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "eeth",
+          "tokenAddress": "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "sand",
+          "tokenAddress": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "pendle",
+          "tokenAddress": "0x808507121B80c02388fAd14726482e061B8da827",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "btt",
+          "tokenAddress": "0xC669928185DbCE49d2230CC9B0979BE6DC797957",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "mana",
+          "tokenAddress": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tel",
+          "tokenAddress": "0x467Bccd9d29f223BcE8043b84E8C8B282827790F",
+          "success": false,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ape",
+          "tokenAddress": "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tusd",
+          "tokenAddress": "0x0000000000085d4780B73119b644AE5ecd22b376",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "comp",
+          "tokenAddress": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "chz",
+          "tokenAddress": "0x3506424F91fD33084466F402d5D97f05F8e3b4AF",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "1inch",
+          "tokenAddress": "0x111111111117dC0aa78b770fA6A738034120C302",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "move",
+          "tokenAddress": "0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "super",
+          "tokenAddress": "0xe53EC727dbDEB9E2d5456c3be40cFF031AB40A55",
+          "success": false,
+          "failureReason": "scaledReserveOut == 0"
+        },
+        {
+          "tokenName": "matic",
+          "tokenAddress": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "frax",
+          "tokenAddress": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
+          "success": false,
+          "failureReason": "scaledReserveOut == 0"
+        },
+        {
+          "tokenName": "usdc",
+          "tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wbtc",
+          "tokenAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "link",
+          "tokenAddress": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "weth",
+          "tokenAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "uni",
+          "tokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": true,
+          "failureReason": ""
+        }
+      ]
+    },
+
+    {
+      "baseToken": "WBTC",
+      "totalTests": 20,
+      "successCount": 18,
+      "failureCount": 2,
+      "results": [
+        {
+          "tokenName": "usdt",
+          "tokenAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "usdc",
+          "tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "steth",
+          "tokenAddress": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+          "success": false,
+          "failureReason": "scaledReserveOut == 0"
+        },
+        {
+          "tokenName": "link",
+          "tokenAddress": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "weth",
+          "tokenAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "uni",
+          "tokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "aave",
+          "tokenAddress": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "cro",
+          "tokenAddress": "0xA0b73E1Ff0B80914AB6fe0444E65848C4C34450b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "solvbtc",
+          "tokenAddress": "0x7A56E1C57C7475CCf742a1832B028F0456652F97",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "grt",
+          "tokenAddress": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "paxg",
+          "tokenAddress": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tusd",
+          "tokenAddress": "0x0000000000085d4780B73119b644AE5ecd22b376",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "chz",
+          "tokenAddress": "0x3506424F91fD33084466F402d5D97f05F8e3b4AF",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "1inch",
+          "tokenAddress": "0x111111111117dC0aa78b770fA6A738034120C302",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "matic",
+          "tokenAddress": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "usdt",
+          "tokenAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "weth",
+          "tokenAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "paxg",
+          "tokenAddress": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+          "success": true,
+          "failureReason": ""
+        }
+      ]
+    },
+
+    {
+      "baseToken": "WETH",
+      "totalTests": 125,
+      "successCount": 63,
+      "failureCount": 62,
+      "results": [
+        {
+          "tokenName": "usdt",
+          "tokenAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "bnb",
+          "tokenAddress": "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "usdc",
+          "tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "steth",
+          "tokenAddress": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wbtc",
+          "tokenAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wsteth",
+          "tokenAddress": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "link",
+          "tokenAddress": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "leo",
+          "tokenAddress": "0x2AF5D2aD76741191D15Dfe7bF6aC92d4Bd912Ca3",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "shib",
+          "tokenAddress": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ton",
+          "tokenAddress": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "usds",
+          "tokenAddress": "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "uni",
+          "tokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "pepe",
+          "tokenAddress": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "bgb",
+          "tokenAddress": "0x54D2252757e1672EEaD234D27B1270728fF90581",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "aave",
+          "tokenAddress": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "cro",
+          "tokenAddress": "0xA0b73E1Ff0B80914AB6fe0444E65848C4C34450b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "near",
+          "tokenAddress": "0x85F17Cf997934a597031b2E18a9aB6ebD4B9f6a4",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ondo",
+          "tokenAddress": "0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ena",
+          "tokenAddress": "0x57e114B691Db790C35207b2e685D4A43181e6061",
+          "success": false,
+          "failureReason": "scaledReserveIn == 0"
+        },
+        {
+          "tokenName": "okb",
+          "tokenAddress": "0x75231F58b43240C9718Dd58B4967c5114342a86c",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "gt",
+          "tokenAddress": "0xE66747a101bFF2dBA3697199DCcE5b743b454759",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "render",
+          "tokenAddress": "0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "pol",
+          "tokenAddress": "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wld",
+          "tokenAddress": "0x163f8C2467924be0ae7B5347228CABF260318753",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "fet",
+          "tokenAddress": "0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "sky",
+          "tokenAddress": "0x56072C95FAA701256059aa122697B133aDEd9279",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "qnt",
+          "tokenAddress": "0x4a220E6096B25EADb88358cb44068A3248254675",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "reth",
+          "tokenAddress": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "spx",
+          "tokenAddress": "0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "rseth",
+          "tokenAddress": "0xA1290d69c65A6Fe4DF752f95823fae25cB99e5A7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "meth",
+          "tokenAddress": "0xd5F7838F5C461fefF7FE49ea5ebaF7728bB0ADfa",
+          "success": false,
+          "failureReason": "scaledReserveIn == 0"
+        },
+        {
+          "tokenName": "crv",
+          "tokenAddress": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "inj",
+          "tokenAddress": "0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "nexo",
+          "tokenAddress": "0xB62132e35a6c13ee1EE0f84dC5d40bad8d815206",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "floki",
+          "tokenAddress": "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ezeth",
+          "tokenAddress": "0xbf5495Efe5DB9ce00f80364C8B423567e58d2110",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "virtual",
+          "tokenAddress": "0x44ff8620b8cA30902395A7bD3F2407e1A091BF73",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "imx",
+          "tokenAddress": "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "grt",
+          "tokenAddress": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ldo",
+          "tokenAddress": "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "paxg",
+          "tokenAddress": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "ens",
+          "tokenAddress": "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tkx",
+          "tokenAddress": "0x667102BD3413bFEaa3Dffb48fa8288819E480a88",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "pyusd",
+          "tokenAddress": "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "jasmy",
+          "tokenAddress": "0x7420B4b9a0110cdC71fB720908340C03F9Bc03EC",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "gala",
+          "tokenAddress": "0xd1d2Eb1B1e90B638588728b4130137D262C87cae",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "sand",
+          "tokenAddress": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "pendle",
+          "tokenAddress": "0x808507121B80c02388fAd14726482e061B8da827",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "btt",
+          "tokenAddress": "0xC669928185DbCE49d2230CC9B0979BE6DC797957",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "mana",
+          "tokenAddress": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "tel",
+          "tokenAddress": "0x467Bccd9d29f223BcE8043b84E8C8B282827790F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "mog",
+          "tokenAddress": "0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "xcn",
+          "tokenAddress": "0xA2cd3D43c775978A96BdBf12d733D5A1ED94fb18",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "cbeth",
+          "tokenAddress": "0xBe9895146f7AF43049ca1c1AE358B0541Ea49704",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ape",
+          "tokenAddress": "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tusd",
+          "tokenAddress": "0x0000000000085d4780B73119b644AE5ecd22b376",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "rsr",
+          "tokenAddress": "0x320623b8E4fF03373931769A31Fc52A4E78B5d70",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "aioz",
+          "tokenAddress": "0x626E8036dEB333b408Be468F951bdB42433cBF18",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "sdai",
+          "tokenAddress": "0x83F20F44975D03b1b09e64809B757c47f942BEeA",
+          "success": false,
+          "failureReason": "scaledReserveIn == 0"
+        },
+        {
+          "tokenName": "sweth",
+          "tokenAddress": "0xf951E335afb289353dc249e82926178EaC7DEd78",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ethfi",
+          "tokenAddress": "0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "comp",
+          "tokenAddress": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "nft",
+          "tokenAddress": "0x198d14F2Ad9CE69E76ea330B374DE4957C3F850a",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "strk",
+          "tokenAddress": "0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "axs",
+          "tokenAddress": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dexe",
+          "tokenAddress": "0xde4EE8057785A7e8e800Db58F9784845A5C2Cbd6",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "chz",
+          "tokenAddress": "0x3506424F91fD33084466F402d5D97f05F8e3b4AF",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "beam",
+          "tokenAddress": "0x62D0A8458eD7719FDAF978fe5929C6D342B0bFcE",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "cvx",
+          "tokenAddress": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "1inch",
+          "tokenAddress": "0x111111111117dC0aa78b770fA6A738034120C302",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "move",
+          "tokenAddress": "0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073",
+          "success": false,
+          "failureReason": "scaledReserveIn == 0"
+        },
+        {
+          "tokenName": "gno",
+          "tokenAddress": "0x6810e776880C02933D47DB1b9fc05908e5386b96",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "ohm",
+          "tokenAddress": "0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ctc",
+          "tokenAddress": "0xa3EE21C306A700E682AbCdfe9BaA6A08F3820419",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "ath",
+          "tokenAddress": "0xbe0Ed4138121EcFC5c0E56B40517da27E6c5226B",
+          "success": false,
+          "failureReason": "scaledReserveIn == 0"
+        },
+        {
+          "tokenName": "super",
+          "tokenAddress": "0xe53EC727dbDEB9E2d5456c3be40cFF031AB40A55",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "turbo",
+          "tokenAddress": "0xA35923162C49cF95e6BF26623385eb431ad920D3",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "matic",
+          "tokenAddress": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "amp",
+          "tokenAddress": "0xfF20817765cB7f73d4bde2e66e067E58D11095C2",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "frax",
+          "tokenAddress": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "usdt",
+          "tokenAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "bnb",
+          "tokenAddress": "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "usdc",
+          "tokenAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "steth",
+          "tokenAddress": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wbtc",
+          "tokenAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "wsteth",
+          "tokenAddress": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "link",
+          "tokenAddress": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "shib",
+          "tokenAddress": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "uni",
+          "tokenAddress": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "aave",
+          "tokenAddress": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "cro",
+          "tokenAddress": "0xA0b73E1Ff0B80914AB6fe0444E65848C4C34450b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "dai",
+          "tokenAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "near",
+          "tokenAddress": "0x85F17Cf997934a597031b2E18a9aB6ebD4B9f6a4",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "arb",
+          "tokenAddress": "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "fet",
+          "tokenAddress": "0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "qnt",
+          "tokenAddress": "0x4a220E6096B25EADb88358cb44068A3248254675",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "reth",
+          "tokenAddress": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "crv",
+          "tokenAddress": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "inj",
+          "tokenAddress": "0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "imx",
+          "tokenAddress": "0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "grt",
+          "tokenAddress": "0xc944E90C64B2c07662A292be6244BDf05Cda44a7",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ldo",
+          "tokenAddress": "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "paxg",
+          "tokenAddress": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "ens",
+          "tokenAddress": "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "jasmy",
+          "tokenAddress": "0x7420B4b9a0110cdC71fB720908340C03F9Bc03EC",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "eeth",
+          "tokenAddress": "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "sand",
+          "tokenAddress": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "pendle",
+          "tokenAddress": "0x808507121B80c02388fAd14726482e061B8da827",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "btt",
+          "tokenAddress": "0xC669928185DbCE49d2230CC9B0979BE6DC797957",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "mana",
+          "tokenAddress": "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "tel",
+          "tokenAddress": "0x467Bccd9d29f223BcE8043b84E8C8B282827790F",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "ape",
+          "tokenAddress": "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "tusd",
+          "tokenAddress": "0x0000000000085d4780B73119b644AE5ecd22b376",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "sweth",
+          "tokenAddress": "0xf951E335afb289353dc249e82926178EaC7DEd78",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "comp",
+          "tokenAddress": "0xc00e94Cb662C3520282E6f5717214004A7f26888",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "axs",
+          "tokenAddress": "0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "cvx",
+          "tokenAddress": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "1inch",
+          "tokenAddress": "0x111111111117dC0aa78b770fA6A738034120C302",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "gno",
+          "tokenAddress": "0x6810e776880C02933D47DB1b9fc05908e5386b96",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "ohm",
+          "tokenAddress": "0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5",
+          "success": true,
+          "failureReason": ""
+        },
+        {
+          "tokenName": "super",
+          "tokenAddress": "0xe53EC727dbDEB9E2d5456c3be40cFF031AB40A55",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "matic",
+          "tokenAddress": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "amp",
+          "tokenAddress": "0xfF20817765cB7f73d4bde2e66e067E58D11095C2",
+          "success": false,
+          "failureReason": "Unknown error"
+        },
+        {
+          "tokenName": "frax",
+          "tokenAddress": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
+          "success": false,
+          "failureReason": "Unknown error"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+@startuml StreamDaemon
+title StreamDaemon Contract Flow
+
+actor "Bot" as B
+actor "Admin" as A
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+box StreamDaemon
+participant "checkSweetSpot" as CSS
+participant "calculateStreams" as CS
+participant "updateDEXRoutes" as UDR
+' participant "cacheSweetSpot" as CSP
+end box
+database "DEXs" as DEX
+
+group "Sweet Spot Calculation for Trade Entry"
+  E -> CSS: checkSweetSpot(pairId, amountIn, gas)
+  activate CSS
+  
+  CSS -> CSS: generate pairId from tokens
+  CSS -> CSS: check if cached sweet spot exists
+  
+  alt Cache Out of Range
+    CSS -> DEX: getReserves(tokenA, tokenB) per DEX
+    DEX -> CSS: return current reserves (R)
+    CSS -> CS: calculate optimal streams with\nDEX that has highest reserves
+    activate CS
+    CS -> CS: calculate gas cost (G)
+    CS -> CS: extract trade volume (V)
+    CS -> CS: apply formula: N = V/sqrt(G·R)
+    CS -> CS: apply fee tier considerations
+    CS -> CS: check liquidity depth constraints
+    CS -> CSS: return optimal stream count
+    deactivate CS
+    ' CSS -> CSP: cache result with timestamp
+  else Valid Cache Exists
+    CSS -> CSS: use cached sweet spot value
+  end
+  
+  CSS -> E: Return optimal stream count\nfor given volume and\n +/- 2% liquidity on the given path
+  deactivate CSS
+end
+
+group "DEX Route Management"
+  A -> UDR: addDEXRoute(dexAddress, tokenA, tokenB)
+  activate UDR
+  UDR -> UDR: verify caller is admin
+  UDR -> UDR: generate pairId
+  UDR <-> DEX: return reserves
+  UDR -> UDR: tore route in pairIdDex mapping
+  UDR -> UDR: cache timestamp
+  UDR -> UDR: emit DEXRouteAdded event
+  deactivate UDR
+  
+  A -> UDR: updateDEXRoute(dexAddress, tokenA, tokenB)
+  activate UDR
+  UDR -> UDR: verify caller is admin
+  UDR -> UDR: generate pairId
+  UDR <-> DEX: return reserves
+  UDR -> UDR: update route in pairIdDex mapping
+  UDR -> UDR: Emit DEXRouteUpdated event
+  deactivate UDR
+  
+  A -> UDR: removeDEXRoute(dexAddress, pairId)
+  activate UDR
+  UDR -> UDR: Verify caller is admin
+  UDR -> UDR: Remove route from mapping
+  UDR -> UDR: Emit DEXRouteRemoved event
+  deactivate UDR
+end
+
+' group "Sweet Spot Re-caching"
+'   B -> R: Call recacheSweetSpots()
+'   R -> CSP: Forward recache request
+'   activate CSP
+  
+'   CSP -> CSP: Loop through all cached DEX routes
+'   loop For each pairId in each DEX
+'     CSP -> CSP: Check if sweet spot is cached
+'     alt Sweet spot is cached
+'       CSP -> CSP: Return cached sweet spot
+'     else Sweet spot is not cached
+'       CSP -> CSP: Recalculate sweet spot (reserves)
+'     end
+'   end
+  
+'   CSP -> CSP: Emit SweetSpotsRecached event
+'   CSP -> R: Return success
+'   deactivate CSP
+' end
+
+@enduml

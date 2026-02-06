@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-10-08T11:59:25Z",
+  "testResults": [
+    {
+      "baseToken": "USDC",
+      "totalTests": 71,
+      "successCount": 66,
+      "failureCount": 5,
+      "successTokens": [
+        "1inch",
+        "aave",
+        "arb",
+        "bonk",
+        "cbbtc",
+        "cbeth",
+        "chz",
+        "comp",
+        "cro",
+        "crv",
+        "dai",
+        "dexe",
+        "eigen",
+        "ena",
+        "ens",
+        "ethfi",
+        "fdusd",
+        "fet",
+        "ff",
+        "fluid",
+        "gho",
+        "gno",
+        "grt",
+        "imx",
+        "ldo",
+        "linea",
+        "link",
+        "mana",
+        "near",
+        "nexo",
+        "ohm",
+        "ondo",
+        "oseth",
+        "paxg",
+        "pendle",
+        "pepe",
+        "pol",
+        "pyusd",
+        "qnt",
+        "render",
+        "rsr",
+        "sand",
+        "sena",
+        "shib",
+        "snx",
+        "spx",
+        "steth",
+        "strk",
+        "super",
+        "susde",
+        "susds",
+        "tel",
+        "ton",
+        "tusd",
+        "uni",
+        "usd0",
+        "usde",
+        "usds",
+        "usdt",
+        "virtual",
+        "wbtc",
+        "weth",
+        "wlfi",
+        "wsteth",
+        "xaut",
+        "xcn"
+      ],
+      "failedTokens": [
+        {
+          "token": "axs",
+          "reason": "No DEX found for token pair"
+        },
+        {
+          "token": "mnt",
+          "reason": "No tokens received from swap"
+        },
+        {
+          "token": "ousg",
+          "reason": "DEX trade failed: �y� UniswapV2: TRANSFER_FAILED"
+        },
+        {
+          "token": "syrupusdc",
+          "reason": "No DEX found for token pair"
+        },
+        {
+          "token": "usdc",
+          "reason": "No DEX found for token pair"
+        }
+      ]
+    }
+  ]
+}

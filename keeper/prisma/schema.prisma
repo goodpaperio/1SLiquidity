@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model LiquidityData {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  
+  // Token A information (main token)
+  tokenAAddress String @db.VarChar(42)
+  tokenASymbol  String @db.VarChar(20)
+  tokenAName    String @db.VarChar(100)
+  tokenADecimals Int
+  
+  // Token B information (base token - WETH, USDC, USDT, WBTC)
+  tokenBAddress String @db.VarChar(42)
+  tokenBSymbol  String @db.VarChar(20)
+  tokenBDecimals Int
+  
+  // Market data
+  marketCap BigInt?
+  
+  // UniswapV2 reserves
+  reservesAUniswapV2 String? // Using String to handle BigInt precision
+  reservesBUniswapV2 String?
+  
+  // SushiSwap reserves
+  reservesASushiswap String?
+  reservesBSushiswap String?
+  
+  // UniswapV3 fee tier 500 (0.05%)
+  reservesAUniswapV3_500 String?
+  reservesBUniswapV3_500 String?
+  
+  // UniswapV3 fee tier 3000 (0.3%)
+  reservesAUniswapV3_3000 String?
+  reservesBUniswapV3_3000 String?
+  
+  // UniswapV3 fee tier 10000 (1%)
+  reservesAUniswapV3_10000 String?
+  reservesBUniswapV3_10000 String?
+
+  // Balancer reserves
+  reservesABalancer String?
+  reservesBBalancer String?
+
+  // Curve reserves
+  reservesACurve String?
+  reservesBCurve String?
+
+  // Total depth fields for Token A (wei format)
+  reserveAtotaldepthWei String? // Sum of all Token A reserves across DEXes in wei
+  reserveAtotaldepth    Float?  // Sum of all Token A reserves in normal decimal format
+  reserveAtotaldepthUsd Float?  // Dollar value of reserveAtotaldepth (reserveAtotaldepth * current_price)
+  
+  // Total depth fields for Token B (wei format)
+  reserveBtotaldepthWei String? // Sum of all Token B reserves across DEXes in wei
+  reserveBtotaldepth    Float?  // Sum of all Token B reserves in normal decimal format
+  
+  // Slippage savings
+  slippageSavings Float?
+  percentageSavings Float?
+  highestLiquidityADex String?
+
+  priceAccuracyDECA Float?
+  priceAccuracyNODECA Float?
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Indexes for performance
+  @@index([tokenAAddress, tokenBAddress])
+  @@index([timestamp])
+  @@index([tokenAAddress, tokenBAddress, timestamp])
+  @@index([marketCap])
+  @@index([tokenASymbol])
+  @@index([tokenBSymbol])
+  @@index([reserveAtotaldepth])
+  @@index([reserveBtotaldepth])
+  
+  // Unique constraint on tokenAAddress and tokenBAddress to prevent duplicates
+  // This will allow upsert operations for updating existing pairs
+  @@unique([tokenAAddress, tokenBAddress])
+  
+  @@map("liquidity_data")
+}

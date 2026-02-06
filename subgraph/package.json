@@ -1,0 +1,25 @@
+{
+  "name": "1sliquidity-subgraph",
+  "version": "1.0.0",
+  "description": "Subgraph for 1SLiquidity protocol",
+  "scripts": {
+    "codegen": "graph codegen",
+    "codegen-mainnet": "graph codegen subgraph-mainnet.yaml",
+    "build": "graph build",
+    "build-mainnet": "graph build subgraph-mainnet.yaml",
+    "deploy": "graph deploy --node http://localhost:8020/ decastream",
+    "deploy-mainnet": "graph deploy --studio decastream-mainnet subgraph-mainnet.yaml",
+    "create-local": "graph create --node http://localhost:8020/ decastream",
+    "remove-local": "graph remove --node http://localhost:8020/ decastream",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 decastream",
+    "create-mainnet": "graph create decastream-mainnet --node https://api.studio.thegraph.com/deploy/",
+    "auth-mainnet": "dotenv -e ../.env -- graph auth --studio decastream-mainnet"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.82.0",
+    "@graphprotocol/graph-ts": "^0.31.0"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^10.0.0"
+  }
+}

@@ -1,0 +1,19 @@
+@startuml BotSettlingProd
+title Gate Daemon Sweet Spot Referencing
+
+participant "Executor" as E
+participant "StreamDaemon" as SD
+database "DEXs" as DEX
+
+E -> SD: check sweet spot called
+SD -> SD: uses pairId to check for last\ntimestamped cache of sweet spot
+group "If > X seconds @audit verify"
+SD <-> DEX: calls proposed DEX\nfor `reserves(...)`
+SD -> SD: utilise 1SL algo to return\n`streamCount` sweet spot
+SD -> E: return sweet spot
+end group
+group "If < X"
+SD -> E: return sweet spot
+end group
+
+@enduml

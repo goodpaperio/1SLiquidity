@@ -1,0 +1,36 @@
+@startuml Trade Entry
+title Trade Entry Flow
+
+actor User
+database "UI" as UI
+database "SubGraph" as S
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+participant "StreamDaemon" as SD
+database "DEXs" as DEX
+
+User -> UI: Enters trade
+UI -> R: Trade signed &\nsubmitted to router
+activate R
+R -> R: Router executes\nchecks on bounds
+R -> C: Call for trade\nentry function
+deactivate R
+C -> C: Create & cache trade\nin queue, storing params\n(defined in specificaiton)
+C -> E: Core calls executor
+activate E
+E -> SD: call StreamDaemon\n to check trade metadata
+SD <-> DEX: calculates sweet spot \nfor specified token
+SD -> E: Return result
+E -> E: Execute checks
+E -> E: Formulates trade params
+E -> DEX: Settles stream against DEX
+E -> C: Returns metadata
+deactivate E
+activate C
+C -> C: Stores trade in queue
+C -> C: Emits event
+deactivate C
+S <--> C: Subgraph listens for events
+UI <--> S: UI displays trade status
+@enduml

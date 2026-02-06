@@ -1,0 +1,80 @@
+@startuml Executor
+title Executor Contract & Dependancy Flow
+
+actor User as U
+actor "Bot" as B
+participant "Core" as C
+box Executor
+participant "executeTIDStream" as ETS 
+participant "executeBatchStream" as EBS
+participant "validateTradeParams" as VTP
+participant cacheEthereumPrice as CEP
+participant interfaceQueryFees as IQF
+end box
+participant "StreamDaemon" as SD
+participant Fees as F
+database "DEXs" as DEX
+
+group "Trade Placement & Single StreamExecution"
+U -> C: user places trade which is stored in the \nqueue. Funds are held in the contract.\n\nA single stream is executed
+  C -> ETS: executeTrade(TradeParams)
+  activate ETS
+  ETS -> SD: checkSweetSpot(token, amount)
+  SD <--> DEX: Return parameters against\nmarket conditions
+  SD -> ETS: return sweet spot
+  ETS <-> VTP: validateTradeParams(params)
+  
+  alt Checks Passed
+    ETS -> DEX: swapOnDEX(tokenIn, tokenOut, amount)
+    DEX -> ETS: Return swap result
+    ETS -> ETS: Emit TradeExecuted event
+    ETS -> C: Return tradeId and metadata
+    C -> C: update trade
+  else Checks Failed
+    ETS -> C: emit event and return fail || 0
+  end
+  deactivate ETS
+end
+
+group "Trade SettleMent (Final Stream)"
+  B -> C: bot prods to settle pending trade streams
+  C -> ETS: executeTrade(tradeParams)
+  activate ETS
+  ETS -> ETS: check trade status (is settled)
+  ETS -> SD: checkSweetSpot(token, amount)
+  SD <--> DEX: Validate parameters against\nmarket conditions
+  SD -> ETS: Return sweet spot
+  ETS -> ETS: Run trade parameter checks
+  
+  alt Checks Passed
+    ETS -> ETS: validateTradeParams(params)
+    ETS -> DEX: swapOnDEX(tokenIn, tokenOut, amount)
+    DEX -> ETS: return swap result
+    ETS -> ETS: emit TradeSettled event
+    ETS -> C: return tradeId and metadata
+    C -> C: mark trade as settled
+    ETS -> IQF
+    IQF -> F: `queryFees()` 
+    C -> B: transfer bot fees
+    ETS -> U: transfer user tokens
+  else Checks Failed
+    ETS -> C: emit event and return fail || 0
+  end
+  deactivate ETS
+end
+
+group "Batch Trade Settlements"
+   B -> C: bot passes either\n`indicies` or `tradeIds`\nalong with `pairdId
+   C -> EBS: executeBatchStream\n(indicies, pairId)
+   EBS -> CEP: call dex to return ethereum price
+   EBS -> EBS: takes trades and applies\nalgo to produce Batch\nfor stream execution
+   EBS -> ETS: execute new (batched) trade
+   ETS -> DEX: execute new (batched) stream
+   DEX -> EBS: return batch swap results
+   EBS -> EBS: process results 
+   EBS -> EBS: emit\n`BatchTradeSettled` event
+   EBS -> C: settles tokens to this contract\nand pass correlating\nupdated trade params
+   C -> B: return success
+end
+
+@enduml

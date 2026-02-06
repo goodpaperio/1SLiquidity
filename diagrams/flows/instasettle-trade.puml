@@ -1,0 +1,26 @@
+@startuml InstaSettleTrade
+title Insta-Settle Trade Flow
+
+actor "EOA" as EOA
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+participant Fees as F
+actor "User" as U
+
+EOA -> R: call instaSettle(tradeId)
+activate R
+R -> C: forward call
+deactivate R
+activate C
+
+C -> C: load pending trade into memory
+C -> C: verify metadata
+C <--> E: calculate in/out/fee amounts 
+C -> C: Update trade status to settled
+C -> U: Transfer tokenOut settlement\namount considering 50BPS loss
+C -> EOA: Transfer remaining tokens
+C -> C: Emit InstaSettleEvent
+deactivate C
+
+@enduml

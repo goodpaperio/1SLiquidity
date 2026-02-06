@@ -1,0 +1,61 @@
+@startuml Fees
+title Fees Contract Flow
+
+actor "User" as U
+actor "Bot" as B
+actor "EOA" as EOA
+participant "Router" as R
+participant "Core" as C
+participant Executor as E
+box Fees
+participant "queryFees" as QF
+participant "transferFees" as TF
+participant "claimFees" as ClF
+end box
+database "DEXs" as DEX
+
+group "Fee Transfer on Stream"
+  B -> R: Executes trades\non streams
+  R -> C
+  C -> E
+  E --> E: Stream executed\n& trade closed
+  E -> E: Return boolean\nfor success
+  C -> C: Load transfers datas into memory
+  C -> TF: Transfer fees on final stream
+  activate TF
+  TF -> TF: safeTransfer to bot
+  TF -> C: Confirm fee transfer
+  deactivate TF
+end
+
+group "Fee Claiming"
+  B -> ClF: Request to claim fees
+  activate ClF
+  ClF -> ClF: Verify bot has\nfees to claim
+  ClF -> ClF: Calculate claimable amount
+  alt Has Fees to Claim
+    ClF -> ClF: Update bot fee balance
+    ClF -> B: Transfer all accumulated fees
+    ClF -> ClF: Emit FeesClaimed event
+  else No Fees to Claim
+    ClF -> B: Return error
+  end
+  deactivate ClF
+end
+
+group "Query Fees Claimable"
+  B -> ClF: Query request to claim fees
+  activate ClF
+  ClF -> ClF: Verify bot has\nfees to claim
+  ClF -> ClF: Calculate claimable amount
+  
+  alt Has Fees to Claim
+    ClF -> ClF: calculate fees to claim in function
+    ClF -> B: return `accumulatedFee` and `token` (address)
+  else No Fees to Claim
+    ClF -> B: Return no fees
+  end
+  deactivate ClF
+end
+
+@enduml
