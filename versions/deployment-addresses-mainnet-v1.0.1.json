@@ -1,0 +1,18 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.1",
+  "deploymentDate": "2025-08-28T09:45:25.487Z",
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0xdba17cba429d55f9ee26b19258ca3e4a8094133771231aef5fcaf1ace44369d9",
+  "contracts": {
+    "Create2Factory": "0x248addf30b7cf9e42e4bba65c6ee995c2213b8fc",
+    "UniswapV2Fetcher": "0x43da7eafc9d244e93d57e9697d6e8c980cf61dc1",
+    "SushiswapFetcher": "0xd483aab5036800d93bbcb2ac4e98c28a970cc28c",
+    "PancakeSwapFetcher": "0x177b45f45e722f550aef0f841a6293d720a88842",
+    "Registry": "0x5ef9dc749bd1c109e3f9cf5f319095b123a4645c",
+    "StreamDaemon": "0x8db74170e4d0080f5e9e394699a1d9b8623b2873",
+    "Executor": "0x7a3dddc9d8083def49c53df72d28e48c57259e4b",
+    "Core": "0xe880c65331fbfb15fdbcb89cd43f31670a969023"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "lastRun": 23996627,
+  "outstandingTrades": [
+    {
+      "tradeId": 3,
+      "pairId": "0x96e50e0e17d065e8070c5511096fbb18939595495b63c76f2e97af7a5bf13155",
+      "lastSweetSpot": 1,
+      "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "pair": "USDC/WETH",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": true,
+      "onlyInstasettle": true,
+      "lastUpdated": 1765543504
+    },
+    {
+      "tradeId": 4,
+      "pairId": "0x8bb515c59c8ed89250b9316105ba225d5aebd720e87e69f2ba78fad8fab9ea7d",
+      "lastSweetSpot": 1,
+      "tokenIn": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "tokenOut": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "pair": "DAI/USDC",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": true,
+      "onlyInstasettle": true,
+      "lastUpdated": 1765543504
+    },
+    {
+      "tradeId": 5,
+      "pairId": "0x2eec03b8999af9793df60f1395a1b41c29e22b324ea3200ca21bc692979b9d46",
+      "lastSweetSpot": 1,
+      "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "tokenOut": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "pair": "WETH/USDC",
+      "owner": "0x2f9d...55C4",
+      "isInstasettlable": true,
+      "onlyInstasettle": true,
+      "lastUpdated": 1765543504
+    },
+    {
+      "tradeId": 8,
+      "pairId": "0x507de59b093b5d06d75cdc99535f8a8ddf7c262ad47f1c01cd547dba37cac501",
+      "lastSweetSpot": 3,
+      "tokenIn": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "tokenOut": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "pair": "USDT/USDC",
+      "owner": "0x538e...65b0",
+      "isInstasettlable": false,
+      "onlyInstasettle": false,
+      "lastUpdated": 1765543504
+    }
+  ],
+  "lastUpdated": 1765543504,
+  "contractAddress": "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
+}

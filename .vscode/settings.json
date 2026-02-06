@@ -1,0 +1,8 @@
+{
+    "editor.formatOnSave": true,
+    "solidity.formatter": "forge",
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.tabSize": 2
+    }
+}

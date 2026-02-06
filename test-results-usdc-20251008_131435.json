@@ -1,0 +1,176 @@
+{
+  "timestamp": "2025-10-08T11:15:43Z",
+  "testResults": [
+    {
+      "baseToken": "USDC",
+      "totalTests": 71,
+      "successCount": 41,
+      "failureCount": 30,
+      "successTokens": [
+        "1inch",
+        "aave",
+        "cbbtc",
+        "cbeth",
+        "chz",
+        "comp",
+        "cro",
+        "dai",
+        "dexe",
+        "ena",
+        "ens",
+        "fdusd",
+        "ff",
+        "grt",
+        "imx",
+        "linea",
+        "link",
+        "mana",
+        "near",
+        "nexo",
+        "ohm",
+        "ondo",
+        "paxg",
+        "pyusd",
+        "qnt",
+        "shib",
+        "steth",
+        "strk",
+        "super",
+        "susde",
+        "tel",
+        "tusd",
+        "uni",
+        "usd0",
+        "usde",
+        "usds",
+        "usdt",
+        "wbtc",
+        "weth",
+        "wlfi",
+        "xcn"
+      ],
+      "failedTokens": [
+        {
+          "token": "arb",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "axs",
+          "reason": "No DEX found for token pair"
+        },
+        {
+          "token": "bonk",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "crv",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "eigen",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "ethfi",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "fet",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "fluid",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "gho",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "gno",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "ldo",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "mnt",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "oseth",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "ousg",
+          "reason": "DEX trade failed: �y� UniswapV2: TRANSFER_FAILED"
+        },
+        {
+          "token": "pendle",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "pepe",
+          "reason": "DEX trade failed: �y� SPL"
+        },
+        {
+          "token": "pol",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "render",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "rsr",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "sand",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "sena",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "snx",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "spx",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "susds",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "syrupusdc",
+          "reason": "No DEX found for token pair"
+        },
+        {
+          "token": "ton",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "usdc",
+          "reason": "No DEX found for token pair"
+        },
+        {
+          "token": "virtual",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "wsteth",
+          "reason": "DEX trade failed: "
+        },
+        {
+          "token": "xaut",
+          "reason": "DEX trade failed: "
+        }
+      ]
+    }
+  ]
+}

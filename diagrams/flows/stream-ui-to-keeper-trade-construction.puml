@@ -1,0 +1,32 @@
+@startuml Trade Entry
+title Trade Entry Flow
+
+actor User as U
+database "UI" as UI
+database "Sub Graph" as SG
+database "Keeper" as K
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+participant "StreamDaemon" as SD
+database "DEXs" as DEX
+
+U -> UI: User chooses trade pair
+UI -> K: Sends request for pairID\nand reserves per DEX
+K <-> DEX: Lambda functions read DEX quotes async and returns results
+K -> UI: Displays data
+U -> UI: User structures trade parameters, inc.\nstreamCount\ngasThreshold\ninstasettle y/n\n
+U -> UI: Signs transaction
+UI -> R: Trade forwarded to endpoint
+R -> C:
+C -> C: Stores trade metadata
+C -> E: Execute single stream\nrequest
+E <-> SD: Retrieve sweet spot\nvia equation
+E <-> DEX: Execute trade (stream)
+E -> C: Return metadata
+C -> C: Update trade
+C -> C: Emit event
+SG <-> C: Listens for event
+UI -> SG: Reads events
+UI -> U: Displays trade status
+@enduml

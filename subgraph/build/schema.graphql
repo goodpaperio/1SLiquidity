@@ -1,0 +1,114 @@
+type Trade @entity(immutable: false) {
+  id: ID!
+  tradeId: BigInt!
+  user: Bytes!
+  tokenIn: Bytes!
+  tokenOut: Bytes!
+  amountIn: BigInt!
+  amountRemaining: BigInt!
+  minAmountOut: BigInt!
+  realisedAmountOut: BigInt!
+  isInstasettlable: Boolean!
+  instasettleBps: BigInt!
+  lastSweetSpot: BigInt!
+  usePriceBased: Boolean!
+  onlyInstasettle: Boolean!
+  createdAt: BigInt!
+  executions: [TradeExecution!]! @derivedFrom(field: "trade")
+  cancellations: [TradeCancellation!]! @derivedFrom(field: "trade")
+  instasettlements: [TradeInstasettlement!]! @derivedFrom(field: "trade")
+  completions: [TradeCompletion!]! @derivedFrom(field: "trade")
+  streamFees: [StreamFee!]! @derivedFrom(field: "trade")
+  instasettleFees: [InstasettleFee!]! @derivedFrom(field: "trade")
+}
+
+type TradeExecution @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  amountIn: BigInt!
+  realisedAmountOut: BigInt!
+  lastSweetSpot: BigInt!
+  timestamp: BigInt!
+}
+
+type TradeCancellation @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  isAutocancelled: Boolean!
+  amountRemaining: BigInt!
+  realisedAmountOut: BigInt!
+  timestamp: BigInt!
+}
+
+type TradeInstasettlement @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  settler: Bytes!
+  totalAmountIn: BigInt!
+  totalAmountOut: BigInt!
+  totalFees: BigInt!
+  timestamp: BigInt!
+}
+
+type TradeCompletion @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  finalRealisedAmountOut: BigInt!
+  timestamp: BigInt!
+}
+
+type StreamFee @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  bot: Bytes!
+  token: Bytes!
+  protocolFee: BigInt!
+  botFee: BigInt!
+  timestamp: BigInt!
+}
+
+type InstasettleFee @entity(immutable: true) {
+  id: ID!
+  trade: Trade!
+  settler: Bytes!
+  token: Bytes!
+  protocolFee: BigInt!
+  timestamp: BigInt!
+}
+
+type DEXRoute @entity(immutable: false) {
+  id: ID!
+  dex: Bytes!
+  isActive: Boolean!
+  addedAt: BigInt!
+  removedAt: BigInt
+}
+
+type FeeClaim @entity(immutable: true) {
+  id: ID!
+  recipient: Bytes!
+  token: Bytes!
+  amount: BigInt!
+  isProtocol: Boolean!
+  timestamp: BigInt!
+}
+
+type FeeRateUpdate @entity(immutable: true) {
+  id: ID!
+  streamProtocolFeeBps: Int!
+  streamBotFeeBps: Int!
+  instasettleProtocolFeeBps: Int!
+  timestamp: BigInt!
+}
+
+type LowLevelError @entity(immutable: true) {
+  id: ID!
+  error: String!
+  timestamp: BigInt!
+}
+
+type DataError @entity(immutable: true) {
+  id: ID!
+  error: Bytes!
+  timestamp: BigInt!
+}

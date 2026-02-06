@@ -1,0 +1,77 @@
+specVersion: 0.0.5
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Core
+    network: mainnet
+    source:
+      address: "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
+      abi: Core
+      startBlock: 23720434
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Trade
+        - TradeExecution
+        - TradeCancellation
+        - TradeInstasettlement
+        - TradeCompletion
+        - StreamFee
+        - InstasettleFee
+        - FeeClaim
+        - FeeRateUpdate
+        - LowLevelError
+        - DataError
+      abis:
+        - name: Core
+          file: Core/Core.json
+      eventHandlers:
+        - event: TradeCreated(indexed uint256,indexed
+            address,address,address,uint256,uint256,uint256,uint256,bool,uint256,uint256,bool,bool)
+          handler: handleTradeCreated
+        - event: TradeStreamExecuted(indexed uint256,uint256,uint256,uint256)
+          handler: handleTradeStreamExecuted
+        - event: TradeCancelled(bool,indexed uint256,uint256,uint256)
+          handler: handleTradeCancelled
+        - event: TradeInstasettled(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleTradeInstasettled
+        - event: TradeCompleted(indexed uint256,uint256)
+          handler: handleTradeCompleted
+        - event: StreamFeesTaken(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleStreamFeesTaken
+        - event: InstasettleFeeTaken(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleInstasettleFeeTaken
+        - event: FeesClaimed(indexed address,indexed address,uint256,bool)
+          handler: handleFeesClaimed
+        - event: FeeRatesUpdated(uint16,uint16,uint16)
+          handler: handleFeeRatesUpdated
+        - event: LowLevelError(string)
+          handler: handleLowLevelError
+        - event: DataError(bytes)
+          handler: handleDataError
+      file: Core/Core.wasm
+  - kind: ethereum/contract
+    name: StreamDaemon
+    network: mainnet
+    source:
+      address: "0xbf1c6d73db66812eb67af1594587f33487951108"
+      abi: StreamDaemon
+      startBlock: 23720434
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DEXRoute
+      abis:
+        - name: StreamDaemon
+          file: StreamDaemon/StreamDaemon.json
+      eventHandlers:
+        - event: DEXRouteAdded(indexed address)
+          handler: handleDEXRouteAdded
+        - event: DEXRouteRemoved(indexed address)
+          handler: handleDEXRouteRemoved
+      file: Core/Core.wasm

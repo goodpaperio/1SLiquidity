@@ -1,0 +1,145 @@
+# .github/workflows/local-monitor.yml
+name: 1SLiquidity Trade Monitor & Executor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # run every 5 minutes
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode (only 'once' supported in CI)"
+        required: true
+        default: "once"
+        type: choice
+        options: ["once"]
+
+jobs:
+  monitor-and-execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Removed working-directory to avoid conflicts with cd commands
+    env:
+      # secrets — set these in GitHub → Settings → Secrets → Actions
+      RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+      PRIVATE_KEY: ${{ secrets.PHANTOM_SECRET_ETH }}
+      CHAIN_ID: "1"
+
+      # Contract addresses (v1.0.4)
+      CORE_CONTRACT: "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2"
+      REGISTRY_CONTRACT: "0x5EAee88B493de2D646a8C29Bb5b09a79c5322dF4"
+      EXECUTOR_CONTRACT: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878"
+      STREAM_DAEMON_CONTRACT: "0xbf1c6d73db66812eb67af1594587f33487951108"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: local-monitor/package.json
+
+      - name: Download previous local data
+        uses: actions/download-artifact@v4
+        with:
+          name: local-data-latest
+          path: local-monitor/
+        continue-on-error: true
+
+      - name: Check local data download
+        run: |
+          echo "Checking if localData.json was downloaded..."
+          if [ -f local-monitor/localData.json ]; then
+            echo "✅ Local data file found! Contents:"
+            cat local-monitor/localData.json
+          else
+            echo "❌ No local data file found, will start fresh"
+            echo "Creating default localData.json..."
+            echo '{"lastRun": 0, "outstandingTrades": [], "lastUpdated": 0}' > local-monitor/localData.json
+            echo "✅ Default localData.json created"
+          fi
+
+      - name: Install dependencies
+        run: |
+          cd local-monitor
+          echo "Installing dependencies in $(pwd)"
+          npm ci
+
+      - name: Build monitor
+        run: |
+          cd local-monitor
+          echo "Building monitor in $(pwd)"
+          echo "Contents before build:"
+          ls -la
+          echo "Running npm run build with verbose output:"
+          npm run build 2>&1 || {
+            echo "Build failed! Checking for errors:"
+            echo "TypeScript config:"
+            cat tsconfig.json || echo "No tsconfig.json found"
+            echo "Package.json scripts:"
+            cat package.json | grep -A 5 -B 5 "scripts" || echo "No scripts found"
+            exit 1
+          }
+          echo "Contents after build:"
+          ls -la
+          echo "Checking dist directory:"
+          ls -la dist/ || echo "dist directory not found"
+
+      - name: Run historical analysis (Step 1)
+        run: |
+          cd local-monitor
+          echo "🔍 Step 1: Running historical analysis to cache outstanding trades..."
+          echo "Running in $(pwd)"
+          echo "RPC_HTTP_URL is set: $RPC_HTTP_URL"
+          npm run historical
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.PHANTOM_SECRET_ETH }}
+
+      - name: Execute outstanding trades (Step 2)
+        run: |
+          cd local-monitor
+          echo "🚀 Step 2: Executing outstanding trades..."
+          echo "Running in $(pwd)"
+          npm run execute-trades
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.PHANTOM_SECRET_ETH }}
+
+      - name: Wait for transactions to be mined (Step 3)
+        run: |
+          echo "⏳ Step 3: Waiting 24 seconds for transactions to be mined..."
+          sleep 24
+
+      - name: Run historical analysis again (Step 4)
+        run: |
+          cd local-monitor
+          echo "🔍 Step 4: Running historical analysis to check updated state..."
+          echo "Running in $(pwd)"
+          npm run historical
+        env:
+          RPC_HTTP_URL: ${{ secrets.RPC_HTTP_URL }}
+          PRIVATE_KEY: ${{ secrets.PHANTOM_SECRET_ETH }}
+
+      - name: Upload local data artifact
+        if: always()
+        run: |
+          echo "Checking for local data files:"
+          find . -name "localData.json" -type f || echo "No localData.json found"
+          find . -name "*.json" -type f | head -10 || echo "No JSON files found"
+        continue-on-error: true
+
+      - name: Upload local data artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-data-latest
+          path: |
+            local-monitor/localData.json
+            local-monitor/*.json
+          if-no-files-found: warn
+
+      - name: Summary
+        run: |
+          echo "✅ 1SLiquidity Trade Monitor & Executor completed successfully!"
+          echo "📊 Check the artifacts for the latest localData.json file"

@@ -1,0 +1,54 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Dotenv file
+.env
+
+/documentation/delta
+/work-packages
+
+/node_modules
+
+/foundry.toml
+
+/broadcast
+
+notes.txt
+
+DEPLOYMENT.md
+
+deployment.env.example
+
+DeployMainnet.s.sol
+DeployBarebones.s.sol
+Deploy.s.sol
+DeployCrossChain.s.sol
+VerifyDeployment.s.sol
+AddPancakeSwap.s.sol
+
+script/processes/deployment/DeployMainnet.s.sol
+script/processes/deployment/DeployBarebones.s.sol
+script/processes/deployment/Deploy.s.sol
+script/processes/deployment/DeployCrossChain.s.sol
+script/processes/deployment/VerifyDeployment.s.sol
+script/processes/deployment/AddPancakeSwap.s.sol
+
+# Ignore only Postgres + IPFS data
+data/postgres/
+data/ipfs/
+
+# Ignore Node.js dependencies and build artifacts
+decabot/node_modules
+alpha/node_modules
+bot/.env.example
+bot/node_modules
+bot/dist    
+.env.backup
+
+TODO.md

@@ -1,0 +1,93 @@
+@startuml Router
+title Router Contract Flow
+
+actor "User" as U
+actor "Bot" as B
+actor "EOA" as EOA
+box Router
+participant "createTrade" as CT
+participant "cancelTrade" as CaT
+participant "instaSettle" as IS
+participant "executeTrades" as ET
+participant "validateAndForward" as VF
+end box
+participant "Core" as C
+participant "Utils" as UT
+database "DEXs" as DEX
+
+group "User Trade Entry"
+  U -> CT: submit trade request
+  activate CT
+  CT -> CT: validate sender is not contract
+  CT -> VF: forward params for validation
+  activate VF
+  VF -> UT: validateTradeParams(params)
+  UT -> VF: return validation result
+  
+  alt Valid 
+    VF -> CT: params validated
+    CT -> CT: check user allowance
+    CT -> C: call core.createTrade(params)
+    C -> C: process trade creation
+    C -> CT: return `tradeId` || fail
+    CT -> U: return `tradeId` || fail
+  else Invalid 
+    VF -> CT: validation failed
+    CT -> U: return error
+  end
+  deactivate VF
+  deactivate CT
+end
+
+group "User: Trade Cancellation"
+  U -> CaT: request cancel trade(tradeId)
+  activate CaT
+  CaT -> CaT: validate caller 
+  
+  alt Valid 
+    CaT -> C: call `core.cancelTrade(tradeId)`
+    C -> C: process cancellation
+    C -> CaT
+    CaT -> U: return success
+  else Invalid 
+    CaT -> U: return error
+  end
+  deactivate CaT
+end
+
+group "Bot: Trade Execution"
+  B -> ET: call executeTrades(tokenAddress)
+  activate ET
+  ET -> ET: check gas price 
+    alt Valid 
+    ET -> C: call core.executeTrades(tokenAddress)
+    C -> C: process trade queue
+    C -> ET
+    ET -> B: return execution results
+  else Invalid 
+    ET -> B: return error
+  end
+  deactivate ET
+end
+
+group "Insta-Settle"
+  EOA -> IS: call instaSettle(tradeId)
+  activate IS
+  IS -> IS: validate caller is not contract
+  IS -> C: call core.instaSettle(tradeId)
+  C -> C: process instant settlement
+  IS -> EOA: return status
+  deactivate IS
+end
+
+group "Admin functions"
+  U -> VF: updateWhitelist(address, bool)
+  activate VF
+  VF -> VF: check caller is owner
+  VF -> VF: update whitelist mapping
+  VF -> VF: emit WhitelistUpdated event
+  VF -> U: return success
+  deactivate VF
+end
+
+@enduml

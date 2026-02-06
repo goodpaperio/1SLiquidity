@@ -1,0 +1,24 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.3",
+  "deploymentDate": "2025-10-29T11:11:14.000Z",
+  "deploymentBlock": 23682597,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0x9c39b909948423fe27725fe2b400f45cc4b021be2998432d53916e71395431d3",
+  "contracts": {
+    "Executor": "0xa03762eff4f98cda57dea0a8eb62ab872c832878",
+    "Registry": "0x5eaee88b493de2d646a8c29bb5b09a79c5322df4",
+    "Core": "0xde054c37000a639d33b886df0e48b011c2092474",
+    "StreamDaemon": "0xaabc29359629a93c7dc850ae938d4d8460ea5669",
+    "UniswapV2Fetcher": "0xcdd26c4361aeb4b20f9e5a2119c7aac08b9da089",
+    "UniswapV3Fetcher_0_05": "0xcb08e56888e59c121ad8745cea19f75c5ccccf1b",
+    "UniswapV3Fetcher_0_3": "0xa54f8ae895b33814c1f4824dccbed6597ccac518",
+    "UniswapV3Fetcher_1": "0xc319a30e3aefc844f8ed9ca5dccdab592299cb43",
+    "SushiswapFetcher": "0x57cfc5ad0812747afbb3dcd98b23b94883a341bc",
+    "BalancerV2PoolRegistry": "0xddbbf78b2bf532d1637551a0186b26fbc9bfb5b1",
+    "BalancerV2Fetcher": "0xf9abe8a26ecf289b7e16ccf88d67252dda2215a6",
+    "CurveMetaFetcher": "0xdaa78ba8ff44351a7669746209d371bcdd85d062",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5"
+  }
+}

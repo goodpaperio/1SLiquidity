@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Run all tests with automatic chunking
+# Usage: ./test-all [chunk-size] [output-file]
+
+CHUNK_SIZE=${1:-10}
+OUTPUT_FILE=${2:-"test-results-$(date +%Y%m%d_%H%M%S).json"}
+
+echo "🧪 Running all trade tests with chunking..."
+echo "📦 Chunk size: $CHUNK_SIZE tokens"
+echo "📁 Output: $OUTPUT_FILE"
+echo ""
+
+# Get pair counts from JSON files
+USDC_COUNT=$(jq '.totalCount' config/usdc_pairs_clean.json)
+USDT_COUNT=$(jq '.totalCount' config/usdt_pairs_clean.json)
+WETH_COUNT=$(jq '.totalCount' config/weth_pairs_clean.json)
+WBTC_COUNT=$(jq '.totalCount' config/wbtc_pairs_clean.json)
+
+echo "📊 Detected pairs:"
+echo "   - USDC: $USDC_COUNT pairs"
+echo "   - USDT: $USDT_COUNT pairs"
+echo "   - WETH: $WETH_COUNT pairs"
+echo "   - WBTC: $WBTC_COUNT pairs"
+echo ""
+
+# Temporary file for all logs
+TEMP_LOG=$(mktemp)
+
+# Function to run test for a token with chunking
+run_chunked_test() {
+    local token=$1
+    local count=$2
+    local test_name=$3
+    
+    local num_chunks=$(( (count + CHUNK_SIZE - 1) / CHUNK_SIZE ))
+    
+    echo "🔄 Testing $token in $num_chunks chunks..."
+    
+    for ((chunk=0; chunk<num_chunks; chunk++)); do
+        local start=$((chunk * CHUNK_SIZE))
+        local end=$((start + CHUNK_SIZE))
+        if [ $end -gt $count ]; then
+            end=$count
+        fi
+        
+        echo "   Chunk $((chunk+1))/$num_chunks: tokens $start-$end"
+        START_INDEX=$start END_INDEX=$end forge test --match-test "$test_name" -vv 2>&1 | tee -a "$TEMP_LOG"
+    done
+}
+
+# Run tests for all tokens
+run_chunked_test "USDC" $USDC_COUNT "test_PlaceTradeWithUSDCTokens"
+run_chunked_test "USDT" $USDT_COUNT "test_PlaceTradeWithUSDTTokens"
+run_chunked_test "WETH" $WETH_COUNT "test_PlaceTradeWithWETHTokens"
+run_chunked_test "WBTC" $WBTC_COUNT "test_PlaceTradeWithWBTCTokens"
+
+echo ""
+echo "📊 Extracting results..."
+
+# Extract results from logs
+bash ./scripts/extract-events-to-json.sh "$OUTPUT_FILE" < "$TEMP_LOG"
+
+# Cleanup
+rm -f "$TEMP_LOG"
+
+echo ""
+echo "✅ All tests completed!"
+echo "📊 Results saved to: $OUTPUT_FILE"

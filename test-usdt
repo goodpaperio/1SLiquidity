@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Test USDT pairs with chunking
+# Usage: ./test-usdt [chunk-size] [output-file]
+
+CHUNK_SIZE=${1:-10}
+OUTPUT_FILE=${2:-"test-results-usdt-$(date +%Y%m%d_%H%M%S).json"}
+
+echo "🧪 Running USDT trade tests..."
+echo "📦 Chunk size: $CHUNK_SIZE tokens"
+echo "📁 Output: $OUTPUT_FILE"
+echo ""
+
+# Get pair count
+USDT_COUNT=$(jq '.totalCount' config/usdt_pairs_clean.json)
+NUM_CHUNKS=$(( (USDT_COUNT + CHUNK_SIZE - 1) / CHUNK_SIZE ))
+
+echo "📊 USDT: $USDT_COUNT pairs → $NUM_CHUNKS chunks"
+echo ""
+
+# Temporary file for logs
+TEMP_LOG=$(mktemp)
+
+# Run chunks
+for ((chunk=0; chunk<NUM_CHUNKS; chunk++)); do
+    start=$((chunk * CHUNK_SIZE))
+    end=$((start + CHUNK_SIZE))
+    if [ $end -gt $USDT_COUNT ]; then
+        end=$USDT_COUNT
+    fi
+    
+    echo "   Chunk $((chunk+1))/$NUM_CHUNKS: tokens $start-$end"
+    START_INDEX=$start END_INDEX=$end forge test --match-test "test_PlaceTradeWithUSDTTokens" -vv 2>&1 | tee -a "$TEMP_LOG"
+done
+
+echo ""
+echo "📊 Extracting results..."
+bash ./scripts/extract-events-to-json.sh "$OUTPUT_FILE" < "$TEMP_LOG"
+
+# Cleanup
+rm -f "$TEMP_LOG"
+
+echo "✅ USDT tests completed!"

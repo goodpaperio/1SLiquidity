@@ -1,0 +1,41 @@
+@startuml SweetSpotAlgorithm
+title Sweet Spot Algorithm Flow
+
+actor User
+database "UI" as UI
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+participant "StreamDaemon" as SD
+database "DEXs" as DEX
+
+User -> UI: Enter trade amount
+UI -> UI: Initial client-side\nsweet spot estimation
+User -> UI: Confirm trade
+UI -> R: Submit trade request
+
+group "Sweet Spot Calculation"
+  R -> C: Forward trade datas
+  C -> E: 
+  E -> SD: checkSweetSpot(pairId, V)
+  activate GD
+  
+  SD -> DEX: getReserves(tokenA, tokenB)
+  DEX -> SD: Return current reserves
+  SD -> SD: Calculate gas cost (G)
+  SD -> SD: Extract reserve size (R)
+  SD -> SD: Apply Sweet Spot Formula:\nN = V/sqrt(G·R)
+  SD -> SD: Check 2% depth cross comparison
+  SD -> SD: Apply fee tier considerations
+  SD -> SD: Determine final stream count
+  SD -> SD: Calculate per-stream amount
+  
+  SD -> E: Return optimal stream count\ndestination DEX and per-stream amount
+  deactivate SD
+end
+
+E -> E: Apply sweet spot to\ntrade parameters
+E <-> DEX: Execute trade
+C -> UI: Return trade confirmation
+
+@enduml

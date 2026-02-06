@@ -1,0 +1,404 @@
+{
+  "description": "All liquidity pairs containing WETH token with non-zero reserves (including all base tokens)",
+  "totalCount": 99,
+  "extractedAt": "2025-10-05T12:39:39.257Z",
+  "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
+  "pairs": [
+    {
+      "name": "1inch",
+      "address": "0x111111111117dc0aa78b770fa6a738034120c302"
+    },
+    {
+      "name": "aave",
+      "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
+    },
+    {
+      "name": "arb",
+      "address": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
+    },
+    {
+      "name": "ath",
+      "address": "0xbe0ed4138121ecfc5c0e56b40517da27e6c5226b"
+    },
+    {
+      "name": "axs",
+      "address": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
+      "name": "beam",
+      "address": "0x62d0a8458ed7719fdaf978fe5929c6d342b0bfce"
+    },
+    {
+      "name": "bgb",
+      "address": "0x54d2252757e1672eead234d27b1270728ff90581"
+    },
+    {
+      "name": "bnb",
+      "address": "0xb8c77482e45f1f44de1745f52c74426c631bdd52"
+    },
+    {
+      "name": "bonk",
+      "address": "0x1151cb3d861920e07a38e03eead12c32178567f6"
+    },
+    {
+      "name": "borg",
+      "address": "0x64d0f55cd8c7133a9d7102b13987235f486f2224"
+    },
+    {
+      "name": "btt",
+      "address": "0xc669928185dbce49d2230cc9b0979be6dc797957"
+    },
+    {
+      "name": "cake",
+      "address": "0x152649ea73beab28c5b49b26eb48f7ead6d4c898"
+    },
+    {
+      "name": "cbbtc",
+      "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf"
+    },
+    {
+      "name": "cbeth",
+      "address": "0xbe9895146f7af43049ca1c1ae358b0541ea49704"
+    },
+    {
+      "name": "chz",
+      "address": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
+    },
+    {
+      "name": "comp",
+      "address": "0xc00e94cb662c3520282e6f5717214004a7f26888"
+    },
+    {
+      "name": "cro",
+      "address": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
+    },
+    {
+      "name": "crv",
+      "address": "0xd533a949740bb3306d119cc777fa900ba034cd52"
+    },
+    {
+      "name": "dai",
+      "address": "0x6b175474e89094c44da98b954eedeac495271d0f"
+    },
+    {
+      "name": "dexe",
+      "address": "0xde4ee8057785a7e8e800db58f9784845a5c2cbd6"
+    },
+    {
+      "name": "eeth",
+      "address": "0x35fa164735182de50811e8e2e824cfb9b6118ac2"
+    },
+    {
+      "name": "eigen",
+      "address": "0xec53bf9167f50cdeb3ae105f56099aaab9061f83"
+    },
+    {
+      "name": "ena",
+      "address": "0x57e114b691db790c35207b2e685d4a43181e6061"
+    },
+    {
+      "name": "ens",
+      "address": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72"
+    },
+    {
+      "name": "eth+",
+      "address": "0xe72b141df173b999ae7c1adcbf60cc9833ce56a8"
+    },
+    {
+      "name": "ethfi",
+      "address": "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb"
+    },
+    {
+      "name": "ethx",
+      "address": "0xa35b1b31ce002fbf2058d22f30f95d405200a15b"
+    },
+    {
+      "name": "ezeth",
+      "address": "0xbf5495efe5db9ce00f80364c8b423567e58d2110"
+    },
+    {
+      "name": "fet",
+      "address": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
+    },
+    {
+      "name": "floki",
+      "address": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e"
+    },
+    {
+      "name": "fluid",
+      "address": "0x6f40d4a6237c257fff2db00fa0510deeecd303eb"
+    },
+    {
+      "name": "frxeth",
+      "address": "0x5e8422345238f34275888049021821e8e08caa1f"
+    },
+    {
+      "name": "gala",
+      "address": "0xd1d2eb1b1e90b638588728b4130137d262c87cae"
+    },
+    {
+      "name": "gno",
+      "address": "0x6810e776880c02933d47db1b9fc05908e5386b96"
+    },
+    {
+      "name": "grt",
+      "address": "0xc944e90c64b2c07662a292be6244bdf05cda44a7"
+    },
+    {
+      "name": "gt",
+      "address": "0xe66747a101bff2dba3697199dcce5b743b454759"
+    },
+    {
+      "name": "icp",
+      "address": "0x00f3c42833c3170159af4e92dbb451fb3f708917"
+    },
+    {
+      "name": "imx",
+      "address": "0xf57e7e7c23978c3caec3c3548e3d615c346e79ff"
+    },
+    {
+      "name": "inj",
+      "address": "0xe28b3b32b6c345a34ff64674606124dd5aceca30"
+    },
+    {
+      "name": "jasmy",
+      "address": "0x7420b4b9a0110cdc71fb720908340c03f9bc03ec"
+    },
+    {
+      "name": "lbtc",
+      "address": "0x8236a87084f8b84306f72007f36f2618a5634494"
+    },
+    {
+      "name": "ldo",
+      "address": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
+    },
+    {
+      "name": "leo",
+      "address": "0x2af5d2ad76741191d15dfe7bf6ac92d4bd912ca3"
+    },
+    {
+      "name": "linea",
+      "address": "0x1789e0043623282d5dcc7f213d703c6d8bafbb04"
+    },
+    {
+      "name": "link",
+      "address": "0x514910771af9ca656af840dff83e8264ecf986ca"
+    },
+    {
+      "name": "lseth",
+      "address": "0x8c1bed5b9a0928467c9b1341da1d7bd5e10b6549"
+    },
+    {
+      "name": "mana",
+      "address": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
+    },
+    {
+      "name": "meth",
+      "address": "0xd5f7838f5c461feff7fe49ea5ebaf7728bb0adfa"
+    },
+    {
+      "name": "mnt",
+      "address": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354"
+    },
+    {
+      "name": "morpho",
+      "address": "0x58d97b57bb95320f9a05dc918aef65434969c2b2"
+    },
+    {
+      "name": "near",
+      "address": "0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4"
+    },
+    {
+      "name": "nexo",
+      "address": "0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206"
+    },
+    {
+      "name": "nft",
+      "address": "0x198d14f2ad9ce69e76ea330b374de4957c3f850a"
+    },
+    {
+      "name": "ohm",
+      "address": "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
+    },
+    {
+      "name": "okb",
+      "address": "0x75231f58b43240c9718dd58b4967c5114342a86c"
+    },
+    {
+      "name": "ondo",
+      "address": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3"
+    },
+    {
+      "name": "oseth",
+      "address": "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38"
+    },
+    {
+      "name": "paxg",
+      "address": "0x45804880de22913dafe09f4980848ece6ecbaf78"
+    },
+    {
+      "name": "pendle",
+      "address": "0x808507121b80c02388fad14726482e061b8da827"
+    },
+    {
+      "name": "pengu",
+      "address": "0x6418c0dd099a9fda397c766304cdd918233e8847"
+    },
+    {
+      "name": "pepe",
+      "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933"
+    },
+    {
+      "name": "pol",
+      "address": "0x455e53cbb86018ac2b8092fdcd39d8444affc3f6"
+    },
+    {
+      "name": "pyusd",
+      "address": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
+    },
+    {
+      "name": "qnt",
+      "address": "0x4a220e6096b25eadb88358cb44068a3248254675"
+    },
+    {
+      "name": "render",
+      "address": "0x6de037ef9ad2725eb40118bb1702ebb27e4aeb24"
+    },
+    {
+      "name": "reth",
+      "address": "0xae78736cd615f374d3085123a210448e74fc6393"
+    },
+    {
+      "name": "rseth",
+      "address": "0xa1290d69c65a6fe4df752f95823fae25cb99e5a7"
+    },
+    {
+      "name": "rsr",
+      "address": "0x320623b8e4ff03373931769a31fc52a4e78b5d70"
+    },
+    {
+      "name": "sand",
+      "address": "0x3845badade8e6dff049820680d1f14bd3903a5d0"
+    },
+    {
+      "name": "sdai",
+      "address": "0x83f20f44975d03b1b09e64809b757c47f942beea"
+    },
+    {
+      "name": "shib",
+      "address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "name": "sky",
+      "address": "0x56072c95faa701256059aa122697b133aded9279"
+    },
+    {
+      "name": "snx",
+      "address": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
+    },
+    {
+      "name": "spx",
+      "address": "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c"
+    },
+    {
+      "name": "steth",
+      "address": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
+      "name": "strk",
+      "address": "0xca14007eff0db1f8135f4c25b34de49ab0d42766"
+    },
+    {
+      "name": "super",
+      "address": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55"
+    },
+    {
+      "name": "sweth",
+      "address": "0xf951e335afb289353dc249e82926178eac7ded78"
+    },
+    {
+      "name": "syrup",
+      "address": "0x643c4e15d7d62ad0abec4a9bd4b001aa3ef52d66"
+    },
+    {
+      "name": "tbtc",
+      "address": "0x18084fba666a33d37592fa2633fd49a74dd93a88"
+    },
+    {
+      "name": "tel",
+      "address": "0x467bccd9d29f223bce8043b84e8c8b282827790f"
+    },
+    {
+      "name": "ton",
+      "address": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1"
+    },
+    {
+      "name": "tusd",
+      "address": "0x0000000000085d4780b73119b644ae5ecd22b376"
+    },
+    {
+      "name": "uni",
+      "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
+    },
+    {
+      "name": "usd1",
+      "address": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
+    },
+    {
+      "name": "usdc",
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    },
+    {
+      "name": "usds",
+      "address": "0xdc035d45d973e3ec169d2276ddab16f1e407384f"
+    },
+    {
+      "name": "usdt",
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+    },
+    {
+      "name": "virtual",
+      "address": "0x44ff8620b8ca30902395a7bd3f2407e1a091bf73"
+    },
+    {
+      "name": "w",
+      "address": "0xb0ffa8000886e57f86dd5264b9582b2ad87b2b91"
+    },
+    {
+      "name": "wbtc",
+      "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+    },
+    {
+      "name": "weeth",
+      "address": "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee"
+    },
+    {
+      "name": "weth",
+      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    },
+    {
+      "name": "wld",
+      "address": "0x163f8c2467924be0ae7b5347228cabf260318753"
+    },
+    {
+      "name": "wlfi",
+      "address": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
+    },
+    {
+      "name": "wsteth",
+      "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "name": "xaut",
+      "address": "0x68749665ff8d2d112fa859aa293f07a622782f38"
+    },
+    {
+      "name": "xcn",
+      "address": "0xa2cd3d43c775978a96bdbf12d733d5a1ed94fb18"
+    },
+    {
+      "name": "zk",
+      "address": "0x66a5cfb2e9c529f14fe6364ad1075df3a649c0a5"
+    }
+  ]
+}

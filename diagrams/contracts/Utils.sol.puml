@@ -1,0 +1,99 @@
+@startuml Utils
+title Utils Contract Flow
+
+participant "Core" as C
+participant "Executor" as E
+participant "StreamDaemon" as SD
+participant "Router" as R
+box Utils
+participant "generatePairId" as GPI
+participant "validateTradeParams" as VTP
+participant "calculateFeeAmount" as CFA
+participant "calculateStreamAmount" as CSA
+participant "addressToBytes32" as ATB
+participant "verifyDeadline" as VD
+
+note right of C
+  
+  <b>TradeParams</b>
+  * bytes32 tradeId
+  * address user
+  * address tokenIn
+  * address tokenOut
+  * uint256 amountIn
+  * uint256 amountInRemaining
+  * uint256 amountOutExpected
+  * uint256 amountOutReceived
+  * uint256 maxSlippage
+  * uint256 deadline
+  * uint256 streamCount
+  * uint256 streamsFulfilled
+  
+end note
+
+end box
+database "DEXs" as DEX
+
+group "Generate Pair ID"
+  C -> GPI: generatePairId(tokenA, tokenB)
+  activate GPI
+  GPI -> GPI: sort tokens by address
+  GPI -> GPI: concatenate addresses
+  GPI -> GPI: hash with keccak256
+  GPI -> C: return bytes32 pairId
+  deactivate GPI
+  
+  SD -> GPI: generatePairId(tokenA, tokenB)
+  activate GPI
+  deactivate GPI
+end
+
+group "Validate Trade Parameters"
+  R -> VTP: validateTradeParams(params)
+  activate VTP
+  VTP -> VTP: check token addresses are valid
+  VTP -> VTP: verify amounts > 0
+  VTP -> VTP: check slippage within limits
+  VTP -> VD: verifyDeadline(deadline)
+  VD -> VD: check if current timestamp\n< deadline
+  VD -> VTP: return deadline validity
+  VTP -> VTP: validate against\nblacklisted tokens
+  VTP -> R: return validation result
+  deactivate VTP
+  
+  C -> VTP: validateTradeParams(params)
+  activate VTP
+  deactivate VTP
+end
+
+group "Calculate Fee"
+  E -> CFA: calculateFeeAmount(amount, feeFactor) //feeFactor state variable in core
+  activate CFA
+  CFA -> CFA: compute fee\n= amount * feeFactor / 10000
+  CFA -> E: return fee amount
+  deactivate CFA
+  
+  C -> CFA: calculateFeeAmount(amount, feeFactor)
+  activate CFA
+  deactivate CFA
+end
+
+group "Calculate Stream Amount"
+  E -> CSA: calculateStreamAmount(totalAmount, streamCount)
+  activate CSA
+  CSA -> CSA: verify streamCount > 0
+  CSA -> CSA: compute amountPerStream\n= totalAmount / streamCount
+  CSA -> CSA: calculate remainder\n= totalAmount % streamCount
+  CSA -> E: return `amountPerStream`\n& `remainder`
+  deactivate CSA
+end
+
+group "Other"
+  C -> VD: verifyDeadline(pairId,tradeId)
+  activate VD
+  VD -> VD: check if block.timestamp < deadline
+  VD -> C: return boolean result
+  deactivate VD
+end
+
+@enduml

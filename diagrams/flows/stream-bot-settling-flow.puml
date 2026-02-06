@@ -1,0 +1,41 @@
+@startuml BotSettlingProd
+title Bot Settling Prod
+
+actor Bot as B
+database SubGraph as SG
+participant "Router" as R
+participant "Core" as C
+participant "Executor" as E
+participant "StreamDaemonon" as SD
+participant "Fees" as F
+database "DEXs" as DEX
+
+group "Call to Execute Trade Queue for `pairId`"
+B -> R: Bot calls trade queue\nprod functionality
+R -> C: Call forwarded
+C -> C: `mapping tokenAddress\n => tradeId[]` called\nin loop
+end group
+group "Settling Loop"
+C -> C: tradeId used to return\n`tradeParams` 
+C -> C: check if trade is settled
+C -> E: passed to executor\nfor trade construction
+E <--> GD: `tradeParams` checked\n gainst StreamDaemonon\nsweet spots
+E -> E: trade params formulated
+group "Is Final Stream"
+E --> E: checks post calculation if\nthis stream is final in the trade
+E --> E: if so, then\nthe fees are taken\nand the trade is constructed\naccordingly
+E --> DEX: fees traded to USDC
+E --> F: fees held in contract\n for bot EOA
+end group
+E -> DEX: trade executed
+E -> E: trade confirmed
+E -> E: `tradeParams` updated
+E -> C: `tradeParams` \nreturned
+C -> C: mapping updated
+C -> C: event emitted
+SG <--> C: event listened for\nand processed
+end group
+
+
+
+@enduml

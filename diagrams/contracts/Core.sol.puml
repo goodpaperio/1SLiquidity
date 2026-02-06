@@ -1,0 +1,124 @@
+@startuml Core
+title Core Contract Flow
+
+actor "User" as U
+actor "Bot" as B
+actor "EOA" as EOA
+participant "Router" as R
+box Core
+participant "createTrade" as CT
+participant "executeTrades" as ET
+participant "cancelTrade" as CaT
+participant "instaSettle" as IS
+participant "updateTradeQueue" as UTQ
+end box
+participant "Executor" as E
+participant "Fees" as F
+database "DEXs" as DEX
+
+group "Trade Entry"
+  U -> R: Submit trade parameters
+  R -> CT: Forward validated parameters
+  activate CT
+  CT -> CT: validate trade parameters\n(volume, address0)
+  CT -> CT: transfer tokens to contract
+  CT -> CT: generate tradeId (incriment uint256)
+  CT -> CT: queue token metadata as Trade = TradeParams
+  CT -> E: call executeTrade with parameters
+  E -> E: process stream\nwith StreamDaemon
+  E <-> DEX: execute initial trade stream
+  E -> CT: return execution metadata
+  CT -> CT: emit event TradeExecuted
+  CT -> CT: store updated trade in userTrades mapping
+  CT -> UTQ: add tradeId to token's trade queue
+  CT -> CT: emit TradeCreated\n(`tradeId`, `streamVolume`, `dexAddress`)\nevent
+  deactivate CT
+end
+
+group "Trade Queue Execution"
+  B -> R: call execute trades for pairId
+  R -> ET: forward call
+  activate ET
+  ET -> UTQ: iterate through tradeIds\nfor pairId queue
+  
+  loop for each tradeId || indicie
+    ET -> ET: load trade parameters
+    alt Trade Not Fully Settled
+      ET -> E: call settleTrade with tradeId
+      E -> DEX: execute trade stream
+      E -> ET: return updated parameters
+      ET -> ET: update trade status
+      alt final stream
+        ET -> F: transfer fees
+        ET -> DEX: execute final stream
+      end
+      ET -> ET: Emit TradeStreamExecuted event
+    else Trade Fully Settled or Invalid
+      ET -> UTQ: Remove from queue
+    end
+  end
+  
+  ET -> ET: Return execution results
+  deactivate ET
+end
+
+group "Trade Cancellation"
+alt User Executes Call
+  U -> R: request trade cancellation
+  end
+  alt SC Triggers Call on Validation
+  CT -> CaT: trigger trade cancellation
+  end
+  R -> CaT: forward with tradeId
+  activate CaT
+  CaT -> CaT: verify trade exists and status
+  CaT -> CaT: verify caller is trade owner\n or the call originates from address(this)
+  
+  alt Can Be Cancelled
+    CaT -> CaT: call `cancelTrade(tradeId)`
+    CaT -> UTQ: remove tradeId from queue
+    CaT -> U: transfer remaining tokens\nback to user\n(`tokenIn` + `tokenOt`)
+    CaT -> CaT: emit TradeCancelled event
+  else Cannot Cancel
+    CaT -> R: return error
+  end
+  deactivate CaT
+end
+
+group "Insta-Settle"
+  EOA -> R: call instaSettle with tradeId
+  R -> IS: forward request
+  activate IS
+  IS -> IS: load pending trade
+  IS -> IS: verify metadata and ownership
+  IS -> IS: calculate in/out/fee amounts
+  IS -> UTQ: remove tradeId from queue
+  IS -> U: transfer tokenOut settlement\namounts (tokenIn + tokenOut)
+  IS -> F: transfer bot fee
+  IS -> EOA: Transfer remaining tokens
+  IS -> IS: Emit InstaSettleEvent
+  IS -> R: Return settlement confirmation
+  deactivate IS
+end
+
+group "Trade Queue Management"
+  CT -> UTQ: addToTradeQueue(tokenAddress, tradeId) onlyOwner
+  activate UTQ
+  UTQ -> UTQ: Add tradeId to mapping
+  UTQ -> CT: Confirm addition
+  deactivate UTQ
+  
+  ET -> UTQ: removeFromTradeQueue(tokenAddress, tradeId) /*checked*/
+  activate UTQ
+  UTQ -> UTQ: Remove tradeId from mapping
+  UTQ -> ET: Confirm removal
+  deactivate UTQ
+  
+  ET -> UTQ: getTradeQueue(tokenAddress) pure view
+  activate UTQ
+  UTQ -> UTQ: Retrieve array of tradeIds
+  UTQ -> ET: Return trade queue
+  deactivate UTQ
+end
+
+@enduml

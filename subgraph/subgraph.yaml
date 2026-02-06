@@ -1,0 +1,77 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Core
+    network: local
+    source:
+      address: "0x2451c39ED4f33D0a9A786445C41e68396f7cd80c"  # Replace with your deployed contract address
+      abi: Core
+      startBlock: 22776838
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Trade
+        - TradeExecution
+        - TradeCancellation
+        - TradeSettlement
+        - StreamFee
+        - InstasettleFee
+        - FeeClaim
+        - FeeRateUpdate
+        - LowLevelError
+        - DataError
+      abis:
+        - name: Core
+          file: ./abis/Core.json
+      eventHandlers:
+        - event: TradeCreated(indexed uint256,indexed address,address,address,uint256,uint256,uint256,uint256,bool,uint256,uint256,bool,bool)
+          handler: handleTradeCreated
+        - event: TradeStreamExecuted(indexed uint256,uint256,uint256,uint256)
+          handler: handleTradeStreamExecuted
+        - event: TradeCancelled(bool,indexed uint256,uint256,uint256)
+          handler: handleTradeCancelled
+        - event: TradeSettled(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleTradeSettled
+        - event: StreamFeesTaken(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleStreamFeesTaken
+        - event: InstasettleFeeTaken(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleInstasettleFeeTaken
+        - event: FeesClaimed(indexed address,indexed address,uint256,bool)
+          handler: handleFeesClaimed
+        - event: FeeRatesUpdated(uint16,uint16,uint16)
+          handler: handleFeeRatesUpdated
+        - event: LowLevelError(string)
+          handler: handleLowLevelError
+        - event: DataError(bytes)
+          handler: handleDataError
+      file: ./src/mapping.ts
+
+  - kind: ethereum/contract
+    name: StreamDaemon
+    network: local
+    source:
+      address: "0x28E2E3a25de36e4Cd542D0c87aC1FC42dC5db8C4"  # Replace with your deployed contract address
+      abi: StreamDaemon
+      startBlock: 22776838
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DEXRoute
+      abis:
+        - name: StreamDaemon
+          file: ./abis/StreamDaemon.json
+      eventHandlers:
+        - event: DEXRouteAdded(indexed address)
+          handler: handleDEXRouteAdded
+        - event: DEXRouteRemoved(indexed address)
+          handler: handleDEXRouteRemoved
+      file: ./src/mapping.ts
+
+  # Router contract removed - InstaSettleConfigured event no longer exists
+  # Fees contract removed - FeesClaimed event moved to Core contract 

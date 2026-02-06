@@ -1,0 +1,27 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.5",
+  "deploymentDate": "2026-02-01T19:30:22Z",
+  "deploymentBlock": 24364017,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0x635d087fd9b047f4276d74e62472b1b60d729131466c4f6332c1064d27f8b1b9",
+  "contracts": {
+    "Executor": "0x72a23d256fa59b7dbc812eade5aae062ba6c21c0",
+    "Registry": "0x478044a89d7fad50a2188070d85eaf3bd7dac7bb",
+    "UniswapV2Fetcher": "0x97538a173e00ed37e96d8ded7c54051adb8fca7b",
+    "UniswapV3Fetcher_0_05": "0x7a88f533287ab702c7f13bbbf7112c6563c8aba8",
+    "UniswapV3Fetcher_0_3": "0xd56510bbf2de389553571728807402b35920762f",
+    "UniswapV3Fetcher_1": "0x59590f24b3eb618fc090385e0f0ef4d22180942d",
+    "SushiswapFetcher": "0xfa6c98f6de087483aa74607b952ae11564962e87",
+    "BalancerV2PoolRegistry": "0x50e02251a114be489030c71192d13f6d774c1696",
+    "BalancerV2Fetcher": "0xbfa5c66fb1131c599178c6b1fc863349e47b5d4e",
+    "CurveMetaFetcher": "0x1406f7b14fe2546cc6402a44060d11bb3e356f34",
+    "StreamDaemon": "0xd35f101db2ea11693c09851389494d9e297de95c",
+    "Core": "0x62a1e4dc903f0677ba4e06494af0a74d8a1205be",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5"
+  },
+  "notes": {
+    "changes": "Full barebones deployment (DeployBarebones.s.sol). ETHSupport set on Core via maintenance:set-ethsupport."
+  }
+}

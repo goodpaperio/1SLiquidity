@@ -1,0 +1,18 @@
+@startuml Keeper Dex Monitor
+title Keeper to DEX Monitor
+
+actor User
+database "UI" as UI
+database "Keeper" as K
+database "DEXs" as DEX
+participant "Router" as R
+
+User -> UI: Opens app and\nchooses token pair
+UI -> K: Calls Keeper back\end passing\ndesired trade parameters
+K <-> DEX: async calls to DEXs to return\n`amountOut` for varying\n`streamCount`
+K -> K: processes data to return\n`streamCount` sweet spot,\n`DEX` & `amountIn`
+K -> K: Caches in Redis
+UI -> UI: Trade formulated based on\npredicted parameters\n\nN.B. the predicted/calculated\namount of gas to be deducted on\nclosure of a trade/position is to be\nincluded in the trade's metadata\n\nN.B. the stream size is only ever\ncalculated on chain
+User <-> UI: Transaction signed
+UI -> R: Signed transaction forwarded to smart contracts entry point
+@enduml
