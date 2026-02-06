@@ -8,6 +8,7 @@
     "monitor": "ts-node src/index.ts",
     "historical": "ts-node src/index.ts --historical",
     "execute-trades": "ts-node src/execute-trades.ts",
+    "balance-check": "ts-node src/balance-check.ts",
     "test-workflow": "ts-node src/test-workflow.ts",
     "dev": "ts-node --watch src/index.ts",
     "start": "node dist/index.js"
