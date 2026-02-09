@@ -181,7 +181,7 @@ const TradesTable = ({
       ...trades.filter(
         (trade) =>
           trade.isInstasettlable &&
-          trade.instasettlements.length === 0 &&
+          trade.settlements.length === 0 &&
           trade.cancellations.length === 0
       ),
     ].map((trade) => {

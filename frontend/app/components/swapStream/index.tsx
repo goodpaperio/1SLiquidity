@@ -27,7 +27,7 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
-  instasettlements: any[]
+  settlements: any[]
   cancellations: Cancellation[]
   onlyInstasettle?: boolean
 }
@@ -178,11 +178,11 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
               )}
               style={{
                 width: `${Math.min(
-                  ((trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
+                  ((trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
                     : trade.executions.length) /
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams)) *
                     100,
                   100
@@ -211,23 +211,23 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
               {!trade.onlyInstasettle && (
                 <>
                   <p className="whitespace-nowrap">
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    {trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : trade.executions.length}{' '}
                     /{' '}
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    {trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams}{' '}
                     completed
                   </p>
 
-                  {trade.instasettlements.length > 0 ||
+                  {trade.settlements.length > 0 ||
                   trade.cancellations.length > 0 ||
-                  (trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
+                  (trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
                     : trade.executions.length) >=
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams) ? (
                     ''
                   ) : (
@@ -246,14 +246,14 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading }) => {
               )}
               {trade.isInstasettlable && !trade.onlyInstasettle && (
                 <InstasettlePill
-                  isSettled={trade.instasettlements.length > 0}
+                  isSettled={trade.settlements.length > 0}
                   variant="instasettled"
                 />
               )}
 
               {trade.onlyInstasettle && (
                 <InstasettlePill
-                  isSettled={trade.instasettlements.length > 0}
+                  isSettled={trade.settlements.length > 0}
                   variant="only-instasettlable"
                 />
               )}
