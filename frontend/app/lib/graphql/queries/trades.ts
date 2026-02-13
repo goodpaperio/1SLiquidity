@@ -34,7 +34,7 @@ export const GET_TRADES = gql`
         timestamp
         isAutocancelled
       }
-      instasettlements {
+      settlements {
         id
         settler
         totalAmountIn
@@ -58,7 +58,7 @@ export const GET_INSTASETTLE_TRADES = gql`
       isInstasettlable
       tokenIn
       tokenOut
-      instasettlements(first: 100) {
+      settlements(first: 100) {
         id
       }
       cancellations(first: 100) {
