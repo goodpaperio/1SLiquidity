@@ -17,6 +17,11 @@ export const NAV_LINKS: NAV_LINKS[] = [
     icon: '/icons/fire.svg',
   },
   {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: '/icons/dashboard.svg',
+  },
+  {
     title: 'Docs',
     href: '/docs',
     icon: '/icons/docs.svg',
