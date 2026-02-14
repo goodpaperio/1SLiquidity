@@ -29,7 +29,7 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
-  instasettlements: any[]
+  settlements: any[]
   cancellations: Cancellation[]
   onlyInstasettle?: boolean
   createdAt?: string
@@ -67,7 +67,13 @@ type Props = {
   linkToTradePage?: boolean
 }
 
-const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkToTradePage = false }) => {
+const SwapStream: React.FC<Props> = ({
+  trade,
+  onClick,
+  isUser,
+  isLoading,
+  linkToTradePage = false,
+}) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
   const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
@@ -113,12 +119,14 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
     : 0
 
   // Calculate BPS savings for instasettlable trades
-  const bpsSavings = trade.isInstasettlable && trade.instasettleBps
-    ? Number(trade.instasettleBps)
-    : 0
-  const savingsAmount = tokenOut && bpsSavings > 0
-    ? (Number(formattedMinAmountOut) * bpsSavings) / 10000
-    : 0
+  const bpsSavings =
+    trade.isInstasettlable && trade.instasettleBps
+      ? Number(trade.instasettleBps)
+      : 0
+  const savingsAmount =
+    tokenOut && bpsSavings > 0
+      ? (Number(formattedMinAmountOut) * bpsSavings) / 10000
+      : 0
   const savingsUsd = savingsAmount * (tokenOut?.usd_price || 0)
 
   if (isLoadingTokens) {
@@ -206,9 +214,11 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
                 </p>
                 {outputUsdValue > 0 && (
                   <span className="text-white/50 text-sm ml-1">
-                    (${outputUsdValue >= 1000
+                    ($
+                    {outputUsdValue >= 1000
                       ? `${(outputUsdValue / 1000).toFixed(1)}K`
-                      : outputUsdValue.toFixed(2)})
+                      : outputUsdValue.toFixed(2)}
+                    )
                   </span>
                 )}
               </>
@@ -227,11 +237,11 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
               )}
               style={{
                 width: `${Math.min(
-                  ((trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
+                  ((trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
                     : trade.executions.length) /
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams)) *
                     100,
                   100
@@ -260,23 +270,23 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
               {!trade.onlyInstasettle && (
                 <>
                   <p className="whitespace-nowrap">
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    {trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : trade.executions.length}{' '}
                     /{' '}
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    {trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams}{' '}
                     completed
                   </p>
 
-                  {trade.instasettlements.length > 0 ||
+                  {trade.settlements.length > 0 ||
                   trade.cancellations.length > 0 ||
-                  (trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
+                  (trade.settlements.length > 0
+                    ? trade.settlements.length + trade.executions.length
                     : trade.executions.length) >=
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
+                    (trade.settlements.length > 0
+                      ? trade.settlements.length + trade.executions.length
                       : remainingStreams) ? (
                     ''
                   ) : (
@@ -296,10 +306,10 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
               {trade.isInstasettlable && !trade.onlyInstasettle && (
                 <>
                   <InstasettlePill
-                    isSettled={trade.instasettlements.length > 0}
+                    isSettled={trade.settlements.length > 0}
                     variant="instasettled"
                   />
-                  {bpsSavings > 0 && trade.instasettlements.length === 0 && (
+                  {bpsSavings > 0 && trade.settlements.length === 0 && (
                     <span className="text-xs text-primary whitespace-nowrap flex items-center gap-0.5">
                       <svg
                         width="12"
@@ -324,10 +334,10 @@ const SwapStream: React.FC<Props> = ({ trade, onClick, isUser, isLoading, linkTo
               {trade.onlyInstasettle && (
                 <>
                   <InstasettlePill
-                    isSettled={trade.instasettlements.length > 0}
+                    isSettled={trade.settlements.length > 0}
                     variant="only-instasettlable"
                   />
-                  {bpsSavings > 0 && trade.instasettlements.length === 0 && (
+                  {bpsSavings > 0 && trade.settlements.length === 0 && (
                     <span className="text-xs text-primary whitespace-nowrap flex items-center gap-0.5">
                       <svg
                         width="12"

@@ -47,7 +47,7 @@ export interface Trade {
   tokenInDetails?: any // Using any for now since we don't have the token type here
   tokenOutDetails?: any // Using any for now since we don't have the token type here
   cancellations: Cancellation[]
-  instasettlements: Settlement[]
+  settlements: Settlement[]
 }
 
 export interface TradesResponse {
