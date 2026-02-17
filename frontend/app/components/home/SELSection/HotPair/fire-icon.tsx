@@ -1,10 +1,13 @@
+import { useId } from 'react'
+
 interface FireIconProps {
   isActive?: boolean
   className?: string
 }
 
 export function FireIcon({ isActive = false, className = '' }: FireIconProps) {
-  const gradientId = `fire-gradient-${Math.random().toString(36).substr(2, 9)}`
+  const id = useId()
+  const gradientId = `fire-gradient-${id}`
 
   return (
     <svg

@@ -15,7 +15,7 @@ const isTradeCompleted = (trade: any) => {
     trade.executions?.some(
       (execution: any) => execution.lastSweetSpot === '0'
     ) ||
-    trade.instasettlements?.length > 0 ||
+    trade.settlements?.length > 0 ||
     trade.cancellations?.length > 0
   )
 }
@@ -108,7 +108,9 @@ const DashboardTrades = () => {
           </div>
           <div className="flex items-center rounded-lg border border-[#373d3f] bg-[#0d0d0d] px-4 py-2">
             <span className="text-sm font-medium text-white">TRADES</span>
-            <span className="text-primary ml-2 text-sm font-medium">{ongoingTrades.length}</span>
+            <span className="text-primary ml-2 text-sm font-medium">
+              {ongoingTrades.length}
+            </span>
           </div>
         </div>
 
@@ -131,7 +133,7 @@ const DashboardTrades = () => {
                     isInstasettlable: false,
                     realisedAmountOut: '0',
                     executions: [],
-                    instasettlements: [],
+                    settlements: [],
                     cancellations: [],
                   }}
                   isLoading={true}
@@ -187,7 +189,7 @@ const DashboardTrades = () => {
                     isInstasettlable: false,
                     realisedAmountOut: '0',
                     executions: [],
-                    instasettlements: [],
+                    settlements: [],
                     cancellations: [],
                   }}
                   isLoading={true}

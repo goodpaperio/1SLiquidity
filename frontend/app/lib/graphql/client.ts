@@ -50,8 +50,13 @@ const cache = new InMemoryCache({
         },
         trades: {
           // Merge function for pagination
-          keyArgs: ['orderBy', 'orderDirection'],
+          // Include 'where' in keyArgs so filtered queries are cached separately
+          keyArgs: ['orderBy', 'orderDirection', 'where'],
           merge(existing = [], incoming, { args }) {
+            // If querying by 'where', don't merge - just return incoming
+            if (args?.where) {
+              return incoming
+            }
             // If we have an offset, we should merge the incoming data at that offset
             const merged = existing ? existing.slice(0) : []
             const offset = args?.skip ?? 0

@@ -97,7 +97,7 @@ export const GET_TRADE_BY_ID = gql`
         timestamp
         isAutocancelled
       }
-      instasettlements {
+      settlements {
         id
         settler
         totalAmountIn

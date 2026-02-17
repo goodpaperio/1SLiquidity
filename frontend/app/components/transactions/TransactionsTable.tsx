@@ -89,12 +89,10 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     if (trade.cancellations?.length > 0) {
       return trade.cancellations[0].isAutocancelled ? 'failed' : 'cancelled'
     }
-    if (trade.instasettlements?.length > 0) {
+    if (trade.settlements?.length > 0) {
       return 'instasettled'
     }
-    if (
-      trade.executions?.some((exec: any) => exec.lastSweetSpot === '0')
-    ) {
+    if (trade.executions?.some((exec: any) => exec.lastSweetSpot === '0')) {
       return 'completed'
     }
     return 'ongoing'
@@ -138,7 +136,10 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         ? formatUnits(BigInt(trade.amountIn || '0'), tokenIn.decimals || 18)
         : '0'
       const formattedAmountOut = tokenOut
-        ? formatUnits(BigInt(trade.minAmountOut || '0'), tokenOut.decimals || 18)
+        ? formatUnits(
+            BigInt(trade.minAmountOut || '0'),
+            tokenOut.decimals || 18
+          )
         : '0'
 
       const volumeUsd = tokenIn
@@ -185,7 +186,15 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     }
 
     return processedTrades
-  }, [trades, tokenList, selectedTokenFrom, selectedTokenTo, walletId, sortField, sortDirection])
+  }, [
+    trades,
+    tokenList,
+    selectedTokenFrom,
+    selectedTokenTo,
+    walletId,
+    sortField,
+    sortDirection,
+  ])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -262,7 +271,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   if (error) {
     return (
       <div className="rounded-xl border border-red-900/50 bg-red-900/10 p-8 text-center">
-        <p className="text-red-400">Error loading transactions: {(error as Error).message}</p>
+        <p className="text-red-400">
+          Error loading transactions: {(error as Error).message}
+        </p>
       </div>
     )
   }
@@ -273,24 +284,36 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="border-b border-[#373d3f] hover:bg-transparent">
-              <TableHead className="text-white/70 min-w-[140px]">Token Pair</TableHead>
+              <TableHead className="text-white/70 min-w-[140px]">
+                Token Pair
+              </TableHead>
               <TableHead
                 className="text-white/70 cursor-pointer hover:text-white transition-colors min-w-[120px]"
                 onClick={() => handleSort('volume')}
               >
                 <div className="flex items-center">
                   Volume
-                  <SortIcon field="volume" currentField={sortField} direction={sortDirection} />
+                  <SortIcon
+                    field="volume"
+                    currentField={sortField}
+                    direction={sortDirection}
+                  />
                 </div>
               </TableHead>
-              <TableHead className="text-white/70 min-w-[140px]">Output</TableHead>
+              <TableHead className="text-white/70 min-w-[140px]">
+                Output
+              </TableHead>
               <TableHead
                 className="text-white/70 cursor-pointer hover:text-white transition-colors min-w-[120px]"
                 onClick={() => handleSort('status')}
               >
                 <div className="flex items-center">
                   Status
-                  <SortIcon field="status" currentField={sortField} direction={sortDirection} />
+                  <SortIcon
+                    field="status"
+                    currentField={sortField}
+                    direction={sortDirection}
+                  />
                 </div>
               </TableHead>
               <TableHead
@@ -299,11 +322,17 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
               >
                 <div className="flex items-center">
                   Time
-                  <SortIcon field="timestamp" currentField={sortField} direction={sortDirection} />
+                  <SortIcon
+                    field="timestamp"
+                    currentField={sortField}
+                    direction={sortDirection}
+                  />
                 </div>
               </TableHead>
               {!walletId && (
-                <TableHead className="text-white/70 min-w-[120px]">Wallet</TableHead>
+                <TableHead className="text-white/70 min-w-[120px]">
+                  Wallet
+                </TableHead>
               )}
               <TableHead className="min-w-[50px]"></TableHead>
             </TableRow>
@@ -311,7 +340,10 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
           <TableBody>
             {displayData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={walletId ? 6 : 7} className="text-center py-12">
+                <TableCell
+                  colSpan={walletId ? 6 : 7}
+                  className="text-center py-12"
+                >
                   <p className="text-white/50">No transactions found</p>
                 </TableCell>
               </TableRow>
@@ -328,7 +360,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         src={
                           trade.tokenInDetails?.symbol?.toLowerCase() === 'usdt'
                             ? '/tokens/usdt.svg'
-                            : trade.tokenInDetails?.icon || '/icons/default-token.svg'
+                            : trade.tokenInDetails?.icon ||
+                              '/icons/default-token.svg'
                         }
                         width={24}
                         height={24}
@@ -338,9 +371,11 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       <span className="text-white/50">→</span>
                       <ImageFallback
                         src={
-                          trade.tokenOutDetails?.symbol?.toLowerCase() === 'usdt'
+                          trade.tokenOutDetails?.symbol?.toLowerCase() ===
+                          'usdt'
                             ? '/tokens/usdt.svg'
-                            : trade.tokenOutDetails?.icon || '/icons/default-token.svg'
+                            : trade.tokenOutDetails?.icon ||
+                              '/icons/default-token.svg'
                         }
                         width={24}
                         height={24}
@@ -348,7 +383,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         className="w-6 h-6 rounded-full"
                       />
                       <span className="text-white/70 text-sm">
-                        {trade.tokenInDetails?.symbol || '?'}/{trade.tokenOutDetails?.symbol || '?'}
+                        {trade.tokenInDetails?.symbol || '?'}/
+                        {trade.tokenOutDetails?.symbol || '?'}
                       </span>
                     </div>
                   </TableCell>
@@ -357,7 +393,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-white">
-                        {Number(trade.formattedAmountIn).toFixed(4)} {trade.tokenInDetails?.symbol}
+                        {Number(trade.formattedAmountIn).toFixed(4)}{' '}
+                        {trade.tokenInDetails?.symbol}
                       </span>
                       <span className="text-white/50 text-xs">
                         {formatVolume(trade.volumeUsd)}
@@ -369,12 +406,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-white">
-                        {Number(trade.formattedAmountOut).toFixed(4)} {trade.tokenOutDetails?.symbol}
+                        {Number(trade.formattedAmountOut).toFixed(4)}{' '}
+                        {trade.tokenOutDetails?.symbol}
                       </span>
                       {trade.tokenOutDetails?.usd_price && (
                         <span className="text-white/50 text-xs">
                           {formatVolume(
-                            Number(trade.formattedAmountOut) * trade.tokenOutDetails.usd_price
+                            Number(trade.formattedAmountOut) *
+                              trade.tokenOutDetails.usd_price
                           )}
                         </span>
                       )}
@@ -386,17 +425,29 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     <div
                       className={cn(
                         'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                        trade.status === 'ongoing' && 'bg-primary/20 text-primary',
-                        trade.status === 'completed' && 'bg-green-900/20 text-green-400',
-                        trade.status === 'instasettled' && 'bg-green-900/20 text-green-400',
-                        trade.status === 'cancelled' && 'bg-red-900/20 text-red-400',
-                        trade.status === 'failed' && 'bg-red-900/20 text-red-400'
+                        trade.status === 'ongoing' &&
+                          'bg-primary/20 text-primary',
+                        trade.status === 'completed' &&
+                          'bg-green-900/20 text-green-400',
+                        trade.status === 'instasettled' &&
+                          'bg-green-900/20 text-green-400',
+                        trade.status === 'cancelled' &&
+                          'bg-red-900/20 text-red-400',
+                        trade.status === 'failed' &&
+                          'bg-red-900/20 text-red-400'
                       )}
                     >
                       {trade.status === 'instasettled' ? (
-                        <InstasettlePill isSettled={true} variant="instasettled" />
-                      ) : trade.status === 'ongoing' && trade.isInstasettlable ? (
-                        <InstasettlePill isSettled={false} variant="instasettled" />
+                        <InstasettlePill
+                          isSettled={true}
+                          variant="instasettled"
+                        />
+                      ) : trade.status === 'ongoing' &&
+                        trade.isInstasettlable ? (
+                        <InstasettlePill
+                          isSettled={false}
+                          variant="instasettled"
+                        />
                       ) : (
                         <span className="capitalize">{trade.status}</span>
                       )}
@@ -441,7 +492,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
       {/* Results count */}
       <div className="px-4 py-3 border-t border-[#373d3f]/50 text-white/50 text-sm">
-        Showing {displayData.length} transaction{displayData.length !== 1 ? 's' : ''}
+        Showing {displayData.length} transaction
+        {displayData.length !== 1 ? 's' : ''}
       </div>
     </div>
   )
