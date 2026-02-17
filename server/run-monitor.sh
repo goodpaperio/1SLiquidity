@@ -13,12 +13,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 MONITOR_DIR="$REPO_DIR/local-monitor"
 
-# Load environment variables
+# Enable AWS Secrets Manager
+export USE_AWS_SECRETS=true
+
+# Load environment variables (optional when using AWS Secrets Manager)
 if [ -f "$SCRIPT_DIR/.env" ]; then
     export $(cat "$SCRIPT_DIR/.env" | grep -v '^#' | xargs)
 else
-    echo "ERROR: .env file not found at $SCRIPT_DIR/.env"
-    exit 1
+    echo "INFO: No .env file found, using AWS Secrets Manager"
 fi
 
 # Setup logging
@@ -66,7 +68,7 @@ log "💰 Checking wallet balance..."
 if npm run balance-check >> "$LOG_FILE" 2>&1; then
     # Extract balance from log (looks for pattern like "Balance: 0.0042 ETH")
     BALANCE=$(grep "Balance:" "$LOG_FILE" | tail -1 | grep -oP '\d+\.\d+' || echo "0")
-    THRESHOLD="${ALERT_LOW_BALANCE_THRESHOLD:-0.005}"
+    THRESHOLD="${ALERT_LOW_BALANCE_THRESHOLD:-0.02}"
     
     if [ -n "$BALANCE" ] && [ "$BALANCE" != "0" ]; then
         log "Current balance: $BALANCE ETH"
@@ -112,8 +114,23 @@ if npm run execute-trades > "$EXECUTE_OUTPUT" 2>&1; then
         
         # Send alert on failures (if configured)
         if [ "$FAIL_COUNT" -gt 0 ] && [ "${ALERT_ON_FAILURE:-true}" = "true" ]; then
-            FAILED_PAIRS=$(grep -oP '0x[a-fA-F0-9]{64}' "$EXECUTE_OUTPUT" | head -3 | tr '\n' ' ')
-            send_alert "⚠️ <b>Execution Failures</b>%0A%0AFailed: <code>$FAIL_COUNT</code> trade(s)%0APair IDs: <code>$FAILED_PAIRS</code>%0A%0ACheck logs: <code>$LOG_FILE</code>"
+            # Unique pair IDs only (same ID often appears multiple times in log)
+            FAILED_PAIRS=$(grep -oP '0x[a-fA-F0-9]{64}' "$EXECUTE_OUTPUT" | sort -u | head -5)
+            FAILED_PAIRS_FORMATTED=""
+            while read -r id; do
+                [ -z "$id" ] && continue
+                short="${id:0:10}...${id: -6}"
+                [ -n "$FAILED_PAIRS_FORMATTED" ] && FAILED_PAIRS_FORMATTED="${FAILED_PAIRS_FORMATTED}%0A"
+                FAILED_PAIRS_FORMATTED="${FAILED_PAIRS_FORMATTED}  • ${short}"
+            done <<< "$FAILED_PAIRS"
+            # Include last failure reason if present (for debugging)
+            LAST_REASON=""
+            if grep -q "Last failure reason:" "$EXECUTE_OUTPUT"; then
+                LAST_REASON=$(grep "Last failure reason:" "$EXECUTE_OUTPUT" | tail -1 | sed 's/.*Last failure reason: //' | tr -d '\n' | head -c 200)
+                LAST_REASON=$(printf '%s' "$LAST_REASON" | sed 's/%/%25/g')
+                LAST_REASON="%0A%0AReason: <code>${LAST_REASON:-unknown}</code>"
+            fi
+            send_alert "⚠️ <b>Execution Failures</b>%0A%0AFailed: <code>$FAIL_COUNT</code> trade(s)%0A%0APair IDs:%0A<code>${FAILED_PAIRS_FORMATTED:-none}</code>${LAST_REASON}%0A%0ACheck logs: <code>$LOG_FILE</code>"
         fi
     fi
 else

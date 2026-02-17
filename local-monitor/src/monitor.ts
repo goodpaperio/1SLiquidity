@@ -21,8 +21,13 @@ import {
   TradeHistory,
   TradeMetadata,
   LocalData,
+  StreamFeesTakenEvent,
+  InstasettleFeeTakenEvent,
+  RunStats,
 } from "./types";
 import CoreABI from "./abi/Core.json";
+import { getTokenPrices, getTokenDecimals } from "./price-fetcher";
+import { getSecrets } from "./secrets";
 
 export class TradeMonitor {
   private provider: ethers.JsonRpcProvider;
@@ -31,29 +36,47 @@ export class TradeMonitor {
   private coreContractWithSigner: ethers.Contract;
   private localDataPath: string;
 
-  constructor() {
-    this.provider = getProvider();
+  private constructor(
+    provider: ethers.JsonRpcProvider,
+    signer: ethers.Wallet | null
+  ) {
+    this.provider = provider;
     this.coreContract = new ethers.Contract(
       CONTRACT_ADDRESSES.core,
       CoreABI,
       this.provider
     );
 
-    // Only create signer if private key is available
-    try {
-      this.signer = getSigner();
+    if (signer) {
+      this.signer = signer;
       this.coreContractWithSigner = new ethers.Contract(
         CONTRACT_ADDRESSES.core,
         CoreABI,
         this.signer
       );
-    } catch (error) {
+    } else {
       // No private key available - only read operations allowed
       this.signer = null as any;
       this.coreContractWithSigner = null as any;
     }
 
     this.localDataPath = join(process.cwd(), "localData.json");
+  }
+
+  /**
+   * Create a new TradeMonitor instance (async factory method)
+   */
+  static async create(): Promise<TradeMonitor> {
+    const provider = await getProvider();
+    
+    let signer: ethers.Wallet | null = null;
+    try {
+      signer = await getSigner();
+    } catch (error) {
+      console.warn("⚠️  No private key available - only read operations allowed");
+    }
+
+    return new TradeMonitor(provider, signer);
   }
 
   /**
@@ -472,6 +495,67 @@ export class TradeMonitor {
       });
     } catch (error) {
       console.error(`❌ Error scanning TradeCompleted events:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Scan for StreamFeesTaken events
+   */
+  private async scanStreamFeeEvents(
+    fromBlock: number = 0,
+    botAddress?: string
+  ): Promise<StreamFeesTakenEvent[]> {
+    try {
+      // Filter for our bot's fees only
+      const filter = botAddress
+        ? this.coreContract.filters.StreamFeesTaken(botAddress)
+        : this.coreContract.filters.StreamFeesTaken();
+      
+      const events = await this.coreContract.queryFilter(filter, fromBlock);
+
+      return events.map((event) => {
+        const eventLog = event as ethers.EventLog;
+        return {
+          bot: eventLog.args?.bot,
+          token: eventLog.args?.token,
+          protocolFee: eventLog.args?.protocolFee.toString(),
+          botFee: eventLog.args?.botFee.toString(),
+          blockNumber: eventLog.blockNumber,
+          transactionHash: eventLog.transactionHash,
+          timestamp: 0, // Will be filled later
+        };
+      });
+    } catch (error) {
+      console.error(`❌ Error scanning StreamFeesTaken events:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Scan for InstasettleFeeTaken events
+   */
+  private async scanInstasettleFeeEvents(
+    fromBlock: number = 0
+  ): Promise<InstasettleFeeTakenEvent[]> {
+    try {
+      const filter = this.coreContract.filters.InstasettleFeeTaken();
+      const events = await this.coreContract.queryFilter(filter, fromBlock);
+
+      return events.map((event) => {
+        const eventLog = event as ethers.EventLog;
+        return {
+          tradeId: Number(eventLog.args?.tradeId),
+          settler: eventLog.args?.settler,
+          token: eventLog.args?.token,
+          protocolFee: eventLog.args?.protocolFee.toString(),
+          blockNumber: eventLog.blockNumber,
+          transactionHash: eventLog.transactionHash,
+          timestamp: 0, // Will be filled later
+        };
+      });
+    } catch (error) {
+      console.error(`❌ Error scanning InstasettleFeeTaken events:`, error);
       return [];
     }
   }
@@ -973,18 +1057,230 @@ export class TradeMonitor {
   }
 
   /**
+   * Calculate run statistics including fees and gas costs
+   */
+  private async calculateRunStats(
+    startBlock: number,
+    receipts: ethers.TransactionReceipt[],
+    successCount: number,
+    failCount: number
+  ): Promise<RunStats> {
+    const currentBlock = await this.provider.getBlockNumber();
+    
+    // Scan for fee events from this run
+    const botAddress = this.signer ? this.signer.address : undefined;
+    const feeEvents = await this.scanStreamFeeEvents(startBlock, botAddress);
+    
+    // Calculate gas costs
+    let totalGasUsed = BigInt(0);
+    let totalGasCost = BigInt(0);
+    
+    for (const receipt of receipts) {
+      totalGasUsed += receipt.gasUsed;
+      const gasPrice = receipt.gasPrice || BigInt(0);
+      totalGasCost += receipt.gasUsed * gasPrice;
+    }
+    
+    const totalGasCostETH = ethers.formatEther(totalGasCost);
+    
+    // Group fees by token
+    const feesByTokenMap = new Map<string, {
+      symbol: string;
+      botFee: bigint;
+      protocolFee: bigint;
+    }>();
+    
+    for (const event of feeEvents) {
+      const token = event.token.toLowerCase();
+      if (!feesByTokenMap.has(token)) {
+        feesByTokenMap.set(token, {
+          symbol: TOKEN_ADDRESSES[token] || token.slice(0, 8),
+          botFee: BigInt(0),
+          protocolFee: BigInt(0),
+        });
+      }
+      
+      const stats = feesByTokenMap.get(token)!;
+      stats.botFee += BigInt(event.botFee);
+      stats.protocolFee += BigInt(event.protocolFee);
+    }
+    
+    // Get token prices
+    const tokenAddresses = Array.from(feesByTokenMap.keys());
+    const prices = await getTokenPrices(tokenAddresses);
+    
+    // Get ETH price for gas cost conversion
+    const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+    const ethPrice = await getTokenPrices([WETH_ADDRESS]);
+    const ethPriceUSD = ethPrice.get(WETH_ADDRESS.toLowerCase()) || 0;
+    
+    // Calculate USD values
+    const feesByToken: { [address: string]: any } = {};
+    let totalBotFeesUSD = 0;
+    let totalProtocolFeesUSD = 0;
+    
+    for (const [token, stats] of feesByTokenMap.entries()) {
+      const decimals = getTokenDecimals(token);
+      const price = prices.get(token) || 0;
+      
+      const botFee = Number(stats.botFee) / Math.pow(10, decimals);
+      const protocolFee = Number(stats.protocolFee) / Math.pow(10, decimals);
+      
+      const botFeeUSD = botFee * price;
+      const protocolFeeUSD = protocolFee * price;
+      
+      totalBotFeesUSD += botFeeUSD;
+      totalProtocolFeesUSD += protocolFeeUSD;
+      
+      feesByToken[token] = {
+        symbol: stats.symbol,
+        botFee: botFee.toFixed(6),
+        protocolFee: protocolFee.toFixed(6),
+        botFeeUSD,
+        protocolFeeUSD,
+      };
+    }
+    
+    const totalGasCostUSD = parseFloat(totalGasCostETH) * ethPriceUSD;
+    const netProfitUSD = totalBotFeesUSD - totalGasCostUSD;
+    
+    return {
+      runNumber: 0, // Can be incremented if tracking runs
+      timestamp: Date.now(),
+      successCount,
+      failCount,
+      gasUsed: totalGasUsed.toString(),
+      totalGasCostETH,
+      totalGasCostUSD,
+      feesByToken,
+      totalBotFeesUSD,
+      totalProtocolFeesUSD,
+      netProfitUSD,
+    };
+  }
+  
+  /**
+   * Send Telegram alert with run stats
+   */
+  private async sendTelegramAlert(stats: RunStats | null, failedPairIds: string[]): Promise<void> {
+    try {
+      const secrets = await getSecrets();
+      const botToken = secrets.TELEGRAM_BOT_TOKEN;
+      const chatId = secrets.TELEGRAM_CHAT_ID;
+      
+      if (!botToken || !chatId) {
+        console.log("ℹ️  Telegram credentials not configured, skipping alert");
+        return;
+      }
+      
+      let message = '';
+      
+      if (stats && stats.successCount > 0) {
+        // Success alert with fees
+        message = `✅ <b>Trades Executed</b>
+
+📊 <b>Executions:</b> ${stats.successCount} successful${stats.failCount > 0 ? `, ${stats.failCount} failed` : ''}`;
+
+        if (Object.keys(stats.feesByToken).length > 0) {
+          message += `\n\n💰 <b>Bot Fees Earned:</b>`;
+          for (const [token, data] of Object.entries(stats.feesByToken)) {
+            message += `\n   • ${data.botFee} ${data.symbol} (≈$${data.botFeeUSD.toFixed(2)})`;
+          }
+          message += `\n   💵 Total: <b>≈$${stats.totalBotFeesUSD.toFixed(2)}</b>`;
+          
+          message += `\n\n🏛 <b>Protocol Fees:</b> ≈$${stats.totalProtocolFeesUSD.toFixed(2)}`;
+        }
+        
+        message += `\n\n⛽ <b>Gas Cost:</b> ${parseFloat(stats.totalGasCostETH).toFixed(6)} ETH (≈$${stats.totalGasCostUSD.toFixed(2)})`;
+        
+        const profitSign = stats.netProfitUSD >= 0 ? '+' : '';
+        const profitEmoji = stats.netProfitUSD >= 0 ? '📈' : '📉';
+        message += `\n${profitEmoji} <b>Net Profit:</b> ${profitSign}$${stats.netProfitUSD.toFixed(2)}`;
+        
+      } else if (stats && stats.failCount > 0) {
+        // Failure alert
+        message = `⚠️ <b>Execution Failures</b>
+
+❌ <b>Failed:</b> ${stats.failCount} trade(s)
+
+📋 <b>Pair IDs:</b>`;
+        failedPairIds.slice(0, 3).forEach(id => {
+          message += `\n<code>${id.slice(0, 10)}...${id.slice(-6)}</code>`;
+        });
+      }
+      
+      message += `\n\n⏰ ${new Date().toISOString()}`;
+      
+      // Send to Telegram
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+      });
+      
+      if (!response.ok) {
+        console.warn(`⚠️  Failed to send Telegram alert: ${response.status}`);
+      }
+    } catch (error) {
+      console.warn(`⚠️  Error sending Telegram alert:`, error);
+    }
+  }
+  
+  /**
+   * Display fee statistics
+   */
+  private displayFeeStats(stats: RunStats): void {
+    console.log(`${"=".repeat(80)}`);
+    console.log("💰 Fee & Cost Summary:");
+    console.log(`${"=".repeat(80)}`);
+    
+    if (Object.keys(stats.feesByToken).length > 0) {
+      console.log("\n📊 Bot Fees Earned:");
+      for (const [token, data] of Object.entries(stats.feesByToken)) {
+        console.log(`   • ${data.botFee} ${data.symbol} (≈$${data.botFeeUSD.toFixed(2)})`);
+      }
+      console.log(`   💵 Total: ≈$${stats.totalBotFeesUSD.toFixed(2)}`);
+      
+      console.log("\n🏛  Protocol Fees:");
+      for (const [token, data] of Object.entries(stats.feesByToken)) {
+        console.log(`   • ${data.protocolFee} ${data.symbol} (≈$${data.protocolFeeUSD.toFixed(2)})`);
+      }
+      console.log(`   💵 Total: ≈$${stats.totalProtocolFeesUSD.toFixed(2)}`);
+    } else {
+      console.log("\nℹ️  No fees earned this run (trades may still be settling)");
+    }
+    
+    console.log(`\n⛽ Gas Cost: ${stats.totalGasCostETH} ETH (≈$${stats.totalGasCostUSD.toFixed(2)})`);
+    
+    const profitSign = stats.netProfitUSD >= 0 ? '+' : '';
+    const profitEmoji = stats.netProfitUSD >= 0 ? '📈' : '📉';
+    console.log(`${profitEmoji} Net Profit: ${profitSign}$${stats.netProfitUSD.toFixed(2)}`);
+    
+    console.log(`${"=".repeat(80)}\n`);
+  }
+
+  /**
    * Execute all outstanding trades from local data (sequential execution)
    */
-  async executeOutstandingTrades(): Promise<void> {
+  async executeOutstandingTrades(): Promise<RunStats | null> {
     try {
       console.log("🚀 Starting trade execution process...\n");
+
+      // Track start block for fee event scanning
+      const startBlock = await this.provider.getBlockNumber();
+      const startTime = Date.now();
 
       // Load local data
       const localData = this.loadLocalData();
 
       if (localData.outstandingTrades.length === 0) {
         console.log("📊 No outstanding trades to execute");
-        return;
+        return null;
       }
 
       // Get unique pair IDs
@@ -1021,7 +1317,7 @@ export class TradeMonitor {
               `   Required (approx): ${ethers.formatEther(requiredWei)} ETH for ${uniquePairIds.length} tx(s)\n` +
               `   Fund this wallet on mainnet to run executeTrades. Skipping execution this round.\n`
           );
-          return;
+          return null;
         }
         console.log(
           `💰 Executor balance: ${ethers.formatEther(balance)} ETH (sufficient for gas)\n`
@@ -1032,6 +1328,8 @@ export class TradeMonitor {
       let successCount = 0;
       let failCount = 0;
       const failedPairIds: string[] = [];
+      const receipts: ethers.TransactionReceipt[] = [];
+      let lastFailureReason: string | null = null;
 
       for (let i = 0; i < uniquePairIds.length; i++) {
         const pairId = uniquePairIds[i];
@@ -1058,8 +1356,10 @@ export class TradeMonitor {
               `✅ Transaction confirmed in block ${receipt.blockNumber}`
             );
             successCount++;
+            receipts.push(receipt);
           } else {
-            console.error(`❌ Transaction reverted: ${tx.hash}`);
+            lastFailureReason = `Transaction reverted (tx ${tx.hash})`;
+            console.error(`❌ ${lastFailureReason}`);
             failCount++;
             failedPairIds.push(pairId);
           }
@@ -1070,6 +1370,12 @@ export class TradeMonitor {
             await new Promise((res) => setTimeout(res, 2000));
           }
         } catch (error: any) {
+          const errMsg =
+            error.shortMessage ||
+            error.message ||
+            String(error).slice(0, 200);
+          lastFailureReason = errMsg;
+
           // Check if it's a gas/funds error (node "allowance" = max gas affordable from balance)
           if (
             error.message?.includes("gas required exceeds") ||
@@ -1087,7 +1393,7 @@ export class TradeMonitor {
           // For other errors, log and continue
           console.error(
             `❌ Failed to execute trades for pairId ${pairId}:`,
-            error.shortMessage || error.message
+            errMsg
           );
           failCount++;
           failedPairIds.push(pairId);
@@ -1103,10 +1409,36 @@ export class TradeMonitor {
       if (failedPairIds.length > 0) {
         console.log(`  ⚠️  Failed pair IDs will be retried in the next run:`);
         failedPairIds.forEach((id) => console.log(`     - ${id}`));
+        if (lastFailureReason) {
+          // Single line so run-monitor.sh can grep "Last failure reason:"
+          console.log(`  🔍 Last failure reason: ${lastFailureReason.replace(/\n/g, " ").slice(0, 300)}`);
+        }
       }
       console.log(`${"=".repeat(80)}\n`);
 
+      // Calculate fee stats if we had successful executions
+      let runStats: RunStats | null = null;
+      
+      if (successCount > 0 && receipts.length > 0) {
+        console.log("💰 Calculating fees and gas costs...\n");
+        runStats = await this.calculateRunStats(
+          startBlock,
+          receipts,
+          successCount,
+          failCount
+        );
+        
+        // Display fee summary
+        this.displayFeeStats(runStats);
+      }
+      
+      // Send Telegram alert (success or failure)
+      if (process.env.ALERT_ON_SUCCESS === 'true' || failCount > 0) {
+        await this.sendTelegramAlert(runStats, failedPairIds);
+      }
+
       console.log("✅ Trade execution process completed!");
+      return runStats;
     } catch (error) {
       console.error("❌ Error during trade execution:", error);
       throw error;
