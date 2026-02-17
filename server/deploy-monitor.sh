@@ -56,30 +56,37 @@ else
     exit 1
 fi
 
-# Deploy script
-print_info "Deploying updates to server..."
+# Determine script directory (project root = parent of server/)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
+# Option 1: Deploy from LOCAL (rsync this machine's code to server)
+print_info "Syncing local code to server..."
+rsync -avz --delete \
+  -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+  "$PROJECT_ROOT/local-monitor/" \
+  "$SSH_USER@$SERVER_IP:~/1SLiquidity/local-monitor/" \
+  --exclude node_modules \
+  --exclude dist \
+  --exclude localData.json
+
+rsync -avz \
+  -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+  "$PROJECT_ROOT/server/" \
+  "$SSH_USER@$SERVER_IP:~/1SLiquidity/server/" \
+  --exclude .env
+
+print_success "Code synced"
+
+# Option 2: On server - install deps and build
+print_info "Installing dependencies and building on server..."
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << 'DEPLOY_SCRIPT'
 set -e
-
-echo ""
-echo "📦 Pulling latest code from GitHub..."
-cd ~/1SLiquidity
-git fetch origin
-git pull origin main
-
-echo ""
-echo "🔨 Rebuilding local-monitor..."
 cd ~/1SLiquidity/local-monitor
-npm ci
+npm install
 npm run build
-
 echo ""
-echo "✅ Deployment completed!"
-echo ""
-echo "📊 Next cron run will use updated code"
-echo "📝 Check logs: tail -f ~/monitor-logs/$(date +%Y-%m-%d).log"
-echo ""
+echo "✅ Build completed!"
 DEPLOY_SCRIPT
 
 print_success "Deployment completed successfully!"
