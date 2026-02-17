@@ -22,12 +22,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ethers": "^6.8.1",
-    "dotenv": "^16.3.1"
+    "@aws-sdk/client-secrets-manager": "^3.991.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.1"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
-    "typescript": "^5.2.2",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }

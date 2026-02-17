@@ -54,24 +54,45 @@ export const TOKEN_ADDRESSES: Record<string, string> = {
   "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e": "USDC", // Another USDC variant
 };
 
-export const RPC_URL = process.env.RPC_HTTP_URL;
+import { getSecrets } from "./secrets";
 
-if (!RPC_URL) {
-  throw new Error("RPC_HTTP_URL environment variable is required");
+// These will be initialized from secrets (AWS Secrets Manager or env vars)
+let RPC_URL: string | null = null;
+let PRIVATE_KEY: string | null = null;
+
+// Initialize secrets (called at startup)
+async function initializeSecrets() {
+  const secrets = await getSecrets();
+  RPC_URL = secrets.MAINNET_RPC_HTTP_URL;
+  PRIVATE_KEY = secrets.PRIVATE_KEY;
 }
 
-export const PRIVATE_KEY = process.env.PRIVATE_KEY;
-
-export function getProvider(): ethers.JsonRpcProvider {
+// Export async versions that ensure secrets are loaded
+export async function getProvider(): Promise<ethers.JsonRpcProvider> {
+  if (!RPC_URL) {
+    await initializeSecrets();
+  }
+  if (!RPC_URL) {
+    throw new Error("Failed to load RPC_URL from secrets");
+  }
   return new ethers.JsonRpcProvider(RPC_URL);
 }
 
-export function getSigner(): ethers.Wallet {
+export async function getSigner(): Promise<ethers.Wallet> {
   if (!PRIVATE_KEY) {
-    throw new Error(
-      "PRIVATE_KEY environment variable is required for write operations"
-    );
+    await initializeSecrets();
   }
-  const provider = getProvider();
-  return new ethers.Wallet(PRIVATE_KEY!, provider);
+  if (!PRIVATE_KEY) {
+    throw new Error("Failed to load PRIVATE_KEY from secrets");
+  }
+  const provider = await getProvider();
+  return new ethers.Wallet(PRIVATE_KEY, provider);
+}
+
+// For compatibility with existing code that expects synchronous access
+export function getRpcUrl(): string {
+  if (!RPC_URL) {
+    throw new Error("Secrets not initialized. Call getProvider() or getSigner() first.");
+  }
+  return RPC_URL;
 }

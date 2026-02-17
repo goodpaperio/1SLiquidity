@@ -8,11 +8,11 @@ async function main() {
 
   if (args.includes("--historical") || args.includes("-h")) {
     console.log("🚀 Starting 1SLiquidity Historical Trade Analysis...\n");
-    const monitor = new TradeMonitor();
+    const monitor = await TradeMonitor.create();
     await monitor.runHistoricalAnalysis();
   } else {
     console.log("🚀 Starting 1SLiquidity Trade Monitor...\n");
-    const monitor = new TradeMonitor();
+    const monitor = await TradeMonitor.create();
     await monitor.run();
   }
 }
