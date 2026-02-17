@@ -138,10 +138,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     function _removeTradeFromStorage(bytes32 pairId, uint256 tradeId) internal {
         uint256[] storage tradeIds = pairIdTradeIds[pairId];
         uint256 tradeIndex = tradeIndicies[tradeId];
-        Utils.Trade memory lastTrade = trades[tradeIds.length - 1]; 
-        trades[tradeIndex] = lastTrade;
+        uint256 idAtLast = tradeIds[tradeIds.length - 1];
+        tradeIds[tradeIndex] = idAtLast;
         tradeIds.pop();
-        tradeIndicies[lastTradeId] = tradeIndex; 
+        tradeIndicies[idAtLast] = tradeIndex;
         delete tradeIndicies[tradeId];
         delete trades[tradeId];
     }
@@ -394,6 +394,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         for (uint256 i = tradesToProcess; i > 0; i--) {
             uint256 index = i - 1; // Convert to 0-based index
             Utils.Trade storage trade = trades[tradeIds[index]];
+            if (trade.owner == address(0)) {
+                _removeTradeFromStorage(pairId, tradeIds[index]);
+                continue;
+            }
             if (trade.attempts >= 3) {
                 // we transfer the remaining amount of the trade to the owner and dequeue it via cancelTrade
                 this.cancelTrade(trade.tradeId);
