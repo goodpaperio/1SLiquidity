@@ -48,6 +48,7 @@ decabot/node_modules
 alpha/node_modules
 bot/.env.example
 bot/node_modules
+local-monitor/node_modules
 bot/dist    
 .env.backup
 
