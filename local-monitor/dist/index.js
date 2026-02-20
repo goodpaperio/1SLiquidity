@@ -7,12 +7,12 @@ async function main() {
     const args = process.argv.slice(2);
     if (args.includes("--historical") || args.includes("-h")) {
         console.log("🚀 Starting 1SLiquidity Historical Trade Analysis...\n");
-        const monitor = new monitor_1.TradeMonitor();
+        const monitor = await monitor_1.TradeMonitor.create();
         await monitor.runHistoricalAnalysis();
     }
     else {
         console.log("🚀 Starting 1SLiquidity Trade Monitor...\n");
-        const monitor = new monitor_1.TradeMonitor();
+        const monitor = await monitor_1.TradeMonitor.create();
         await monitor.run();
     }
 }
