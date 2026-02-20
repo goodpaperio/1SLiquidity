@@ -105,6 +105,20 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     mapping(address => mapping(address => uint256)) public eoaTokenBalance;
     mapping(address => uint256) public modulusResiduals;
 
+    // Bot whitelist for executeTrades: when non-empty, only whitelisted EOAs may call executeTrades
+    mapping(address => bool) public botWhitelist;
+    uint256 public botWhitelistCount;
+    event BotAdded(address indexed bot);
+    event BotRemoved(address indexed bot);
+    error NotAuthorisedBot();
+
+    modifier onlyBot() {
+        if (botWhitelistCount > 0) {
+            if (!botWhitelist[msg.sender]) revert NotAuthorisedBot();
+        }
+        _;
+    }
+
     constructor(address _streamDaemon, address _executor, address _registry, address _ethSupport) Ownable(msg.sender) {
         streamDaemon = StreamDaemon(_streamDaemon);
         executor = Executor(_executor);
@@ -210,6 +224,37 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     function setRegistry(address _registry) external onlyOwner {
         require(_registry != address(0), "Invalid address");
         registry = IRegistry(_registry);
+    }
+
+    /**
+     * @notice Add a bot EOA to the whitelist authorised to call executeTrades
+     * @dev When at least one bot is whitelisted, only whitelisted addresses may call executeTrades
+     */
+    function addBot(address bot) external onlyOwner {
+        require(bot != address(0), "Bot cannot be zero address");
+        if (!botWhitelist[bot]) {
+            botWhitelist[bot] = true;
+            botWhitelistCount++;
+            emit BotAdded(bot);
+        }
+    }
+
+    /**
+     * @notice Remove a bot EOA from the whitelist
+     */
+    function removeBot(address bot) external onlyOwner {
+        if (botWhitelist[bot]) {
+            botWhitelist[bot] = false;
+            botWhitelistCount--;
+            emit BotRemoved(bot);
+        }
+    }
+
+    /**
+     * @notice Check whether an address is whitelisted to call executeTrades
+     */
+    function isBotWhitelisted(address bot) external view returns (bool) {
+        return botWhitelist[bot];
     }
 
     function instasettle(uint256 tradeId) external nonReentrant {
@@ -363,13 +408,16 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             _removeTradeFromStorage(pairId, tradeId);
             
             // If tokenOut is ETH sentinel, unwrap WETH to ETH before transferring
-            if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-                ethSupport.unwrap(trade.realisedAmountOut, trade.owner); // @ethsupport ensure that unwrap is payable in interface
-            } else {
-                IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+            if (trade.realisedAmountOut > 0) {
+                if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                    ethSupport.unwrap(trade.realisedAmountOut, trade.owner); // @ethsupport ensure that unwrap is payable in interface
+                } else {
+                    IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);
+                }
             }
-            
-            IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
+            if (trade.amountRemaining > 0) {
+                IERC20(trade.tokenIn).safeTransfer(trade.owner, trade.amountRemaining);
+            }
 
             bool autoCancelled = msg.sender == address(this) ? true : false;
 
@@ -381,7 +429,7 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         }
     }
 
-    function executeTrades(bytes32 pairId) public nonReentrant {
+    function executeTrades(bytes32 pairId) public nonReentrant onlyBot {
         uint256[] storage tradeIds = pairIdTradeIds[pairId];
         uint256 botFeesAccrued = 0;
         address tokenOutForRun = address(0);
@@ -452,10 +500,16 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
     function executeStream(uint256 tradeId) public returns (Utils.Trade memory updatedTrade) {
         Utils.Trade storage storageTrade = trades[tradeId];
         Utils.Trade memory trade = trades[tradeId];
+        uint256 immutableAmountIn = trade.amountIn; // capture at entry; if layout is wrong, trace shows restore/access and why revert
 
         // Early return for onlyInstasettle trades - they should only be settled via instasettle()
         if (trade.onlyInstasettle) {
-            // Set lastSweetSpot to sentinel value to prevent auto-settlement in executeTrades
+            return storageTrade;
+        }
+
+        // Nothing left to stream: settle with whatever we realised (trade underperformed vs target)
+        if (trade.amountRemaining == 0) {
+            storageTrade.lastSweetSpot = 0; // Signal completion so executeTrades transfers and removes
             return storageTrade;
         }
 
