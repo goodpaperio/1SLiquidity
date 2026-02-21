@@ -221,14 +221,6 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   // Get execution hashes count (if available)
   const executionsCount = selectedStream.executions?.length || 0
 
-  // Get lastSweetSpot from the most recent execution (or 0 if no executions)
-  const lastSweetSpot =
-    selectedStream.executions && selectedStream.executions.length > 0
-      ? Number(
-          selectedStream.executions[selectedStream.executions.length - 1]
-            .lastSweetSpot || 0
-        )
-      : Number(selectedStream.lastSweetSpot || 0)
 
   // Format execution amounts and calculate their times
   const formattedExecutions =
@@ -850,12 +842,11 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               amount={
                 isLoading
                   ? '0 / 0'
-                  : selectedStream.settlements.length > 0 ||
-                      selectedStream.cancellations.length > 0
-                    ? `${Number(executionsCount) + 1} / ${
-                        Number(executionsCount) + 1
+                  : selectedStream.settlements.length > 0
+                    ? `${selectedStream.settlements.length + executionsCount} / ${
+                        selectedStream.settlements.length + executionsCount
                       }`
-                    : `${executionsCount} / ${executionsCount + lastSweetSpot}`
+                    : `${executionsCount} / ${remainingStreams}`
               }
               infoDetail="Info"
               titleClassName="text-white52"
@@ -1360,10 +1351,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 },
               ]}
               streamIndex={
-                selectedStream.isInstasettlable &&
                 selectedStream.settlements.length > 0
-                  ? 2
-                  : 0
+                  ? index + 2
+                  : index + 1
               }
               date={new Date(execution.timestamp * 1000)}
               timeRemaining={execution.estimatedTime}
