@@ -36,6 +36,7 @@ import { InfoIcon } from '@/app/lib/icons'
 import Navbar from '@/app/components/navbar'
 import Link from 'next/link'
 import { Trade } from '@/app/lib/graphql/types/trade'
+import ExplorerNav from '@/app/components/explorer/ExplorerNav'
 
 export default function TradePage() {
   const params = useParams()
@@ -142,11 +143,12 @@ export default function TradePage() {
 
   if (!trade && !isLoadingTrade) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative min-h-screen">
         <Navbar />
-        {/* Topographic wave background - positioned at top, centered */}
+        <ExplorerNav />
+        {/* Topographic wave background - positioned below navbars */}
         <div
-          className="absolute top-0 left-0 right-0 h-[340px] pointer-events-none"
+          className="absolute top-[108px] left-0 right-0 h-[340px] pointer-events-none"
           style={{
             backgroundImage: 'url(/heros/hero-3.png)',
             backgroundSize: '100% auto',
@@ -155,7 +157,7 @@ export default function TradePage() {
           }}
         />
 
-        <div className="mt-[60px] mb-10 mx-auto relative z-10 w-full px-4 md:max-w-4xl">
+        <div className="mt-[108px] mb-10 mx-auto relative z-10 w-full px-4 md:max-w-4xl">
           <motion.div
             initial="hidden"
             animate={controls}
@@ -449,12 +451,13 @@ export default function TradePage() {
 
   return (
     <TooltipProvider>
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative min-h-screen">
         <Navbar />
+        <ExplorerNav />
 
-        {/* Topographic wave background - positioned at top, centered */}
+        {/* Topographic wave background - positioned below navbars */}
         <div
-          className="absolute top-0 left-0 right-0 h-[340px] pointer-events-none"
+          className="absolute top-[108px] left-0 right-0 h-[340px] pointer-events-none"
           style={{
             backgroundImage: 'url(/heros/hero-3.png)',
             backgroundSize: '100% auto',
@@ -463,7 +466,7 @@ export default function TradePage() {
           }}
         />
 
-        <div className="mt-[40px] mb-10 mx-auto relative z-10 w-full px-4 md:max-w-4xl">
+        <div className="mt-[108px] mb-10 mx-auto relative z-10 w-full px-4 md:max-w-4xl">
           {/* Back button */}
           <motion.div
             initial="hidden"
