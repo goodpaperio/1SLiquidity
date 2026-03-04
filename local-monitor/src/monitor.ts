@@ -170,6 +170,9 @@ export class TradeMonitor {
     };
 
     this.saveLocalData(localData);
+    if (outstandingTrades.length === 0) {
+      console.log("No outstanding trades.");
+    }
     console.log(
       `💾 Updated local data with ${outstandingTrades.length} outstanding trades (contract: ${CONTRACT_ADDRESSES.core})`
     );
@@ -917,7 +920,7 @@ export class TradeMonitor {
    */
   private displayOngoingTrades(ongoingTrades: TradeDisplay[]): void {
     if (ongoingTrades.length === 0) {
-      console.log("📊 No ongoing trades found");
+      console.log("No outstanding trades.");
       return;
     }
 
@@ -1207,6 +1210,9 @@ export class TradeMonitor {
         failedPairIds.slice(0, 3).forEach(id => {
           message += `\n<code>${id.slice(0, 10)}...${id.slice(-6)}</code>`;
         });
+      } else {
+        // Heartbeat: run completed with nothing to report (0 trades executed, 0 failures)
+        message = `✅ <b>Bot run completed</b>\n\n📊 No trades to execute this round.`;
       }
       
       message += `\n\n⏰ ${new Date().toISOString()}`;
@@ -1279,7 +1285,7 @@ export class TradeMonitor {
       const localData = this.loadLocalData();
 
       if (localData.outstandingTrades.length === 0) {
-        console.log("📊 No outstanding trades to execute");
+        console.log("No outstanding trades — nothing to execute.");
         return null;
       }
 
@@ -1432,10 +1438,8 @@ export class TradeMonitor {
         this.displayFeeStats(runStats);
       }
       
-      // Send Telegram alert (success or failure)
-      if (process.env.ALERT_ON_SUCCESS === 'true' || failCount > 0) {
-        await this.sendTelegramAlert(runStats, failedPairIds);
-      }
+      // Send Telegram alert when credentials are configured (success, failure, or heartbeat)
+      await this.sendTelegramAlert(runStats, failedPairIds);
 
       console.log("✅ Trade execution process completed!");
       return runStats;

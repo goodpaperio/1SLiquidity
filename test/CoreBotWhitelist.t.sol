@@ -159,4 +159,36 @@ contract CoreBotWhitelistTest is Deploys {
         vm.prank(RANDOM_USER);
         core.executeTrades(pairId);
     }
+
+    // --- placeTrade is NOT restricted by bot whitelist (anyone can place trades) ---
+
+    function test_placeTrade_notRestrictedByBotWhitelist() public {
+        vm.prank(_asOwner());
+        core.addBot(BOT_ONE);
+        assertGt(core.botWhitelistCount(), 0);
+
+        // RANDOM_USER is not whitelisted. placeTrade has no onlyBot modifier, so it must
+        // revert for a different reason (e.g. transfer), not NotAuthorisedBot.
+        vm.prank(RANDOM_USER);
+        (bool success, bytes memory reason) = address(core).call(
+            abi.encodeWithSelector(
+                Core.placeTrade.selector,
+                abi.encode(
+                    address(1),  // tokenIn (non-contract)
+                    address(2),
+                    uint256(0),
+                    uint256(0),
+                    false,
+                    false,
+                    uint256(0),
+                    false
+                )
+            )
+        );
+        assertFalse(success, "placeTrade should revert (e.g. SafeERC20)");
+        if (reason.length >= 4) {
+            bytes4 selector = bytes4(reason);
+            assertTrue(selector != Core.NotAuthorisedBot.selector, "placeTrade must not be restricted by bot whitelist");
+        }
+    }
 }

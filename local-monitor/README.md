@@ -52,6 +52,15 @@ export MAINNET_RPC_URL="https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
 export PRIVATE_KEY="0xYOUR_PRIVATE_KEY"
 ```
 
+### Telegram notifications
+
+The monitor sends one Telegram message per run when credentials are set (heartbeat when no trades, or execution summary when trades run or fail).
+
+- **Local**: set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in your environment (or `.env`).
+- **AWS (EC2)**: add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to the **1sliquidity-bot-secrets** secret in AWS Secrets Manager (same JSON as `PRIVATE_KEY` and `MAINNET_RPC_HTTP_URL`). The Node scripts load these and send a message every run.
+
+Shell-level alerts from `run-monitor.sh` (low balance, script errors) use the same env vars; on the server you can set them in `server/.env` or export before running.
+
 ## 🏁 First Run Setup
 
 ### For Community Members
@@ -260,6 +269,10 @@ local-monitor/
 - **Event Scanning**: Scans `TradeCreated`, `TradeStreamExecuted`, `TradeCancelled`, `TradeSettled` events
 - **Smart Caching**: Tracks last run block to avoid rescanning
 - **Execution Logic**: Calls `executeTrades(pairId)` for each unique pair ID
+
+### Bot whitelist (Core v1.0.6+)
+
+The Core contract has an optional bot whitelist for `executeTrades`: when at least one bot is whitelisted, only those addresses can call `executeTrades`; otherwise anyone can. **`placeTrade` is not restricted**—any user can place trades. As Core owner, call `core.addBot(botAddress)` to restrict execution to your bot. Unit tests: `forge test --match-contract CoreBotWhitelistTest`.
 
 ## 🚨 Error Handling
 

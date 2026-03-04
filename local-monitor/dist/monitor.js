@@ -120,6 +120,9 @@ class TradeMonitor {
             contractAddress: config_1.CONTRACT_ADDRESSES.core,
         };
         this.saveLocalData(localData);
+        if (outstandingTrades.length === 0) {
+            console.log("No outstanding trades.");
+        }
         console.log(`💾 Updated local data with ${outstandingTrades.length} outstanding trades (contract: ${config_1.CONTRACT_ADDRESSES.core})`);
     }
     /**
@@ -745,7 +748,7 @@ class TradeMonitor {
      */
     displayOngoingTrades(ongoingTrades) {
         if (ongoingTrades.length === 0) {
-            console.log("📊 No ongoing trades found");
+            console.log("No outstanding trades.");
             return;
         }
         console.log("\n" + "=".repeat(120));
@@ -977,6 +980,10 @@ class TradeMonitor {
                     message += `\n<code>${id.slice(0, 10)}...${id.slice(-6)}</code>`;
                 });
             }
+            else {
+                // Heartbeat: run completed with nothing to report (0 trades executed, 0 failures)
+                message = `✅ <b>Bot run completed</b>\n\n📊 No trades to execute this round.`;
+            }
             message += `\n\n⏰ ${new Date().toISOString()}`;
             // Send to Telegram
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -1037,7 +1044,7 @@ class TradeMonitor {
             // Load local data
             const localData = this.loadLocalData();
             if (localData.outstandingTrades.length === 0) {
-                console.log("📊 No outstanding trades to execute");
+                console.log("No outstanding trades — nothing to execute.");
                 return null;
             }
             // Get unique pair IDs
@@ -1072,6 +1079,7 @@ class TradeMonitor {
             let failCount = 0;
             const failedPairIds = [];
             const receipts = [];
+            let lastFailureReason = null;
             for (let i = 0; i < uniquePairIds.length; i++) {
                 const pairId = uniquePairIds[i];
                 const tradesInQueue = localData.outstandingTrades.filter((t) => t.pairId === pairId).length;
@@ -1088,7 +1096,8 @@ class TradeMonitor {
                         receipts.push(receipt);
                     }
                     else {
-                        console.error(`❌ Transaction reverted: ${tx.hash}`);
+                        lastFailureReason = `Transaction reverted (tx ${tx.hash})`;
+                        console.error(`❌ ${lastFailureReason}`);
                         failCount++;
                         failedPairIds.push(pairId);
                     }
@@ -1099,6 +1108,10 @@ class TradeMonitor {
                     }
                 }
                 catch (error) {
+                    const errMsg = error.shortMessage ||
+                        error.message ||
+                        String(error).slice(0, 200);
+                    lastFailureReason = errMsg;
                     // Check if it's a gas/funds error (node "allowance" = max gas affordable from balance)
                     if (error.message?.includes("gas required exceeds") ||
                         error.message?.includes("out of gas") ||
@@ -1109,7 +1122,7 @@ class TradeMonitor {
                         continue; // Skip to next pairId
                     }
                     // For other errors, log and continue
-                    console.error(`❌ Failed to execute trades for pairId ${pairId}:`, error.shortMessage || error.message);
+                    console.error(`❌ Failed to execute trades for pairId ${pairId}:`, errMsg);
                     failCount++;
                     failedPairIds.push(pairId);
                 }
@@ -1123,6 +1136,10 @@ class TradeMonitor {
             if (failedPairIds.length > 0) {
                 console.log(`  ⚠️  Failed pair IDs will be retried in the next run:`);
                 failedPairIds.forEach((id) => console.log(`     - ${id}`));
+                if (lastFailureReason) {
+                    // Single line so run-monitor.sh can grep "Last failure reason:"
+                    console.log(`  🔍 Last failure reason: ${lastFailureReason.replace(/\n/g, " ").slice(0, 300)}`);
+                }
             }
             console.log(`${"=".repeat(80)}\n`);
             // Calculate fee stats if we had successful executions
@@ -1133,10 +1150,8 @@ class TradeMonitor {
                 // Display fee summary
                 this.displayFeeStats(runStats);
             }
-            // Send Telegram alert (success or failure)
-            if (process.env.ALERT_ON_SUCCESS === 'true' || failCount > 0) {
-                await this.sendTelegramAlert(runStats, failedPairIds);
-            }
+            // Send Telegram alert when credentials are configured (success, failure, or heartbeat)
+            await this.sendTelegramAlert(runStats, failedPairIds);
             console.log("✅ Trade execution process completed!");
             return runStats;
         }
