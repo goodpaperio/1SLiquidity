@@ -950,6 +950,7 @@ class TradeMonitor {
                 console.log("ℹ️  Telegram credentials not configured, skipping alert");
                 return;
             }
+            console.log("📱 Sending Telegram alert...");
             let message = '';
             if (stats && stats.successCount > 0) {
                 // Success alert with fees
@@ -997,7 +998,11 @@ class TradeMonitor {
                 }),
             });
             if (!response.ok) {
-                console.warn(`⚠️  Failed to send Telegram alert: ${response.status}`);
+                const body = await response.text();
+                console.warn(`⚠️  Failed to send Telegram alert: ${response.status}`, body ? body.slice(0, 200) : "");
+            }
+            else {
+                console.log("📱 Telegram alert sent.");
             }
         }
         catch (error) {
@@ -1045,6 +1050,7 @@ class TradeMonitor {
             const localData = this.loadLocalData();
             if (localData.outstandingTrades.length === 0) {
                 console.log("No outstanding trades — nothing to execute.");
+                await this.sendTelegramAlert(null, []);
                 return null;
             }
             // Get unique pair IDs
@@ -1070,6 +1076,7 @@ class TradeMonitor {
                         `   Balance: ${ethers_1.ethers.formatEther(balance)} ETH\n` +
                         `   Required (approx): ${ethers_1.ethers.formatEther(requiredWei)} ETH for ${uniquePairIds.length} tx(s)\n` +
                         `   Fund this wallet on mainnet to run executeTrades. Skipping execution this round.\n`);
+                    await this.sendTelegramAlert(null, []);
                     return null;
                 }
                 console.log(`💰 Executor balance: ${ethers_1.ethers.formatEther(balance)} ETH (sufficient for gas)\n`);
