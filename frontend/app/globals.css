@@ -18,24 +18,18 @@
   --ongoing: rgba(209, 152, 46, 1);
   --scheduled: rgba(9, 165, 180, 1);
   --border-bottom: #1b1d20;
-  --primary-gradient: linear-gradient(
-    90deg,
-    #40fcb4 100%,
-    #41f58c 100%,
-    #40fcb4 100%,
-    #41f58c 100%,
-    #40fcb4 100%
-  );
-  --success-gradient: linear-gradient(
-    111.28deg,
-    #071310 29.08%,
-    rgba(3, 75, 43, 0.49) 121.35%
-  );
-  --border-gradient: linear-gradient(
-    298.75deg,
-    rgba(202, 242, 223, 0.145) 7.04%,
-    rgba(51, 244, 152, 0.28) 67.52%
-  );
+  --primary-gradient: linear-gradient(90deg,
+      #40fcb4 100%,
+      #41f58c 100%,
+      #40fcb4 100%,
+      #41f58c 100%,
+      #40fcb4 100%);
+  --success-gradient: linear-gradient(111.28deg,
+      #071310 29.08%,
+      rgba(3, 75, 43, 0.49) 121.35%);
+  --border-gradient: linear-gradient(298.75deg,
+      rgba(202, 242, 223, 0.145) 7.04%,
+      rgba(51, 244, 152, 0.28) 67.52%);
   --black-gradient: linear-gradient(103.16deg, #171717 17.54%, #131313 93.09%);
   --gradient-text: linear-gradient(271.73deg, #33f498 0%, #23dae6 100%);
   --tabs-gradient: linear-gradient(268.27deg, #03301b 0%, #052b2e 100%),
@@ -54,90 +48,81 @@ body {
 
 .border-black-gradient {
   border: 2px solid;
-  border-image-source: linear-gradient(
-    180deg,
-    #292929 34.12%,
-    #02100d 38.21%,
-    #02100e 62.31%,
-    #292929 64.58%
-  );
+  border-image-source: linear-gradient(180deg,
+      #292929 34.12%,
+      #02100d 38.21%,
+      #02100e 62.31%,
+      #292929 64.58%);
 }
 
 .coin-sell-clip-path {
-  clip-path: polygon(
-    100% 0,
-    100% 100%,
-    59% 100%,
-    52% 82%,
-    45% 100%,
-    0 100%,
-    0 0
-  );
+  clip-path: polygon(100% 0,
+      100% 100%,
+      59% 100%,
+      52% 82%,
+      45% 100%,
+      0 100%,
+      0 0);
 }
 
 .coin-buy-clip-path {
   clip-path: polygon(100% 100%, 100% 0, 59% 0, 52% 18%, 45% 0, 0 0, 0 100%);
 }
+
 /* md screen */
 @media (min-width: 380px) and (max-width: 480px) {
   .coin-sell-clip-path {
-    clip-path: polygon(
-      100% 0,
-      100% 100%,
-      61% 100%,
-      52.5% 82%,
-      44% 100%,
-      0 100%,
-      0 0
-    ) !important;
+    clip-path: polygon(100% 0,
+        100% 100%,
+        61% 100%,
+        52.5% 82%,
+        44% 100%,
+        0 100%,
+        0 0) !important;
   }
 
   .coin-buy-clip-path {
     /* clip-path: ; */
-    clip-path: polygon(
-      100% 100%,
-      100% 0,
-      61% 0,
-      52.5% 18%,
-      44% 0,
-      0 0,
-      0 100%
-    ) !important;
+    clip-path: polygon(100% 100%,
+        100% 0,
+        61% 0,
+        52.5% 18%,
+        44% 0,
+        0 0,
+        0 100%) !important;
   }
 }
 
 @media screen and (max-width: 380px) {
   .coin-sell-clip-path {
-    clip-path: polygon(
-      100% 0,
-      100% 100%,
-      63.5% 100%,
-      53% 82%,
-      43% 100%,
-      0 100%,
-      0 0
-    ) !important;
+    clip-path: polygon(100% 0,
+        100% 100%,
+        63.5% 100%,
+        53% 82%,
+        43% 100%,
+        0 100%,
+        0 0) !important;
   }
 
   .coin-buy-clip-path {
     /* clip-path: ; */
-    clip-path: polygon(
-      100% 100%,
-      100% 0,
-      63.5% 0,
-      53% 18%,
-      43% 0,
-      0 0,
-      0 100%
-    ) !important;
+    clip-path: polygon(100% 100%,
+        100% 0,
+        63.5% 0,
+        53% 18%,
+        43% 0,
+        0 0,
+        0 100%) !important;
   }
 }
 
 @keyframes blink {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0;
   }
@@ -147,6 +132,7 @@ body {
   from {
     width: 0%;
   }
+
   to {
     width: 100%;
   }
@@ -157,6 +143,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -167,6 +154,7 @@ body {
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -184,6 +172,7 @@ body {
   from {
     width: 0%;
   }
+
   to {
     width: 100%;
   }
@@ -205,13 +194,16 @@ body {
 
 /* Custom scrollbar for chart container */
 .chart-scroll {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
   scroll-behavior: smooth;
 }
 
 .chart-scroll::-webkit-scrollbar {
-  height: 0; /* For Chrome, Safari, and Opera */
+  height: 0;
+  /* For Chrome, Safari, and Opera */
   width: 0;
   display: none;
 }
@@ -230,15 +222,14 @@ body {
   background-position: center;
   z-index: -10;
 }
+
 .selectbox-gradient {
   border: 2px solid transparent;
-  border-radius: 15px !important; /* Adjust radius size as needed for desired roundness */
-  border-image: linear-gradient(
-      298.75deg,
+  border-radius: 15px !important;
+  /* Adjust radius size as needed for desired roundness */
+  border-image: linear-gradient(298.75deg,
       rgba(202, 242, 223, 0.145) 7.04%,
-      rgba(51, 244, 152, 0.28) 67.52%
-    )
-    1;
+      rgba(51, 244, 152, 0.28) 67.52%) 1;
   background-origin: border-box;
   background-clip: content-box, border-box;
 }
@@ -255,18 +246,17 @@ body {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 .shimmer {
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0.03) 8%,
-    rgba(255, 255, 255, 0.08) 18%,
-    rgba(255, 255, 255, 0.03) 33%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0.03) 8%,
+      rgba(255, 255, 255, 0.08) 18%,
+      rgba(255, 255, 255, 0.03) 33%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
@@ -275,9 +265,11 @@ body {
   0% {
     transform: rotate(0deg);
   }
+
   15% {
     transform: rotate(360deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -291,9 +283,11 @@ body {
   0% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(0%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -304,13 +298,223 @@ body {
 }
 
 @keyframes scale-pulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.5);
   }
+}
+
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-33.333%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left {
+  animation: marquee-left 30s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marquee-right 30s linear infinite;
+}
+
+@keyframes scroll-chevron {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translateY(10px);
+    opacity: 1;
+  }
+}
+
+.animate-scroll-chevron {
+  animation: scroll-chevron 2s ease-in-out infinite;
+}
+
+/* --- Docs / Vanguard-inspired HUD utilities --- */
+
+@keyframes scan {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+.bg-scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.15) 50%,
+    rgba(0, 0, 0, 0.15)
+  );
+  background-size: 100% 4px;
+  animation: scan 10s linear infinite;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.hover-glitch:hover {
+  animation: glitch 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+.perspective-grid {
+  transform: perspective(1000px) rotateX(60deg) translateY(-100px) scale(2);
+  background-image: linear-gradient(
+      to right,
+      rgba(64, 247, 152, 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(64, 247, 152, 0.1) 1px,
+      transparent 1px
+    );
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), transparent);
+}
+
+.hud-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--primary);
+  transition: all 0.3s ease;
+}
+
+.hud-tl {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.hud-tr {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+
+.hud-bl {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+
+.hud-br {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+}
+
+.card-hover:hover .hud-corner {
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(64, 247, 152, 0.5);
+}
+
+.clip-diagonal {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
+}
+
+/* Docs page custom scrollbar (thin, green on hover) */
+.docs-page-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.docs-page-scroll::-webkit-scrollbar-track {
+  background: #000;
+}
+
+.docs-page-scroll::-webkit-scrollbar-thumb {
+  background: #333;
+}
+
+.docs-page-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation: spin-slow 15s linear infinite reverse;
 }
 
 @layer base {
@@ -341,6 +545,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
