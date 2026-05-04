@@ -10,14 +10,19 @@ out/
 # Dotenv file
 .env
 
+# Generated deploy env snippets (local only)
+deployments/phase-a-mainnet.env
+deployments/phase-b-mainnet.env
+
 /documentation/delta
 /work-packages
 
 /node_modules
 
-/foundry.toml
-
 /broadcast
+
+# Local dependency snapshots (do not commit)
+backup/
 
 notes.txt
 
