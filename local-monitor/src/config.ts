@@ -9,14 +9,14 @@ export interface ContractAddresses {
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  core: "0x62A1e4DC903F0677Ba4E06494af0a74D8A1205be",
-  registry: "0x478044a89d7fad50a2188070d85eaf3bd7dac7bb",
-  executor: "0x72a23d256Fa59b7DbC812EADe5aAE062bA6C21c0",
-  streamDaemon: "0xd35f101db2ea11693c09851389494d9e297de95c",
+  core: "0x4f055d064556ce4433c53b7c21ebe4f6ab96a8a3",
+  registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
+  executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
+  streamDaemon: "0x4b62049fdbc935f4af89e7ccb9541c6f6a58d314",
 };
 
-// Deployment block for Core contract v1.0.5
-export const DEPLOYMENT_BLOCK = 24364017;
+// Deployment block for Core contract v1.0.7
+export const DEPLOYMENT_BLOCK = 25014137;
 
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {

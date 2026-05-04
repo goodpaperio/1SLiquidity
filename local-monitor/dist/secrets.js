@@ -56,8 +56,9 @@ function getSecretsFromEnv() {
         TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
         TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
     };
-    if (!secrets.PRIVATE_KEY || !secrets.MAINNET_RPC_HTTP_URL) {
-        throw new Error("Missing required environment variables: PRIVATE_KEY or MAINNET_RPC_HTTP_URL");
+    // RPC URL is always required; PRIVATE_KEY only needed for execution
+    if (!secrets.MAINNET_RPC_HTTP_URL) {
+        throw new Error("Missing required environment variable: MAINNET_RPC_HTTP_URL (or RPC_HTTP_URL)");
     }
     console.log("ℹ️  Using secrets from environment variables (local mode)");
     return secrets;

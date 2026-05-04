@@ -7,7 +7,7 @@ export interface ContractAddresses {
     streamDaemon: string;
 }
 export declare const CONTRACT_ADDRESSES: ContractAddresses;
-export declare const DEPLOYMENT_BLOCK = 24364017;
+export declare const DEPLOYMENT_BLOCK = 25014137;
 export declare const TOKEN_ADDRESSES: Record<string, string>;
 export declare function getProvider(): Promise<ethers.JsonRpcProvider>;
 export declare function getSigner(): Promise<ethers.Wallet>;
