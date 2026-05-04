@@ -26,6 +26,9 @@ interface IRegistry {
      * @param amount Amount of input tokens
      * @param minOut Minimum output amount
      * @param recipient Address to receive output tokens
+     * @param quoteAux For UniswapV3: pass `getQuote`'s `bytes aux` (`abi.encode(fee, pool)`). Registry uses
+     *                 this fee for router encoding so execution matches the quote. Empty bytes => use `fee()` only.
+     *                 Ignored for non-V3 DEX types.
      * @return Trade data containing selector, router, and encoded parameters
      */
     function prepareTradeData(
@@ -34,6 +37,7 @@ interface IRegistry {
         address tokenOut,
         uint256 amount,
         uint256 minOut,
-        address recipient
+        address recipient,
+        bytes calldata quoteAux
     ) external view returns (TradeData memory);
 }

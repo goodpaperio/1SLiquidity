@@ -81,6 +81,43 @@ contract Create2Factory {
     }
 
     /**
+     * @notice Deploy a contract with CREATE2 and transfer ownership to msg.sender (for Ownable contracts)
+     * @param amount Amount of ETH to send with deployment
+     * @param salt Unique identifier for the deployment
+     * @param bytecode Contract creation bytecode
+     * @param constructorArgs Constructor arguments
+     * @param contractName Name for logging
+     * @return deployedAddress Address of the deployed contract
+     */
+    function deployWithNameAndTransferOwnership(
+        uint256 amount,
+        bytes32 salt,
+        bytes memory bytecode,
+        bytes memory constructorArgs,
+        string memory contractName
+    ) external payable returns (address deployedAddress) {
+        require(msg.value >= amount, "Insufficient ETH sent");
+
+        bytes memory deploymentData = abi.encodePacked(bytecode, constructorArgs);
+
+        assembly {
+            deployedAddress := create2(amount, add(deploymentData, 0x20), mload(deploymentData), salt)
+        }
+
+        require(deployedAddress != address(0), "Create2: Failed on deploy");
+
+        emit ContractCreated(deployedAddress, salt, contractName, block.number, block.timestamp);
+
+        // Transfer ownership to caller (for Ownable / Ownable2Step)
+        (bool ok,) = deployedAddress.call(
+            abi.encodeWithSignature("transferOwnership(address)", msg.sender)
+        );
+        require(ok, "Create2: transferOwnership failed");
+
+        return deployedAddress;
+    }
+
+    /**
      * @notice Compute the address where a contract will be deployed
      * @param salt Unique identifier for the deployment
      * @param bytecode Contract bytecode

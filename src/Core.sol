@@ -554,9 +554,10 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         require(streamVolume > 0, "Invalid stream volume");
 
         IUniversalDexInterface dex = IUniversalDexInterface(bestDex);
-        (uint256 quotedOut,) = dex.getQuote(trade.tokenIn, quoteTokenOut, streamVolume);
+        (uint256 quotedOut, bytes memory quoteAux) = dex.getQuote(trade.tokenIn, quoteTokenOut, streamVolume);
         if (quotedOut == 0) {
             quotedOut = dex.getPrice(trade.tokenIn, quoteTokenOut, streamVolume);
+            quoteAux = new bytes(0);
         }
         require(quotedOut > 0, "Quote unavailable");
 
@@ -571,12 +572,17 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         if (trade.tokenOut == 0x0000000000000000000000000000000000000000 || trade.tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
             // this sets the trading currency to WETH if the desired tokenOut is native ETH
             tradeData = registry.prepareTradeData(
-                bestDex, trade.tokenIn, address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2), streamVolume, targetAmountOut, address(this)
+                bestDex,
+                trade.tokenIn,
+                address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2),
+                streamVolume,
+                targetAmountOut,
+                address(this),
+                quoteAux
             );
-            
         } else {
             tradeData = registry.prepareTradeData(
-                bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this)
+                bestDex, trade.tokenIn, trade.tokenOut, streamVolume, targetAmountOut, address(this), quoteAux
             );
         }
 
