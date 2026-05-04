@@ -45,10 +45,14 @@ echo ""
 
 # Test SSH connection
 print_info "Testing SSH connection..."
-if ssh -i "$SSH_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "echo 'Connection successful'" &>/dev/null; then
+if SSH_TEST_OUTPUT="$(ssh -i "$SSH_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "echo 'Connection successful'" 2>&1)"; then
     print_success "SSH connection successful"
 else
     print_error "Cannot connect to server!"
+    if [ -n "$SSH_TEST_OUTPUT" ]; then
+        print_info "SSH error output:"
+        echo "$SSH_TEST_OUTPUT"
+    fi
     print_info "Make sure:"
     print_info "  1. Server IP is correct: $SERVER_IP"
     print_info "  2. SSH key has correct permissions: chmod 400 $SSH_KEY"
