@@ -272,7 +272,13 @@ local-monitor/
 
 ### Bot whitelist (Core v1.0.6+)
 
-The Core contract has an optional bot whitelist for `executeTrades`: when at least one bot is whitelisted, only those addresses can call `executeTrades`; otherwise anyone can. **`placeTrade` is not restricted**—any user can place trades. As Core owner, call `core.addBot(botAddress)` to restrict execution to your bot. Unit tests: `forge test --match-contract CoreBotWhitelistTest`.
+The Core contract has an optional bot whitelist for `executeTrades`: when at least one bot is whitelisted, only those addresses can call `executeTrades`; otherwise anyone can. **`placeTrade` is not restricted**—any user can place trades.
+
+- As Core owner, call `core.addBot(botAddress)` to restrict execution to your bot.
+- During Phase C deploy (`DeployBarebonesCore`), you can set `DEPLOY_BAREBONES_BOT=0x...` to whitelist your bot in the deployment script.
+- `local-monitor` now preflights this: if whitelist is active and signer is not whitelisted, execution fails fast with a clear error.
+
+Whitelist behavior unit tests: `forge test --match-contract CoreBotWhitelistTest`.
 
 ## 🚨 Error Handling
 

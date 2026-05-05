@@ -65,7 +65,7 @@ export DEPLOY_BAREBONES_SALT_TAG=1.0.7
 npm run deploy:phase-c:barebones:core
 ```
 
-**Optional env overrides** for `DeployBarebonesCore` (if you do not use the generated files): `DEPLOY_BAREBONES_V3_500`, `DEPLOY_BAREBONES_V3_3000`, `DEPLOY_BAREBONES_V3_10000`, `DEPLOY_BAREBONES_REGISTRY`, `DEPLOY_BAREBONES_EXECUTOR`, `DEPLOY_BAREBONES_ETH_SUPPORT`, `DEPLOY_BAREBONES_V2`, `DEPLOY_BAREBONES_SUSHI`, `DEPLOY_BAREBONES_BALANCER`, `CREATE2_FACTORY_ADDRESS`.
+**Optional env overrides** for `DeployBarebonesCore` (if you do not use the generated files): `DEPLOY_BAREBONES_V3_500`, `DEPLOY_BAREBONES_V3_3000`, `DEPLOY_BAREBONES_V3_10000`, `DEPLOY_BAREBONES_REGISTRY`, `DEPLOY_BAREBONES_EXECUTOR`, `DEPLOY_BAREBONES_ETH_SUPPORT`, `DEPLOY_BAREBONES_V2`, `DEPLOY_BAREBONES_SUSHI`, `DEPLOY_BAREBONES_BALANCER`, `DEPLOY_BAREBONES_BOT` (optional `core.addBot` during deploy), `CREATE2_FACTORY_ADDRESS`.
 
 **Sender:** override with `export DEPLOY_SENDER=0x...` when running **`bash scripts/deploy-next-mainnet-phases.sh`** (defaults to the same address as `package.json`).
 
