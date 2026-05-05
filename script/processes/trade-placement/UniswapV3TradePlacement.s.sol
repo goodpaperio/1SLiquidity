@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+// @dev Exercises **locally deployed** UniswapV3Fetcher (forge bytecode). For **live** fetcher vs Registry invariants,
+//      see `test/UniswapV3MainnetFetcherAlignment.t.sol` and `docs/TESTING_DEPLOYMENT_ALIGNMENT.md`.
+//      All production tiers: also run `UniswapV3TradePlacementFeeTiers.s.sol` (500 + 10000); this file defaults to 3000.
+
 import "../../SingleDexProtocol.s.sol";
 import "../../../src/Utils.sol";
 import "../../../src/adapters/UniswapV3Fetcher.sol";
@@ -8,18 +12,27 @@ import "../../../src/interfaces/IUniversalDexInterface.sol";
 
 contract UniswapV3TradePlacement is SingleDexProtocol {
     address constant UNISWAP_V3_QUOTER_V2 = 0x61fFE014bA17989E743c5F6cB21bF9697530B21e;
-    
-    function setUp() public {
-        console.log("UniswapV3TradePlacement: Starting setup");
-        UniswapV3Fetcher uniswapV3Fetcher = new UniswapV3Fetcher(UNISWAP_V3_FACTORY, UNISWAP_V3_FEE);
+
+    /// @dev Set in `setUp` / overrides — mirrors production tier (500, 3000, 10000).
+    uint24 public v3FeeTier;
+
+    /// @notice Deploy fresh fetcher + stack for this fee tier (same source as `forge build`, not pinned mainnet bytecode).
+    function _bootstrapUniswapV3(uint24 feeTier) internal {
+        v3FeeTier = feeTier;
+        console.log("UniswapV3TradePlacement: Starting setup, fee tier", feeTier);
+        UniswapV3Fetcher uniswapV3Fetcher = new UniswapV3Fetcher(UNISWAP_V3_FACTORY, feeTier);
         console.log("UniswapV3TradePlacement: Created fetcher at", address(uniswapV3Fetcher));
-        
-        // Set QuoterV2 address for enhanced functionality
+
         uniswapV3Fetcher.setQuoterV2(UNISWAP_V3_QUOTER_V2);
         console.log("UniswapV3TradePlacement: Set QuoterV2 at", UNISWAP_V3_QUOTER_V2);
-        
+
         setUpSingleDex(address(uniswapV3Fetcher), UNISWAP_V3_ROUTER);
         console.log("UniswapV3TradePlacement: Setup complete");
+    }
+
+    /// @dev Default: 0.3% pool — override in `UniswapV3TradePlacement_Fee500` / `_Fee10000` for full tier coverage.
+    function setUp() public virtual {
+        _bootstrapUniswapV3(UNISWAP_V3_FEE);
     }
 
     function run() external {
@@ -123,17 +136,16 @@ contract UniswapV3TradePlacement is SingleDexProtocol {
         console.log("Reserve fee tier:", reserveFeeTier);
         console.log("Reserve pool:", reservePool);
         
-        // Test 3: Price-based selection (when usePriceBased = true)
-        console.log("Testing price-based pool selection (usePriceBased = true)...");
+        // Test 3: getQuote must match this fetcher's configured tier (Core + Registry rely on this invariant)
+        console.log("Testing getQuote vs configured fee tier...");
         (uint256 amountOut, bytes memory aux) = fetcher.getQuote(WETH, USDC, amountIn);
         assertTrue(amountOut > 0, "Should get accurate quote from QuoterV2");
         (uint24 feeTier, address pool) = abi.decode(aux, (uint24, address));
-        // Note: Quote uses best price across all fee tiers (different from deepest liquidity)
-        assertTrue(feeTier == 100 || feeTier == 500 || feeTier == 3000 || feeTier == 10000, "Quote should use valid fee tier");
-        assertTrue(pool != address(0), "Quote should find a valid pool");
-        console.log("Price-based quote - Amount out:", amountOut);
-        console.log("Price-based fee tier:", feeTier);
-        console.log("Price-based pool:", pool);
+        assertEq(feeTier, fetcher.fee(), "getQuote aux fee must equal fetcher.fee() (Registry encodes fee())");
+        assertEq(pool, fetcher.getPoolAddress(WETH, USDC), "getQuote aux pool must match getPoolAddress for this tier");
+        console.log("Quote amount out:", amountOut);
+        console.log("Fee tier (must match v3FeeTier):", feeTier);
+        console.log("Pool:", pool);
         
         // Test 4: Slippage protection calculation
         console.log("Testing slippage protection calculation...");

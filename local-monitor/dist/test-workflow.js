@@ -5,7 +5,7 @@ const monitor_1 = require("./monitor");
 async function main() {
     try {
         console.log("🧪 Testing complete 1SLiquidity workflow...\n");
-        const monitor = new monitor_1.TradeMonitor();
+        const monitor = await monitor_1.TradeMonitor.create();
         // Step 1: Run historical analysis
         console.log("🔍 Step 1: Running historical analysis...");
         await monitor.runHistoricalAnalysis();
@@ -16,9 +16,7 @@ async function main() {
             console.log("📊 No outstanding trades to execute");
             return;
         }
-        const uniquePairIds = [
-            ...new Set(localData.outstandingTrades.map((trade) => trade.pairId)),
-        ];
+        const uniquePairIds = Array.from(new Set(localData.outstandingTrades.map((trade) => trade.pairId)));
         console.log(`📊 Found ${uniquePairIds.length} unique pair IDs that would be executed:`);
         uniquePairIds.forEach((pairId, index) => {
             const trades = localData.outstandingTrades.filter((t) => t.pairId === pairId);

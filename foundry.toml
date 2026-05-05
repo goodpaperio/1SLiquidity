@@ -1,0 +1,11 @@
+[profile.default]
+optimizer = true
+optimizer_runs = 1000
+via_ir = true
+# Deploy scripts write `deployments/phase-*-mainnet.env` and read compiled artifacts from `out/`
+fs_permissions = [{ access = "write", path = "deployments" }, { access = "read", path = "out" }]
+
+[profile.deploy]
+optimizer = true
+optimizer_runs = 1000
+via_ir = true

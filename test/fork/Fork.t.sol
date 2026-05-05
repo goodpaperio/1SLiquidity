@@ -9,7 +9,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @notice Common logic needed by all fork tests.
 abstract contract Fork_Test is Deploys {
     function setUp() public virtual override {
-        vm.createSelectFork({ blockNumber: 23_512_534, urlOrAlias: "mainnet" });
+        // Default: Anvil (`npm run anvil:fork`). Override: `MAINNET_RPC_URL=https://... forge test ...`
+        vm.createSelectFork(vm.envOr("MAINNET_RPC_URL", string("http://127.0.0.1:8545")), 23_512_534);
         super.setUp();
     }
 

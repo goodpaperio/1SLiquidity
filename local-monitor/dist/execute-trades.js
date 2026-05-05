@@ -5,7 +5,7 @@ const monitor_1 = require("./monitor");
 async function main() {
     try {
         console.log("🚀 Starting 1SLiquidity Trade Execution...\n");
-        const monitor = new monitor_1.TradeMonitor();
+        const monitor = await monitor_1.TradeMonitor.create();
         await monitor.executeOutstandingTrades();
         console.log("\n✅ Trade execution process completed!");
     }

@@ -1,0 +1,26 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.7",
+  "deploymentDate": "2026-05-03T11:22:56Z",
+  "deploymentBlock": 25014137,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0x72b8253b1091098f6c86870bcd0b1cbfa59410547f2ccc2f665196e6c9ddfe89",
+  "contracts": {
+    "Executor": "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
+    "Registry": "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
+    "UniswapV2Fetcher": "0xcDd26C4361AEB4b20f9e5A2119C7aac08B9dA089",
+    "UniswapV3Fetcher_0_05": "0x15DC9274c61D9B0F20dC09bD0BFA7D1e2D504FC6",
+    "UniswapV3Fetcher_0_3": "0xD561BC0801Fb9E85Ea151a784fCb41898C98f49a",
+    "UniswapV3Fetcher_1": "0xec5545C87eE4F74d33A4af6F817a1B6eabF67852",
+    "SushiswapFetcher": "0x57cfC5AD0812747afbb3dCD98B23b94883A341BC",
+    "BalancerV2Fetcher": "0xF9abe8A26EcF289b7e16Ccf88D67252DdA2215A6",
+    "StreamDaemon": "0x4b62049fdbc935f4af89e7ccb9541c6f6a58d314",
+    "Core": "0x4f055d064556ce4433c53b7c21ebe4f6ab96a8a3",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5",
+    "Create2Factory": "0xc0267111884a7adf070152715f6e1d9ac08378a5"
+  },
+  "notes": {
+    "changes": "New: 3x UniswapV3Fetcher (fixed getQuote ABI + QuoterV2), Registry (prepareTradeData 8-arg), Core+StreamDaemon. Reused: Executor, ETHSupport, UniswapV2Fetcher, SushiswapFetcher, BalancerV2Fetcher."
+  }
+}

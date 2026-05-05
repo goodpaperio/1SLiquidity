@@ -4,12 +4,12 @@
  */
 
 import { ethers } from 'ethers';
-import { RPC_URL, PRIVATE_KEY } from './config';
+import { getProvider, getSigner } from './config';
 
 async function checkBalance() {
   try {
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    const wallet = new ethers.Wallet(PRIVATE_KEY!, provider);
+    const provider = await getProvider();
+    const wallet = await getSigner();
     
     const balance = await provider.getBalance(wallet.address);
     const balanceInEth = ethers.formatEther(balance);

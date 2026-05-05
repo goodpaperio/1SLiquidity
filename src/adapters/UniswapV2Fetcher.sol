@@ -20,24 +20,25 @@ contract UniswapV2Fetcher is IUniversalDexInterface {
         factory = _factory;
     }
 
+    function _getReserves(address tokenA, address tokenB) internal view returns (uint256 reserveA, uint256 reserveB) {
+        address pair = IUniswapV2Factory(factory).getPair(tokenA, tokenB);
+        require(pair != address(0), "Pair does not exist");
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(pair).getReserves();
+        address token0 = IUniswapV2Pair(pair).token0();
+        if (tokenA == token0) {
+            return (uint256(reserve0), uint256(reserve1));
+        } else {
+            return (uint256(reserve1), uint256(reserve0));
+        }
+    }
+
     function getReserves(address tokenA, address tokenB)
         external
         view
         override
         returns (uint256 reserveA, uint256 reserveB)
     {
-        address pair = IUniswapV2Factory(factory).getPair(tokenA, tokenB);
-
-        // @audit revert or throw error
-        require(pair != address(0), "Pair does not exist");
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(pair).getReserves();
-        address token0 = IUniswapV2Pair(pair).token0();
-
-        if (tokenA == token0) {
-            return (uint256(reserve0), uint256(reserve1));
-        } else {
-            return (uint256(reserve1), uint256(reserve0));
-        }
+        return _getReserves(tokenA, tokenB);
     }
 
     function getPoolAddress(address tokenIn, address tokenOut) external view override returns (address) {
@@ -53,8 +54,7 @@ contract UniswapV2Fetcher is IUniversalDexInterface {
     }
 
     function getPrice(address tokenIn, address tokenOut, uint256 amountIn) external view override returns (uint256) {
-        // For UniswapV2, calculate price based on reserves
-        (uint256 reserveIn, uint256 reserveOut) = this.getReserves(tokenIn, tokenOut);
+        (uint256 reserveIn, uint256 reserveOut) = _getReserves(tokenIn, tokenOut);
 
         if (reserveIn == 0 || reserveOut == 0) {
             return 0;
@@ -71,16 +71,24 @@ contract UniswapV2Fetcher is IUniversalDexInterface {
 
     function getQuote(address tokenIn, address tokenOut, uint256 amountIn)
         external
+        view
         override
         returns (uint256 amountOut, bytes memory aux)
     {
-        (uint256 reserveIn, uint256 reserveOut) = this.getReserves(tokenIn, tokenOut);
+        (uint256 reserveIn, uint256 reserveOut) = _getReserves(tokenIn, tokenOut);
         if (amountIn == 0 || reserveIn == 0 || reserveOut == 0) {
             return (0, "");
         }
         uint256 amountInWithFee = amountIn * 997;
-        uint256 numerator = amountInWithFee * reserveOut;
         uint256 denominator = (reserveIn * 1000) + amountInWithFee;
+        if (denominator == 0) {
+            return (0, "");
+        }
+        // Avoid overflow: numerator = amountInWithFee * reserveOut must fit in uint256
+        if (reserveOut != 0 && amountInWithFee > type(uint256).max / reserveOut) {
+            return (0, "");
+        }
+        uint256 numerator = amountInWithFee * reserveOut;
         amountOut = numerator / denominator;
         aux = ""; // No auxiliary data for v2-style pools
     }

@@ -1,5 +1,8 @@
 import { ethers } from "ethers";
 import "dotenv/config";
+import { execSync } from "child_process";
+import { existsSync, readFileSync, readdirSync } from "fs";
+import { join } from "path";
 
 export interface ContractAddresses {
   core: string;
@@ -9,14 +12,86 @@ export interface ContractAddresses {
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  core: "0x62A1e4DC903F0677Ba4E06494af0a74D8A1205be",
-  registry: "0x478044a89d7fad50a2188070d85eaf3bd7dac7bb",
-  executor: "0x72a23d256Fa59b7DbC812EADe5aAE062bA6C21c0",
-  streamDaemon: "0xd35f101db2ea11693c09851389494d9e297de95c",
+  core: "0xa017d75fed4e71799fde4457191a1e3e295c3b0b",
+  registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
+  executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
+  streamDaemon: "0xe3a6a07a73727be782b0a7bc0c093ecb19d0c251",
 };
 
-// Deployment block for Core contract v1.0.5
-export const DEPLOYMENT_BLOCK = 24364017;
+function extractVersionNumber(version: string): number[] {
+  return version.split(".").map((v) => Number(v));
+}
+
+function compareSemver(a: string, b: string): number {
+  const av = extractVersionNumber(a);
+  const bv = extractVersionNumber(b);
+  const len = Math.max(av.length, bv.length);
+  for (let i = 0; i < len; i++) {
+    const ai = av[i] ?? 0;
+    const bi = bv[i] ?? 0;
+    if (ai !== bi) return ai - bi;
+  }
+  return 0;
+}
+
+function getLatestDeploymentVersion(repoRoot: string): string | null {
+  const versionsDir = join(repoRoot, "versions");
+  if (!existsSync(versionsDir)) return null;
+
+  const matches = readdirSync(versionsDir)
+    .map((name) => {
+      const m = name.match(/^deployment-addresses-mainnet-(\d+\.\d+\.\d+)\.json$/);
+      return m ? m[1] : null;
+    })
+    .filter((v): v is string => Boolean(v));
+
+  if (matches.length === 0) return null;
+  matches.sort(compareSemver);
+  return matches[matches.length - 1];
+}
+
+function detectBotVersion(): string {
+  const fromEnv = process.env.BOT_VERSION?.trim();
+  if (fromEnv) return fromEnv;
+
+  const repoRoot = join(__dirname, "..", "..");
+
+  // Prefer deployment manifests first so runtime reflects deployed artifacts.
+  const latestDeploymentVersion = getLatestDeploymentVersion(repoRoot);
+  if (latestDeploymentVersion) return latestDeploymentVersion;
+
+  // Fallback to latest git tag when manifests are unavailable.
+  try {
+    const latestTag = execSync("git describe --tags --abbrev=0", {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "ignore"],
+      encoding: "utf8",
+    }).trim();
+    if (latestTag) return latestTag;
+  } catch {
+    // fall through to package.json fallback
+  }
+
+  // Final fallback: root package.json version.
+  try {
+    const rootPackagePath = join(repoRoot, "package.json");
+    const rootPackage = JSON.parse(readFileSync(rootPackagePath, "utf8")) as {
+      version?: string;
+    };
+    if (rootPackage.version) return rootPackage.version;
+  } catch {
+    // ignore and use final default
+  }
+
+  return "unknown";
+}
+
+// Bot/deployment version shown in Telegram notifications.
+// Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
+export const BOT_VERSION = detectBotVersion();
+
+// Deployment block for Core contract v1.0.7
+export const DEPLOYMENT_BLOCK = 25028148;
 
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {
@@ -54,24 +129,45 @@ export const TOKEN_ADDRESSES: Record<string, string> = {
   "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e": "USDC", // Another USDC variant
 };
 
-export const RPC_URL = process.env.RPC_HTTP_URL;
+import { getSecrets } from "./secrets";
 
-if (!RPC_URL) {
-  throw new Error("RPC_HTTP_URL environment variable is required");
+// These will be initialized from secrets (AWS Secrets Manager or env vars)
+let RPC_URL: string | null = null;
+let PRIVATE_KEY: string | null = null;
+
+// Initialize secrets (called at startup)
+async function initializeSecrets() {
+  const secrets = await getSecrets();
+  RPC_URL = secrets.MAINNET_RPC_HTTP_URL;
+  PRIVATE_KEY = secrets.PRIVATE_KEY;
 }
 
-export const PRIVATE_KEY = process.env.PRIVATE_KEY;
-
-export function getProvider(): ethers.JsonRpcProvider {
+// Export async versions that ensure secrets are loaded
+export async function getProvider(): Promise<ethers.JsonRpcProvider> {
+  if (!RPC_URL) {
+    await initializeSecrets();
+  }
+  if (!RPC_URL) {
+    throw new Error("Failed to load RPC_URL from secrets");
+  }
   return new ethers.JsonRpcProvider(RPC_URL);
 }
 
-export function getSigner(): ethers.Wallet {
+export async function getSigner(): Promise<ethers.Wallet> {
   if (!PRIVATE_KEY) {
-    throw new Error(
-      "PRIVATE_KEY environment variable is required for write operations"
-    );
+    await initializeSecrets();
   }
-  const provider = getProvider();
-  return new ethers.Wallet(PRIVATE_KEY!, provider);
+  if (!PRIVATE_KEY) {
+    throw new Error("Failed to load PRIVATE_KEY from secrets");
+  }
+  const provider = await getProvider();
+  return new ethers.Wallet(PRIVATE_KEY, provider);
+}
+
+// For compatibility with existing code that expects synchronous access
+export function getRpcUrl(): string {
+  if (!RPC_URL) {
+    throw new Error("Secrets not initialized. Call getProvider() or getSigner() first.");
+  }
+  return RPC_URL;
 }

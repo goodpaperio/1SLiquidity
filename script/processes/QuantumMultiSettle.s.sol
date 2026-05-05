@@ -6,7 +6,8 @@ import "forge-std/console.sol";
 import "../Protocol.s.sol";
 import "../../src/Utils.sol";
 
-contract MultiSettle is Protocol {
+/// @dev Named `QuantumMultiSettle` so `forge test` does not collide with `MultiSettle` in `MultiSettle.s.sol`.
+contract QuantumMultiSettle is Protocol {
     // Define missing variables
     address public constant EOA2 = address(0xB0B2); // Second test EOA
     address public constant BOT_EOA = address(0xB0B3); // Bot EOA

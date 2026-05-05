@@ -9,9 +9,14 @@
 # Determine script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Load environment variables
+# Enable AWS Secrets Manager
+export USE_AWS_SECRETS=true
+
+# Load environment variables (optional - mainly for Telegram alerts)
 if [ -f "$SCRIPT_DIR/.env" ]; then
     export $(cat "$SCRIPT_DIR/.env" | grep -v '^#' | xargs)
+else
+    echo "INFO: No .env file found, Telegram alerts may not work from health checks"
 fi
 
 # Setup logging

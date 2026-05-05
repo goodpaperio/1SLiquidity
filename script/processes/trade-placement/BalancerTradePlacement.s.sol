@@ -133,7 +133,7 @@ contract BalancerTradePlacement is SingleDexProtocol {
 
         // Get trade data from registry
         IRegistry.TradeData memory tradeData =
-            registry.prepareTradeData(address(balancerFetcher), BAL, WETH, tradeAmount, minOut, address(this));
+            registry.prepareTradeData(address(balancerFetcher), BAL, WETH, tradeAmount, minOut, address(this), hex"");
 
         console.log("Trade data prepared successfully");
         console.log("Executor selector:", vm.toString(tradeData.selector));
@@ -214,7 +214,7 @@ contract BalancerTradePlacement is SingleDexProtocol {
 
         // Get trade data from registry
         IRegistry.TradeData memory tradeData =
-            registry.prepareTradeData(address(balancerFetcher), WETH, BAL, tradeAmount, minOut, address(this));
+            registry.prepareTradeData(address(balancerFetcher), WETH, BAL, tradeAmount, minOut, address(this), hex"");
 
         console.log("Trade data prepared successfully");
         console.log("Executor selector:", vm.toString(tradeData.selector));

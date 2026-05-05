@@ -139,3 +139,68 @@ export interface LocalData {
   lastUpdated: number; // timestamp
   contractAddress?: string; // Core contract address (added for version validation)
 }
+
+export interface StreamFeesTakenEvent {
+  bot: string;
+  token: string;
+  protocolFee: string;
+  botFee: string;
+  blockNumber: number;
+  transactionHash: string;
+  timestamp: number;
+}
+
+export interface InstasettleFeeTakenEvent {
+  tradeId: number;
+  settler: string;
+  token: string;
+  protocolFee: string;
+  blockNumber: number;
+  transactionHash: string;
+  timestamp: number;
+}
+
+export interface RunStats {
+  runNumber: number;
+  timestamp: number;
+  successCount: number;
+  failCount: number;
+  gasUsed: string;
+  totalGasCostETH: string;
+  totalGasCostUSD: number;
+  feesByToken: {
+    [tokenAddress: string]: {
+      symbol: string;
+      botFee: string;
+      protocolFee: string;
+      botFeeUSD: number;
+      protocolFeeUSD: number;
+    };
+  };
+  totalBotFeesUSD: number;
+  totalProtocolFeesUSD: number;
+  netProfitUSD: number;
+  streamDetails: RunStreamDetail[];
+  tradeRollups: RunTradeRollup[];
+}
+
+export interface RunStreamDetail {
+  tradeId: number;
+  pair: string;
+  amountIn: string;
+  amountOut: string;
+  tokenInSymbol: string;
+  tokenOutSymbol: string;
+  lastSweetSpot: number;
+  transactionHash: string;
+}
+
+export interface RunTradeRollup {
+  tradeId: number;
+  pair: string;
+  streams: number;
+  totalAmountIn: string;
+  totalAmountOut: string;
+  tokenInSymbol: string;
+  tokenOutSymbol: string;
+}

@@ -8,6 +8,10 @@ import "./interfaces/IUniswapV3Fetcher.sol";
 import "./Executor.sol";
 // import "forge-std/console.sol";
 
+interface IUniswapV3FactoryForRegistry {
+    function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address pool);
+}
+
 /**
  * @title Registry
  * @notice Registry for preparing DEX-specific trade data
@@ -124,7 +128,8 @@ contract Registry is IRegistry, Ownable {
         address tokenOut,
         uint256 amount,
         uint256 minOut,
-        address recipient
+        address recipient,
+        bytes calldata quoteAux
     )
         external
         view
@@ -135,11 +140,11 @@ contract Registry is IRegistry, Ownable {
         IUniversalDexInterface fetcher = IUniversalDexInterface(dex);
         string memory dexType = fetcher.getDexType();
 
-        // Get the fee if it's UniswapV3
+        // Get the fee if it's UniswapV3 (prefer fee embedded in getQuote aux when provided)
         uint24 uniswapV3Fee; // default
         if (_compareStrings(dexType, "UniswapV3")) {
             IUniswapV3Fetcher v3Fetcher = IUniswapV3Fetcher(dex);
-            uniswapV3Fee = v3Fetcher.fee();
+            uniswapV3Fee = _uniswapV3FeeFromQuoteOrFetcher(v3Fetcher, tokenIn, tokenOut, quoteAux);
         }
 
         // Get router for this DEX type
@@ -397,6 +402,37 @@ contract Registry is IRegistry, Ownable {
         );
 
         return TradeData({ selector: Executor.executeOneInchTrade.selector, router: router, params: params });
+    }
+
+    /// @dev When `quoteAux` is empty, use `fee()`. Otherwise require `abi.encode(uint24 fee, address pool)` consistent with the fetcher's factory.
+    function _uniswapV3FeeFromQuoteOrFetcher(
+        IUniswapV3Fetcher v3Fetcher,
+        address tokenIn,
+        address tokenOut,
+        bytes calldata quoteAux
+    )
+        internal
+        view
+        returns (uint24)
+    {
+        if (quoteAux.length < 64) {
+            return v3Fetcher.fee();
+        }
+
+        (uint24 feeFromAux, address poolFromAux) = abi.decode(quoteAux, (uint24, address));
+        require(
+            feeFromAux == 100 || feeFromAux == 500 || feeFromAux == 3000 || feeFromAux == 10_000,
+            "Registry: V3 aux fee tier"
+        );
+
+        address factoryAddr = v3Fetcher.factory();
+        require(factoryAddr != address(0), "Registry: V3 factory");
+
+        (address t0, address t1) = tokenIn < tokenOut ? (tokenIn, tokenOut) : (tokenOut, tokenIn);
+        address expectedPool = IUniswapV3FactoryForRegistry(factoryAddr).getPool(t0, t1, feeFromAux);
+        require(expectedPool != address(0) && expectedPool == poolFromAux, "Registry: V3 aux pool");
+
+        return feeFromAux;
     }
 
     function _compareStrings(string memory a, string memory b) internal pure returns (bool) {

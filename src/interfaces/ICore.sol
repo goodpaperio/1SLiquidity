@@ -9,4 +9,5 @@ interface ICore {
     function instasettle(uint256 tradeId) external payable;
     function getPairIdTradeIds(bytes32 pairId) external view returns (uint256[] memory);
     function trades(uint256 tradeId) external view returns (Utils.Trade memory);
+    function isBotWhitelisted(address bot) external view returns (bool);
 }

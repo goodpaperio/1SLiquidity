@@ -1,18 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PRIVATE_KEY = exports.RPC_URL = exports.TOKEN_ADDRESSES = exports.DEPLOYMENT_BLOCK = exports.CONTRACT_ADDRESSES = void 0;
+exports.TOKEN_ADDRESSES = exports.DEPLOYMENT_BLOCK = exports.CONTRACT_ADDRESSES = void 0;
 exports.getProvider = getProvider;
 exports.getSigner = getSigner;
+exports.getRpcUrl = getRpcUrl;
 const ethers_1 = require("ethers");
 require("dotenv/config");
 exports.CONTRACT_ADDRESSES = {
-    core: "0x66be9da4d7312d48c855be1fc4c1e979b6e94cc2",
-    registry: "0x5EAee88B493de2D646a8C29Bb5b09a79c5322dF4",
+    core: "0x4f055d064556ce4433c53b7c21ebe4f6ab96a8a3",
+    registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
     executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
-    streamDaemon: "0xbf1c6d73db66812eb67af1594587f33487951108",
+    streamDaemon: "0x4b62049fdbc935f4af89e7ccb9541c6f6a58d314",
 };
-// Deployment block for Core contract v1.0.4
-exports.DEPLOYMENT_BLOCK = 23720434;
+// Deployment block for Core contract v1.0.7
+exports.DEPLOYMENT_BLOCK = 25014137;
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 exports.TOKEN_ADDRESSES = {
     "0x0000000000000000000000000000000000000000": "ETH",
@@ -48,19 +49,41 @@ exports.TOKEN_ADDRESSES = {
     "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC", // Real USDC address
     "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e": "USDC", // Another USDC variant
 };
-exports.RPC_URL = process.env.RPC_HTTP_URL;
-if (!exports.RPC_URL) {
-    throw new Error("RPC_HTTP_URL environment variable is required");
+const secrets_1 = require("./secrets");
+// These will be initialized from secrets (AWS Secrets Manager or env vars)
+let RPC_URL = null;
+let PRIVATE_KEY = null;
+// Initialize secrets (called at startup)
+async function initializeSecrets() {
+    const secrets = await (0, secrets_1.getSecrets)();
+    RPC_URL = secrets.MAINNET_RPC_HTTP_URL;
+    PRIVATE_KEY = secrets.PRIVATE_KEY;
 }
-exports.PRIVATE_KEY = process.env.PRIVATE_KEY;
-function getProvider() {
-    return new ethers_1.ethers.JsonRpcProvider(exports.RPC_URL);
-}
-function getSigner() {
-    if (!exports.PRIVATE_KEY) {
-        throw new Error("PRIVATE_KEY environment variable is required for write operations");
+// Export async versions that ensure secrets are loaded
+async function getProvider() {
+    if (!RPC_URL) {
+        await initializeSecrets();
     }
-    const provider = getProvider();
-    return new ethers_1.ethers.Wallet(exports.PRIVATE_KEY, provider);
+    if (!RPC_URL) {
+        throw new Error("Failed to load RPC_URL from secrets");
+    }
+    return new ethers_1.ethers.JsonRpcProvider(RPC_URL);
+}
+async function getSigner() {
+    if (!PRIVATE_KEY) {
+        await initializeSecrets();
+    }
+    if (!PRIVATE_KEY) {
+        throw new Error("Failed to load PRIVATE_KEY from secrets");
+    }
+    const provider = await getProvider();
+    return new ethers_1.ethers.Wallet(PRIVATE_KEY, provider);
+}
+// For compatibility with existing code that expects synchronous access
+function getRpcUrl() {
+    if (!RPC_URL) {
+        throw new Error("Secrets not initialized. Call getProvider() or getSigner() first.");
+    }
+    return RPC_URL;
 }
 //# sourceMappingURL=config.js.map

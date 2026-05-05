@@ -166,7 +166,7 @@ contract CurveTradePlacement is SingleDexProtocol {
 
         // Get trade data from registry
         IRegistry.TradeData memory tradeData =
-            registry.prepareTradeData(address(curveFetcher), USDC, DAI, tradeAmount, minOut, address(this));
+            registry.prepareTradeData(address(curveFetcher), USDC, DAI, tradeAmount, minOut, address(this), hex"");
 
         console.log("Trade data prepared successfully");
         console.log("Executor selector:", vm.toString(tradeData.selector));
@@ -247,7 +247,7 @@ contract CurveTradePlacement is SingleDexProtocol {
 
         // Get trade data from registry
         IRegistry.TradeData memory tradeData =
-            registry.prepareTradeData(address(curveFetcher), DAI, USDC, tradeAmount, minOut, address(this));
+            registry.prepareTradeData(address(curveFetcher), DAI, USDC, tradeAmount, minOut, address(this), hex"");
 
         console.log("Trade data prepared successfully");
         console.log("Executor selector:", vm.toString(tradeData.selector));

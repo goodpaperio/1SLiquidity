@@ -1,12 +1,16 @@
 import { ethers } from "ethers";
-import { MonitorResult } from "./types";
+import { MonitorResult, RunStats } from "./types";
 export declare class TradeMonitor {
     private provider;
     private signer;
     private coreContract;
     private coreContractWithSigner;
     private localDataPath;
-    constructor();
+    private constructor();
+    /**
+     * Create a new TradeMonitor instance (async factory method)
+     */
+    static create(): Promise<TradeMonitor>;
     /**
      * Load local data from file
      */
@@ -72,6 +76,14 @@ export declare class TradeMonitor {
      */
     private scanTradeCompletedEvents;
     /**
+     * Scan for StreamFeesTaken events
+     */
+    private scanStreamFeeEvents;
+    /**
+     * Scan for InstasettleFeeTaken events
+     */
+    private scanInstasettleFeeEvents;
+    /**
      * Get block timestamp
      */
     private getBlockTimestamp;
@@ -102,11 +114,23 @@ export declare class TradeMonitor {
     /**
      * Execute trades for a specific pair ID (submits transaction and returns transaction response)
      */
-    executeTrades(pairId: string): Promise<ethers.ContractTransactionResponse>;
+    executeTrades(pairId: string): Promise<ethers.TransactionResponse>;
+    /**
+     * Calculate run statistics including fees and gas costs
+     */
+    private calculateRunStats;
+    /**
+     * Send Telegram alert with run stats
+     */
+    private sendTelegramAlert;
+    /**
+     * Display fee statistics
+     */
+    private displayFeeStats;
     /**
      * Execute all outstanding trades from local data (sequential execution)
      */
-    executeOutstandingTrades(): Promise<void>;
+    executeOutstandingTrades(): Promise<RunStats | null>;
     /**
      * Run the monitor
      */

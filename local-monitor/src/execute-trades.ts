@@ -6,7 +6,7 @@ async function main() {
   try {
     console.log("🚀 Starting 1SLiquidity Trade Execution...\n");
 
-    const monitor = new TradeMonitor();
+    const monitor = await TradeMonitor.create();
     await monitor.executeOutstandingTrades();
 
     console.log("\n✅ Trade execution process completed!");
