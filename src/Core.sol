@@ -389,6 +389,19 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
             usePriceBased,
             onlyInstasettle
         );
+
+        // If placement fully streamed the trade, settle and dequeue immediately.
+        // Fees are already applied above, so transfer the net realised amount.
+        if (updatedTrade.lastSweetSpot == 0) {
+            uint256 realisedNet = trades[tradeId].realisedAmountOut;
+            if (tokenOut == 0x0000000000000000000000000000000000000000 || tokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+                ethSupport.unwrap(realisedNet, trade.owner);
+            } else {
+                IERC20(tokenOut).safeTransfer(trade.owner, realisedNet);
+            }
+            emit TradeCompleted(tradeId, realisedNet);
+            _removeTradeFromStorage(pairId, tradeId);
+        }
     }
 
     function cancelTrade(uint256 tradeId) public returns (bool) {
@@ -595,14 +608,6 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         }
         uint256 amountOut = abi.decode(returnData, (uint256));
         require(amountOut > 0, "No tokens received from swap");
-
-        // @dev protection for the case that an EOA has called executeStream
-        if (sweetSpot == 1 && msg.sender != address(this)) {
-            bytes32 pairId = keccak256(abi.encode(trade.tokenIn, trade.tokenOut));
-            IERC20(trade.tokenOut).safeTransfer(trade.owner, trade.realisedAmountOut);                        
-            _removeTradeFromStorage(pairId, trade.tradeId);
-            return storageTrade;
-        }
 
         if (sweetSpot == 1 || sweetSpot == 2 || sweetSpot == 3 || sweetSpot == 4) {
             sweetSpot--;

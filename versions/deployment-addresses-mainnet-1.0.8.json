@@ -1,0 +1,26 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "1.0.8",
+  "deploymentDate": "2026-05-05T10:17:26Z",
+  "deploymentBlock": 25028148,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0x0d1a8124f8b8346baf6b5592fb2d5df9e03bf666e746816c78c3b845d6b6b8e5",
+  "contracts": {
+    "Executor": "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
+    "Registry": "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
+    "UniswapV2Fetcher": "0xcDd26C4361AEB4b20f9e5A2119C7aac08B9dA089",
+    "UniswapV3Fetcher_0_05": "0x15DC9274c61D9B0F20dC09bD0BFA7D1e2D504FC6",
+    "UniswapV3Fetcher_0_3": "0xD561BC0801Fb9E85Ea151a784fCb41898C98f49a",
+    "UniswapV3Fetcher_1": "0xec5545C87eE4F74d33A4af6F817a1B6eabF67852",
+    "SushiswapFetcher": "0x57cfC5AD0812747afbb3dCD98B23b94883A341BC",
+    "BalancerV2Fetcher": "0xF9abe8A26EcF289b7e16Ccf88D67252DdA2215A6",
+    "StreamDaemon": "0xe3a6a07a73727be782b0a7bc0c093ecb19d0c251",
+    "Core": "0xa017d75fed4e71799fde4457191a1e3e295c3b0b",
+    "ETHSupport": "0xB970aF8dA1909230a32819602d97a0C0d44C5FB5",
+    "Create2Factory": "0xc7da3a86aefacc0ba6dc309183c3bc39357f58c9"
+  },
+  "notes": {
+    "changes": "Core hotfix v1.0.8 (executeStream payout/dequeue fix). Reused: Registry, Executor, ETHSupport, UniswapV2/V3, Sushiswap, Balancer fetchers."
+  }
+}

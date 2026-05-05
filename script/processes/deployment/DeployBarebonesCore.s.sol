@@ -22,6 +22,7 @@ import "../../../src/interfaces/IETHSupport.sol";
  *        DEPLOY_BAREBONES_V2           — optional override UniswapV2 fetcher
  *        DEPLOY_BAREBONES_SUSHI        — optional Sushiswap fetcher
  *        DEPLOY_BAREBONES_BALANCER     — optional BalancerV2 fetcher
+ *        DEPLOY_BAREBONES_BOT          — optional bot EOA to whitelist via core.addBot(...)
  */
 contract DeployBarebonesCore is Script {
     // Default existing contract addresses (v1.0.3 / prior mainnet)
@@ -80,6 +81,10 @@ contract DeployBarebonesCore is Script {
         address uniV3_10000 = _envAddr("DEPLOY_BAREBONES_V3_10000", DEFAULT_UNISWAP_V3_FETCHER_1);
         address sushi = _envAddr("DEPLOY_BAREBONES_SUSHI", DEFAULT_SUSHISWAP_FETCHER);
         address balancer = _envAddr("DEPLOY_BAREBONES_BALANCER", DEFAULT_BALANCER_V2_FETCHER);
+        address botToWhitelist = address(0);
+        try vm.envAddress("DEPLOY_BAREBONES_BOT") returns (address b) {
+            botToWhitelist = b;
+        } catch {}
 
         vm.startBroadcast();
 
@@ -168,6 +173,13 @@ contract DeployBarebonesCore is Script {
         ethSupport = core.ethSupport();
         require(address(ethSupport) == ethSupportAddr, "ETHSupport not set correctly");
         console.log("ETHSupport verified on Core:", address(ethSupport));
+
+        if (botToWhitelist != address(0)) {
+            console.log("\n--- Whitelisting bot on Core ---");
+            core.addBot(botToWhitelist);
+            require(core.isBotWhitelisted(botToWhitelist), "Bot whitelist failed");
+            console.log("Bot whitelisted:", botToWhitelist);
+        }
 
         vm.stopBroadcast();
 
