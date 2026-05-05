@@ -180,4 +180,27 @@ export interface RunStats {
   totalBotFeesUSD: number;
   totalProtocolFeesUSD: number;
   netProfitUSD: number;
+  streamDetails: RunStreamDetail[];
+  tradeRollups: RunTradeRollup[];
+}
+
+export interface RunStreamDetail {
+  tradeId: number;
+  pair: string;
+  amountIn: string;
+  amountOut: string;
+  tokenInSymbol: string;
+  tokenOutSymbol: string;
+  lastSweetSpot: number;
+  transactionHash: string;
+}
+
+export interface RunTradeRollup {
+  tradeId: number;
+  pair: string;
+  streams: number;
+  totalAmountIn: string;
+  totalAmountOut: string;
+  tokenInSymbol: string;
+  tokenOutSymbol: string;
 }

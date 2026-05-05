@@ -1,5 +1,8 @@
 import { ethers } from "ethers";
 import "dotenv/config";
+import { execSync } from "child_process";
+import { existsSync, readFileSync, readdirSync } from "fs";
+import { join } from "path";
 
 export interface ContractAddresses {
   core: string;
@@ -9,14 +12,86 @@ export interface ContractAddresses {
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  core: "0x4f055d064556ce4433c53b7c21ebe4f6ab96a8a3",
+  core: "0xa017d75fed4e71799fde4457191a1e3e295c3b0b",
   registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
   executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
-  streamDaemon: "0x4b62049fdbc935f4af89e7ccb9541c6f6a58d314",
+  streamDaemon: "0xe3a6a07a73727be782b0a7bc0c093ecb19d0c251",
 };
 
+function extractVersionNumber(version: string): number[] {
+  return version.split(".").map((v) => Number(v));
+}
+
+function compareSemver(a: string, b: string): number {
+  const av = extractVersionNumber(a);
+  const bv = extractVersionNumber(b);
+  const len = Math.max(av.length, bv.length);
+  for (let i = 0; i < len; i++) {
+    const ai = av[i] ?? 0;
+    const bi = bv[i] ?? 0;
+    if (ai !== bi) return ai - bi;
+  }
+  return 0;
+}
+
+function getLatestDeploymentVersion(repoRoot: string): string | null {
+  const versionsDir = join(repoRoot, "versions");
+  if (!existsSync(versionsDir)) return null;
+
+  const matches = readdirSync(versionsDir)
+    .map((name) => {
+      const m = name.match(/^deployment-addresses-mainnet-(\d+\.\d+\.\d+)\.json$/);
+      return m ? m[1] : null;
+    })
+    .filter((v): v is string => Boolean(v));
+
+  if (matches.length === 0) return null;
+  matches.sort(compareSemver);
+  return matches[matches.length - 1];
+}
+
+function detectBotVersion(): string {
+  const fromEnv = process.env.BOT_VERSION?.trim();
+  if (fromEnv) return fromEnv;
+
+  const repoRoot = join(__dirname, "..", "..");
+
+  // Prefer deployment manifests first so runtime reflects deployed artifacts.
+  const latestDeploymentVersion = getLatestDeploymentVersion(repoRoot);
+  if (latestDeploymentVersion) return latestDeploymentVersion;
+
+  // Fallback to latest git tag when manifests are unavailable.
+  try {
+    const latestTag = execSync("git describe --tags --abbrev=0", {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "ignore"],
+      encoding: "utf8",
+    }).trim();
+    if (latestTag) return latestTag;
+  } catch {
+    // fall through to package.json fallback
+  }
+
+  // Final fallback: root package.json version.
+  try {
+    const rootPackagePath = join(repoRoot, "package.json");
+    const rootPackage = JSON.parse(readFileSync(rootPackagePath, "utf8")) as {
+      version?: string;
+    };
+    if (rootPackage.version) return rootPackage.version;
+  } catch {
+    // ignore and use final default
+  }
+
+  return "unknown";
+}
+
+// Bot/deployment version shown in Telegram notifications.
+// Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
+export const BOT_VERSION = detectBotVersion();
+
 // Deployment block for Core contract v1.0.7
-export const DEPLOYMENT_BLOCK = 25014137;
+export const DEPLOYMENT_BLOCK = 25028148;
 
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {
