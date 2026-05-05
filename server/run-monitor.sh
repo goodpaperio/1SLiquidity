@@ -13,6 +13,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 MONITOR_DIR="$REPO_DIR/local-monitor"
 
+# Prevent overlapping cron runs (can cause contradictory summaries/state races).
+LOCK_FILE="/tmp/1sliquidity-monitor.lock"
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: Another monitor run is still in progress, skipping this cycle."
+    exit 0
+fi
+
 # Enable AWS Secrets Manager
 export USE_AWS_SECRETS=true
 

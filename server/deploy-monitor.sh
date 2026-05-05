@@ -80,6 +80,11 @@ rsync -avz \
   "$SSH_USER@$SERVER_IP:~/1SLiquidity/server/" \
   --exclude .env
 
+rsync -avz \
+  -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+  "$PROJECT_ROOT/versions/deployment-addresses-mainnet-"*.json \
+  "$SSH_USER@$SERVER_IP:~/1SLiquidity/versions/"
+
 print_success "Code synced"
 
 # Option 2: On server - install deps and build
@@ -91,6 +96,48 @@ npm install
 npm run build
 echo ""
 echo "✅ Build completed!"
+
+# Optional deploy-complete Telegram notification (uses AWS Secrets Manager/env on server)
+USE_AWS_SECRETS=true node - <<'NODE' || true
+(async () => {
+  try {
+    const { getSecrets } = require("./dist/secrets.js");
+    const cfg = require("./dist/config.js");
+    const secrets = await getSecrets();
+    if (!secrets.TELEGRAM_BOT_TOKEN || !secrets.TELEGRAM_CHAT_ID) {
+      console.log("ℹ️ Telegram not configured for deploy notifications");
+      return;
+    }
+
+    const text =
+      "🚀 <b>Bot Redeploy Complete</b>\n\n" +
+      `📌 <b>Version:</b> <code>${cfg.BOT_VERSION}</code>\n` +
+      `🏗 <b>Core:</b> <code>${cfg.CONTRACT_ADDRESSES.core}</code>\n` +
+      `🧱 <b>Deployment block:</b> <code>${cfg.DEPLOYMENT_BLOCK}</code>\n` +
+      `🖥 <b>Host:</b> <code>${require("os").hostname()}</code>\n` +
+      `⏰ ${new Date().toISOString()}`;
+
+    const res = await fetch(`https://api.telegram.org/bot${secrets.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: secrets.TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: "HTML",
+      }),
+    });
+
+    if (res.ok) {
+      console.log("✅ Deploy notification sent to Telegram");
+    } else {
+      const body = await res.text();
+      console.log(`⚠️ Telegram deploy notify failed: ${res.status} ${body.slice(0, 200)}`);
+    }
+  } catch (err) {
+    console.log(`⚠️ Telegram deploy notify skipped: ${err?.message || err}`);
+  }
+})();
+NODE
 DEPLOY_SCRIPT
 
 print_success "Deployment completed successfully!"
