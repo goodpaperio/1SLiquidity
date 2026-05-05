@@ -7,7 +7,7 @@
 #   npm run place-trade:fork -- WETH_DAI
 #   ./scripts/place-trade-fork.sh WETH_DAI
 #
-# Pairs: WETH_DAI, WETH_PEPE, USDC_DAI, USDC_PEPE, ETH_DAI, ETH_PEPE
+# Pairs: WETH_DAI, WETH_PEPE, USDC_DAI, USDC_WETH, USDC_PEPE, ETH_DAI, ETH_PEPE
 #
 set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
