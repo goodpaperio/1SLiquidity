@@ -22,12 +22,13 @@ node generate-pairs.js
 
 ### 3️⃣ Result
 
-You will get 4 updated files:
+You will get 5 updated files:
 
 - ✅ `usdc_pairs_clean.json`
 - ✅ `usdt_pairs_clean.json`
 - ✅ `wbtc_pairs_clean.json`
 - ✅ `weth_pairs_clean.json`
+- ✅ `dai_pairs_clean.json`
 
 ## Example Output
 
@@ -40,6 +41,7 @@ You will get 4 updated files:
 ✅ Generated: usdt_pairs_clean.json (54 pairs)
 ✅ Generated: wbtc_pairs_clean.json (30 pairs)
 ✅ Generated: weth_pairs_clean.json (99 pairs)
+✅ Generated: dai_pairs_clean.json (5 pairs)
 
 ✨ Generation completed successfully!
 ```
@@ -86,6 +88,7 @@ The `liquidity.json` file must have the following structure:
 | USDT  | `0xdac17f958d2ee523a2206206994597c13d831ec7` |
 | WBTC  | `0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599` |
 | WETH  | `0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2` |
+| DAI   | `0x6B175474E89094C44Da98b954EedeAC495271d0F` |
 
 ## Filtering Criteria
 
