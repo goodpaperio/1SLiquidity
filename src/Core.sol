@@ -531,48 +531,30 @@ contract Core is Ownable, ReentrancyGuard /*, UUPSUpgradeable */ {
         //     revert ToxicTrade(trade.tradeId);
         // }
 
-        (uint256 sweetSpot, address bestDex, address router) = streamDaemon.evaluateSweetSpotAndDex(
-            trade.tokenIn, trade.tokenOut, trade.amountRemaining, 0, trade.usePriceBased
+        uint256 preferredSweetSpot = (
+            trade.lastSweetSpot == 1 || trade.lastSweetSpot == 2 || trade.lastSweetSpot == 3 || trade.lastSweetSpot == 4
+        ) ? trade.lastSweetSpot : 0;
+
+        (
+            address bestDex,
+            ,
+            uint256 sweetSpot,
+            uint256 streamVolume,
+            uint256 quotedOut,
+            bytes memory quoteAux
+        ) = streamDaemon.evaluateStreamPlan(
+            trade.tokenIn,
+            trade.tokenOut,
+            trade.amountRemaining,
+            trade.targetAmountOut > trade.realisedAmountOut,
+            trade.usePriceBased,
+            preferredSweetSpot
         );
 
-        if (
-            trade.lastSweetSpot == 1 || trade.lastSweetSpot == 2 || trade.lastSweetSpot == 3 || trade.lastSweetSpot == 4
-        ) {
-            sweetSpot = trade.lastSweetSpot;
-        }
-
-        if (sweetSpot > 500) {
-            sweetSpot = 500; // this is an arbitrary value @audit needs revision
-        }
-
         require(sweetSpot > 0, "Invalid sweet spot");
-        uint256 targetAmountOut;
-        uint256 streamVolume;
-        address quoteTokenOut = trade.tokenOut;
-        if (
-            quoteTokenOut == 0x0000000000000000000000000000000000000000
-                || quoteTokenOut == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
-        ) {
-            quoteTokenOut = WETH;
-        }
-
-        if (trade.targetAmountOut > trade.realisedAmountOut) {
-            streamVolume = trade.amountRemaining / sweetSpot;
-        } else {
-            // Over-achieved already: take the full remaining amount in one go
-            sweetSpot = 1;
-            streamVolume = trade.amountRemaining;
-        }
-
         require(streamVolume > 0, "Invalid stream volume");
-
-        IUniversalDexInterface dex = IUniversalDexInterface(bestDex);
-        (uint256 quotedOut, bytes memory quoteAux) = dex.getQuote(trade.tokenIn, quoteTokenOut, streamVolume);
-        if (quotedOut == 0) {
-            quotedOut = dex.getPrice(trade.tokenIn, quoteTokenOut, streamVolume);
-            quoteAux = new bytes(0);
-        }
         require(quotedOut > 0, "Quote unavailable");
+        uint256 targetAmountOut;
 
         uint256 slippageCoefficient = 1000 - BPS_SLIPPAGE;
 
