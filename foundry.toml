@@ -6,7 +6,8 @@ via_ir = true
 fs_permissions = [
   { access = "write", path = "deployments" },
   { access = "read", path = "out" },
-  { access = "read", path = "config" }
+  { access = "read", path = "config" },
+  { access = "read", path = "docs" }
 ]
 
 [profile.deploy]
