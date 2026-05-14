@@ -23,6 +23,13 @@ echo ""
 
 echo "📦 Building local-monitor..."
 cd "$ROOT/local-monitor"
+
+# Ensure local dev toolchain exists before build (typescript/tsc).
+if [ ! -x "node_modules/.bin/tsc" ]; then
+  echo "ℹ️  local-monitor TypeScript toolchain missing; running npm install..."
+  npm install
+fi
+
 npm run build
 echo ""
 

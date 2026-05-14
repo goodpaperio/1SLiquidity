@@ -1,0 +1,1770 @@
+{
+  "generatedAt": "2026-05-11T11:42:11.731Z",
+  "source": "keeper/data/balancer-pools.json",
+  "universeCount": 254,
+  "totalCount": 47,
+  "missingCount": 207,
+  "candidates": [
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "dai",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "pool": "0x66bb9d104c55861feb3ec3559433f01f6373c966",
+      "poolId": "0x66bb9d104c55861feb3ec3559433f01f6373c9660002000000000000000003cf",
+      "poolName": "BPT-DAI-USDC",
+      "poolSymbol": "BPT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "gho",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f",
+      "pool": "0x006d7e2166472f62f0e9e5c95e3a313e01caea74",
+      "poolId": "0x006d7e2166472f62f0e9e5c95e3a313e01caea74000200000000000000000690",
+      "poolName": "Gyroscope ECLP GHO/USDC 3",
+      "poolSymbol": "ECLP-GHO-USDC-3",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "grt",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc944e90c64b2c07662a292be6244bdf05cda44a7",
+      "pool": "0x14462305d211c12a736986f4e8216e28c5ea7ab4",
+      "poolId": "0x14462305d211c12a736986f4e8216e28c5ea7ab4000200000000000000000068",
+      "poolName": "B-GRT-USDC",
+      "poolSymbol": "BPTGRTUSDC",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "link",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x514910771af9ca656af840dff83e8264ecf986ca",
+      "pool": "0x02dca886b5af3b6400254d9909af9fb4b320794e",
+      "poolId": "0x02dca886b5af3b6400254d9909af9fb4b320794e0002000000000000000005e6",
+      "poolName": "LINK Fjord Foundry LBP",
+      "poolSymbol": "LINK_LBP",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "qnt",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x4a220e6096b25eadb88358cb44068a3248254675",
+      "pool": "0xb1c5944170c96c2bd5f0f1855e4691c54601dca6",
+      "poolId": "0xb1c5944170c96c2bd5f0f1855e4691c54601dca60002000000000000000003af",
+      "poolName": "80QNT-20USDC",
+      "poolSymbol": "80QNT-20USDC",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "snx",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+      "pool": "0x5face3411e8db2e35d2720633579c30915f0e998",
+      "poolId": "0x5face3411e8db2e35d2720633579c30915f0e9980002000000000000000003f9",
+      "poolName": "50USDC-50SNX",
+      "poolSymbol": "50USDC-50SNX",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "uni",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+      "pool": "0xa0cf2478a7a9fadd53ce24665399aa80c7eb5075",
+      "poolId": "0xa0cf2478a7a9fadd53ce24665399aa80c7eb50750002000000000000000003ea",
+      "poolName": "50UNI-50USDC",
+      "poolSymbol": "50UNI-50USDC",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "usdt",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "pool": "0x2d62dc792237b6360daa3f0c5d908edaef0a0d9a",
+      "poolId": "0x2d62dc792237b6360daa3f0c5d908edaef0a0d9a0002000000000000000006ac",
+      "poolName": "50USDC-50USDT",
+      "poolSymbol": "50USDC-50USDT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "weth",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "pool": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb",
+      "poolId": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb0002000000000000000000f4",
+      "poolName": "Test NoFee LBP",
+      "poolSymbol": "TLBP",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "dai",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "pool": "0x4d7880b18373fd916bbe63227509a187a41f8b62",
+      "poolId": "0x4d7880b18373fd916bbe63227509a187a41f8b620002000000000000000003c4",
+      "poolName": "Balancer DAI-USDT Fixed Rate Pool",
+      "poolSymbol": "B-DAI-USDT-FIXED-RATE",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ens",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+      "pool": "0x2dd73658b2351da4c8fee8af2135b007db37b362",
+      "poolId": "0x2dd73658b2351da4c8fee8af2135b007db37b362000200000000000000000434",
+      "poolName": "50ENS-50USDT",
+      "poolSymbol": "50ENS-50USDT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "snx",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+      "pool": "0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb",
+      "poolId": "0xe3132b8923ae75c66c9c07032fc56fd4bb1e4ecb000200000000000000000405",
+      "poolName": "50stETH-50SNX",
+      "poolSymbol": "50stETH-50SNX",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "usdc",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "pool": "0x2d62dc792237b6360daa3f0c5d908edaef0a0d9a",
+      "poolId": "0x2d62dc792237b6360daa3f0c5d908edaef0a0d9a0002000000000000000006ac",
+      "poolName": "50USDC-50USDT",
+      "poolSymbol": "50USDC-50USDT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "weth",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "pool": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a",
+      "poolId": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c",
+      "poolName": "Balancer 50 WETH 50 USDT",
+      "poolSymbol": "B-50WETH-50USDT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "aave",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+      "pool": "0x8ae511baa25d6c7d21f45ebe60ff29912d28a8e6",
+      "poolId": "0x8ae511baa25d6c7d21f45ebe60ff29912d28a8e60002000000000000000003d4",
+      "poolName": "50AAVE-50WETH",
+      "poolSymbol": "50AAVE-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "comp",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xc00e94cb662c3520282e6f5717214004a7f26888",
+      "pool": "0xefaa1604e82e1b3af8430b90192c1b9e8197e377",
+      "poolId": "0xefaa1604e82e1b3af8430b90192c1b9e8197e377000200000000000000000021",
+      "poolName": "Balancer 50 COMP 50 WETH",
+      "poolSymbol": "B-50COMP-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "crv",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xd533a949740bb3306d119cc777fa900ba034cd52",
+      "pool": "0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a",
+      "poolId": "0x813e6a5f31c95f7c5f9982b1fdc6c69610beab4a0002000000000000000003ed",
+      "poolName": "50WETH-50CRV",
+      "poolSymbol": "50WETH-50CRV",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "dai",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "pool": "0x0b09dea16768f0799065c475be02919503cb2a35",
+      "poolId": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
+      "poolName": "Balancer 60 WETH 40 DAI",
+      "poolSymbol": "B-60WETH-40DAI",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ens",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+      "pool": "0xefdc9246e0c4280fb1c138e1093a95ab88959cf8",
+      "poolId": "0xefdc9246e0c4280fb1c138e1093a95ab88959cf80002000000000000000000b9",
+      "poolName": "Balancer 80 ENS 20 WETH",
+      "poolSymbol": "B-80ENS-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ethx",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xa35b1b31ce002fbf2058d22f30f95d405200a15b",
+      "pool": "0x911fc393355fe415a667893d55fff6703c57c72e",
+      "poolId": "0x911fc393355fe415a667893d55fff6703c57c72e000200000000000000000574",
+      "poolName": "50ETHx-50WETH",
+      "poolSymbol": "50ETHx-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "gno",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6810e776880c02933d47db1b9fc05908e5386b96",
+      "pool": "0xf4c0dd9b82da36c07605df83c8a416f11724d88b",
+      "poolId": "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026",
+      "poolName": "Balancer 80 GNO 20 WETH",
+      "poolSymbol": "B-80GNO-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "grt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xc944e90c64b2c07662a292be6244bdf05cda44a7",
+      "pool": "0x89ea4363bd541d27d9811e4df1209daa73154472",
+      "poolId": "0x89ea4363bd541d27d9811e4df1209daa73154472000200000000000000000034",
+      "poolName": "Balancer 80 GRT 20 WETH",
+      "poolSymbol": "B-80GRT-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ldo",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
+      "pool": "0xbf96189eee9357a95c7719f4f5047f76bde804e5",
+      "poolId": "0xbf96189eee9357a95c7719f4f5047f76bde804e5000200000000000000000087",
+      "poolName": "Balancer 80 LDO 20 WETH",
+      "poolSymbol": "B-80LDO-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "link",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x514910771af9ca656af840dff83e8264ecf986ca",
+      "pool": "0xe99481dc77691d8e2456e5f3f61c1810adfc1503",
+      "poolId": "0xe99481dc77691d8e2456e5f3f61c1810adfc1503000200000000000000000018",
+      "poolName": "Balancer 50 LINK 50 WETH",
+      "poolSymbol": "B-50LINK-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "nexo",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206",
+      "pool": "0x5e6989c0e2b6600ab585d56bf05479d5450a60c8",
+      "poolId": "0x5e6989c0e2b6600ab585d56bf05479d5450a60c80002000000000000000000c1",
+      "poolName": "Balancer 80 NEXO 20 WETH",
+      "poolSymbol": "B-80NEXO-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ohm",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5",
+      "pool": "0xd1ec5e215e8148d76f4460e4097fd3d5ae0a3558",
+      "poolId": "0xd1ec5e215e8148d76f4460e4097fd3d5ae0a35580002000000000000000003d3",
+      "poolName": "50OHM-50WETH",
+      "poolSymbol": "50OHM-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ondo",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3",
+      "pool": "0x98b76fb35387142f97d601a297276bb152ae8ab0",
+      "poolId": "0x98b76fb35387142f97d601a297276bb152ae8ab0000200000000000000000662",
+      "poolName": "20WETH-80ONDO",
+      "poolSymbol": "20WETH-80ONDO",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "paxg",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "pool": "0x614b5038611729ed49e0ded154d8a5d3af9d1d9e",
+      "poolId": "0x614b5038611729ed49e0ded154d8a5d3af9d1d9e000200000000000000000044",
+      "poolName": "Balancer 50 PAXG 50 WETH",
+      "poolSymbol": "B-50PAXG-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "pendle",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x808507121b80c02388fad14726482e061b8da827",
+      "pool": "0xfd1cf6fd41f229ca86ada0584c63c49c3d66bbc9",
+      "poolId": "0xfd1cf6fd41f229ca86ada0584c63c49c3d66bbc9000200000000000000000438",
+      "poolName": "50PENDLE-50WETH",
+      "poolSymbol": "50PENDLE-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "pepe",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+      "pool": "0x6f4906c181e6acb096908238c5ffd088cca6ba9f",
+      "poolId": "0x6f4906c181e6acb096908238c5ffd088cca6ba9f00020000000000000000053a",
+      "poolName": "\"ChadPepe\"",
+      "poolSymbol": "CPEPE",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "qnt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x4a220e6096b25eadb88358cb44068a3248254675",
+      "pool": "0x217c4d9dfe90ffa2ed2cafb3d0a2f992540cad83",
+      "poolId": "0x217c4d9dfe90ffa2ed2cafb3d0a2f992540cad8300020000000000000000038e",
+      "poolName": "50QNT-50WETH",
+      "poolSymbol": "50QNT-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "reth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xae78736cd615f374d3085123a210448e74fc6393",
+      "pool": "0x1e19cf2d73a72ef1332c882f20534b6519be0276",
+      "poolId": "0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112",
+      "poolName": "Balancer rETH Stable Pool",
+      "poolSymbol": "B-rETH-STABLE",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "rsr",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x320623b8e4ff03373931769a31fc52a4e78b5d70",
+      "pool": "0x771fbbfcbd8ba252f7f1ee47c1a486bdb0b5bc62",
+      "poolId": "0x771fbbfcbd8ba252f7f1ee47c1a486bdb0b5bc6200020000000000000000063d",
+      "poolName": "50RSR-50WETH",
+      "poolSymbol": "50RSR-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "shib",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+      "pool": "0x7269efb54fb300ae742cabe6533ad5e6a2cc73c6",
+      "poolId": "0x7269efb54fb300ae742cabe6533ad5e6a2cc73c600020000000000000000052d",
+      "poolName": "SHIB",
+      "poolSymbol": "SHIB_F9_LBP",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "snx",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+      "pool": "0x072f14b85add63488ddad88f855fda4a99d6ac9b",
+      "poolId": "0x072f14b85add63488ddad88f855fda4a99d6ac9b000200000000000000000027",
+      "poolName": "Balancer 50 SNX 50 WETH",
+      "poolSymbol": "B-50SNX-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "tel",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x467bccd9d29f223bce8043b84e8c8b282827790f",
+      "pool": "0x6ae82385f76e3742f89cb46343b169f6ee49de1b",
+      "poolId": "0x6ae82385f76e3742f89cb46343b169f6ee49de1b000200000000000000000016",
+      "poolName": "Balancer 80 TEL 20 WETH",
+      "poolSymbol": "B-80TEL-20WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "uni",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+      "pool": "0x5aa90c7362ea46b3cbfbd7f01ea5ca69c98fef1c",
+      "poolId": "0x5aa90c7362ea46b3cbfbd7f01ea5ca69c98fef1c000200000000000000000020",
+      "poolName": "Balancer 50 UNI 50 WETH",
+      "poolSymbol": "B-50UNI-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "usdc",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "pool": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb",
+      "poolId": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb0002000000000000000000f4",
+      "poolName": "Test NoFee LBP",
+      "poolSymbol": "TLBP",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "usdt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "pool": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a",
+      "poolId": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c",
+      "poolName": "Balancer 50 WETH 50 USDT",
+      "poolSymbol": "B-50WETH-50USDT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "wbtc",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "pool": "0x0297e37f1873d2dab4487aa67cd56b58e2f27875",
+      "poolId": "0x0297e37f1873d2dab4487aa67cd56b58e2f27875000200000000000000000003",
+      "poolName": "Balancer 50 WBTC 50 WETH",
+      "poolSymbol": "B-50WBTC-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "wsteth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+      "pool": "0x32296969ef14eb0c6d29669c550d4a0449130230",
+      "poolId": "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+      "poolName": "Balancer stETH Stable Pool",
+      "poolSymbol": "B-stETH-STABLE",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "cbbtc",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+      "pool": "0x9d73398c54be236da189d937eace8e6dccad3616",
+      "poolId": "0x9d73398c54be236da189d937eace8e6dccad36160002000000000000000006e3",
+      "poolName": "Gyroscope ECLP cbBTC/WBTC",
+      "poolSymbol": "ECLP-cbBTC-WBTC",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "tbtc",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x18084fba666a33d37592fa2633fd49a74dd93a88",
+      "pool": "0xa9dd57145ca13a2f05199d85e3f2739af6478427",
+      "poolId": "0xa9dd57145ca13a2f05199d85e3f2739af64784270002000000000000000005be",
+      "poolName": "80TBTC-20WBTC",
+      "poolSymbol": "80TBTC-20WBTC",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "weth",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "pool": "0x0297e37f1873d2dab4487aa67cd56b58e2f27875",
+      "poolId": "0x0297e37f1873d2dab4487aa67cd56b58e2f27875000200000000000000000003",
+      "poolName": "Balancer 50 WBTC 50 WETH",
+      "poolSymbol": "B-50WBTC-50WETH",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "DAI",
+      "quoteName": "usdc",
+      "tokenA": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "tokenB": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "pool": "0x66bb9d104c55861feb3ec3559433f01f6373c966",
+      "poolId": "0x66bb9d104c55861feb3ec3559433f01f6373c9660002000000000000000003cf",
+      "poolName": "BPT-DAI-USDC",
+      "poolSymbol": "BPT",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "DAI",
+      "quoteName": "usdt",
+      "tokenA": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "tokenB": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "pool": "0x4d7880b18373fd916bbe63227509a187a41f8b62",
+      "poolId": "0x4d7880b18373fd916bbe63227509a187a41f8b620002000000000000000003c4",
+      "poolName": "Balancer DAI-USDT Fixed Rate Pool",
+      "poolSymbol": "B-DAI-USDT-FIXED-RATE",
+      "tokensInPool": 2
+    },
+    {
+      "baseSymbol": "DAI",
+      "quoteName": "weth",
+      "tokenA": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "tokenB": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "pool": "0x0b09dea16768f0799065c475be02919503cb2a35",
+      "poolId": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
+      "poolName": "Balancer 60 WETH 40 DAI",
+      "poolSymbol": "B-60WETH-40DAI",
+      "tokensInPool": 2
+    }
+  ],
+  "missing": [
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "1inch",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x111111111117dc0aa78b770fa6a738034120c302"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "aave",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "arb",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "axs",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "bonk",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x1151cb3d861920e07a38e03eead12c32178567f6"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "cbbtc",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "cbeth",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xbe9895146f7af43049ca1c1ae358b0541ea49704"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "chz",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "comp",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc00e94cb662c3520282e6f5717214004a7f26888"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "cro",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "crv",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xd533a949740bb3306d119cc777fa900ba034cd52"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "dexe",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xde4ee8057785a7e8e800db58f9784845a5c2cbd6"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "eigen",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xec53bf9167f50cdeb3ae105f56099aaab9061f83"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ena",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x57e114b691db790c35207b2e685d4a43181e6061"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ens",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ethfi",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "fdusd",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xc5f0f7b66764f6ec8c8dff7ba683102295e16409"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "fet",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ff",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "fluid",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6f40d4a6237c257fff2db00fa0510deeecd303eb"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "gno",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6810e776880c02933d47db1b9fc05908e5386b96"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "imx",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xf57e7e7c23978c3caec3c3548e3d615c346e79ff"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ldo",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "linea",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x1789e0043623282d5dcc7f213d703c6d8bafbb04"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "mana",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "mnt",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "near",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "nexo",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ohm",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ondo",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "oseth",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ousg",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "paxg",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x45804880de22913dafe09f4980848ece6ecbaf78"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "pendle",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x808507121b80c02388fad14726482e061b8da827"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "pepe",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6982508145454ce325ddbe47a25d4ec3d2311933"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "pol",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x455e53cbb86018ac2b8092fdcd39d8444affc3f6"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "pyusd",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "render",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x6de037ef9ad2725eb40118bb1702ebb27e4aeb24"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "rsr",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x320623b8e4ff03373931769a31fc52a4e78b5d70"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "sand",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x3845badade8e6dff049820680d1f14bd3903a5d0"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "sena",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x8be3460a480c80728a8c4d7a5d5303c85ba7b3b9"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "shib",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "spx",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "steth",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "strk",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xca14007eff0db1f8135f4c25b34de49ab0d42766"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "super",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "susde",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "susds",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "syrupusdc",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x80ac24aa929eaf5013f6436cda2a7ba190f5cc0b"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "tel",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x467bccd9d29f223bce8043b84e8c8b282827790f"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "ton",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "tusd",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x0000000000085d4780b73119b644ae5ecd22b376"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "usd0",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x73a15fed60bf67631dc6cd7bc5b6e8da8190acf5"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "usde",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "usds",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xdc035d45d973e3ec169d2276ddab16f1e407384f"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "virtual",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x44ff8620b8ca30902395a7bd3f2407e1a091bf73"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "wbtc",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "wlfi",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "wsteth",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "xaut",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0x68749665ff8d2d112fa859aa293f07a622782f38"
+    },
+    {
+      "baseSymbol": "USDC",
+      "quoteName": "xcn",
+      "tokenA": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "tokenB": "0xa2cd3d43c775978a96bdbf12d733d5a1ed94fb18"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "1inch",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x111111111117dc0aa78b770fa6a738034120c302"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "aave",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "arb",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "axs",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "bnb",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xb8c77482e45f1f44de1745f52c74426c631bdd52"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "bonk",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x1151cb3d861920e07a38e03eead12c32178567f6"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "chz",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "comp",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xc00e94cb662c3520282e6f5717214004a7f26888"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "cro",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "crv",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xd533a949740bb3306d119cc777fa900ba034cd52"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "eigen",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xec53bf9167f50cdeb3ae105f56099aaab9061f83"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ena",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x57e114b691db790c35207b2e685d4a43181e6061"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ethfi",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "fet",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ff",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "floki",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "gho",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "gno",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x6810e776880c02933d47db1b9fc05908e5386b96"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "grt",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xc944e90c64b2c07662a292be6244bdf05cda44a7"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "gt",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xe66747a101bff2dba3697199dcce5b743b454759"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "jasmy",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x7420b4b9a0110cdc71fb720908340c03f9bc03ec"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ldo",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "link",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x514910771af9ca656af840dff83e8264ecf986ca"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "mana",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "nexo",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ohm",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "okb",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x75231f58b43240c9718dd58b4967c5114342a86c"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ondo",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xfaba6f8e4a5e8ab82f62fe7c39859fa577269be3"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "paxg",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x45804880de22913dafe09f4980848ece6ecbaf78"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "pepe",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x6982508145454ce325ddbe47a25d4ec3d2311933"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "pyusd",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "qnt",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x4a220e6096b25eadb88358cb44068a3248254675"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "render",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x6de037ef9ad2725eb40118bb1702ebb27e4aeb24"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "sand",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x3845badade8e6dff049820680d1f14bd3903a5d0"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "shib",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "steth",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "super",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "ton",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "tusd",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x0000000000085d4780b73119b644ae5ecd22b376"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "uni",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "usd0",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x73a15fed60bf67631dc6cd7bc5b6e8da8190acf5"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "usde",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "usdf",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xfa2b947eec368f42195f24f36d2af29f7c24cec2"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "virtual",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x44ff8620b8ca30902395a7bd3f2407e1a091bf73"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "wbtc",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "wlfi",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "wsteth",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "baseSymbol": "USDT",
+      "quoteName": "xaut",
+      "tokenA": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "tokenB": "0x68749665ff8d2d112fa859aa293f07a622782f38"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "1inch",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x111111111117dc0aa78b770fa6a738034120c302"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "arb",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ath",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xbe0ed4138121ecfc5c0e56b40517da27e6c5226b"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "axs",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "beam",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x62d0a8458ed7719fdaf978fe5929c6d342b0bfce"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "bgb",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x54d2252757e1672eead234d27b1270728ff90581"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "bnb",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xb8c77482e45f1f44de1745f52c74426c631bdd52"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "bonk",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x1151cb3d861920e07a38e03eead12c32178567f6"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "borg",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x64d0f55cd8c7133a9d7102b13987235f486f2224"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "btt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xc669928185dbce49d2230cc9b0979be6dc797957"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "cake",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x152649ea73beab28c5b49b26eb48f7ead6d4c898"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "cbbtc",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "cbeth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xbe9895146f7af43049ca1c1ae358b0541ea49704"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "chz",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "cro",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "dexe",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xde4ee8057785a7e8e800db58f9784845a5c2cbd6"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "eeth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x35fa164735182de50811e8e2e824cfb9b6118ac2"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "eigen",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xec53bf9167f50cdeb3ae105f56099aaab9061f83"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ena",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x57e114b691db790c35207b2e685d4a43181e6061"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "eth+",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xe72b141df173b999ae7c1adcbf60cc9833ce56a8"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ethfi",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ezeth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xbf5495efe5db9ce00f80364c8b423567e58d2110"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "fet",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "floki",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "fluid",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6f40d4a6237c257fff2db00fa0510deeecd303eb"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "frxeth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x5e8422345238f34275888049021821e8e08caa1f"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "gala",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xd1d2eb1b1e90b638588728b4130137d262c87cae"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "gt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xe66747a101bff2dba3697199dcce5b743b454759"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "icp",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x00f3c42833c3170159af4e92dbb451fb3f708917"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "imx",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xf57e7e7c23978c3caec3c3548e3d615c346e79ff"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "inj",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xe28b3b32b6c345a34ff64674606124dd5aceca30"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "jasmy",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x7420b4b9a0110cdc71fb720908340c03f9bc03ec"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "lbtc",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x8236a87084f8b84306f72007f36f2618a5634494"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "leo",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x2af5d2ad76741191d15dfe7bf6ac92d4bd912ca3"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "linea",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x1789e0043623282d5dcc7f213d703c6d8bafbb04"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "lseth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x8c1bed5b9a0928467c9b1341da1d7bd5e10b6549"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "mana",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "meth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xd5f7838f5c461feff7fe49ea5ebaf7728bb0adfa"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "mnt",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "morpho",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x58d97b57bb95320f9a05dc918aef65434969c2b2"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "near",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x85f17cf997934a597031b2e18a9ab6ebd4b9f6a4"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "nft",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x198d14f2ad9ce69e76ea330b374de4957c3f850a"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "okb",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x75231f58b43240c9718dd58b4967c5114342a86c"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "oseth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "pengu",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6418c0dd099a9fda397c766304cdd918233e8847"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "pol",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x455e53cbb86018ac2b8092fdcd39d8444affc3f6"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "pyusd",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "render",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x6de037ef9ad2725eb40118bb1702ebb27e4aeb24"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "rseth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xa1290d69c65a6fe4df752f95823fae25cb99e5a7"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "sand",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x3845badade8e6dff049820680d1f14bd3903a5d0"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "sdai",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x83f20f44975d03b1b09e64809b757c47f942beea"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "sky",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x56072c95faa701256059aa122697b133aded9279"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "spx",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "steth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "strk",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xca14007eff0db1f8135f4c25b34de49ab0d42766"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "super",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "sweth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xf951e335afb289353dc249e82926178eac7ded78"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "syrup",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x643c4e15d7d62ad0abec4a9bd4b001aa3ef52d66"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "tbtc",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x18084fba666a33d37592fa2633fd49a74dd93a88"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "ton",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "tusd",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x0000000000085d4780b73119b644ae5ecd22b376"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "usd1",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "usds",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xdc035d45d973e3ec169d2276ddab16f1e407384f"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "virtual",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x44ff8620b8ca30902395a7bd3f2407e1a091bf73"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "w",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xb0ffa8000886e57f86dd5264b9582b2ad87b2b91"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "weeth",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "wld",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x163f8c2467924be0ae7b5347228cabf260318753"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "wlfi",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xda5e1988097297dcdc1f90d4dfe7909e847cbef6"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "xaut",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x68749665ff8d2d112fa859aa293f07a622782f38"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "xcn",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0xa2cd3d43c775978a96bdbf12d733d5a1ed94fb18"
+    },
+    {
+      "baseSymbol": "WETH",
+      "quoteName": "zk",
+      "tokenA": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "tokenB": "0x66a5cfb2e9c529f14fe6364ad1075df3a649c0a5"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "1inch",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x111111111117dc0aa78b770fa6a738034120c302"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "aave",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "axs",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "chz",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x3506424f91fd33084466f402d5d97f05f8e3b4af"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "comp",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xc00e94cb662c3520282e6f5717214004a7f26888"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "cro",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "crv",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xd533a949740bb3306d119cc777fa900ba034cd52"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "dai",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x6b175474e89094c44da98b954eedeac495271d0f"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "fet",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xaea46a60368a7bd060eec7df8cba43b7ef41ad85"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "grt",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xc944e90c64b2c07662a292be6244bdf05cda44a7"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "lbtc",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x8236a87084f8b84306f72007f36f2618a5634494"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "ldo",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x5a98fcbea516cf06857215779fd812ca3bef1b32"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "link",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x514910771af9ca656af840dff83e8264ecf986ca"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "paxg",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x45804880de22913dafe09f4980848ece6ecbaf78"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "pepe",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x6982508145454ce325ddbe47a25d4ec3d2311933"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "qnt",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x4a220e6096b25eadb88358cb44068a3248254675"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "shib",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "snx",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "solvbtc",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x7a56e1c57c7475ccf742a1832b028f0456652f97"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "steth",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "tusd",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x0000000000085d4780b73119b644ae5ecd22b376"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "uni",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "usdc",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "usdt",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "wsteth",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"
+    },
+    {
+      "baseSymbol": "WBTC",
+      "quoteName": "xaut",
+      "tokenA": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "tokenB": "0x68749665ff8d2d112fa859aa293f07a622782f38"
+    },
+    {
+      "baseSymbol": "DAI",
+      "quoteName": "wbtc",
+      "tokenA": "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "tokenB": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+    }
+  ]
+}

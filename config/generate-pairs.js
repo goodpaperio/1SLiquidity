@@ -5,7 +5,7 @@
  * 
  * This script extracts liquidity pairs for each base token
  * from the liquidity.json file and generates separate files
- * for each token (USDC, USDT, WBTC, WETH).
+ * for each token (USDC, USDT, WBTC, WETH, DAI).
  * 
  * Usage:
  *   node generate-pairs.js
@@ -15,6 +15,7 @@
  *   - usdt_pairs_clean.json
  *   - wbtc_pairs_clean.json
  *   - weth_pairs_clean.json
+ *   - dai_pairs_clean.json
  */
 
 const fs = require('fs');
@@ -25,7 +26,8 @@ const BASE_TOKENS = {
   usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   usdt: '0xdac17f958d2ee523a2206206994597c13d831ec7',
   wbtc: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-  weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+  weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  dai: '0x6B175474E89094C44Da98b954EedeAC495271d0F'
 };
 
 // Source file

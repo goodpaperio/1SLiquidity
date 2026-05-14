@@ -4,7 +4,7 @@
 
 The `generate-pairs.js` script automatically generates `*_pairs_clean.json` files from the `liquidity.json` file.
 
-It extracts all liquidity pairs with non-zero reserves for each base token (USDC, USDT, WBTC, WETH).
+It extracts all liquidity pairs with non-zero reserves for each base token (USDC, USDT, WBTC, WETH, DAI).
 
 ## 🚀 Usage
 
@@ -32,12 +32,13 @@ cd config
 
 ## 📁 Generated Files
 
-The script generates 4 JSON files:
+The script generates 5 JSON files:
 
 - `usdc_pairs_clean.json` - Pairs with USDC
 - `usdt_pairs_clean.json` - Pairs with USDT
 - `wbtc_pairs_clean.json` - Pairs with WBTC
 - `weth_pairs_clean.json` - Pairs with WETH
+- `dai_pairs_clean.json` - Pairs with DAI
 
 ## 📊 Output Format
 
@@ -70,6 +71,7 @@ const BASE_TOKENS = {
   usdt: "0xdac17f958d2ee523a2206206994597c13d831ec7",
   wbtc: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
   weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  dai: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
 };
 ```
 
@@ -107,6 +109,7 @@ cat usdc_pairs_clean.json | grep '"name"' | wc -l
 cat usdt_pairs_clean.json | grep '"name"' | wc -l
 cat wbtc_pairs_clean.json | grep '"name"' | wc -l
 cat weth_pairs_clean.json | grep '"name"' | wc -l
+cat dai_pairs_clean.json | grep '"name"' | wc -l
 ```
 
 ## 📝 Output Examples
@@ -122,6 +125,7 @@ cat weth_pairs_clean.json | grep '"name"' | wc -l
 ✅ Generated: usdt_pairs_clean.json (54 pairs)
 ✅ Generated: wbtc_pairs_clean.json (30 pairs)
 ✅ Generated: weth_pairs_clean.json (99 pairs)
+✅ Generated: dai_pairs_clean.json (5 pairs)
 
 ✨ Generation completed successfully!
 ```

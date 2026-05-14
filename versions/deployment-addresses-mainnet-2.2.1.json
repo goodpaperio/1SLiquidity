@@ -1,0 +1,27 @@
+{
+  "network": "mainnet",
+  "chainId": 1,
+  "version": "2.2.1",
+  "deploymentDate": "2026-05-14T13:42:37Z",
+  "deploymentBlock": 25093744,
+  "deployer": "0x538e5e9797fa86ee25e97289439b6a3aba0165b0",
+  "deploymentHash": "0x81d70a9e19ee76a4677b3b7c6869320cd78a4152703a3f5a0a94cc7888907afa",
+  "contracts": {
+    "Executor": "0xb2194D54cD31A2c23B071ca68394CF9C35910545",
+    "Registry": "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
+    "UniswapV2Fetcher": "0xAFF18eD0314e61F91f7F4F647c4D595f6A59a4c9",
+    "UniswapV3Fetcher_0_01": "0xe3D5dAA0543a396BF14D8404cb9E5Ad19D7eC819",
+    "UniswapV3Fetcher_0_05": "0x15DC9274c61D9B0F20dC09bD0BFA7D1e2D504FC6",
+    "UniswapV3Fetcher_0_3": "0xD561BC0801Fb9E85Ea151a784fCb41898C98f49a",
+    "UniswapV3Fetcher_1": "0xec5545C87eE4F74d33A4af6F817a1B6eabF67852",
+    "SushiswapFetcher": "0x5E4BBBe42366BC6eB6246d4589A0Fc6B71493841",
+    "BalancerV2Fetcher": "0xF9abe8A26EcF289b7e16Ccf88D67252DdA2215A6",
+    "StreamDaemon": "0xfc61Dd8254F07b515b0529032181DA1cC42518c1",
+    "Core": "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
+    "ETHSupport": "0x93A21f27BbC9ABdf725E09ae6FE714D5C9428Bf4",
+    "Create2Factory": "0x823bb522e82c6a72d182ccff8bbfd62eac847d6e"
+  },
+  "notes": {
+    "changes": "Same protocol stack as v1.0.9 (Core, Registry, Executor, fetchers, ETHSupport). New StreamDaemon at 25093744: six-DEX planner (V2, V3 0.01/0.05/0.3/1%, Sushi; Balancer fetcher not in StreamDaemon list), evaluateStreamPlan reserve/price score caching. Core.setStreamDaemon in tx 0x975d219b9e9b7453443aa3a1fe94a505e1da5031666f26d294e9a79e9c3b672a (block 25093746). BalancerV2Fetcher address retained for Registry reference only."
+  }
+}

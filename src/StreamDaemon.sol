@@ -12,12 +12,15 @@ contract StreamDaemon is Ownable {
 
     event DEXRouteAdded(address indexed dex);
     event DEXRouteRemoved(address indexed dex);
+    event DEXRouterUpdated(address indexed dex, address indexed router);
 
     // temporarily efine a constant for minimum effective gas in dollars
     // uint256 public constant MIN_EFFECTIVE_GAS_DOLLARS = 1; // i.e $1 minimum @audit this should be valuated against
         // TOKEN-USDC value during execution in production
     uint256 public DEFAULT_SWEET_SPOT = 4;
     uint256 public MAXIMUM_SWEET_SPOT = 500;
+    address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant ETH_SENTINEL = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     constructor(address[] memory _dexs, address[] memory _routers) Ownable(msg.sender) {
         for (uint256 i = 0; i < _dexs.length; i++) {
@@ -50,9 +53,29 @@ contract StreamDaemon is Ownable {
     }
 
     function registerDex(address _fetcher) external onlyOwner {
+        require(_fetcher != address(0), "invalid fetcher");
+        require(!_dexExists(_fetcher), "fetcher already registered");
         dexs.push(_fetcher); // @audit this storage allocation has multiple dependancies in order to actually function,
             // including deployments of appropriate fetchers and configuration of the relevant dex's interface
         emit DEXRouteAdded(_fetcher);
+    }
+
+    function registerDexWithRouter(address _fetcher, address _router) external onlyOwner {
+        require(_fetcher != address(0), "invalid fetcher");
+        require(_router != address(0), "invalid router");
+        require(!_dexExists(_fetcher), "fetcher already registered");
+        dexs.push(_fetcher);
+        dexToRouters[_fetcher] = _router;
+        emit DEXRouteAdded(_fetcher);
+        emit DEXRouterUpdated(_fetcher, _router);
+    }
+
+    function setDexRouter(address _fetcher, address _router) external onlyOwner {
+        require(_fetcher != address(0), "invalid fetcher");
+        require(_router != address(0), "invalid router");
+        require(_dexExists(_fetcher), "fetcher not registered");
+        dexToRouters[_fetcher] = _router;
+        emit DEXRouterUpdated(_fetcher, _router);
     }
 
     function removeDex(address _fetcher) external onlyOwner {
@@ -65,6 +88,13 @@ contract StreamDaemon is Ownable {
                 break;
             }
         }
+    }
+
+    function _dexExists(address _fetcher) internal view returns (bool) {
+        for (uint256 i = 0; i < dexs.length; i++) {
+            if (dexs[i] == _fetcher) return true;
+        }
+        return false;
     }
 
     function evaluateSweetSpotAndDex(
@@ -100,6 +130,144 @@ contract StreamDaemon is Ownable {
         }
 
         sweetSpot = _sweetSpotAlgo(tokenIn, tokenOut, volume, bestFetcher);
+    }
+
+    function evaluateStreamPlan(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountRemaining,
+        bool targetOutPending,
+        bool usePriceBased,
+        uint256 preferredSweetSpot
+    )
+        external
+        returns (
+            address bestFetcher,
+            address router,
+            uint256 sweetSpot,
+            uint256 streamVolume,
+            uint256 quotedOut,
+            bytes memory quoteAux
+        )
+    {
+        address quoteTokenOut = tokenOut;
+        if (quoteTokenOut == address(0) || quoteTokenOut == ETH_SENTINEL) {
+            quoteTokenOut = WETH;
+        }
+
+        uint256 n = dexs.length;
+        bool[] memory visited = new bool[](n);
+        // One probe per DEX per planning call; pick next-best from cached scores (no O(n²) reserve/price re-reads).
+        uint256[] memory scores = new uint256[](n);
+        for (uint256 s = 0; s < n; s++) {
+            IUniversalDexInterface fetcher = IUniversalDexInterface(dexs[s]);
+            if (usePriceBased) {
+                try fetcher.getPrice(tokenIn, quoteTokenOut, amountRemaining) returns (uint256 price) {
+                    if (price > 0) {
+                        scores[s] = price;
+                    }
+                } catch {}
+            } else {
+                try fetcher.getReserves(tokenIn, quoteTokenOut) returns (uint256 reserveIn, uint256) {
+                    if (reserveIn > 0) {
+                        scores[s] = reserveIn;
+                    }
+                } catch {}
+            }
+        }
+
+        for (uint256 i = 0; i < n; i++) {
+            (bool found, uint256 idx) = _bestUnvisitedDexIndex(scores, visited, usePriceBased);
+            if (!found) {
+                break;
+            }
+
+            visited[idx] = true;
+            address candidate = dexs[idx];
+            address candidateRouter = dexToRouters[candidate];
+            if (candidateRouter == address(0)) {
+                continue;
+            }
+
+            uint256 candidateSweetSpot;
+            try this._sweetSpotAlgo(tokenIn, quoteTokenOut, amountRemaining, candidate) returns (uint256 computedSweetSpot) {
+                candidateSweetSpot = computedSweetSpot;
+            } catch {
+                continue;
+            }
+
+            if (preferredSweetSpot >= 1 && preferredSweetSpot <= 4) {
+                candidateSweetSpot = preferredSweetSpot;
+            }
+
+            if (candidateSweetSpot == 0) {
+                continue;
+            }
+
+            if (targetOutPending) {
+                streamVolume = amountRemaining / candidateSweetSpot;
+            } else {
+                candidateSweetSpot = 1;
+                streamVolume = amountRemaining;
+            }
+
+            if (streamVolume == 0) {
+                continue;
+            }
+
+            try IUniversalDexInterface(candidate).getQuote(tokenIn, quoteTokenOut, streamVolume) returns (
+                uint256 candidateQuoteOut,
+                bytes memory candidateQuoteAux
+            ) {
+                if (candidateQuoteOut == 0) {
+                    continue;
+                }
+
+                bestFetcher = candidate;
+                router = candidateRouter;
+                sweetSpot = candidateSweetSpot;
+                quotedOut = candidateQuoteOut;
+                quoteAux = candidateQuoteAux;
+                return (bestFetcher, router, sweetSpot, streamVolume, quotedOut, quoteAux);
+            } catch {
+                continue;
+            }
+        }
+
+        revert("No quote-capable DEX found for stream");
+    }
+
+    /// @dev Reserve mode: highest `scores[i]` among unvisited; price mode: lowest positive `scores[i]` (ties → lower index).
+    function _bestUnvisitedDexIndex(uint256[] memory scores, bool[] memory visited, bool usePriceBased)
+        internal
+        pure
+        returns (bool found, uint256 bestIdx)
+    {
+        uint256 len = scores.length;
+        if (usePriceBased) {
+            uint256 bestPrice = type(uint256).max;
+            for (uint256 i = 0; i < len; i++) {
+                if (visited[i]) continue;
+                uint256 p = scores[i];
+                if (p == 0) continue;
+                if (p < bestPrice) {
+                    bestPrice = p;
+                    bestIdx = i;
+                    found = true;
+                }
+            }
+        } else {
+            uint256 bestReserveIn;
+            for (uint256 i = 0; i < len; i++) {
+                if (visited[i]) continue;
+                uint256 r = scores[i];
+                if (r > bestReserveIn) {
+                    bestReserveIn = r;
+                    bestIdx = i;
+                    found = true;
+                }
+            }
+        }
     }
 
     function findBestPriceForTokenPair(

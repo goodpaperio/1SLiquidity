@@ -1,7 +1,7 @@
 {
   "description": "All liquidity pairs containing WETH token with non-zero reserves (including all base tokens)",
   "totalCount": 99,
-  "extractedAt": "2025-10-05T12:39:39.257Z",
+  "extractedAt": "2026-05-07T12:35:32.354Z",
   "filterCriteria": "Reserves token0 > 0 AND token1 > 0",
   "pairs": [
     {

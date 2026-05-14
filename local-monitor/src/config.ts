@@ -12,10 +12,10 @@ export interface ContractAddresses {
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
-  core: "0xa017d75fed4e71799fde4457191a1e3e295c3b0b",
+  core: "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
   registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
-  executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
-  streamDaemon: "0xe3a6a07a73727be782b0a7bc0c093ecb19d0c251",
+  executor: "0xb2194D54cD31A2c23B071ca68394CF9C35910545",
+  streamDaemon: "0x75C851Ea1f6461f65Fd04582b6E4BF49168632C5",
 };
 
 function extractVersionNumber(version: string): number[] {
@@ -90,8 +90,8 @@ function detectBotVersion(): string {
 // Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
 export const BOT_VERSION = detectBotVersion();
 
-// Deployment block for Core contract v1.0.7
-export const DEPLOYMENT_BLOCK = 25028148;
+// Deployment block for Core contract v1.0.9
+export const DEPLOYMENT_BLOCK = 25072029;
 
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {

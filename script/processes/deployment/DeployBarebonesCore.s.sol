@@ -16,6 +16,7 @@ import "../../../src/interfaces/IETHSupport.sol";
  *      Optional env (override defaults without editing this file):
  *        DEPLOY_BAREBONES_SALT_TAG     — e.g. "1.0.7" → salts keccak256("StreamDaemon-<tag>") / keccak256("Core-<tag>")
  *        DEPLOY_BAREBONES_REGISTRY     — new Registry from Phase B
+ *        DEPLOY_BAREBONES_V3_100       — UniswapV3Fetcher 0.01% (Phase A)
  *        DEPLOY_BAREBONES_V3_500       — UniswapV3Fetcher 0.05% (Phase A)
  *        DEPLOY_BAREBONES_V3_3000      — UniswapV3Fetcher 0.3%
  *        DEPLOY_BAREBONES_V3_10000     — UniswapV3Fetcher 1%
@@ -31,6 +32,7 @@ contract DeployBarebonesCore is Script {
     address constant DEFAULT_ETH_SUPPORT = 0xB970aF8dA1909230a32819602d97a0C0d44C5FB5;
 
     address constant DEFAULT_UNISWAP_V2_FETCHER = 0xcDd26C4361AEB4b20f9e5A2119C7aac08B9dA089;
+    address constant DEFAULT_UNISWAP_V3_FETCHER_0_01 = 0x0000000000000000000000000000000000000000;
     address constant DEFAULT_UNISWAP_V3_FETCHER_0_05 = 0xCB08e56888E59c121AD8745CEA19f75c5cCccF1B;
     address constant DEFAULT_UNISWAP_V3_FETCHER_0_3 = 0xa54f8aE895B33814c1F4824dCcBEd6597CCAc518;
     address constant DEFAULT_UNISWAP_V3_FETCHER_1 = 0xC319A30E3AEFC844F8eD9ca5DCCDAb592299CB43;
@@ -76,6 +78,7 @@ contract DeployBarebonesCore is Script {
         address ethSupportAddr = _envAddr("DEPLOY_BAREBONES_ETH_SUPPORT", DEFAULT_ETH_SUPPORT);
 
         address uniV2 = _envAddr("DEPLOY_BAREBONES_V2", DEFAULT_UNISWAP_V2_FETCHER);
+        address uniV3_100 = _envAddr("DEPLOY_BAREBONES_V3_100", DEFAULT_UNISWAP_V3_FETCHER_0_01);
         address uniV3_500 = _envAddr("DEPLOY_BAREBONES_V3_500", DEFAULT_UNISWAP_V3_FETCHER_0_05);
         address uniV3_3000 = _envAddr("DEPLOY_BAREBONES_V3_3000", DEFAULT_UNISWAP_V3_FETCHER_0_3);
         address uniV3_10000 = _envAddr("DEPLOY_BAREBONES_V3_10000", DEFAULT_UNISWAP_V3_FETCHER_1);
@@ -97,6 +100,7 @@ contract DeployBarebonesCore is Script {
         console.log("Registry:", registryAddr);
         console.log("ETHSupport:", ethSupportAddr);
         console.log("UniswapV2Fetcher:", uniV2);
+        console.log("UniswapV3Fetcher 100:", uniV3_100);
         console.log("UniswapV3Fetcher 500:", uniV3_500);
         console.log("UniswapV3Fetcher 3000:", uniV3_3000);
         console.log("UniswapV3Fetcher 10000:", uniV3_10000);
@@ -108,12 +112,13 @@ contract DeployBarebonesCore is Script {
         require(ethSupportAddr.code.length > 0, "ETHSupport not deployed");
 
         require(uniV2.code.length > 0, "UniswapV2Fetcher not deployed");
+        require(uniV3_100.code.length > 0, "UniswapV3Fetcher (0.01%) not deployed");
         require(uniV3_500.code.length > 0, "UniswapV3Fetcher (0.05%) not deployed");
         require(uniV3_3000.code.length > 0, "UniswapV3Fetcher (0.3%) not deployed");
         require(uniV3_10000.code.length > 0, "UniswapV3Fetcher (1%) not deployed");
         require(sushi.code.length > 0, "SushiswapFetcher not deployed");
         require(balancer.code.length > 0, "BalancerV2Fetcher not deployed");
-        console.log("Fetchers verified (6 DEXs, Curve excluded)");
+        console.log("Fetchers verified (7 DEXs, Curve excluded)");
 
         try vm.envAddress("CREATE2_FACTORY_ADDRESS") returns (address factoryAddr) {
             require(factoryAddr != address(0) && factoryAddr.code.length > 0, "CREATE2_FACTORY_ADDRESS invalid");
@@ -126,20 +131,22 @@ contract DeployBarebonesCore is Script {
             console.log("Create2Factory deployed at:", address(factory));
         }
 
-        address[] memory dexs = new address[](6);
-        address[] memory routers = new address[](6);
+        address[] memory dexs = new address[](7);
+        address[] memory routers = new address[](7);
         dexs[0] = uniV2;
-        dexs[1] = uniV3_500;
-        dexs[2] = uniV3_3000;
-        dexs[3] = uniV3_10000;
-        dexs[4] = sushi;
-        dexs[5] = balancer;
+        dexs[1] = uniV3_100;
+        dexs[2] = uniV3_500;
+        dexs[3] = uniV3_3000;
+        dexs[4] = uniV3_10000;
+        dexs[5] = sushi;
+        dexs[6] = balancer;
         routers[0] = UNISWAP_V2_ROUTER;
         routers[1] = UNISWAP_V3_ROUTER;
         routers[2] = UNISWAP_V3_ROUTER;
         routers[3] = UNISWAP_V3_ROUTER;
-        routers[4] = SUSHISWAP_ROUTER;
-        routers[5] = balancer;
+        routers[4] = UNISWAP_V3_ROUTER;
+        routers[5] = SUSHISWAP_ROUTER;
+        routers[6] = balancer;
 
         console.log("\n--- Deploying StreamDaemon (CREATE2) ---");
         bytes memory streamDaemonBytecode = vm.parseJsonBytes(
@@ -191,13 +198,14 @@ contract DeployBarebonesCore is Script {
         console.log("Executor:", executorAddr);
         console.log("Registry:", registryAddr);
         console.log("ETHSupport:", ethSupportAddr);
-        console.log("\nDEXs in StreamDaemon (6 total, Curve excluded):");
+        console.log("\nDEXs in StreamDaemon (7 total, Curve excluded):");
         console.log("  1. UniswapV2Fetcher:", uniV2);
-        console.log("  2. UniswapV3Fetcher (0.05%):", uniV3_500);
-        console.log("  3. UniswapV3Fetcher (0.3%):", uniV3_3000);
-        console.log("  4. UniswapV3Fetcher (1%):", uniV3_10000);
-        console.log("  5. SushiswapFetcher:", sushi);
-        console.log("  6. BalancerV2Fetcher:", balancer);
+        console.log("  2. UniswapV3Fetcher (0.01%):", uniV3_100);
+        console.log("  3. UniswapV3Fetcher (0.05%):", uniV3_500);
+        console.log("  4. UniswapV3Fetcher (0.3%):", uniV3_3000);
+        console.log("  5. UniswapV3Fetcher (1%):", uniV3_10000);
+        console.log("  6. SushiswapFetcher:", sushi);
+        console.log("  7. BalancerV2Fetcher:", balancer);
         console.log("========================\n");
         console.log("Deployment completed successfully!");
         console.log("Next steps: Verify Core and StreamDaemon on Etherscan; update deployment JSON.");

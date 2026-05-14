@@ -30,6 +30,8 @@ SD=$(cs "$(jq -r '.contracts.StreamDaemon' "$JSON")")
 REG=$(cs "$(jq -r '.contracts.Registry' "$JSON")")
 EX=$(cs "$(jq -r '.contracts.Executor' "$JSON")")
 UV2=$(cs "$(jq -r '.contracts.UniswapV2Fetcher' "$JSON")")
+UV3_100_RAW=$(jq -r '.contracts.UniswapV3Fetcher_0_01 // "0x0000000000000000000000000000000000000000"' "$JSON")
+UV3_100=$(cs "$UV3_100_RAW")
 UV3_500=$(cs "$(jq -r '.contracts.UniswapV3Fetcher_0_05' "$JSON")")
 UV3_3000=$(cs "$(jq -r '.contracts.UniswapV3Fetcher_0_3' "$JSON")")
 UV3_10000=$(cs "$(jq -r '.contracts.UniswapV3Fetcher_1' "$JSON")")
@@ -53,6 +55,7 @@ library MainnetAddresses {
     address internal constant EXECUTOR = $EX;
 
     address internal constant UNISWAP_V2_FETCHER = $UV2;
+    address internal constant UNISWAP_V3_FETCHER_100 = $UV3_100;
     address internal constant UNISWAP_V3_FETCHER_500 = $UV3_500;
     address internal constant UNISWAP_V3_FETCHER_3000 = $UV3_3000;
     address internal constant UNISWAP_V3_FETCHER_10000 = $UV3_10000;
