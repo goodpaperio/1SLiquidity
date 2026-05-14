@@ -155,16 +155,35 @@ contract StreamDaemon is Ownable {
             quoteTokenOut = WETH;
         }
 
-        bool[] memory visited = new bool[](dexs.length);
+        uint256 n = dexs.length;
+        bool[] memory visited = new bool[](n);
+        // One probe per DEX per planning call; pick next-best from cached scores (no O(n²) reserve/price re-reads).
+        uint256[] memory scores = new uint256[](n);
+        for (uint256 s = 0; s < n; s++) {
+            IUniversalDexInterface fetcher = IUniversalDexInterface(dexs[s]);
+            if (usePriceBased) {
+                try fetcher.getPrice(tokenIn, quoteTokenOut, amountRemaining) returns (uint256 price) {
+                    if (price > 0) {
+                        scores[s] = price;
+                    }
+                } catch {}
+            } else {
+                try fetcher.getReserves(tokenIn, quoteTokenOut) returns (uint256 reserveIn, uint256) {
+                    if (reserveIn > 0) {
+                        scores[s] = reserveIn;
+                    }
+                } catch {}
+            }
+        }
 
-        for (uint256 i = 0; i < dexs.length; i++) {
-            (bool found, uint256 idx, address candidate) =
-                _selectNextCandidate(tokenIn, quoteTokenOut, amountRemaining, usePriceBased, visited);
+        for (uint256 i = 0; i < n; i++) {
+            (bool found, uint256 idx) = _bestUnvisitedDexIndex(scores, visited, usePriceBased);
             if (!found) {
                 break;
             }
 
             visited[idx] = true;
+            address candidate = dexs[idx];
             address candidateRouter = dexToRouters[candidate];
             if (candidateRouter == address(0)) {
                 continue;
@@ -218,47 +237,34 @@ contract StreamDaemon is Ownable {
         revert("No quote-capable DEX found for stream");
     }
 
-    function _selectNextCandidate(
-        address tokenIn,
-        address tokenOut,
-        uint256 volume,
-        bool usePriceBased,
-        bool[] memory visited
-    )
+    /// @dev Reserve mode: highest `scores[i]` among unvisited; price mode: lowest positive `scores[i]` (ties → lower index).
+    function _bestUnvisitedDexIndex(uint256[] memory scores, bool[] memory visited, bool usePriceBased)
         internal
-        view
-        returns (bool found, uint256 selectedIndex, address selectedFetcher)
+        pure
+        returns (bool found, uint256 bestIdx)
     {
-        uint256 bestReserveIn = 0;
-        uint256 bestPrice = type(uint256).max;
-
-        for (uint256 i = 0; i < dexs.length; i++) {
-            if (visited[i]) continue;
-
-            address fetcherAddr = dexs[i];
-            IUniversalDexInterface fetcher = IUniversalDexInterface(fetcherAddr);
-
-            if (usePriceBased) {
-                try fetcher.getPrice(tokenIn, tokenOut, volume) returns (uint256 price) {
-                    if (price > 0 && price < bestPrice) {
-                        found = true;
-                        bestPrice = price;
-                        selectedIndex = i;
-                        selectedFetcher = fetcherAddr;
-                    }
-                } catch {
-                    continue;
+        uint256 len = scores.length;
+        if (usePriceBased) {
+            uint256 bestPrice = type(uint256).max;
+            for (uint256 i = 0; i < len; i++) {
+                if (visited[i]) continue;
+                uint256 p = scores[i];
+                if (p == 0) continue;
+                if (p < bestPrice) {
+                    bestPrice = p;
+                    bestIdx = i;
+                    found = true;
                 }
-            } else {
-                try fetcher.getReserves(tokenIn, tokenOut) returns (uint256 reserveIn, uint256) {
-                    if (reserveIn > bestReserveIn && reserveIn > 0) {
-                        found = true;
-                        bestReserveIn = reserveIn;
-                        selectedIndex = i;
-                        selectedFetcher = fetcherAddr;
-                    }
-                } catch {
-                    continue;
+            }
+        } else {
+            uint256 bestReserveIn;
+            for (uint256 i = 0; i < len; i++) {
+                if (visited[i]) continue;
+                uint256 r = scores[i];
+                if (r > bestReserveIn) {
+                    bestReserveIn = r;
+                    bestIdx = i;
+                    found = true;
                 }
             }
         }

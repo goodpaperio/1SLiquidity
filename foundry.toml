@@ -7,7 +7,8 @@ fs_permissions = [
   { access = "write", path = "deployments" },
   { access = "read", path = "out" },
   { access = "read", path = "config" },
-  { access = "read", path = "docs" }
+  { access = "read", path = "docs" },
+  { access = "read", path = "versions" }
 ]
 
 [profile.deploy]

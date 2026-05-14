@@ -47,6 +47,23 @@ contract DeployProtocolFresh is Script {
         }
     }
 
+    /// @dev Default false — Balancer must be explicitly enabled for fresh deploys.
+    function _envBool(string memory key, bool def) internal view returns (bool) {
+        try vm.envBool(key) returns (bool b) {
+            return b;
+        } catch {}
+        try vm.envString(key) returns (string memory v) {
+            bytes32 h = keccak256(bytes(v));
+            if (h == keccak256(bytes("1")) || h == keccak256(bytes("true")) || h == keccak256(bytes("yes"))) {
+                return true;
+            }
+            if (h == keccak256(bytes("0")) || h == keccak256(bytes("false")) || h == keccak256(bytes("no"))) {
+                return false;
+            }
+        } catch {}
+        return def;
+    }
+
     function run() external {
         console.log("=== DeployProtocolFresh ===");
         string memory saltTag = _envSaltTag();
@@ -68,9 +85,11 @@ contract DeployProtocolFresh is Script {
         uniV3_3000.setQuoterV2(UNISWAP_V3_QUOTER_V2);
         uniV3_10000.setQuoterV2(UNISWAP_V3_QUOTER_V2);
 
-        // Optional predeployed Balancer fetcher can be included via env.
+        // Balancer is opt-in: set DEPLOY_FRESH_INCLUDE_BALANCER=1 and DEPLOY_FRESH_BALANCER_FETCHER to the fetcher.
         address balancerFetcher = _envAddrOrZero("DEPLOY_FRESH_BALANCER_FETCHER");
-        bool includeBalancer = balancerFetcher != address(0) && balancerFetcher.code.length > 0;
+        bool includeBalancer = _envBool("DEPLOY_FRESH_INCLUDE_BALANCER", false)
+            && balancerFetcher != address(0)
+            && balancerFetcher.code.length > 0;
 
         uint256 dexCount = includeBalancer ? 7 : 6;
         address[] memory dexs = new address[](dexCount);
