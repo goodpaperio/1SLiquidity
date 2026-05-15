@@ -1,0 +1,48 @@
+{
+  "name": "liquidity-bot",
+  "version": "1.0.0",
+  "description": "DecaStream liquidity opportunity bot (scan, direct swap, placeTrade)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:0": "vitest run tests/phase-0",
+    "verify:a": "vitest run tests/phase-a",
+    "verify:b": "vitest run tests/phase-b",
+    "verify:c": "vitest run tests/phase-c",
+    "verify:d": "vitest run tests/phase-d",
+    "verify:e": "vitest run tests/phase-e",
+    "verify:f": "vitest run tests/phase-f",
+    "verify:g": "vitest run tests/phase-g",
+    "verify:all": "npm run build && vitest run",
+    "generate": "tsx src/cli/generate-bot.ts",
+    "deploy": "tsx src/cli/deploy-bot.ts",
+    "stop": "echo 'Phase B: pm2 stop liquidity-bot'",
+    "withdraw": "tsx src/cli/withdraw-bot.ts",
+    "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
+    "history": "tsx src/cli/history.ts"
+  },
+  "keywords": [
+    "decastream",
+    "liquidity",
+    "arbitrage"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.4"
+  }
+}
