@@ -32,7 +32,8 @@ npm run start bot -- alpha                    # pm2 start (requires npm run buil
 npm run stop bot -- alpha
 npm run status bot -- alpha
 npm run withdraw bot -- alpha --to 0x... [--dry-run]
-npm run scan:dry-run                          # phase C
+npm run scan:dry-run -- --bot alpha           # scan once (needs MAINNET_RPC_URL)
+npm run scan:dry-run -- --bot alpha --max-pairs 20
 ```
 
 Install PM2 globally on the server: `npm i -g pm2`
