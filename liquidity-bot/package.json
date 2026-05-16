@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "start": "tsx src/cli/start-bot.ts",
+    "stop": "tsx src/cli/stop-bot.ts",
+    "status": "tsx src/cli/status-bot.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:0": "vitest run tests/phase-0",
@@ -21,7 +23,6 @@
     "verify:all": "npm run build && vitest run",
     "generate": "tsx src/cli/generate-bot.ts",
     "deploy": "tsx src/cli/deploy-bot.ts",
-    "stop": "echo 'Phase B: pm2 stop liquidity-bot'",
     "withdraw": "tsx src/cli/withdraw-bot.ts",
     "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
     "history": "tsx src/cli/history.ts"
@@ -37,6 +38,7 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
+    "ethers": "^6.16.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

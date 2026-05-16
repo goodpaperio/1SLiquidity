@@ -23,14 +23,19 @@ npm run verify:b    # … (phase B+)
 npm run verify:all  # build + all tests
 ```
 
-## Bot lifecycle (phased)
+## Bot lifecycle
 
 ```bash
-npm run generate bot -- alpha      # phase B — create bot locally
-npm run deploy bot -- alpha        # phase B — push to AWS
-npm run start bot -- alpha         # phase B — start on server
-npm run scan:dry-run -- --bot alpha  # phase C
+npm run generate bot -- alpha [--write-env]   # create wallet + bots/alpha.json
+npm run deploy bot -- alpha [--dry-run]       # rsync repo + scp config + remote build
+npm run start bot -- alpha                    # pm2 start (requires npm run build)
+npm run stop bot -- alpha
+npm run status bot -- alpha
+npm run withdraw bot -- alpha --to 0x... [--dry-run]
+npm run scan:dry-run                          # phase C
 ```
+
+Install PM2 globally on the server: `npm i -g pm2`
 
 ## Development
 

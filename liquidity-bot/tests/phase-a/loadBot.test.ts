@@ -14,9 +14,9 @@ describe('phase A — loadBot', () => {
   const botsDir = getBotsDir();
   const fixturePath = path.join(
     getPackageRoot(),
-    'tests/fixtures/bots/test-bot.json'
+    'tests/fixtures/bots/test-bot-load.json'
   );
-  const targetPath = path.join(botsDir, 'test-bot.json');
+  const targetPath = path.join(botsDir, 'test-bot-load.json');
 
   beforeEach(() => {
     fs.mkdirSync(botsDir, { recursive: true });
@@ -30,8 +30,8 @@ describe('phase A — loadBot', () => {
   });
 
   it('loads bot config from bots/<id>.json', () => {
-    const bot = loadBotConfig('test-bot');
-    expect(bot.id).toBe('test-bot');
+    const bot = loadBotConfig('test-bot-load');
+    expect(bot.id).toBe('test-bot-load');
     expect(bot.scan.minSpreadBps).toBe(1000);
     expect(bot.trade.nominalTradeUsd).toBe(50);
   });

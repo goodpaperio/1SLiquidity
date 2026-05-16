@@ -15,8 +15,8 @@ import {
 
 describe('phase A — loadPairs', () => {
   const botsDir = getBotsDir();
-  const botFixture = path.join(getFixturesDir(), 'bots', 'test-bot.json');
-  const botTarget = path.join(botsDir, 'test-bot.json');
+  const botFixture = path.join(getFixturesDir(), 'bots', 'test-bot-pairs.json');
+  const botTarget = path.join(botsDir, 'test-bot-pairs.json');
   const configFixtureDir = path.join(getFixturesDir(), 'config');
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('phase A — loadPairs', () => {
   });
 
   it('builds base→alt trade pairs, skipping base duplicates', () => {
-    const bot = loadBotConfig('test-bot');
+    const bot = loadBotConfig('test-bot-pairs');
     const trades = buildTradePairsForBot(bot);
     const usdcPepe = trades.find(
       (t) => t.baseSymbol === 'USDC' && t.targetName === 'pepe'
