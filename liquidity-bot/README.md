@@ -12,7 +12,10 @@ npm install
 cp .env.example .env
 ```
 
-Requires **Node.js ≥ 18** (Node 20+ recommended).
+Requires **Node.js ≥ 18** (use `nvm use` — see `.nvmrc` for Node 22).
+
+If `npm run verify:*` fails with `@rollup/rollup-darwin-*`, run:
+`rm -rf node_modules package-lock.json && npm install` using Node 18+.
 
 ## Verify by phase
 
@@ -32,8 +35,9 @@ npm run start bot -- alpha                    # pm2 start (requires npm run buil
 npm run stop bot -- alpha
 npm run status bot -- alpha
 npm run withdraw bot -- alpha --to 0x... [--dry-run]
-npm run scan:dry-run -- --bot alpha           # scan once (needs MAINNET_RPC_URL)
+npm run scan:dry-run -- --bot alpha           # discover mode: quotes ~$50 notional, no balance needed
 npm run scan:dry-run -- --bot alpha --max-pairs 20
+npm run scan:dry-run -- --bot alpha --require-balance   # only if wallet holds bases
 ```
 
 Install PM2 globally on the server: `npm i -g pm2`

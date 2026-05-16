@@ -50,5 +50,30 @@ describe('phase C — QuoteScanner (mocked)', () => {
     const result = await scanner.scanBot(botConfig);
     expect(result.pairsScanned).toBe(0);
     expect(result.opportunities).toHaveLength(0);
+    expect(result.diagnostics.mode).toBe('live');
+    expect(result.diagnostics.heldBases).toHaveLength(0);
+  });
+
+  it('discover mode scans without balance', async () => {
+    const provider = {} as import('ethers').Provider;
+    const cache = new OpportunityCache();
+    const balanceService = {
+      getBaseBalances: async () => ({ USDC: 0n }),
+    } as unknown as BalanceService;
+    const quoteService = {
+      quoteDex: async () => null,
+    } as unknown as import('../../src/scan/DexQuoteService.js').DexQuoteService;
+
+    const scanner = new QuoteScanner(
+      provider,
+      cache,
+      { discoverMode: true, maxPairsPerRun: 2, pairDelayMs: 0 },
+      { balanceService, quoteService }
+    );
+
+    const result = await scanner.scanBot(botConfig);
+    expect(result.diagnostics.mode).toBe('discover');
+    expect(result.diagnostics.scanBases).toContain('USDC');
+    expect(result.diagnostics.pairsConsidered).toBeGreaterThan(0);
   });
 });

@@ -30,10 +30,15 @@ async function main(): Promise<void> {
   console.log(
     `  DEX set: Uni V2, V3 (100/500/3000/10000), Sushi — no Balancer/Curve`
   );
+  const requireBalance = flags['require-balance'] === true;
+  console.log(
+    `  mode: ${requireBalance ? 'live (needs funded bases)' : 'discover (nominal $ quotes, no balance required)'}`
+  );
   console.log(`  DRY_RUN: no transactions\n`);
 
   const scanner = new QuoteScanner(provider, cache, {
     verbose: true,
+    discoverMode: !requireBalance,
     maxPairsPerRun: Number.isFinite(maxPairs) ? maxPairs : undefined,
     pairDelayMs: 30,
   });

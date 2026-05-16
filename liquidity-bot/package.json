@@ -42,9 +42,14 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^25.8.0",
+    "@types/node": "^22.10.0",
     "tsx": "^4.22.0",
-    "typescript": "^6.0.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.46.3",
+    "@rollup/rollup-darwin-x64": "^4.46.3",
+    "@rollup/rollup-linux-x64-gnu": "^4.46.3"
   }
 }
