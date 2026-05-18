@@ -439,6 +439,7 @@ export const UniswapV3QuoterABI = [
   },
 ]
 
+// === DISABLED: Balancer/Curve (re-enable when supported) ===
 // Curve Pool ABI - Essential functions for calculation
 export const CurvePoolABI = [
   {

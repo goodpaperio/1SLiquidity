@@ -115,94 +115,9 @@ export class PriceAggregator {
           'SushiSwap'
         );
       case 'curve':
-        if (this.curvePoolFilter) {
-          // Use smart filtering to find candidate Curve pools
-          const candidatePools = this.curvePoolFilter.findBestPools(tokenA, tokenB, 5);
-          if (candidatePools.length === 0) {
-            console.log(`No suitable Curve pools found for ${tokenA}/${tokenB}`);
-            return null;
-          }
-
-          // Evaluate all candidate pools to find the best one
-          let bestPrice: PriceResult | null = null;
-          let bestPriceValue = 0;
-          let bestPoolAddress = '';
-
-          for (const poolAddress of candidatePools) {
-            const curveService = this.curveServices.get(poolAddress);
-            if (!curveService) {
-              console.log(`Curve service not found for pool ${poolAddress}`);
-              continue;
-            }
-
-            const price = await this.fetchWithRetry(
-              () => curveService.getPrice(tokenA, tokenB),
-              `Curve ${poolAddress}`
-            );
-
-            if (price && parseFloat(price.price) > bestPriceValue) {
-              bestPrice = price;
-              bestPriceValue = parseFloat(price.price);
-              bestPoolAddress = poolAddress;
-            }
-          }
-
-          if (bestPrice) {
-            bestPrice.dex = `curve-${bestPoolAddress}`;
-            console.log(`Selected best Curve pool ${bestPoolAddress} with price: ${bestPriceValue}`);
-          }
-
-          return bestPrice;
-        } else {
-          console.log('Curve pool filter not initialized - skipping Curve pools');
-          return null;
-        }
       case 'balancer':
-        if (this.balancerPoolFilter) {
-          // Use smart filtering to find candidate Balancer pools
-          const candidatePools = await this.balancerPoolFilter.findBestPools(tokenA, tokenB, 5);
-          if (candidatePools.length === 0) {
-            console.log(`No suitable Balancer pools found for ${tokenA}/${tokenB}`);
-            return null;
-          }
-
-          // Evaluate all candidate pools to find the best one
-          let bestPrice: PriceResult | null = null;
-          let bestPriceValue = 0;
-          let bestPoolAddress = '';
-
-          for (const poolAddress of candidatePools) {
-            const balancerService = this.balancerServices.get(poolAddress);
-            if (!balancerService) {
-              console.log(`Balancer service not found for pool ${poolAddress}`);
-              continue;
-            }
-
-            const balancerResult = await this.fetchWithRetry(
-              () => balancerService.getPrice(tokenA, tokenB),
-              `Balancer ${poolAddress}`
-            );
-            if (balancerResult && parseFloat(balancerResult.price) > bestPriceValue) {
-              bestPrice = {
-                dex: balancerResult.dex,
-                price: balancerResult.price,
-                timestamp: balancerResult.timestamp
-              };
-              bestPriceValue = parseFloat(balancerResult.price);
-              bestPoolAddress = poolAddress;
-            }
-          }
-
-          if (bestPrice) {
-            bestPrice.dex = `balancer-${bestPoolAddress}`;
-            console.log(`Selected best Balancer pool ${bestPoolAddress} with price: ${bestPriceValue}`);
-          }
-
-          return bestPrice;
-        } else {
-          console.log('Balancer pool filter not initialized - skipping Balancer pools');
-          return null;
-        }
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        return null;
       default:
         throw new Error(`Unsupported DEX type: ${dex}`);
     }
@@ -247,7 +162,8 @@ export class PriceAggregator {
     // Add short delay before making more calls to avoid rate limits
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Try Curve pools for the token pair with smart filtering
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
+    /*
     console.log('Fetching Curve prices...');
     if (this.curvePoolFilter) {
       // Use smart filtering to find relevant pools
@@ -328,6 +244,7 @@ export class PriceAggregator {
     } else {
       console.log('Balancer pool filter not initialized - skipping Balancer pools');
     }
+    */
 
     // Sort all prices by price value in descending order (highest first)
     const sortedResults = results.sort((a, b) => {

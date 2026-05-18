@@ -2,7 +2,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { ReservesAggregator, DexType } from '../../services/reserves-aggregator'
 import { getCache, setCache, generateCacheKey } from '../../utils/redis'
 import { createProvider } from '../../utils/provider'
-import { CURVE_POOL_METADATA, BALANCER_POOL_METADATA } from '../../config/dex'
+// === DISABLED: Balancer/Curve (re-enable when supported) ===
+// import { CURVE_POOL_METADATA, BALANCER_POOL_METADATA } from '../../config/dex'
 
 // Create provider with better throttling and retry settings
 const provider = createProvider()
@@ -13,9 +14,9 @@ const CACHE_TTL = 300 // 5 minutes fresh cache
 const STALE_CACHE_TTL = 900 // 15 minutes stale cache (still usable)
 const BACKGROUND_REFRESH_THRESHOLD = 240 // 4 minutes - start background refresh
 
-// Initialize Curve smart filtering (only reserves aggregator needed)
-reservesService.initializeCurvePoolFilter(CURVE_POOL_METADATA)
-reservesService.initializeBalancerPoolFilter(BALANCER_POOL_METADATA)
+// === DISABLED: Balancer/Curve (re-enable when supported) ===
+// reservesService.initializeCurvePoolFilter(CURVE_POOL_METADATA)
+// reservesService.initializeBalancerPoolFilter(BALANCER_POOL_METADATA)
 
 interface ReserveRequest {
   tokenA: string

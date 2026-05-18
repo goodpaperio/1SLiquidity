@@ -110,7 +110,7 @@ export default function TradesChart({
     let filteredTrades = trades.filter(
       (trade) =>
         (trade.isInstasettlable || trade.onlyInstasettle) &&
-        trade.settlements.length === 0 &&
+        trade.instasettlements.length === 0 &&
         trade.cancellations.length === 0
     )
 

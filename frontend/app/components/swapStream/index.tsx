@@ -29,7 +29,7 @@ type Trade = {
   realisedAmountOut: string
   lastSweetSpot: string
   executions: any[]
-  settlements: any[]
+  instasettlements: any[]
   cancellations: Cancellation[]
   onlyInstasettle?: boolean
   createdAt?: string
@@ -237,11 +237,11 @@ const SwapStream: React.FC<Props> = ({
               )}
               style={{
                 width: `${Math.min(
-                  ((trade.settlements.length > 0
-                    ? trade.settlements.length + trade.executions.length
+                  ((trade.instasettlements.length > 0
+                    ? trade.instasettlements.length + trade.executions.length
                     : trade.executions.length) /
-                    (trade.settlements.length > 0
-                      ? trade.settlements.length + trade.executions.length
+                    (trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
                       : remainingStreams)) *
                     100,
                   100
@@ -270,23 +270,23 @@ const SwapStream: React.FC<Props> = ({
               {!trade.onlyInstasettle && (
                 <>
                   <p className="whitespace-nowrap">
-                    {trade.settlements.length > 0
-                      ? trade.settlements.length + trade.executions.length
+                    {trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
                       : trade.executions.length}{' '}
                     /{' '}
-                    {trade.settlements.length > 0
-                      ? trade.settlements.length + trade.executions.length
+                    {trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
                       : remainingStreams}{' '}
                     completed
                   </p>
 
-                  {trade.settlements.length > 0 ||
+                  {trade.instasettlements.length > 0 ||
                   trade.cancellations.length > 0 ||
-                  (trade.settlements.length > 0
-                    ? trade.settlements.length + trade.executions.length
+                  (trade.instasettlements.length > 0
+                    ? trade.instasettlements.length + trade.executions.length
                     : trade.executions.length) >=
-                    (trade.settlements.length > 0
-                      ? trade.settlements.length + trade.executions.length
+                    (trade.instasettlements.length > 0
+                      ? trade.instasettlements.length + trade.executions.length
                       : remainingStreams) ? (
                     ''
                   ) : (
@@ -306,10 +306,10 @@ const SwapStream: React.FC<Props> = ({
               {trade.isInstasettlable && !trade.onlyInstasettle && (
                 <>
                   <InstasettlePill
-                    isSettled={trade.settlements.length > 0}
+                    isSettled={trade.instasettlements.length > 0}
                     variant="instasettled"
                   />
-                  {bpsSavings > 0 && trade.settlements.length === 0 && (
+                  {bpsSavings > 0 && trade.instasettlements.length === 0 && (
                     <span className="text-xs text-primary whitespace-nowrap flex items-center gap-0.5">
                       <svg
                         width="12"
@@ -334,10 +334,10 @@ const SwapStream: React.FC<Props> = ({
               {trade.onlyInstasettle && (
                 <>
                   <InstasettlePill
-                    isSettled={trade.settlements.length > 0}
+                    isSettled={trade.instasettlements.length > 0}
                     variant="only-instasettlable"
                   />
-                  {bpsSavings > 0 && trade.settlements.length === 0 && (
+                  {bpsSavings > 0 && trade.instasettlements.length === 0 && (
                     <span className="text-xs text-primary whitespace-nowrap flex items-center gap-0.5">
                       <svg
                         width="12"

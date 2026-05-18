@@ -8,16 +8,8 @@ import {
   BalancerVaultABI,
   BalancerPoolABI,
 } from '../config/abis'
-import {
-  extractPoolAddressFromDexType as extractCurvePoolAddress,
-  isCurveDex,
-} from '../config/curve-config'
-import {
-  extractPoolAddressFromDexType as extractBalancerPoolAddress,
-  isBalancerDex,
-  getBalancerVaultAddress,
-  getBalancerPoolMetadata,
-} from '../config/balancer-config'
+// Stubs only while Balancer/Curve routing is disabled in DexCalculatorFactory
+import { getBalancerVaultAddress, getBalancerPoolMetadata } from '../config/balancer-config'
 
 // import { ReserveData } from '@/app/types'
 
@@ -2048,31 +2040,9 @@ export class DexCalculatorFactory {
         calculator = new SushiSwapCalculator(chainId)
         break
       default:
-        // Check if it's a Curve pool
-        if (isCurveDex(dexType)) {
-          const poolAddress = extractCurvePoolAddress(dexType)
-          if (poolAddress) {
-            calculator = new CurveCalculator(poolAddress, chainId)
-            break
-          } else {
-            console.error(
-              `Failed to extract pool address from DEX type: ${dexType}`
-            )
-          }
-        }
-
-        // Check if it's a Balancer pool
-        if (isBalancerDex(dexType)) {
-          const poolAddress = extractBalancerPoolAddress(dexType)
-          if (poolAddress) {
-            calculator = new BalancerCalculator(poolAddress, chainId)
-            break
-          } else {
-            console.error(
-              `Failed to extract pool address from DEX type: ${dexType}`
-            )
-          }
-        }
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        // if (isCurveDex(dexType)) { ... CurveCalculator ... }
+        // if (isBalancerDex(dexType)) { ... BalancerCalculator ... }
 
         // Check if it's a Uniswap V3 pool with fee tier
         if (dexType.startsWith('uniswap-v3')) {

@@ -16,6 +16,7 @@ import { RefreshIcon, TypewriterIcon } from '@/app/lib/icons'
 import { Button } from '@/components/ui/button'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { X, ChevronDown, XIcon, CheckCircle2 } from 'lucide-react'
+import { isTradeCompleted } from '@/app/lib/utils/tradeStatus'
 
 type GlobalStreamSidebarProps = {
   isOpen: boolean
@@ -76,19 +77,6 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
     first: 100,
     skip: 0,
   })
-
-  const isTradeCompleted = (trade: any) => {
-    return (
-      trade.executions?.some(
-        (execution: any) => execution.lastSweetSpot === '0'
-      ) ||
-      trade.executions?.some(
-        (execution: any) => execution.lastSweetSpot === '0'
-      ) ||
-      trade.settlements?.length > 0 ||
-      trade.cancellations?.length > 0
-    )
-  }
 
   const filteredTrades = trades.filter((trade) => {
     if (activeTab.title === 'My Trades') {
@@ -406,7 +394,7 @@ const GlobalStreamSidebar: React.FC<GlobalStreamSidebarProps> = ({
                                 isInstasettlable: false,
                                 realisedAmountOut: '0',
                                 executions: [],
-                                settlements: [],
+                                instasettlements: [],
                                 cancellations: [],
                               }}
                               isLoading={true}

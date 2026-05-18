@@ -161,36 +161,9 @@ export async function calculateVolumeMetrics(
   // Fetch pool address for Curve or Balancer if needed
   let poolAddress: string | undefined = undefined;
 
-  if (bestDexName === "curve" || bestDexName.startsWith("curve-")) {
-    console.log("Fetching Curve pool address...");
-    try {
-      const reserves = await reservesAggregator.getReservesFromDex(
-        pair.tokenAAddress,
-        pair.tokenBAddress,
-        "curve" as any
-      );
-      poolAddress = reserves?.pairAddress;
-      console.log("Curve pool address:", poolAddress);
-    } catch (error) {
-      console.warn("Failed to fetch Curve pool address:", error);
-    }
-  } else if (
-    bestDexName === "balancer" ||
-    bestDexName.startsWith("balancer-")
-  ) {
-    console.log("Fetching Balancer pool ID...");
-    try {
-      const reserves = await reservesAggregator.getReservesFromDex(
-        pair.tokenAAddress,
-        pair.tokenBAddress,
-        "balancer" as any
-      );
-      poolAddress = reserves?.pairAddress;
-      console.log("Balancer pool ID:", poolAddress);
-    } catch (error) {
-      console.warn("Failed to fetch Balancer pool ID:", error);
-    }
-  }
+  // === DISABLED: Balancer/Curve (re-enable when supported) ===
+  // if (bestDexName === "curve" || bestDexName.startsWith("curve-")) { ... }
+  // else if (bestDexName === "balancer" || bestDexName.startsWith("balancer-")) { ... }
 
   // Calculate slippage savings
   const {

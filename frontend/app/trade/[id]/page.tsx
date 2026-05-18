@@ -203,10 +203,10 @@ export default function TradePage() {
   const isStreamCompleted =
     trade &&
     ((trade.cancellations && trade.cancellations.length > 0) ||
-      (trade.settlements && trade.settlements.length > 0))
+      (trade.instasettlements && trade.instasettlements.length > 0))
 
   const isStreamSettled =
-    trade && trade.settlements && trade.settlements.length > 0
+    trade && trade.instasettlements && trade.instasettlements.length > 0
 
   // Calculate amounts
   const amountRemaining = aggregates
@@ -369,7 +369,7 @@ export default function TradePage() {
       .sort((a, b) => b.timestamp - a.timestamp) || []
 
   const formattedSettlements =
-    trade?.settlements?.map((settlement) => ({
+    trade?.instasettlements?.map((settlement) => ({
       sell: {
         amount: Number(
           formatUnits(BigInt(settlement.totalAmountIn), tokenIn?.decimals || 18)
@@ -502,12 +502,12 @@ export default function TradePage() {
                       ? 'bg-red-900/20 text-red-400'
                       : trade.executions?.some(
                             (execution: any) => execution.lastSweetSpot === '0'
-                          ) || trade.settlements.length > 0
+                          ) || trade.instasettlements.length > 0
                         ? 'bg-green-900/20 text-green-400'
                         : 'bg-zinc-900 text-primary'
                   )}
                 >
-                  {trade.settlements.length > 0 ? (
+                  {trade.instasettlements.length > 0 ? (
                     <InstasettlePill
                       isSettled={true}
                       variant={
@@ -716,7 +716,7 @@ export default function TradePage() {
                   amount={
                     isLoading
                       ? '0 / 0'
-                      : (trade?.settlements?.length ?? 0) > 0 ||
+                      : (trade?.instasettlements?.length ?? 0) > 0 ||
                           (trade?.cancellations?.length ?? 0) > 0
                         ? `${Number(executionsCount) + 1} / ${Number(executionsCount) + 1}`
                         : `${executionsCount} / ${executionsCount + lastSweetSpot}`
@@ -730,21 +730,21 @@ export default function TradePage() {
                   amount={
                     isLoading
                       ? '0%'
-                      : `${(trade?.settlements?.length ?? 0) > 0 ? 100 : volumeExecutedPercentage}%`
+                      : `${(trade?.instasettlements?.length ?? 0) > 0 ? 100 : volumeExecutedPercentage}%`
                   }
                   infoDetail="Percentage of trade volume that has been executed"
                   titleClassName="text-white52"
                   isLoading={isLoading}
                 />
                 {!(
-                  (trade?.settlements?.length ?? 0) > 0 ||
+                  (trade?.instasettlements?.length ?? 0) > 0 ||
                   (trade?.cancellations?.length ?? 0) > 0 ||
                   trade?.onlyInstasettle
                 ) && (
                   <AmountTag
                     title="Est time"
                     amount={
-                      isLoading || (trade?.settlements?.length ?? 0) > 0
+                      isLoading || (trade?.instasettlements?.length ?? 0) > 0
                         ? '...'
                         : estimatedTime
                     }
@@ -784,7 +784,7 @@ export default function TradePage() {
                 <div
                   className={cn(
                     'flex flex-col gap-2 pt-4 pb-4 border-b border-borderBottom',
-                    (trade.settlements.length > 0 ||
+                    (trade.instasettlements.length > 0 ||
                       trade.cancellations.length > 0) &&
                       'border-b-0'
                   )}
@@ -935,7 +935,7 @@ export default function TradePage() {
 
                   {trade.isInstasettlable &&
                     !(
-                      trade.settlements.length > 0 ||
+                      trade.instasettlements.length > 0 ||
                       trade.cancellations.length > 0
                     ) && (
                       <Button
@@ -943,7 +943,7 @@ export default function TradePage() {
                         className="h-[2.5rem] mt-2"
                         disabled={
                           isLoading ||
-                          trade.settlements.length > 0 ||
+                          trade.instasettlements.length > 0 ||
                           !walletAddress ||
                           tradeOperationLoading
                         }
@@ -957,7 +957,7 @@ export default function TradePage() {
               {/* User Actions */}
               {isUser &&
                 !(
-                  (trade?.settlements?.length ?? 0) > 0 ||
+                  (trade?.instasettlements?.length ?? 0) > 0 ||
                   (trade?.cancellations?.length ?? 0) > 0
                 ) && (
                   <div className="pt-4">
@@ -1030,7 +1030,7 @@ export default function TradePage() {
                 status="completed"
                 stream={[{ sell: execution.sell, buy: execution.buy }]}
                 streamIndex={
-                  trade?.isInstasettlable && trade.settlements.length > 0
+                  trade?.isInstasettlable && trade.instasettlements.length > 0
                     ? 2
                     : 0
                 }

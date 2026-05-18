@@ -1,6 +1,11 @@
+export type TradeStatus =
+  | 'OPEN'
+  | 'COMPLETED'
+  | 'INSTASETTLED'
+  | 'CANCELLED'
+
 export interface Execution {
   amountIn: string
-  cumulativeGasEntailed: string
   id: string
   lastSweetSpot: string
   timestamp: string
@@ -13,7 +18,7 @@ export interface Cancellation {
   isAutocancelled: boolean
 }
 
-export interface Settlement {
+export interface Instasettlement {
   id: string
   settler: string
   totalAmountIn: string
@@ -22,10 +27,40 @@ export interface Settlement {
   timestamp: string
 }
 
+export interface Completion {
+  id: string
+  timestamp: string
+  finalRealisedAmountOut: string
+}
+
+export interface AttemptEvent {
+  id: string
+  attempts: number
+  timestamp: string
+}
+
+export interface StreamFee {
+  id: string
+  bot: string
+  token: string
+  protocolFee: string
+  botFee: string
+  timestamp: string
+}
+
+export interface InstasettleFee {
+  id: string
+  settler: string
+  token: string
+  protocolFee: string
+  timestamp: string
+}
+
 export interface Trade {
   amountIn: string
   amountRemaining: string
   createdAt: string
+  updatedAt: string
   instasettleBps: string
   isInstasettlable: boolean
   lastSweetSpot: string
@@ -36,18 +71,25 @@ export interface Trade {
   user: string
   realisedAmountOut: string
   id: string
+  onlyInstasettle?: boolean
+  usePriceBased: boolean
+  attempts: number
+  status: TradeStatus
   executions: Execution[]
+  cancellations: Cancellation[]
+  instasettlements: Instasettlement[]
+  completions: Completion[]
+  attemptEvents: AttemptEvent[]
+  streamFees: StreamFee[]
+  instasettleFees: InstasettleFee[]
   // Calculated fields
   effectivePrice?: number
   networkFee?: number
   amountOutSavings?: number
   totalSavings?: number
   amountInUsd?: number
-  onlyInstasettle?: boolean
-  tokenInDetails?: any // Using any for now since we don't have the token type here
-  tokenOutDetails?: any // Using any for now since we don't have the token type here
-  cancellations: Cancellation[]
-  settlements: Settlement[]
+  tokenInDetails?: any
+  tokenOutDetails?: any
 }
 
 export interface TradesResponse {

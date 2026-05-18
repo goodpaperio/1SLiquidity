@@ -1,6 +1,9 @@
 import { ethers } from 'ethers';
-import { CURVE_POOL_METADATA } from '../../data/curve-config';
-import { BALANCER_POOL_METADATA } from '../../data/balancer-config';
+// === DISABLED: Balancer/Curve (re-enable when supported) ===
+// import { CURVE_POOL_METADATA } from '../../data/curve-config';
+// import { BALANCER_POOL_METADATA } from '../../data/balancer-config';
+export const CURVE_POOL_METADATA: Record<string, unknown> = {};
+export const BALANCER_POOL_METADATA: Record<string, unknown> = {};
 
 // Contract Addresses
 export const CONTRACT_ADDRESSES = {
@@ -23,8 +26,6 @@ export const CONTRACT_ADDRESSES = {
     VAULT: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   }
 };
-
-export { CURVE_POOL_METADATA, BALANCER_POOL_METADATA };
 
 // Contract ABIs
 export const CONTRACT_ABIS = {

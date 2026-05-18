@@ -2,11 +2,21 @@ import Redis from 'ioredis'
 
 // Redis client configuration
 const getRedisConfig = () => {
-  // const url = process.env.REDIS_URL
-  const url =
-    'rediss://default:AYCJAAIjcDEyZTc0MGNiYjhlMWE0NTljYjZmN2U5ZThhM2Y4NWU1NXAxMA@clever-yak-32905.upstash.io:6379'
+  let url = process.env.REDIS_URL
+  if (!url && process.env.REDIS_HOST) {
+    const password = process.env.REDIS_PASSWORD || 'default'
+    const port = process.env.REDIS_PORT || '6379'
+    const protocol = process.env.REDIS_HOST.includes('upstash.io')
+      ? 'rediss'
+      : 'redis'
+    url = `${protocol}://default:${password}@${process.env.REDIS_HOST}:${port}`
+  }
   if (!url) {
-    throw new Error('REDIS_URL environment variable is not set')
+    throw new Error('REDIS_URL (or REDIS_HOST) environment variable is not set')
+  }
+  // Upstash requires TLS
+  if (url.startsWith('redis://') && url.includes('upstash.io')) {
+    url = url.replace('redis://', 'rediss://')
   }
   return url
 }

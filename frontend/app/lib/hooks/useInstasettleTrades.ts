@@ -8,7 +8,8 @@ interface InstasettleTrade {
   isInstasettlable: boolean
   tokenIn: string
   tokenOut: string
-  settlements: { id: string }[]
+  status?: string
+  instasettlements: { id: string }[]
   cancellations: { id: string }[]
 }
 
@@ -24,25 +25,25 @@ export function useInstasettleTrades() {
         first: 200,
         skip: 0,
       },
-      // Refetch every 2 minutes to keep data fresh
       pollInterval: 120000,
       notifyOnNetworkStatusChange: true,
     }
   )
 
-  // Filter trades to get only those that are instasettlable and not settled/cancelled
   const getAvailableTrades = () => {
     if (!data?.trades) return []
 
     return data.trades.filter(
       (trade) =>
         trade.isInstasettlable &&
-        trade.settlements.length === 0 &&
+        trade.status !== 'INSTASETTLED' &&
+        trade.status !== 'CANCELLED' &&
+        trade.status !== 'COMPLETED' &&
+        trade.instasettlements.length === 0 &&
         trade.cancellations.length === 0
     )
   }
 
-  // Get unique token addresses from available trades
   const getAvailableTokenAddresses = () => {
     const availableTrades = getAvailableTrades()
     const tokenAddresses = new Set<string>()
@@ -55,7 +56,6 @@ export function useInstasettleTrades() {
     return Array.from(tokenAddresses)
   }
 
-  // Get first trade for auto-selection
   const getFirstTrade = () => {
     const availableTrades = getAvailableTrades()
     return availableTrades.length > 0 ? availableTrades[0] : null

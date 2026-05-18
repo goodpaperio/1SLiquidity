@@ -1,0 +1,30 @@
+[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenOut", "type": "address" },
+      { "internalType": "uint256", "name": "amountOutMin", "type": "uint256" },
+      { "internalType": "bool", "name": "isInstasettlable", "type": "bool" },
+      { "internalType": "bool", "name": "usePriceBased", "type": "bool" },
+      { "internalType": "uint256", "name": "instasettleBps", "type": "uint256" },
+      { "internalType": "bool", "name": "onlyInstasettle", "type": "bool" }
+    ],
+    "name": "placeTradeWithETH",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "weth",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "core",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

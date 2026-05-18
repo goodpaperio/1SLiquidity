@@ -1,5 +1,7 @@
 # DEX Calculator Module
 
+> **Note:** Balancer and Curve calculators are currently **disabled** in `DexCalculatorFactory` (Uniswap V2/V3 and SushiSwap only). Re-enable by restoring the `default` branch cases in `calculators.ts` and the config modules.
+
 This module provides a clean, extensible way to calculate swap amounts for different decentralized exchanges (DEXes) like Uniswap V2, Uniswap V3, SushiSwap, etc. using actual on-chain contract calls.
 
 ## Design Principles (SOLID)

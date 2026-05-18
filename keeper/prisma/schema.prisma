@@ -51,6 +51,7 @@ model LiquidityData {
   reservesAUniswapV3_10000 String?
   reservesBUniswapV3_10000 String?
 
+  // === DISABLED: Balancer/Curve (columns retained; not populated while disabled) ===
   // Balancer reserves
   reservesABalancer String?
   reservesBBalancer String?

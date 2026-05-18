@@ -1,7 +1,8 @@
 import * as cron from 'node-cron'
 import { runLiquidityAnalysisFromJson } from '../tests/liquidity-analysis'
-import { main as fetchBalancerPools } from '../scripts/fetch-balancer-pools'
-import { main as fetchCurvePools } from '../scripts/fetch-curve-pools'
+// === DISABLED: Balancer/Curve (re-enable when supported) ===
+// import { main as fetchBalancerPools } from '../scripts/fetch-balancer-pools'
+// import { main as fetchCurvePools } from '../scripts/fetch-curve-pools'
 import * as dotenv from 'dotenv'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -42,20 +43,21 @@ class CronScheduler {
           enabled: process.env.CRON_ENABLED === 'true',
           type: 'liquidity-analysis',
         },
-        {
-          name: 'fetch-balancer-pools',
-          schedule: process.env.BALANCER_CRON_SCHEDULE || '0 8,20 * * *', // 8 AM, 8 PM
-          description: '2 times daily at 8 AM and 8 PM',
-          enabled: process.env.BALANCER_CRON_ENABLED === 'true',
-          type: 'fetch-balancer-pools',
-        },
-        {
-          name: 'fetch-curve-pools',
-          schedule: process.env.CURVE_CRON_SCHEDULE || '0 8,20 * * *', // 8 AM, 8 PM
-          description: '2 times daily at 8 AM and 8 PM',
-          enabled: process.env.CURVE_CRON_ENABLED === 'true',
-          type: 'fetch-curve-pools',
-        },
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        // {
+        //   name: 'fetch-balancer-pools',
+        //   schedule: process.env.BALANCER_CRON_SCHEDULE || '0 8,20 * * *',
+        //   description: '2 times daily at 8 AM and 8 PM',
+        //   enabled: process.env.BALANCER_CRON_ENABLED === 'true',
+        //   type: 'fetch-balancer-pools',
+        // },
+        // {
+        //   name: 'fetch-curve-pools',
+        //   schedule: process.env.CURVE_CRON_SCHEDULE || '0 8,20 * * *',
+        //   description: '2 times daily at 8 AM and 8 PM',
+        //   enabled: process.env.CURVE_CRON_ENABLED === 'true',
+        //   type: 'fetch-curve-pools',
+        // },
       ],
       timezone: 'UTC',
       logging: {
@@ -109,13 +111,13 @@ class CronScheduler {
           )
           break
 
-        case 'fetch-balancer-pools':
-          await fetchBalancerPools()
-          break
-
-        case 'fetch-curve-pools':
-          await fetchCurvePools()
-          break
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        // case 'fetch-balancer-pools':
+        //   await fetchBalancerPools()
+        //   break
+        // case 'fetch-curve-pools':
+        //   await fetchCurvePools()
+        //   break
 
         default:
           throw new Error(`Unknown job type: ${jobConfig.type}`)

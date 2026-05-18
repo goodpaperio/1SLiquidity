@@ -27,20 +27,21 @@ class CronRunner {
           enabled: process.env.CRON_ENABLED === 'true',
           type: 'liquidity-analysis',
         },
-        {
-          name: 'fetch-balancer-pools',
-          schedule: process.env.BALANCER_CRON_SCHEDULE || '0 6,18 * * *',
-          description: '2 times daily at 6 AM and 6 PM',
-          enabled: process.env.BALANCER_CRON_ENABLED === 'true',
-          type: 'fetch-balancer-pools',
-        },
-        {
-          name: 'fetch-curve-pools',
-          schedule: process.env.CURVE_CRON_SCHEDULE || '0 6,18 * * *',
-          description: '2 times daily at 6 AM and 6 PM',
-          enabled: process.env.CURVE_CRON_ENABLED === 'true',
-          type: 'fetch-curve-pools',
-        },
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        // {
+        //   name: 'fetch-balancer-pools',
+        //   schedule: process.env.BALANCER_CRON_SCHEDULE || '0 6,18 * * *',
+        //   description: '2 times daily at 6 AM and 6 PM',
+        //   enabled: process.env.BALANCER_CRON_ENABLED === 'true',
+        //   type: 'fetch-balancer-pools',
+        // },
+        // {
+        //   name: 'fetch-curve-pools',
+        //   schedule: process.env.CURVE_CRON_SCHEDULE || '0 6,18 * * *',
+        //   description: '2 times daily at 6 AM and 6 PM',
+        //   enabled: process.env.CURVE_CRON_ENABLED === 'true',
+        //   type: 'fetch-curve-pools',
+        // },
       ],
     })
 

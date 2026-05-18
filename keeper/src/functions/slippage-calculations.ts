@@ -391,6 +391,16 @@ export async function calculateSlippageSavings(
       };
     }
 
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
+    if (dex.startsWith("balancer-") || dex === "balancer") {
+      return {
+        slippageSavings: 0,
+        percentageSavings: 0,
+        priceAccuracyNODECA: 0,
+        priceAccuracyDECA: 0,
+      };
+    }
+    /*
     if (dex.startsWith("balancer-") || dex === "balancer") {
       try {
         const vault = new ethers.Contract(
@@ -551,7 +561,18 @@ export async function calculateSlippageSavings(
         };
       }
     }
+    */
 
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
+    if (dex.startsWith("curve-") || dex === "curve") {
+      return {
+        slippageSavings: 0,
+        percentageSavings: 0,
+        priceAccuracyNODECA: 0,
+        priceAccuracyDECA: 0,
+      };
+    }
+    /*
     if (dex.startsWith("curve-") || dex === "curve") {
       console.log("Calculating slippage for Curve pool...");
 
@@ -709,6 +730,7 @@ export async function calculateSlippageSavings(
         };
       }
     }
+    */
 
     console.log(`Slippage calculation not implemented for DEX: ${dex}`);
     return {

@@ -849,7 +849,8 @@ async function getAllReservesForPair(
     { name: 'uniswap-v3-10000', fee: 10000 },
     { name: 'uniswap-v2', fee: null },
     { name: 'sushiswap', fee: null },
-    { name: 'curve', fee: null },
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
+    // { name: 'curve', fee: null },
     // { name: 'balancer', fee: null },
   ]
 
@@ -1186,18 +1187,17 @@ async function transformToColumnFormat(
           record.reservesBSushiswap = pair.reserves.token1
           record.pairAddress = pair.pairAddress
           break
-        case 'curve':
-          // Handle generic 'curve' format
-          record.reservesACurve = pair.reserves.token0
-          record.reservesBCurve = pair.reserves.token1
-          record.pairAddress = pair.pairAddress
-          break
-        case 'balancer':
-          // Handle generic 'balancer' format
-          record.reservesABalancer = pair.reserves.token0
-          record.reservesBBalancer = pair.reserves.token1
-          record.pairAddress = pair.pairAddress
-          break
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        // case 'curve':
+        //   record.reservesACurve = pair.reserves.token0
+        //   record.reservesBCurve = pair.reserves.token1
+        //   record.pairAddress = pair.pairAddress
+        //   break
+        // case 'balancer':
+        //   record.reservesABalancer = pair.reserves.token0
+        //   record.reservesBBalancer = pair.reserves.token1
+        //   record.pairAddress = pair.pairAddress
+        //   break
         case 'uniswap-v3-500':
           record.reservesAUniswapV3_500 = pair.reserves.token0
           record.reservesBUniswapV3_500 = pair.reserves.token1
@@ -1214,15 +1214,12 @@ async function transformToColumnFormat(
           record.pairAddress = pair.pairAddress
           break
         default:
-          // Handle Curve and Balancer pools with specific addresses
-          if (pair.dex.startsWith('curve-')) {
-            record.reservesACurve = pair.reserves.token0
-            record.reservesBCurve = pair.reserves.token1
-            record.pairAddress = pair.pairAddress
-          } else if (pair.dex.startsWith('balancer-')) {
-            record.reservesABalancer = pair.reserves.token0
-            record.reservesBBalancer = pair.reserves.token1
-            record.pairAddress = pair.pairAddress
+          // === DISABLED: Balancer/Curve prefix handling ===
+          if (
+            pair.dex.startsWith('curve-') ||
+            pair.dex.startsWith('balancer-')
+          ) {
+            console.warn(`⚠️  Skipping disabled DEX: ${pair.dex}`)
           } else {
             console.warn(`⚠️  Unknown DEX: ${pair.dex}`)
           }

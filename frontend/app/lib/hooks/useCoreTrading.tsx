@@ -4,6 +4,7 @@ import { ethers } from 'ethers'
 import { erc20Abi, parseUnits } from 'viem'
 import { toast } from 'react-hot-toast'
 import coreAbi from '../config/trade-core-abi.json'
+import ethSupportAbi from '../config/eth-support-abi.json'
 import { useToast } from '../context/toastProvider'
 import NotifiSwapStream from '@/app/components/toasts/notifiSwapStream'
 import wethAbi from '../config/eth-contract-abi.json'
@@ -55,7 +56,10 @@ export interface ContractInfo {
 
 // Constants - You should move these to environment variables
 const CORE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CORE_ADDRESS || ''
+const ETH_SUPPORT_ADDRESS =
+  process.env.NEXT_PUBLIC_ETH_SUPPORT_ADDRESS || ''
 const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+const ETH_SENTINEL = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
 export const useCoreTrading = () => {
   const [loading, setLoading] = useState(false)
@@ -77,6 +81,21 @@ export const useCoreTrading = () => {
     }
 
     return new ethers.Contract(CORE_CONTRACT_ADDRESS, coreAbi, signer)
+  }, [])
+
+  const getEthSupportContract = useCallback((signer?: ethers.Signer) => {
+    if (!ETH_SUPPORT_ADDRESS) {
+      throw new Error('ETHSupport contract address not configured')
+    }
+
+    if (!signer) {
+      const provider = new ethers.providers.Web3Provider(
+        (window as any).ethereum
+      )
+      return new ethers.Contract(ETH_SUPPORT_ADDRESS, ethSupportAbi, provider)
+    }
+
+    return new ethers.Contract(ETH_SUPPORT_ADDRESS, ethSupportAbi, signer)
   }, [])
 
   const getWethContract = useCallback((signer?: ethers.Signer) => {
@@ -364,17 +383,59 @@ export const useCoreTrading = () => {
           tokenOutDecimals
         )
 
-        if (tokenOutObj.symbol === 'ETH' || tokenInObj.symbol === 'ETH') {
-          let amountInEth = parseUnits(amountIn, 18)
-          if (tokenOutObj.symbol === 'ETH') {
-            amountInEth = parseUnits(minAmountOut, 18)
+        const instasettleBpsBn = ethers.BigNumber.from(instasettleBps || 0)
+        const resolvedTokenOut =
+          tokenOutObj.symbol === 'ETH' ? ETH_SENTINEL : tokenOut
+
+        // ETH input: route through ETHSupport (wraps ETH → WETH, calls Core)
+        if (tokenInObj.symbol === 'ETH') {
+          if (!ETH_SUPPORT_ADDRESS) {
+            throw new Error('ETHSupport contract address not configured')
           }
-          const wethContract = getWethContract(signer)
-          const wrapTx = await wethContract.deposit({ value: amountInEth })
-          await wrapTx.wait()
+
+          updateToastProgress('Sending ETH trade...', 85, 4)
+          const ethSupport = getEthSupportContract(signer)
+          const gasEstimate =
+            await ethSupport.estimateGas.placeTradeWithETH(
+              resolvedTokenOut,
+              minAmountOutWei,
+              isInstasettlable,
+              usePriceBased,
+              instasettleBpsBn,
+              onlyInstasettle || false,
+              { value: amountInWei }
+            )
+
+          const placeTradeTx = await ethSupport.placeTradeWithETH(
+            resolvedTokenOut,
+            minAmountOutWei,
+            isInstasettlable,
+            usePriceBased,
+            instasettleBpsBn,
+            onlyInstasettle || false,
+            {
+              value: amountInWei,
+              gasLimit: gasEstimate.mul(120).div(100),
+            }
+          )
+
+          updateToastProgress('Waiting for confirmation...', 95, 4)
+          await placeTradeTx.wait()
+
+          const coreContract = getContract()
+          const lastTradeId = (await coreContract.lastTradeId()).toNumber()
+
+          updateToastProgress('Trade completed successfully!', 100, 4)
+          setTimeout(() => removeToast(TOAST_ID), 3000)
+
+          return {
+            success: true,
+            tradeId: lastTradeId,
+            txHash: placeTradeTx.hash,
+          }
         }
 
-        // Step 3: Check and handle token allowance
+        // Step 3: Check and handle token allowance (ERC20)
         updateToastProgress('Checking token allowance...', 40, 3)
         const hasAllowance = await checkTokenAllowance(
           tokenIn,
@@ -398,8 +459,6 @@ export const useCoreTrading = () => {
         // Step 4: Prepare trade
         updateToastProgress('Preparing trade data...', 70, 4)
         const contract = getContract(signer)
-        console.log('testinTradedata', onlyInstasettle)
-        // Current encoding (6 parameters) - for deployed contract
         const tradeData = ethers.utils.defaultAbiCoder.encode(
           [
             'address',
@@ -413,12 +472,12 @@ export const useCoreTrading = () => {
           ],
           [
             tokenIn,
-            tokenOut,
+            resolvedTokenOut,
             amountInWei,
             minAmountOutWei,
             isInstasettlable,
             usePriceBased,
-            instasettleBps,
+            instasettleBpsBn,
             onlyInstasettle || false,
           ]
         )
@@ -476,12 +535,55 @@ export const useCoreTrading = () => {
     },
     [
       getContract,
+      getEthSupportContract,
       getTokenDecimals,
       checkTokenAllowance,
       addToast,
       removeToast,
       loading,
     ]
+  )
+
+  const executeTrades = useCallback(
+    async (
+      tokenIn: string,
+      tokenOut: string,
+      signer: ethers.Signer
+    ): Promise<{ success: boolean; txHash?: string }> => {
+      try {
+        setLoading(true)
+        const contract = getContract(signer)
+        const pairId = ethers.utils.keccak256(
+          ethers.utils.defaultAbiCoder.encode(
+            ['address', 'address'],
+            [tokenIn, tokenOut]
+          )
+        )
+        const tx = await contract.executeTrades(pairId)
+        const receipt = await tx.wait()
+        return { success: true, txHash: receipt.transactionHash }
+      } catch (error: any) {
+        console.error('Error executing trades:', error)
+        toast.error(`Failed to execute trades: ${error.reason || error.message}`)
+        return { success: false }
+      } finally {
+        setLoading(false)
+      }
+    },
+    [getContract]
+  )
+
+  const isBotWhitelisted = useCallback(
+    async (botAddress: string): Promise<boolean> => {
+      try {
+        const contract = getContract()
+        return await contract.isBotWhitelisted(botAddress)
+      } catch (error: any) {
+        console.error('Error checking bot whitelist:', error)
+        return false
+      }
+    },
+    [getContract]
   )
 
   // Dummy method for testing toast updates
@@ -1043,6 +1145,8 @@ export const useCoreTrading = () => {
     getTrade,
     getRecentTrades,
     placeTrade,
+    executeTrades,
+    isBotWhitelisted,
     cancelTrade,
     instasettle,
     getTradesByPair,

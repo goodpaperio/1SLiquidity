@@ -256,131 +256,9 @@ export class ReservesAggregator {
         )
         break
       case 'curve':
-        if (this.curvePoolFilter) {
-          // Use smart filtering to find candidate Curve pools
-          const candidatePools = this.curvePoolFilter.findBestPools(
-            tokenA,
-            tokenB,
-            5
-          )
-          if (candidatePools.length === 0) {
-            console.log(`No suitable Curve pools found for ${tokenA}/${tokenB}`)
-            return null
-          }
-
-          // Evaluate all candidate pools to find the best one
-          let bestReserves: ReserveResult | null = null
-          let bestMeanReserves = 0n
-          let bestPoolAddress = ''
-
-          for (const poolAddress of candidatePools) {
-            const curveService = this.curveServices.get(poolAddress)
-            if (!curveService) {
-              console.log(`Curve service not found for pool ${poolAddress}`)
-              continue
-            }
-
-            const poolReserves = await this.fetchWithRetry(
-              () => curveService.getReserves(tokenA, tokenB),
-              `Curve ${poolAddress}`
-            )
-
-            if (poolReserves) {
-              const meanReserves = this.calculateGeometricMean(
-                poolReserves.reserves,
-                { token0: token0Info.decimals, token1: token1Info.decimals }
-              )
-
-              if (meanReserves > bestMeanReserves) {
-                bestReserves = poolReserves
-                bestMeanReserves = meanReserves
-                bestPoolAddress = poolAddress
-              }
-            }
-          }
-
-          if (bestReserves) {
-            bestReserves.dex = `curve-${bestPoolAddress}`
-            reserves = bestReserves
-            console.log(`Selected best Curve pool ${bestPoolAddress} with mean reserves: ${bestMeanReserves.toString()}`)
-          }
-        } else {
-          console.log(
-            'Curve pool filter not initialized - skipping Curve pools'
-          )
-          return null
-        }
-        break
       case 'balancer':
-        if (this.balancerPoolFilter) {
-          // Use smart filtering to find candidate Balancer pools
-          const candidatePools = await this.balancerPoolFilter.findBestPools(
-            tokenA,
-            tokenB,
-            5
-          )
-          if (candidatePools.length === 0) {
-            console.log(
-              `No suitable Balancer pools found for ${tokenA}/${tokenB}`
-            )
-            return null
-          }
-
-          // Evaluate all candidate pools to find the best one
-          let bestReserves: ReserveResult | null = null
-          let bestMeanReserves = 0n
-          let bestPoolAddress = ''
-
-          for (const poolAddress of candidatePools) {
-            const balancerService = this.balancerServices.get(poolAddress)
-            if (!balancerService) {
-              console.log(`Balancer service not found for pool ${poolAddress}`)
-              continue
-            }
-
-            const balancerResult = await balancerService.getReserves(
-              tokenA,
-              tokenB
-            )
-            if (balancerResult) {
-              const poolReserves = {
-                dex: balancerResult.dex,
-                pairAddress: balancerResult.pairAddress,
-                reserves: balancerResult.reserves,
-                decimals: {
-                  token0: token0Info.decimals,
-                  token1: token1Info.decimals,
-                },
-                price: balancerResult.price,
-                timestamp: balancerResult.timestamp,
-                tokenIndices: balancerResult.tokenIndices,
-              }
-
-              const meanReserves = this.calculateGeometricMean(
-                balancerResult.reserves,
-                { token0: token0Info.decimals, token1: token1Info.decimals }
-              )
-
-              if (meanReserves > bestMeanReserves) {
-                bestReserves = poolReserves
-                bestMeanReserves = meanReserves
-                bestPoolAddress = poolAddress
-              }
-            }
-          }
-
-          if (bestReserves) {
-            bestReserves.dex = `balancer-${bestPoolAddress}`
-            reserves = bestReserves
-            console.log(`Selected best Balancer pool ${bestPoolAddress} with mean reserves: ${bestMeanReserves.toString()}`)
-          }
-        } else {
-          console.log(
-            'Balancer pool filter not initialized - skipping Balancer pools'
-          )
-          return null
-        }
-        break
+        // === DISABLED: Balancer/Curve (re-enable when supported) ===
+        return null
       default:
         throw new Error(`Unsupported DEX type: ${dex}`)
     }
@@ -781,9 +659,11 @@ export class ReservesAggregator {
     // Add short delay before making more calls to avoid rate limits
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    // Try Curve pools for the token pair with smart filtering
-    console.log('Fetching Curve reserves...')
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
     const curveResults: { result: ReserveResult; meanReserves: bigint }[] = []
+    const balancerResults: { result: ReserveResult; meanReserves: bigint }[] = []
+    /* Curve/Balancer getAllReserves block disabled
+    console.log('Fetching Curve reserves...')
     if (this.curvePoolFilter) {
       // Use smart filtering to find relevant pools
       const candidatePools = this.curvePoolFilter.findBestPools(
@@ -922,6 +802,7 @@ export class ReservesAggregator {
         'Balancer pool filter not initialized - skipping Balancer pools'
       )
     }
+    */
 
     if (results.length === 0) {
       console.log('No valid reserves found from any DEX')

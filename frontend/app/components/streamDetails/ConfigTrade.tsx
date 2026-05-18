@@ -324,7 +324,7 @@ const ConfigTrade: React.FC<Props> = ({
                   className="h-[2.25rem]"
                   disabled={
                     isLoading ||
-                    selectedStream.settlements.length > 0 ||
+                    selectedStream.instasettlements.length > 0 ||
                     !walletAddress
                   }
                   loading={isLoading}

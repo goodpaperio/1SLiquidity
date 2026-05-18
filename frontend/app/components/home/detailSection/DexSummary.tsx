@@ -25,10 +25,11 @@ const DexSummary: React.FC<DexSummaryProps> = ({
 }) => {
   const dexLogoConfig = useMemo(
     () => ({
-      curve: '/assets/curve.png',
+      // === DISABLED: Balancer/Curve (re-enable when supported) ===
+      // curve: '/assets/curve.png',
+      // balancer: '/assets/balancer-dex.png',
       uniswap: '/assets/uniswap.png',
       sushiswap: '/assets/sushiswap.png',
-      balancer: '/assets/balancer-dex.png',
     }),
     []
   )
@@ -39,10 +40,11 @@ const DexSummary: React.FC<DexSummaryProps> = ({
       const lowercaseName = dexName.toLowerCase()
 
       // Check for partial matches in the dex name
-      if (lowercaseName.includes('curve')) return dexLogoConfig.curve
+      // === DISABLED: Balancer/Curve (re-enable when supported) ===
+      // if (lowercaseName.includes('curve')) return dexLogoConfig.curve
+      // if (lowercaseName.includes('balancer')) return dexLogoConfig.balancer
       if (lowercaseName.includes('uniswap')) return dexLogoConfig.uniswap
       if (lowercaseName.includes('sushiswap')) return dexLogoConfig.sushiswap
-      if (lowercaseName.includes('balancer')) return dexLogoConfig.balancer
 
       // Fallback to exact match or default
       return (
@@ -65,20 +67,22 @@ const DexSummary: React.FC<DexSummaryProps> = ({
 
       // Format versions (e.g., "uniswap-v3" -> "Uniswap V3")
       let formattedBase = ''
-      if (baseName.includes('curve')) formattedBase = 'Curve'
-      else if (baseName.includes('uniswap')) formattedBase = 'Uniswap'
+      // === DISABLED: Balancer/Curve (re-enable when supported) ===
+      // if (baseName.includes('curve')) formattedBase = 'Curve'
+      // else if (baseName.includes('balancer')) formattedBase = 'Balancer'
+      if (baseName.includes('uniswap')) formattedBase = 'Uniswap'
       else if (baseName.includes('sushiswap')) formattedBase = 'SushiSwap'
-      else if (baseName.includes('balancer')) formattedBase = 'Balancer'
       else formattedBase = baseName.charAt(0).toUpperCase() + baseName.slice(1)
 
       return `${formattedBase} ${version.toUpperCase()}`
     }
 
     const lowerDex = cleanIdentifier.toLowerCase()
-    if (lowerDex.includes('curve')) return 'Curve'
+    // === DISABLED: Balancer/Curve (re-enable when supported) ===
+    // if (lowerDex.includes('curve')) return 'Curve'
+    // if (lowerDex.includes('balancer')) return 'Balancer'
     if (lowerDex.includes('uniswap')) return 'Uniswap'
     if (lowerDex.includes('sushiswap')) return 'SushiSwap'
-    if (lowerDex.includes('balancer')) return 'Balancer'
 
     return cleanIdentifier.charAt(0).toUpperCase() + cleanIdentifier.slice(1)
   }, [])

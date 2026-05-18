@@ -194,10 +194,10 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   // Check if stream is completed (has cancellations or settlements)
   const isStreamCompleted =
     (selectedStream.cancellations && selectedStream.cancellations.length > 0) ||
-    (selectedStream.settlements && selectedStream.settlements.length > 0)
+    (selectedStream.instasettlements && selectedStream.instasettlements.length > 0)
 
   const isStreamSettled =
-    selectedStream.settlements && selectedStream.settlements.length > 0
+    selectedStream.instasettlements && selectedStream.instasettlements.length > 0
 
   // Calculate swapped amount values
   // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
@@ -248,7 +248,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       .sort((a, b) => b.timestamp - a.timestamp) || []
 
   const formattedSettlements =
-    selectedStream.settlements?.map((settlement) => ({
+    selectedStream.instasettlements?.map((settlement) => ({
       sell: {
         amount: Number(
           formatUnits(BigInt(settlement.totalAmountIn), tokenIn?.decimals || 18)
@@ -503,7 +503,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
       <div className="flex items-center justify-end pb-2">
         {(selectedStream.isInstasettlable ||
-          selectedStream.settlements.length > 0 ||
+          selectedStream.instasettlements.length > 0 ||
           selectedStream.cancellations.length > 0 ||
           selectedStream.executions?.some(
             (execution: any) => execution.lastSweetSpot === '0'
@@ -515,13 +515,13 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 ? 'bg-red-900/20 text-red-400'
                 : selectedStream.executions?.some(
                       (execution: any) => execution.lastSweetSpot === '0'
-                    ) || selectedStream.settlements.length > 0
+                    ) || selectedStream.instasettlements.length > 0
                   ? 'bg-green-900/20 text-green-400'
                   : 'bg-zinc-900 text-primary'
             )}
           >
             <span className="text-xs sm:inline-block hidden">
-              {selectedStream.settlements.length > 0 ? (
+              {selectedStream.instasettlements.length > 0 ? (
                 <InstasettlePill
                   isSettled={true}
                   variant={
@@ -842,9 +842,9 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               amount={
                 isLoading
                   ? '0 / 0'
-                  : selectedStream.settlements.length > 0
-                    ? `${selectedStream.settlements.length + executionsCount} / ${
-                        selectedStream.settlements.length + executionsCount
+                  : selectedStream.instasettlements.length > 0
+                    ? `${selectedStream.instasettlements.length + executionsCount} / ${
+                        selectedStream.instasettlements.length + executionsCount
                       }`
                     : `${executionsCount} / ${remainingStreams}`
               }
@@ -858,7 +858,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 isLoading
                   ? '0%'
                   : `${
-                      selectedStream.settlements.length > 0
+                      selectedStream.instasettlements.length > 0
                         ? 100
                         : volumeExecutedPercentage
                     }%`
@@ -868,14 +868,14 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
               isLoading={isLoading}
             />
             {!(
-              selectedStream.settlements.length > 0 ||
+              selectedStream.instasettlements.length > 0 ||
               selectedStream.cancellations.length > 0 ||
               selectedStream.onlyInstasettle
             ) && (
               <AmountTag
                 title="Est time"
                 amount={
-                  isLoading || selectedStream.settlements.length > 0
+                  isLoading || selectedStream.instasettlements.length > 0
                     ? '...'
                     : estimatedTime
                 }
@@ -921,7 +921,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             <div
               className={cn(
                 'flex flex-col gap-2 pt-2.5 pb-4 border-b border-borderBottom',
-                (selectedStream.settlements.length > 0 ||
+                (selectedStream.instasettlements.length > 0 ||
                   selectedStream.cancellations.length > 0) &&
                   'border-b-0'
               )}
@@ -1207,7 +1207,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
               {selectedStream.isInstasettlable &&
                 !(
-                  selectedStream.settlements.length > 0 ||
+                  selectedStream.instasettlements.length > 0 ||
                   selectedStream.cancellations.length > 0
                 ) && (
                   <Button
@@ -1215,7 +1215,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                     className="h-[2.25rem]"
                     disabled={
                       isLoading ||
-                      selectedStream.settlements.length > 0 ||
+                      selectedStream.instasettlements.length > 0 ||
                       !walletAddress ||
                       tradeOperationLoading
                     }
@@ -1226,7 +1226,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
             </div>
           )}
 
-          {selectedStream.settlements.length > 0 ||
+          {selectedStream.instasettlements.length > 0 ||
           selectedStream.cancellations.length > 0 ? (
             ''
           ) : (
@@ -1351,7 +1351,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                 },
               ]}
               streamIndex={
-                selectedStream.settlements.length > 0
+                selectedStream.instasettlements.length > 0
                   ? index + 2
                   : index + 1
               }

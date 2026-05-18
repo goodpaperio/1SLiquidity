@@ -22,6 +22,7 @@ import { formatWalletAddress } from '@/app/lib/helper'
 import ImageFallback from '@/app/shared/ImageFallback'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { cn } from '@/lib/utils'
+import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
 type SortField = 'volume' | 'timestamp' | 'status' | null
 type SortDirection = 'asc' | 'desc'
@@ -82,20 +83,6 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
       (t: TOKENS_TYPE) =>
         t.token_address?.toLowerCase() === address?.toLowerCase()
     )
-  }
-
-  // Get trade status
-  const getTradeStatus = (trade: any) => {
-    if (trade.cancellations?.length > 0) {
-      return trade.cancellations[0].isAutocancelled ? 'failed' : 'cancelled'
-    }
-    if (trade.settlements?.length > 0) {
-      return 'instasettled'
-    }
-    if (trade.executions?.some((exec: any) => exec.lastSweetSpot === '0')) {
-      return 'completed'
-    }
-    return 'ongoing'
   }
 
   // Filter and sort trades

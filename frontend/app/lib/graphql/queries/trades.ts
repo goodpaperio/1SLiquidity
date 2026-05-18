@@ -11,6 +11,7 @@ export const GET_TRADES = gql`
       amountIn
       amountRemaining
       createdAt
+      updatedAt
       instasettleBps
       isInstasettlable
       lastSweetSpot
@@ -22,6 +23,9 @@ export const GET_TRADES = gql`
       realisedAmountOut
       id
       onlyInstasettle
+      usePriceBased
+      attempts
+      status
       executions(first: 50, orderBy: timestamp, orderDirection: desc) {
         amountIn
         id
@@ -34,12 +38,37 @@ export const GET_TRADES = gql`
         timestamp
         isAutocancelled
       }
-      settlements {
+      instasettlements {
         id
         settler
         totalAmountIn
         totalAmountOut
         totalFees
+        timestamp
+      }
+      completions {
+        id
+        timestamp
+        finalRealisedAmountOut
+      }
+      attemptEvents {
+        id
+        attempts
+        timestamp
+      }
+      streamFees {
+        id
+        bot
+        token
+        protocolFee
+        botFee
+        timestamp
+      }
+      instasettleFees {
+        id
+        settler
+        token
+        protocolFee
         timestamp
       }
     }
@@ -58,7 +87,8 @@ export const GET_INSTASETTLE_TRADES = gql`
       isInstasettlable
       tokenIn
       tokenOut
-      settlements(first: 100) {
+      status
+      instasettlements(first: 100) {
         id
       }
       cancellations(first: 100) {
@@ -74,6 +104,7 @@ export const GET_TRADE_BY_ID = gql`
       amountIn
       amountRemaining
       createdAt
+      updatedAt
       instasettleBps
       isInstasettlable
       lastSweetSpot
@@ -85,6 +116,9 @@ export const GET_TRADE_BY_ID = gql`
       realisedAmountOut
       id
       onlyInstasettle
+      usePriceBased
+      attempts
+      status
       executions(first: 50, orderBy: timestamp, orderDirection: desc) {
         amountIn
         id
@@ -97,7 +131,7 @@ export const GET_TRADE_BY_ID = gql`
         timestamp
         isAutocancelled
       }
-      settlements {
+      instasettlements {
         id
         settler
         totalAmountIn
@@ -105,45 +139,31 @@ export const GET_TRADE_BY_ID = gql`
         totalFees
         timestamp
       }
+      completions {
+        id
+        timestamp
+        finalRealisedAmountOut
+      }
+      attemptEvents {
+        id
+        attempts
+        timestamp
+      }
+      streamFees {
+        id
+        bot
+        token
+        protocolFee
+        botFee
+        timestamp
+      }
+      instasettleFees {
+        id
+        settler
+        token
+        protocolFee
+        timestamp
+      }
     }
   }
 `
-
-// export const GET_TRADES = gql`
-//   query MyQuery($first: Int = 10, $skip: Int = 0) {
-//     trades(first: $first, orderBy: id, orderDirection: asc, skip: $skip) {
-//       amountIn
-//       amountRemaining
-//       createdAt
-//       instasettleBps
-//       isInstasettlable
-//       lastSweetSpot
-//       minAmountOut
-//       tokenIn
-//       tokenOut
-//       tradeId
-//       user
-//       realisedAmountOut
-//       id
-//       executions {
-//         amountIn
-//         id
-//         lastSweetSpot
-//         timestamp
-//         realisedAmountOut
-//       }
-//       cancellations {
-//         id
-//         timestamp
-//       }
-//       settlements {
-//         id
-//         settler
-//         totalAmountIn
-//         totalAmountOut
-//         totalFees
-//         timestamp
-//       }
-//     }
-//   }
-// `

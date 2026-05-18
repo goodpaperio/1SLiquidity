@@ -8,17 +8,7 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import SwapStream from '../swapStream'
 import { LiveStatisticsIcon } from '@/app/lib/icons'
 import Link from 'next/link'
-
-// Helper to check if trade is completed
-const isTradeCompleted = (trade: any) => {
-  return (
-    trade.executions?.some(
-      (execution: any) => execution.lastSweetSpot === '0'
-    ) ||
-    trade.settlements?.length > 0 ||
-    trade.cancellations?.length > 0
-  )
-}
+import { isTradeCompleted } from '@/app/lib/utils/tradeStatus'
 
 const DashboardTrades = () => {
   const { trades, isLoading } = useTrades({ first: 100, skip: 0 })
@@ -133,7 +123,7 @@ const DashboardTrades = () => {
                     isInstasettlable: false,
                     realisedAmountOut: '0',
                     executions: [],
-                    settlements: [],
+                    instasettlements: [],
                     cancellations: [],
                   }}
                   isLoading={true}
@@ -189,7 +179,7 @@ const DashboardTrades = () => {
                     isInstasettlable: false,
                     realisedAmountOut: '0',
                     executions: [],
-                    settlements: [],
+                    instasettlements: [],
                     cancellations: [],
                   }}
                   isLoading={true}
