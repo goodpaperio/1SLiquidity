@@ -30,6 +30,19 @@
   },
   {
     "type": "function",
+    "name": "MAXIMUM_SWEET_SPOT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "_sweetSpotAlgo",
     "inputs": [
       {
@@ -99,6 +112,75 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "evaluateStreamPlan",
+    "inputs": [
+      {
+        "name": "tokenIn",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenOut",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amountRemaining",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "targetOutPending",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "usePriceBased",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "preferredSweetSpot",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bestFetcher",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "router",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "sweetSpot",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "streamVolume",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "quotedOut",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "quoteAux",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -250,6 +332,24 @@
   },
   {
     "type": "function",
+    "name": "registerDexWithRouter",
+    "inputs": [
+      {
+        "name": "_fetcher",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_router",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "removeDex",
     "inputs": [
       {
@@ -274,6 +374,37 @@
     "inputs": [
       {
         "name": "_defaultSweetSpot",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setDexRouter",
+    "inputs": [
+      {
+        "name": "_fetcher",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_router",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaximumSweetSpot",
+    "inputs": [
+      {
+        "name": "_maximumSweetSpot",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -326,6 +457,25 @@
     "inputs": [
       {
         "name": "dex",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DEXRouterUpdated",
+    "inputs": [
+      {
+        "name": "dex",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "router",
         "type": "address",
         "indexed": true,
         "internalType": "address"

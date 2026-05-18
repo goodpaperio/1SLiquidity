@@ -4,16 +4,20 @@ import {
   TradeCancelled,
   TradeInstasettled,
   TradeCompleted,
+  AttemptsIncremented,
   StreamFeesTaken,
   InstasettleFeeTaken,
   FeesClaimed,
   FeeRatesUpdated,
+  BotAdded,
+  BotRemoved,
   LowLevelError,
   DataError
 } from '../generated/Core/Core'
 import {
   DEXRouteAdded,
-  DEXRouteRemoved
+  DEXRouteRemoved,
+  DEXRouterUpdated
 } from '../generated/StreamDaemon/StreamDaemon'
 import {
   Trade,
@@ -21,15 +25,28 @@ import {
   TradeCancellation,
   TradeInstasettlement,
   TradeCompletion,
+  TradeAttempt,
   StreamFee,
   InstasettleFee,
   DEXRoute,
+  DEXRouterUpdate,
+  Bot,
+  BotEvent,
   FeeClaim,
   FeeRateUpdate,
   LowLevelError as LowLevelErrorEntity,
   DataError as DataErrorEntity
 } from '../generated/schema'
-import { BigInt, Bytes } from '@graphprotocol/graph-ts'
+import { BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
+
+const STATUS_OPEN = 'OPEN'
+const STATUS_COMPLETED = 'COMPLETED'
+const STATUS_INSTASETTLED = 'INSTASETTLED'
+const STATUS_CANCELLED = 'CANCELLED'
+
+function eventId(event: ethereum.Event): string {
+  return event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
+}
 
 export function handleTradeCreated(event: TradeCreated): void {
   let trade = new Trade(event.params.tradeId.toString())
@@ -46,44 +63,52 @@ export function handleTradeCreated(event: TradeCreated): void {
   trade.lastSweetSpot = event.params.lastSweetSpot
   trade.usePriceBased = event.params.usePriceBased
   trade.onlyInstasettle = event.params.onlyInstasettle
+  trade.attempts = 0
+  trade.status = STATUS_OPEN
   trade.createdAt = event.block.timestamp
+  trade.updatedAt = event.block.timestamp
   trade.save()
 }
 
 export function handleTradeStreamExecuted(event: TradeStreamExecuted): void {
-  // let trade = Trade.load(event.params.tradeId.toString())
-  // if (trade == null) return
-
-  let execution = new TradeExecution(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let execution = new TradeExecution(eventId(event))
   execution.trade = event.params.tradeId.toString()
   execution.amountIn = event.params.amountIn
   execution.realisedAmountOut = event.params.realisedAmountOut
   execution.lastSweetSpot = event.params.lastSweetSpot
   execution.timestamp = event.block.timestamp
+  execution.blockNumber = event.block.number
+  execution.txHash = event.transaction.hash
   execution.save()
 
-  // Update trade state
-  // trade.amountRemaining = trade.amountRemaining.minus(event.params.amountIn)
-  // trade.realisedAmountOut = trade.realisedAmountOut.plus(event.params.realisedAmountOut)
-  // trade.lastSweetSpot = event.params.lastSweetSpot
-  // trade.save()
+  // Reflect latest stream state on the parent Trade for easier querying.
+  let trade = Trade.load(event.params.tradeId.toString())
+  if (trade != null) {
+    trade.realisedAmountOut = event.params.realisedAmountOut
+    trade.lastSweetSpot = event.params.lastSweetSpot
+    trade.updatedAt = event.block.timestamp
+    trade.save()
+  }
 }
 
 export function handleTradeCancelled(event: TradeCancelled): void {
   let trade = Trade.load(event.params.tradeId.toString())
   if (trade == null) return
 
-  let cancellation = new TradeCancellation(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let cancellation = new TradeCancellation(eventId(event))
   cancellation.trade = trade.id
   cancellation.isAutocancelled = event.params.isAutocancelled
   cancellation.amountRemaining = event.params.amountRemaining
   cancellation.realisedAmountOut = event.params.realisedAmountOut
   cancellation.timestamp = event.block.timestamp
+  cancellation.blockNumber = event.block.number
+  cancellation.txHash = event.transaction.hash
   cancellation.save()
 
-  // Update trade state
   trade.amountRemaining = event.params.amountRemaining
   trade.realisedAmountOut = event.params.realisedAmountOut
+  trade.status = STATUS_CANCELLED
+  trade.updatedAt = event.block.timestamp
   trade.save()
 }
 
@@ -91,18 +116,21 @@ export function handleTradeInstasettled(event: TradeInstasettled): void {
   let trade = Trade.load(event.params.tradeId.toString())
   if (trade == null) return
 
-  let instasettlement = new TradeInstasettlement(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let instasettlement = new TradeInstasettlement(eventId(event))
   instasettlement.trade = trade.id
   instasettlement.settler = event.params.settler
   instasettlement.totalAmountIn = event.params.totalAmountIn
   instasettlement.totalAmountOut = event.params.totalAmountOut
   instasettlement.totalFees = event.params.totalFees
   instasettlement.timestamp = event.block.timestamp
+  instasettlement.blockNumber = event.block.number
+  instasettlement.txHash = event.transaction.hash
   instasettlement.save()
 
-  // Update trade state
   trade.amountRemaining = BigInt.fromI32(0)
   trade.realisedAmountOut = event.params.totalAmountOut
+  trade.status = STATUS_INSTASETTLED
+  trade.updatedAt = event.block.timestamp
   trade.save()
 }
 
@@ -110,47 +138,136 @@ export function handleTradeCompleted(event: TradeCompleted): void {
   let trade = Trade.load(event.params.tradeId.toString())
   if (trade == null) return
 
-  let completion = new TradeCompletion(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let completion = new TradeCompletion(eventId(event))
   completion.trade = trade.id
   completion.finalRealisedAmountOut = event.params.finalRealisedAmountOut
   completion.timestamp = event.block.timestamp
+  completion.blockNumber = event.block.number
+  completion.txHash = event.transaction.hash
   completion.save()
 
-  // Update trade state
   trade.realisedAmountOut = event.params.finalRealisedAmountOut
+  trade.amountRemaining = BigInt.fromI32(0)
+  trade.status = STATUS_COMPLETED
+  trade.updatedAt = event.block.timestamp
   trade.save()
 }
 
-export function handleStreamFeesTaken(event: StreamFeesTaken): void {
-  let trade = Trade.load(event.params.tradeId.toString())
-  if (trade == null) return
+export function handleAttemptsIncremented(event: AttemptsIncremented): void {
+  let attemptsValue = event.params.attempts
 
-  let streamFee = new StreamFee(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
-  streamFee.trade = trade.id
+  let attempt = new TradeAttempt(eventId(event))
+  attempt.trade = event.params.tradeId.toString()
+  attempt.attempts = attemptsValue
+  attempt.timestamp = event.block.timestamp
+  attempt.blockNumber = event.block.number
+  attempt.txHash = event.transaction.hash
+  attempt.save()
+
+  let trade = Trade.load(event.params.tradeId.toString())
+  if (trade != null) {
+    trade.attempts = attemptsValue
+    trade.updatedAt = event.block.timestamp
+    trade.save()
+  }
+}
+
+export function handleStreamFeesTaken(event: StreamFeesTaken): void {
+  let streamFee = new StreamFee(eventId(event))
+  streamFee.trade = event.params.tradeId.toString()
   streamFee.bot = event.params.bot
   streamFee.token = event.params.token
   streamFee.protocolFee = event.params.protocolFee
   streamFee.botFee = event.params.botFee
   streamFee.timestamp = event.block.timestamp
+  streamFee.blockNumber = event.block.number
+  streamFee.txHash = event.transaction.hash
   streamFee.save()
 }
 
 export function handleInstasettleFeeTaken(event: InstasettleFeeTaken): void {
-  let trade = Trade.load(event.params.tradeId.toString())
-  if (trade == null) return
-
-  let instasettleFee = new InstasettleFee(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
-  instasettleFee.trade = trade.id
+  let instasettleFee = new InstasettleFee(eventId(event))
+  instasettleFee.trade = event.params.tradeId.toString()
   instasettleFee.settler = event.params.settler
   instasettleFee.token = event.params.token
   instasettleFee.protocolFee = event.params.protocolFee
   instasettleFee.timestamp = event.block.timestamp
+  instasettleFee.blockNumber = event.block.number
+  instasettleFee.txHash = event.transaction.hash
   instasettleFee.save()
 }
 
+export function handleFeesClaimed(event: FeesClaimed): void {
+  let feeClaim = new FeeClaim(eventId(event))
+  feeClaim.recipient = event.params.recipient
+  feeClaim.token = event.params.token
+  feeClaim.amount = event.params.amount
+  feeClaim.isProtocol = event.params.isProtocol
+  feeClaim.timestamp = event.block.timestamp
+  feeClaim.blockNumber = event.block.number
+  feeClaim.txHash = event.transaction.hash
+  feeClaim.save()
+}
+
+export function handleFeeRatesUpdated(event: FeeRatesUpdated): void {
+  let feeRateUpdate = new FeeRateUpdate(eventId(event))
+  feeRateUpdate.streamProtocolFeeBps = event.params.streamProtocolFeeBps
+  feeRateUpdate.streamBotFeeBps = event.params.streamBotFeeBps
+  feeRateUpdate.instasettleProtocolFeeBps = event.params.instasettleProtocolFeeBps
+  feeRateUpdate.timestamp = event.block.timestamp
+  feeRateUpdate.blockNumber = event.block.number
+  feeRateUpdate.txHash = event.transaction.hash
+  feeRateUpdate.save()
+}
+
+export function handleBotAdded(event: BotAdded): void {
+  let botId = event.params.bot.toHexString()
+  let bot = Bot.load(botId)
+  if (bot == null) {
+    bot = new Bot(botId)
+    bot.bot = event.params.bot
+  }
+  bot.isWhitelisted = true
+  bot.addedAt = event.block.timestamp
+  bot.removedAt = null
+  bot.save()
+
+  let botEvent = new BotEvent(eventId(event))
+  botEvent.bot = event.params.bot
+  botEvent.action = 'ADDED'
+  botEvent.timestamp = event.block.timestamp
+  botEvent.blockNumber = event.block.number
+  botEvent.txHash = event.transaction.hash
+  botEvent.save()
+}
+
+export function handleBotRemoved(event: BotRemoved): void {
+  let botId = event.params.bot.toHexString()
+  let bot = Bot.load(botId)
+  if (bot == null) {
+    bot = new Bot(botId)
+    bot.bot = event.params.bot
+  }
+  bot.isWhitelisted = false
+  bot.removedAt = event.block.timestamp
+  bot.save()
+
+  let botEvent = new BotEvent(eventId(event))
+  botEvent.bot = event.params.bot
+  botEvent.action = 'REMOVED'
+  botEvent.timestamp = event.block.timestamp
+  botEvent.blockNumber = event.block.number
+  botEvent.txHash = event.transaction.hash
+  botEvent.save()
+}
+
 export function handleDEXRouteAdded(event: DEXRouteAdded): void {
-  let dexRoute = new DEXRoute(event.params.dex.toHexString())
-  dexRoute.dex = event.params.dex
+  let id = event.params.dex.toHexString()
+  let dexRoute = DEXRoute.load(id)
+  if (dexRoute == null) {
+    dexRoute = new DEXRoute(id)
+    dexRoute.dex = event.params.dex
+  }
   dexRoute.isActive = true
   dexRoute.addedAt = event.block.timestamp
   dexRoute.removedAt = null
@@ -166,35 +283,42 @@ export function handleDEXRouteRemoved(event: DEXRouteRemoved): void {
   dexRoute.save()
 }
 
-export function handleFeesClaimed(event: FeesClaimed): void {
-  let feeClaim = new FeeClaim(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
-  feeClaim.recipient = event.params.recipient
-  feeClaim.token = event.params.token
-  feeClaim.amount = event.params.amount
-  feeClaim.isProtocol = event.params.isProtocol
-  feeClaim.timestamp = event.block.timestamp
-  feeClaim.save()
-}
+export function handleDEXRouterUpdated(event: DEXRouterUpdated): void {
+  let id = event.params.dex.toHexString()
+  let dexRoute = DEXRoute.load(id)
+  if (dexRoute == null) {
+    dexRoute = new DEXRoute(id)
+    dexRoute.dex = event.params.dex
+    dexRoute.isActive = true
+    dexRoute.addedAt = event.block.timestamp
+  }
+  dexRoute.router = event.params.router
+  dexRoute.routerUpdatedAt = event.block.timestamp
+  dexRoute.save()
 
-export function handleFeeRatesUpdated(event: FeeRatesUpdated): void {
-  let feeRateUpdate = new FeeRateUpdate(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
-  feeRateUpdate.streamProtocolFeeBps = event.params.streamProtocolFeeBps
-  feeRateUpdate.streamBotFeeBps = event.params.streamBotFeeBps
-  feeRateUpdate.instasettleProtocolFeeBps = event.params.instasettleProtocolFeeBps
-  feeRateUpdate.timestamp = event.block.timestamp
-  feeRateUpdate.save()
+  let update = new DEXRouterUpdate(eventId(event))
+  update.dex = event.params.dex
+  update.router = event.params.router
+  update.timestamp = event.block.timestamp
+  update.blockNumber = event.block.number
+  update.txHash = event.transaction.hash
+  update.save()
 }
 
 export function handleLowLevelError(event: LowLevelError): void {
-  let lowLevelError = new LowLevelErrorEntity(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let lowLevelError = new LowLevelErrorEntity(eventId(event))
   lowLevelError.error = event.params.error
   lowLevelError.timestamp = event.block.timestamp
+  lowLevelError.blockNumber = event.block.number
+  lowLevelError.txHash = event.transaction.hash
   lowLevelError.save()
 }
 
 export function handleDataError(event: DataError): void {
-  let dataError = new DataErrorEntity(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  let dataError = new DataErrorEntity(eventId(event))
   dataError.error = event.params.error
   dataError.timestamp = event.block.timestamp
+  dataError.blockNumber = event.block.number
+  dataError.txHash = event.transaction.hash
   dataError.save()
 }

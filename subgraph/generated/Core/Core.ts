@@ -10,6 +10,64 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
+export class AttemptsIncremented extends ethereum.Event {
+  get params(): AttemptsIncremented__Params {
+    return new AttemptsIncremented__Params(this);
+  }
+}
+
+export class AttemptsIncremented__Params {
+  _event: AttemptsIncremented;
+
+  constructor(event: AttemptsIncremented) {
+    this._event = event;
+  }
+
+  get tradeId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get attempts(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+}
+
+export class BotAdded extends ethereum.Event {
+  get params(): BotAdded__Params {
+    return new BotAdded__Params(this);
+  }
+}
+
+export class BotAdded__Params {
+  _event: BotAdded;
+
+  constructor(event: BotAdded) {
+    this._event = event;
+  }
+
+  get bot(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class BotRemoved extends ethereum.Event {
+  get params(): BotRemoved__Params {
+    return new BotRemoved__Params(this);
+  }
+}
+
+export class BotRemoved__Params {
+  _event: BotRemoved;
+
+  constructor(event: BotRemoved) {
+    this._event = event;
+  }
+
+  get bot(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
 export class DataError extends ethereum.Event {
   get params(): DataError__Params {
     return new DataError__Params(this);
@@ -618,6 +676,21 @@ export class Core extends ethereum.SmartContract {
     return new Core("Core", address);
   }
 
+  BPS_SLIPPAGE(): BigInt {
+    let result = super.call("BPS_SLIPPAGE", "BPS_SLIPPAGE():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_BPS_SLIPPAGE(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("BPS_SLIPPAGE", "BPS_SLIPPAGE():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   EXECUTE_STREAM_TRADE_CAP(): BigInt {
     let result = super.call(
       "EXECUTE_STREAM_TRADE_CAP",
@@ -679,6 +752,21 @@ export class Core extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
+  MIN_BPS(): i32 {
+    let result = super.call("MIN_BPS", "MIN_BPS():(uint16)", []);
+
+    return result[0].toI32();
+  }
+
+  try_MIN_BPS(): ethereum.CallResult<i32> {
+    let result = super.tryCall("MIN_BPS", "MIN_BPS():(uint16)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
   WETH(): Address {
     let result = super.call("WETH", "WETH():(address)", []);
 
@@ -692,6 +780,48 @@ export class Core extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  botWhitelist(param0: Address): boolean {
+    let result = super.call("botWhitelist", "botWhitelist(address):(bool)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_botWhitelist(param0: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall("botWhitelist", "botWhitelist(address):(bool)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  botWhitelistCount(): BigInt {
+    let result = super.call(
+      "botWhitelistCount",
+      "botWhitelistCount():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_botWhitelistCount(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "botWhitelistCount",
+      "botWhitelistCount():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   cancelTrade(tradeId: BigInt): boolean {
@@ -871,6 +1001,29 @@ export class Core extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
+  isBotWhitelisted(bot: Address): boolean {
+    let result = super.call(
+      "isBotWhitelisted",
+      "isBotWhitelisted(address):(bool)",
+      [ethereum.Value.fromAddress(bot)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isBotWhitelisted(bot: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isBotWhitelisted",
+      "isBotWhitelisted(address):(bool)",
+      [ethereum.Value.fromAddress(bot)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
   lastTradeId(): BigInt {
@@ -1176,6 +1329,36 @@ export class ConstructorCall__Outputs {
   }
 }
 
+export class AddBotCall extends ethereum.Call {
+  get inputs(): AddBotCall__Inputs {
+    return new AddBotCall__Inputs(this);
+  }
+
+  get outputs(): AddBotCall__Outputs {
+    return new AddBotCall__Outputs(this);
+  }
+}
+
+export class AddBotCall__Inputs {
+  _call: AddBotCall;
+
+  constructor(call: AddBotCall) {
+    this._call = call;
+  }
+
+  get bot(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class AddBotCall__Outputs {
+  _call: AddBotCall;
+
+  constructor(call: AddBotCall) {
+    this._call = call;
+  }
+}
+
 export class CancelTradeCall extends ethereum.Call {
   get inputs(): CancelTradeCall__Inputs {
     return new CancelTradeCall__Inputs(this);
@@ -1424,6 +1607,36 @@ export class PlaceTradeCall__Outputs {
   }
 }
 
+export class RemoveBotCall extends ethereum.Call {
+  get inputs(): RemoveBotCall__Inputs {
+    return new RemoveBotCall__Inputs(this);
+  }
+
+  get outputs(): RemoveBotCall__Outputs {
+    return new RemoveBotCall__Outputs(this);
+  }
+}
+
+export class RemoveBotCall__Inputs {
+  _call: RemoveBotCall;
+
+  constructor(call: RemoveBotCall) {
+    this._call = call;
+  }
+
+  get bot(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class RemoveBotCall__Outputs {
+  _call: RemoveBotCall;
+
+  constructor(call: RemoveBotCall) {
+    this._call = call;
+  }
+}
+
 export class RenounceOwnershipCall extends ethereum.Call {
   get inputs(): RenounceOwnershipCall__Inputs {
     return new RenounceOwnershipCall__Inputs(this);
@@ -1446,6 +1659,36 @@ export class RenounceOwnershipCall__Outputs {
   _call: RenounceOwnershipCall;
 
   constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SetBPSSlippageCall extends ethereum.Call {
+  get inputs(): SetBPSSlippageCall__Inputs {
+    return new SetBPSSlippageCall__Inputs(this);
+  }
+
+  get outputs(): SetBPSSlippageCall__Outputs {
+    return new SetBPSSlippageCall__Outputs(this);
+  }
+}
+
+export class SetBPSSlippageCall__Inputs {
+  _call: SetBPSSlippageCall;
+
+  constructor(call: SetBPSSlippageCall) {
+    this._call = call;
+  }
+
+  get _bps(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetBPSSlippageCall__Outputs {
+  _call: SetBPSSlippageCall;
+
+  constructor(call: SetBPSSlippageCall) {
     this._call = call;
   }
 }

@@ -46,6 +46,28 @@ export class DEXRouteRemoved__Params {
   }
 }
 
+export class DEXRouterUpdated extends ethereum.Event {
+  get params(): DEXRouterUpdated__Params {
+    return new DEXRouterUpdated__Params(this);
+  }
+}
+
+export class DEXRouterUpdated__Params {
+  _event: DEXRouterUpdated;
+
+  constructor(event: DEXRouterUpdated) {
+    this._event = event;
+  }
+
+  get dex(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get router(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+}
+
 export class OwnershipTransferred extends ethereum.Event {
   get params(): OwnershipTransferred__Params {
     return new OwnershipTransferred__Params(this);
@@ -65,6 +87,66 @@ export class OwnershipTransferred__Params {
 
   get newOwner(): Address {
     return this._event.parameters[1].value.toAddress();
+  }
+}
+
+export class StreamDaemon__evaluateStreamPlanResult {
+  value0: Address;
+  value1: Address;
+  value2: BigInt;
+  value3: BigInt;
+  value4: BigInt;
+  value5: Bytes;
+
+  constructor(
+    value0: Address,
+    value1: Address,
+    value2: BigInt,
+    value3: BigInt,
+    value4: BigInt,
+    value5: Bytes,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
+    this.value5 = value5;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromAddress(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set("value4", ethereum.Value.fromUnsignedBigInt(this.value4));
+    map.set("value5", ethereum.Value.fromBytes(this.value5));
+    return map;
+  }
+
+  getBestFetcher(): Address {
+    return this.value0;
+  }
+
+  getRouter(): Address {
+    return this.value1;
+  }
+
+  getSweetSpot(): BigInt {
+    return this.value2;
+  }
+
+  getStreamVolume(): BigInt {
+    return this.value3;
+  }
+
+  getQuotedOut(): BigInt {
+    return this.value4;
+  }
+
+  getQuoteAux(): Bytes {
+    return this.value5;
   }
 }
 
@@ -192,6 +274,29 @@ export class StreamDaemon extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  MAXIMUM_SWEET_SPOT(): BigInt {
+    let result = super.call(
+      "MAXIMUM_SWEET_SPOT",
+      "MAXIMUM_SWEET_SPOT():(uint256)",
+      [],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_MAXIMUM_SWEET_SPOT(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "MAXIMUM_SWEET_SPOT",
+      "MAXIMUM_SWEET_SPOT():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   _sweetSpotAlgo(
     tokenIn: Address,
     tokenOut: Address,
@@ -273,6 +378,73 @@ export class StreamDaemon extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  evaluateStreamPlan(
+    tokenIn: Address,
+    tokenOut: Address,
+    amountRemaining: BigInt,
+    targetOutPending: boolean,
+    usePriceBased: boolean,
+    preferredSweetSpot: BigInt,
+  ): StreamDaemon__evaluateStreamPlanResult {
+    let result = super.call(
+      "evaluateStreamPlan",
+      "evaluateStreamPlan(address,address,uint256,bool,bool,uint256):(address,address,uint256,uint256,uint256,bytes)",
+      [
+        ethereum.Value.fromAddress(tokenIn),
+        ethereum.Value.fromAddress(tokenOut),
+        ethereum.Value.fromUnsignedBigInt(amountRemaining),
+        ethereum.Value.fromBoolean(targetOutPending),
+        ethereum.Value.fromBoolean(usePriceBased),
+        ethereum.Value.fromUnsignedBigInt(preferredSweetSpot),
+      ],
+    );
+
+    return new StreamDaemon__evaluateStreamPlanResult(
+      result[0].toAddress(),
+      result[1].toAddress(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toBigInt(),
+      result[5].toBytes(),
+    );
+  }
+
+  try_evaluateStreamPlan(
+    tokenIn: Address,
+    tokenOut: Address,
+    amountRemaining: BigInt,
+    targetOutPending: boolean,
+    usePriceBased: boolean,
+    preferredSweetSpot: BigInt,
+  ): ethereum.CallResult<StreamDaemon__evaluateStreamPlanResult> {
+    let result = super.tryCall(
+      "evaluateStreamPlan",
+      "evaluateStreamPlan(address,address,uint256,bool,bool,uint256):(address,address,uint256,uint256,uint256,bytes)",
+      [
+        ethereum.Value.fromAddress(tokenIn),
+        ethereum.Value.fromAddress(tokenOut),
+        ethereum.Value.fromUnsignedBigInt(amountRemaining),
+        ethereum.Value.fromBoolean(targetOutPending),
+        ethereum.Value.fromBoolean(usePriceBased),
+        ethereum.Value.fromUnsignedBigInt(preferredSweetSpot),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new StreamDaemon__evaluateStreamPlanResult(
+        value[0].toAddress(),
+        value[1].toAddress(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toBigInt(),
+        value[5].toBytes(),
+      ),
+    );
   }
 
   evaluateSweetSpotAndDex(
@@ -499,6 +671,80 @@ export class ConstructorCall__Outputs {
   }
 }
 
+export class EvaluateStreamPlanCall extends ethereum.Call {
+  get inputs(): EvaluateStreamPlanCall__Inputs {
+    return new EvaluateStreamPlanCall__Inputs(this);
+  }
+
+  get outputs(): EvaluateStreamPlanCall__Outputs {
+    return new EvaluateStreamPlanCall__Outputs(this);
+  }
+}
+
+export class EvaluateStreamPlanCall__Inputs {
+  _call: EvaluateStreamPlanCall;
+
+  constructor(call: EvaluateStreamPlanCall) {
+    this._call = call;
+  }
+
+  get tokenIn(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get tokenOut(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get amountRemaining(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
+  get targetOutPending(): boolean {
+    return this._call.inputValues[3].value.toBoolean();
+  }
+
+  get usePriceBased(): boolean {
+    return this._call.inputValues[4].value.toBoolean();
+  }
+
+  get preferredSweetSpot(): BigInt {
+    return this._call.inputValues[5].value.toBigInt();
+  }
+}
+
+export class EvaluateStreamPlanCall__Outputs {
+  _call: EvaluateStreamPlanCall;
+
+  constructor(call: EvaluateStreamPlanCall) {
+    this._call = call;
+  }
+
+  get bestFetcher(): Address {
+    return this._call.outputValues[0].value.toAddress();
+  }
+
+  get router(): Address {
+    return this._call.outputValues[1].value.toAddress();
+  }
+
+  get sweetSpot(): BigInt {
+    return this._call.outputValues[2].value.toBigInt();
+  }
+
+  get streamVolume(): BigInt {
+    return this._call.outputValues[3].value.toBigInt();
+  }
+
+  get quotedOut(): BigInt {
+    return this._call.outputValues[4].value.toBigInt();
+  }
+
+  get quoteAux(): Bytes {
+    return this._call.outputValues[5].value.toBytes();
+  }
+}
+
 export class RegisterDexCall extends ethereum.Call {
   get inputs(): RegisterDexCall__Inputs {
     return new RegisterDexCall__Inputs(this);
@@ -525,6 +771,40 @@ export class RegisterDexCall__Outputs {
   _call: RegisterDexCall;
 
   constructor(call: RegisterDexCall) {
+    this._call = call;
+  }
+}
+
+export class RegisterDexWithRouterCall extends ethereum.Call {
+  get inputs(): RegisterDexWithRouterCall__Inputs {
+    return new RegisterDexWithRouterCall__Inputs(this);
+  }
+
+  get outputs(): RegisterDexWithRouterCall__Outputs {
+    return new RegisterDexWithRouterCall__Outputs(this);
+  }
+}
+
+export class RegisterDexWithRouterCall__Inputs {
+  _call: RegisterDexWithRouterCall;
+
+  constructor(call: RegisterDexWithRouterCall) {
+    this._call = call;
+  }
+
+  get _fetcher(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _router(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class RegisterDexWithRouterCall__Outputs {
+  _call: RegisterDexWithRouterCall;
+
+  constructor(call: RegisterDexWithRouterCall) {
     this._call = call;
   }
 }
@@ -611,6 +891,70 @@ export class SetDefaultSweetSpotCall__Outputs {
   _call: SetDefaultSweetSpotCall;
 
   constructor(call: SetDefaultSweetSpotCall) {
+    this._call = call;
+  }
+}
+
+export class SetDexRouterCall extends ethereum.Call {
+  get inputs(): SetDexRouterCall__Inputs {
+    return new SetDexRouterCall__Inputs(this);
+  }
+
+  get outputs(): SetDexRouterCall__Outputs {
+    return new SetDexRouterCall__Outputs(this);
+  }
+}
+
+export class SetDexRouterCall__Inputs {
+  _call: SetDexRouterCall;
+
+  constructor(call: SetDexRouterCall) {
+    this._call = call;
+  }
+
+  get _fetcher(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _router(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class SetDexRouterCall__Outputs {
+  _call: SetDexRouterCall;
+
+  constructor(call: SetDexRouterCall) {
+    this._call = call;
+  }
+}
+
+export class SetMaximumSweetSpotCall extends ethereum.Call {
+  get inputs(): SetMaximumSweetSpotCall__Inputs {
+    return new SetMaximumSweetSpotCall__Inputs(this);
+  }
+
+  get outputs(): SetMaximumSweetSpotCall__Outputs {
+    return new SetMaximumSweetSpotCall__Outputs(this);
+  }
+}
+
+export class SetMaximumSweetSpotCall__Inputs {
+  _call: SetMaximumSweetSpotCall;
+
+  constructor(call: SetMaximumSweetSpotCall) {
+    this._call = call;
+  }
+
+  get _maximumSweetSpot(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetMaximumSweetSpotCall__Outputs {
+  _call: SetMaximumSweetSpotCall;
+
+  constructor(call: SetMaximumSweetSpotCall) {
     this._call = call;
   }
 }
