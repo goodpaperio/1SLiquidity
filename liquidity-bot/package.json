@@ -25,7 +25,10 @@
     "deploy": "tsx src/cli/deploy-bot.ts",
     "withdraw": "tsx src/cli/withdraw-bot.ts",
     "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
-    "history": "tsx src/cli/history.ts"
+    "history": "tsx src/cli/history.ts",
+    "postinstall": "node scripts/ensure-rollup-native.mjs",
+    "install:clean": "rm -rf node_modules package-lock.json && npm install --include=optional",
+    "fix:rollup": "node scripts/ensure-rollup-native.mjs"
   },
   "keywords": [
     "decastream",
@@ -48,8 +51,8 @@
     "vitest": "^2.1.9"
   },
   "optionalDependencies": {
-    "@rollup/rollup-darwin-arm64": "^4.46.3",
-    "@rollup/rollup-darwin-x64": "^4.46.3",
-    "@rollup/rollup-linux-x64-gnu": "^4.46.3"
+    "@rollup/rollup-darwin-arm64": "4.46.3",
+    "@rollup/rollup-darwin-x64": "4.46.3",
+    "@rollup/rollup-linux-x64-gnu": "4.46.3"
   }
 }

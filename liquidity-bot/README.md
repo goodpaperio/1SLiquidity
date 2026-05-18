@@ -14,8 +14,15 @@ cp .env.example .env
 
 Requires **Node.js ≥ 18** (use `nvm use` — see `.nvmrc` for Node 22).
 
-If `npm run verify:*` fails with `@rollup/rollup-darwin-*`, run:
-`rm -rf node_modules package-lock.json && npm install` using Node 18+.
+If `npm run verify:*` fails with `@rollup/rollup-darwin-*` (npm optional-deps bug on Mac):
+
+```bash
+nvm use 22
+npm run install:clean
+npm run verify:c
+```
+
+Do not paste `# comments` on the same line as shell commands.
 
 ## Verify by phase
 
