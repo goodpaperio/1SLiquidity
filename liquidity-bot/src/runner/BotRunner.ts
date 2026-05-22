@@ -4,6 +4,8 @@ import type { BotConfig } from '../config/schema.js';
 import { getBotsDir } from '../config/paths.js';
 import { createProvider } from '../chain/provider.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
+import { PairCooldownStore } from '../scan/pairCooldown.js';
+import { TradeHistoryStore } from '../scan/tradeHistory.js';
 import { QuoteScanner, formatScanSummary } from '../scan/QuoteScanner.js';
 
 export interface BotState {
@@ -33,13 +35,23 @@ export function writeBotState(botId: string, state: BotState): void {
  */
 export class BotRunner {
   private stopped = false;
-  private readonly opportunityCache = new OpportunityCache();
+  private readonly pairCooldown: PairCooldownStore;
+  private readonly tradeHistory: TradeHistoryStore;
+  private readonly opportunityCache: OpportunityCache;
   private scanTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private readonly config: BotConfig,
     private readonly heartbeatMs = 60_000
-  ) {}
+  ) {
+    this.pairCooldown = PairCooldownStore.forBot(config);
+    this.tradeHistory = TradeHistoryStore.forBot(config);
+    this.opportunityCache = new OpportunityCache(
+      undefined,
+      this.pairCooldown,
+      this.tradeHistory
+    );
+  }
 
   stop(): void {
     this.stopped = true;
@@ -86,7 +98,9 @@ export class BotRunner {
   private async runScan(id: string, scanner: QuoteScanner): Promise<void> {
     try {
       const result = await scanner.scanBot(this.config);
-      console.log(formatScanSummary(id, result, this.opportunityCache));
+      console.log(
+        formatScanSummary(id, this.config, result, this.opportunityCache)
+      );
     } catch (err) {
       console.error(
         `[${id}] scan failed:`,

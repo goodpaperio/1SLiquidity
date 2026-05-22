@@ -4,6 +4,8 @@ import { parseCliArgs, requireBotId } from './parse-args.js';
 import { loadBotConfig } from '../config/loadBot.js';
 import { createProvider } from '../chain/provider.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
+import { PairCooldownStore } from '../scan/pairCooldown.js';
+import { TradeHistoryStore } from '../scan/tradeHistory.js';
 import {
   QuoteScanner,
   formatScanSummary,
@@ -18,14 +20,18 @@ async function main(): Promise<void> {
 
   const bot = loadBotConfig(botId);
   const provider = createProvider();
-  const cache = new OpportunityCache();
+  const pairCooldown = PairCooldownStore.forBot(bot);
+  const tradeHistory = TradeHistoryStore.forBot(bot);
+  const cache = new OpportunityCache(undefined, pairCooldown, tradeHistory);
   const maxPairs =
     typeof flags['max-pairs'] === 'string'
       ? Number(flags['max-pairs'])
       : undefined;
 
   console.log(
-    `\n[scan:dry-run] bot=${botId} address=${bot.address} minSpread=${bot.scan.minSpreadBps}bps`
+    `\n[scan:dry-run] bot=${botId} address=${bot.address} ` +
+      `selection=${bot.scan.selectionMode} coupledFloor=${bot.scan.minCoupledSpreadBps}bps ` +
+      `pairCooldown=${bot.trade.pairCooldownMs / 60_000}min`
   );
   console.log(
     `  DEX set: Uni V2, V3 (100/500/3000/10000), Sushi — no Balancer/Curve`
@@ -43,8 +49,12 @@ async function main(): Promise<void> {
     pairDelayMs: 30,
   });
 
+  const runStart = Date.now();
   const result = await scanner.scanBot(bot);
-  console.log(formatScanSummary(botId, result, cache));
+  if (!result.durationMs) {
+    result.durationMs = Date.now() - runStart;
+  }
+  console.log(formatScanSummary(botId, bot, result, cache));
 }
 
 main().catch((err: unknown) => {

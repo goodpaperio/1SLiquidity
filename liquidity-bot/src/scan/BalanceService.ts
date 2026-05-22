@@ -10,6 +10,11 @@ export type BaseBalances = Partial<Record<BaseTokenSymbol, bigint>>;
 export class BalanceService {
   constructor(private readonly provider: Provider) {}
 
+  async getTokenBalance(holder: string, tokenAddress: string): Promise<bigint> {
+    const erc20 = new Contract(tokenAddress, ERC20_ABI, this.provider);
+    return erc20.balanceOf(holder);
+  }
+
   async getBaseBalances(
     holder: string,
     bases: BaseTokenSymbol[]

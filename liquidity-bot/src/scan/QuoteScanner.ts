@@ -1,18 +1,22 @@
 import type { BotConfig } from '../config/schema.js';
 import type { BaseTokenSymbol } from '../config/baseTokens.js';
-import { buildTradePairsForBot } from '../config/loadPairs.js';
-import {
-  computeEffectiveInForBase,
-  getPriceHintsFromEnv,
-  isAboveDustFloor,
-  nominalUsdToBaseAmount,
-} from '../config/sizing.js';
 import type { Provider } from 'ethers';
 import { BalanceService } from './BalanceService.js';
 import { DexQuoteService, STREAM_DEX_IDS } from './DexQuoteService.js';
+import { formatOpportunityLine, formatPredictedWin } from './formatOpportunity.js';
+import { collectCandidateOpportunities } from '../selection/collectCandidates.js';
+import {
+  formatSelectionLog,
+  selectForExecution,
+} from '../selection/selectForExecution.js';
 import { detectOpportunitiesForPair } from './opportunityDetector.js';
 import { OpportunityCache } from './OpportunityCache.js';
 import type { ScanOpportunity } from './types.js';
+import {
+  collectQuoteSnapshots,
+  type CollectQuotesResult,
+  type PairQuoteSnapshot,
+} from './collectQuotes.js';
 
 export interface ScanResult {
   pairsScanned: number;
@@ -20,6 +24,7 @@ export interface ScanResult {
   opportunities: ScanOpportunity[];
   errors: number;
   diagnostics: ScanDiagnostics;
+  durationMs: number;
 }
 
 /** Why a run did or did not quote pairs. */
@@ -67,8 +72,33 @@ export class QuoteScanner {
     this.quotes = deps.quoteService ?? new DexQuoteService(_provider);
   }
 
+  getBaseBalances(holder: string, bases: BaseTokenSymbol[]) {
+    return this.balances.getBaseBalances(holder, bases);
+  }
+
+  getTokenBalance(holder: string, token: string) {
+    return this.balances.getTokenBalance(holder, token);
+  }
+
+  async fetchQuotesForPair(
+    tokenIn: string,
+    tokenOut: string,
+    amountIn: bigint
+  ) {
+    const quotes = await this.fetchQuotesWithDelay(tokenIn, tokenOut, amountIn);
+    await sleep(this.options.pairDelayMs ?? DEFAULT_PAIR_DELAY);
+    return quotes;
+  }
+
+  async collectQuotes(bot: BotConfig): Promise<CollectQuotesResult> {
+    return collectQuoteSnapshots(this, bot, {
+      discoverMode: this.options.discoverMode === true,
+      maxPairs: this.options.maxPairsPerRun,
+    });
+  }
+
   async scanBot(bot: BotConfig): Promise<ScanResult> {
-    const hints = getPriceHintsFromEnv();
+    const start = Date.now();
     const discoverMode = this.options.discoverMode === true;
     const baseBalances = await this.balances.getBaseBalances(
       bot.address,
@@ -90,13 +120,10 @@ export class QuoteScanner {
       discoverMode ? bot.baseTokens : heldBases
     ) as BaseTokenSymbol[];
 
-    const allPairs = buildTradePairsForBot(bot);
-    const pairs = allPairs.filter((p) => scanBases.includes(p.baseSymbol));
-
     const diagnostics: ScanDiagnostics = {
       mode: discoverMode ? 'discover' : 'live',
-      totalPairsInUniverse: allPairs.length,
-      pairsConsidered: pairs.length,
+      totalPairsInUniverse: 0,
+      pairsConsidered: 0,
       heldBases,
       scanBases,
       baseBalances: balanceStrings,
@@ -105,88 +132,104 @@ export class QuoteScanner {
     if (scanBases.length === 0) {
       diagnostics.message =
         'No base tokens to scan. Fund the wallet with USDC/WETH/etc., or use scan:dry-run (discover mode).';
-      return emptyResult(diagnostics);
+      return emptyResult(diagnostics, Date.now() - start);
     }
 
-    const maxPairs = this.options.maxPairsPerRun ?? pairs.length;
-    const slice = pairs.slice(0, maxPairs);
+    console.log(
+      `  [1/2] Quoting pairs (mode=${discoverMode ? 'discover' : 'wallet balance'})…`
+    );
 
-    if (slice.length === 0) {
-      diagnostics.message = 'No pairs matched configured base tokens.';
-      return emptyResult(diagnostics);
-    }
+    const collected = await collectQuoteSnapshots(this, bot, {
+      discoverMode,
+      maxPairs: this.options.maxPairsPerRun,
+      onProgress: (p) => {
+        if (p.index % 10 === 0 || p.index === p.total) {
+          console.log(
+            `        quotes ${p.index}/${p.total} ${p.pair.baseSymbol}→${p.pair.targetName}  ${(p.elapsedMs / 1000).toFixed(0)}s`
+          );
+        }
+      },
+    });
+    diagnostics.totalPairsInUniverse = collected.totalPairsInUniverse;
+    diagnostics.pairsConsidered = collected.pairsConsidered;
 
-    let pairsScanned = 0;
-    let pairsSkipped = 0;
-    let errors = 0;
-    const opportunities: ScanOpportunity[] = [];
+    const edgeStart = Date.now();
+    console.log(
+      `  [2/2] Building coupled routes for ${collected.snapshots.length} pairs…`
+    );
 
-    for (const tradePair of slice) {
-      const balance = baseBalances[tradePair.baseSymbol] ?? 0n;
-      const effectiveIn = discoverMode
-        ? nominalUsdToBaseAmount(
-            tradePair.baseSymbol,
-            bot.trade.nominalTradeUsd,
-            hints
-          )
-        : computeEffectiveInForBase(
+    const opportunities =
+      bot.scan.selectionMode === 'mid_range_spread'
+        ? await collectCandidateOpportunities(
+            collected.snapshots,
             bot,
-            tradePair.baseSymbol,
-            balance,
-            hints
+            this.quotes,
+            {
+              onProgress: (p) => {
+                if (p.index % 10 === 0 || p.index === p.total) {
+                  console.log(
+                    `        edges ${p.index}/${p.total} ${p.pair.baseSymbol}→${p.pair.targetName}  (+${p.candidates} candidates)`
+                  );
+                }
+              },
+            }
+          )
+        : await this.detectRoundTripOpportunities(
+            collected.snapshots,
+            bot
           );
 
-      if (
-        effectiveIn <= 0n ||
-        !isAboveDustFloor(effectiveIn, tradePair.baseSymbol, hints)
-      ) {
-        pairsSkipped++;
-        continue;
-      }
+    const edgeSec = ((Date.now() - edgeStart) / 1000).toFixed(0);
+    console.log(
+      `  scan phases done: ${opportunities.length} safe candidates (${edgeSec}s edge pass)`
+    );
 
-      try {
-        const dexQuotes = await this.fetchQuotesWithDelay(
-          tradePair.tokenIn,
-          tradePair.tokenOut,
-          effectiveIn
+    if (this.options.verbose) {
+      const sel = selectForExecution(bot, opportunities, this.cache.selectionStores());
+      console.log(`  ${formatSelectionLog(sel)}`);
+      for (const o of opportunities.slice(0, 20)) {
+        console.log(
+          `  candidate ${o.baseSymbol}→${o.targetName} ${o.direction} ` +
+            `coupled=${o.roundTripBps}bps buySpr=${o.buySpreadBps} ` +
+            `leg1@${o.candidateDex}`
         );
-        const found = detectOpportunitiesForPair(
-          tradePair,
-          effectiveIn,
-          dexQuotes,
-          bot
-        );
-        opportunities.push(...found);
-        this.cache.upsertMany(found);
-        pairsScanned++;
-
-        if (this.options.verbose && found.length > 0) {
-          for (const o of found) {
-            console.log(
-              `  opportunity ${o.baseSymbol}→${o.targetName} ${o.spreadBps}bps ` +
-                `${o.candidateDex} vs ref ${o.referenceDex}`
-            );
-          }
-        }
-      } catch {
-        errors++;
       }
-
-      await sleep(this.options.pairDelayMs ?? DEFAULT_PAIR_DELAY);
+      if (sel.pick) {
+        console.log(
+          `  pick ${sel.pick.baseSymbol}→${sel.pick.targetName} ` +
+            `coupled=${sel.pick.roundTripBps}bps`
+        );
+      }
     }
 
-    if (pairsScanned === 0 && pairsSkipped === slice.length) {
-      diagnostics.message =
-        'All pairs skipped (dust or zero effective size). In live mode fund bases; in discover mode check nominalTradeUsd.';
-    }
+    this.cache.upsertMany(opportunities);
 
     return {
-      pairsScanned,
-      pairsSkipped,
+      pairsScanned: collected.pairsScanned,
+      pairsSkipped: collected.pairsSkipped,
       opportunities,
-      errors,
+      errors: collected.errors,
       diagnostics,
+      durationMs: collected.durationMs,
     };
+  }
+
+  private async detectRoundTripOpportunities(
+    snapshots: PairQuoteSnapshot[],
+    bot: BotConfig
+  ): Promise<ScanOpportunity[]> {
+    const opportunities: ScanOpportunity[] = [];
+    for (const snap of snapshots) {
+      const found = await detectOpportunitiesForPair(
+        snap.tradePair,
+        snap.amountIn,
+        snap.quotes,
+        bot,
+        this.quotes
+      );
+      opportunities.push(...found);
+    }
+    return opportunities;
   }
 
   private async fetchQuotesWithDelay(
@@ -209,13 +252,17 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function emptyResult(diagnostics: ScanDiagnostics): ScanResult {
+function emptyResult(
+  diagnostics: ScanDiagnostics,
+  durationMs: number
+): ScanResult {
   return {
     pairsScanned: 0,
     pairsSkipped: 0,
     opportunities: [],
     errors: 0,
     diagnostics,
+    durationMs,
   };
 }
 
@@ -241,6 +288,7 @@ function formatBalanceRow(
 
 export function formatScanSummary(
   botId: string,
+  bot: BotConfig,
   result: ScanResult,
   cache: OpportunityCache
 ): string {
@@ -257,22 +305,55 @@ export function formatScanSummary(
     `  pairs scanned:  ${result.pairsScanned}`,
     `  pairs skipped:  ${result.pairsSkipped}`,
     `  errors:         ${result.errors}`,
+    `  duration:       ${(result.durationMs / 1000).toFixed(1)}s`,
     `  opportunities this run: ${result.opportunities.length}`,
     `  cached total:   ${cache.list().length}`,
   ];
+  const blocked = cache.countBlockedByCooldown();
+  if (blocked > 0) {
+    lines.push(`  on pair cooldown: ${blocked} (skipped for execution pick)`);
+  }
+  const stores = cache.selectionStores();
+  const beforeHistory = stores.tradeHistory
+    ? stores.tradeHistory.filterEligible(result.opportunities).length
+    : result.opportunities.length;
+  const sel = cache.executionSelection(bot);
+  lines.push(`  ${formatSelectionLog(sel)}`);
+  lines.push(
+    `  coupled floor:  ${bot.scan.minCoupledSpreadBps} bps (~${(Math.abs(bot.scan.minCoupledSpreadBps) / 100).toFixed(2)}% max quoted loss)`
+  );
+  if (stores.tradeHistory) {
+    lines.push(
+      `  repeat guard:   block pair if in last ${bot.trade.minTradesBetweenSamePair} live trades (fwd+rev)`
+    );
+    lines.push(
+      `  trade history:  ${stores.tradeHistory.recentSummary(8)}`
+    );
+    if (beforeHistory > (sel.pick ? 1 : 0) && beforeHistory < result.opportunities.length) {
+      lines.push(
+        `  repeat skips:   ${result.opportunities.length - beforeHistory} candidates removed`
+      );
+    }
+  }
+  const best = sel.pick;
+  if (best) {
+    lines.push(
+      `  would execute:  ${formatOpportunityLine(best)}`
+    );
+    lines.push(`  predicted win:  ${formatPredictedWin(best)} (quote-only, before gas)`);
+  } else if (result.opportunities.length > 0 && blocked > 0) {
+    lines.push(`  would execute:  (none — top picks on pair cooldown)`);
+  }
   if (d.message) {
     lines.push(`  note: ${d.message}`);
   }
   if (result.opportunities.length > 0) {
-    lines.push('\n  Top opportunities:');
+    lines.push('\n  Top candidates (coupled bps):');
     const top = [...result.opportunities]
-      .sort((a, b) => b.spreadBps - a.spreadBps)
+      .sort((a, b) => b.roundTripBps - a.roundTripBps)
       .slice(0, 15);
     for (const o of top) {
-      lines.push(
-        `    ${o.baseSymbol}→${o.targetName.padEnd(12)} ${String(o.spreadBps).padStart(5)} bps  ` +
-          `buy@${o.candidateDex}  stream@${o.referenceDex}`
-      );
+      lines.push(`    ${formatOpportunityLine(o)}`);
     }
   }
   lines.push('');
