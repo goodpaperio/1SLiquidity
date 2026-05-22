@@ -10,6 +10,8 @@ export type StreamDexId =
   | 'uniswap-v3-10000'
   | 'sushiswap';
 
+export type TradeDirection = 'forward' | 'reverse';
+
 export interface DexQuote {
   dex: StreamDexId;
   amountOut: bigint;
@@ -24,12 +26,25 @@ export interface ScanOpportunity {
   targetName: string;
   tokenIn: string;
   tokenOut: string;
+  direction: TradeDirection;
   amountIn: bigint;
+  /** Thin pool on leg 1 (forward: base→alt buy; reverse: alt→base sell). */
   candidateDex: StreamDexId;
-  referenceDex: StreamDexId;
+  /** Deepest base→alt buy book. */
+  deepBuyDex: StreamDexId;
+  /** Deepest alt→base reserveIn (forward leg-2 / reverse leg-1 ref). */
+  referenceSellDex: StreamDexId;
   amountOutCandidate: bigint;
-  amountOutReference: bigint;
-  spreadBps: number;
+  /** Quoted base back from full alt on referenceSellDex. */
+  predictedBaseOut: bigint;
+  /** Round-trip edge bps: (predictedBaseOut − amountIn) / amountIn. */
+  roundTripBps: number;
+  /** Expected profit in base wei if quotes hold (before gas). */
+  predictedWinWei: bigint;
+  /** Buy-only spread vs deepBuyDex (diagnostic). */
+  buySpreadBps: number;
+  /** reserveIn on alt→base for referenceSellDex. */
+  sellReserveIn: bigint;
   liquidityRatio: number;
   detectedAt: number;
 }
