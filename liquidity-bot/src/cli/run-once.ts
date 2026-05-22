@@ -7,7 +7,7 @@ import { TradeExecutor } from '../execution/TradeExecutor.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
 import { PairCooldownStore } from '../scan/pairCooldown.js';
 import { TradeHistoryStore } from '../scan/tradeHistory.js';
-import { formatPredictedWin } from '../scan/formatOpportunity.js';
+import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 import {
   QuoteScanner,
   formatScanSummary,
@@ -57,17 +57,20 @@ async function main(): Promise<void> {
   }
   console.log(formatScanSummary(botId, bot, result, cache));
 
-  const opportunity = cache.peekBestForExecution(bot);
+  const sel = cache.executionSelection(bot);
+  console.log(
+    formatSelectedTradeBlock(sel, {
+      headline: isDryRun()
+        ? 'DRY-RUN: would execute on live run'
+        : 'LIVE: executing this trade',
+    })
+  );
+
+  const opportunity = sel.pick;
   if (!opportunity) {
     console.log('\n[run-once] No eligible opportunity — exiting without trade.');
     process.exit(0);
   }
-
-  console.log(
-    `\n[run-once] Executing best: ${opportunity.baseSymbol}→${opportunity.targetName} ` +
-      `coupled=${opportunity.roundTripBps}bps buySpr=${opportunity.buySpreadBps} ` +
-      `predictedWin=${formatPredictedWin(opportunity)}`
-  );
 
   console.log(
     `  trade-history recent: ${tradeHistory.recentSummary(8)}`

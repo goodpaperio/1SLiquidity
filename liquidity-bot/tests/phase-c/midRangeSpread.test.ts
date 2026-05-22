@@ -17,6 +17,23 @@ describe('midRangeSpread selection', () => {
     expect(d.find((o) => o.pairKey === 'a:b')?.roundTripBps).toBe(-30);
   });
 
+  it('picks highest coupled at or above p25 (includes positive outliers)', () => {
+    const list = [
+      sampleOpportunity({ targetName: 'a', roundTripBps: -100 }),
+      sampleOpportunity({ targetName: 'b', roundTripBps: -50 }),
+      sampleOpportunity({ targetName: 'c', roundTripBps: -40 }),
+      sampleOpportunity({ targetName: 'd', roundTripBps: -30 }),
+      sampleOpportunity({ targetName: 'e', roundTripBps: -20 }),
+      sampleOpportunity({ targetName: 'f', roundTripBps: -18 }),
+      sampleOpportunity({ targetName: 'g', roundTripBps: -15 }),
+      sampleOpportunity({ targetName: 'ldo', roundTripBps: 12 }),
+    ];
+    const sel = selectMidRangeFromOpportunities(list);
+    expect(sel.pick?.targetName).toBe('ldo');
+    expect(sel.pick?.roundTripBps).toBe(12);
+    expect(sel.eligibleCount).toBeGreaterThan(0);
+  });
+
   it('respects -100 bps floor before banding', () => {
     const list = [
       sampleOpportunity({ roundTripBps: -200 }),

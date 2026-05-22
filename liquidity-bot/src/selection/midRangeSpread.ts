@@ -23,8 +23,8 @@ export function dedupeByPairBestCoupled(
 }
 
 /**
- * p25–p75 band on coupled (roundTrip) bps; pick highest in band.
- * Pool must already satisfy minCoupledSpreadBps and other safety filters.
+ * Floor at p25 on coupled bps (drop worst outliers), then pick **highest** coupled
+ * at or above that floor — so profitable quotes (+bps) are eligible, not capped at p75.
  */
 export function selectMidRangeFromOpportunities(
   opportunities: ScanOpportunity[],
@@ -42,10 +42,8 @@ export function selectMidRangeFromOpportunities(
   }
 
   const bandLow = percentile(spreads, 0.25);
-  const bandHigh = percentile(spreads, 0.75);
-  const eligible = pool.filter(
-    (o) => o.roundTripBps >= bandLow && o.roundTripBps <= bandHigh
-  );
+  const bandHigh = spreads[spreads.length - 1] ?? bandLow;
+  const eligible = pool.filter((o) => o.roundTripBps >= bandLow);
   const pickPool = eligible.length > 0 ? eligible : pool;
   const pick = pickPool.reduce((a, b) =>
     b.roundTripBps > a.roundTripBps ? b : a

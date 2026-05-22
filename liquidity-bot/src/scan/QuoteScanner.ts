@@ -3,9 +3,10 @@ import type { BaseTokenSymbol } from '../config/baseTokens.js';
 import type { Provider } from 'ethers';
 import { BalanceService } from './BalanceService.js';
 import { DexQuoteService, STREAM_DEX_IDS } from './DexQuoteService.js';
-import { formatOpportunityLine, formatPredictedWin } from './formatOpportunity.js';
+import { formatOpportunityLine } from './formatOpportunity.js';
 import { collectCandidateOpportunities } from '../selection/collectCandidates.js';
 import {
+  formatSelectedTradeBlock,
   formatSelectionLog,
   selectForExecution,
 } from '../selection/selectForExecution.js';
@@ -194,12 +195,11 @@ export class QuoteScanner {
             `leg1@${o.candidateDex}`
         );
       }
-      if (sel.pick) {
-        console.log(
-          `  pick ${sel.pick.baseSymbol}→${sel.pick.targetName} ` +
-            `coupled=${sel.pick.roundTripBps}bps`
-        );
-      }
+      console.log(
+        formatSelectedTradeBlock(sel, {
+          headline: 'SELECTED TRADE THIS RUN (pre-cache)',
+        })
+      );
     }
 
     this.cache.upsertMany(opportunities);
@@ -335,15 +335,6 @@ export function formatScanSummary(
       );
     }
   }
-  const best = sel.pick;
-  if (best) {
-    lines.push(
-      `  would execute:  ${formatOpportunityLine(best)}`
-    );
-    lines.push(`  predicted win:  ${formatPredictedWin(best)} (quote-only, before gas)`);
-  } else if (result.opportunities.length > 0 && blocked > 0) {
-    lines.push(`  would execute:  (none — top picks on pair cooldown)`);
-  }
   if (d.message) {
     lines.push(`  note: ${d.message}`);
   }
@@ -356,6 +347,16 @@ export function formatScanSummary(
       lines.push(`    ${formatOpportunityLine(o)}`);
     }
   }
-  lines.push('');
-  return lines.join('\n');
+  const summaryBody = lines.join('\n');
+  const pickBlock = formatSelectedTradeBlock(sel, {
+    headline:
+      d.mode === 'discover'
+        ? 'DRY-RUN: would execute (discover / nominal $)'
+        : 'WOULD EXECUTE THIS RUN (wallet-sized quotes)',
+    emptyMessage:
+      blocked > 0
+        ? 'No trade — candidates on pair cooldown or filtered out.'
+        : undefined,
+  });
+  return summaryBody + pickBlock;
 }

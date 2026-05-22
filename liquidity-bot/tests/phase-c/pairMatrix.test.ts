@@ -31,7 +31,7 @@ describe('pairMatrix selection', () => {
     expect(sel.pick?.targetName).toBe('best');
   });
 
-  it('picks highest coupled spread inside p25–p75 band', () => {
+  it('picks highest coupled at or above p25 (includes positive outliers)', () => {
     const rows = [
       row('a', -100),
       row('b', -50),
@@ -41,10 +41,11 @@ describe('pairMatrix selection', () => {
       row('f', -10),
       row('g', -5),
       row('h', -2),
+      row('ldo', 12),
     ];
     const sel = selectMidRangeCoupled(rows);
-    expect(sel.pick?.targetName).toBe('g');
-    expect(sel.pick?.coupledSpreadBps).toBe(-5);
+    expect(sel.pick?.targetName).toBe('ldo');
+    expect(sel.pick?.coupledSpreadBps).toBe(12);
   });
 
   it('percentile on sorted values', () => {

@@ -173,7 +173,7 @@ export interface MidRangePick {
   pick: PairMatrixRow | null;
 }
 
-/** Mid-range (p25–p75) on coupled spread; pick highest coupledSpreadBps in band. */
+/** Floor at p25 on coupled spread, then pick highest at or above floor. */
 export function selectMidRangeCoupled(
   rows: PairMatrixRow[],
   options?: {
@@ -194,18 +194,12 @@ export function selectMidRangeCoupled(
     return { bandLow: 0, bandHigh: 0, eligibleCount: 0, pick: null };
   }
   const bandLow = percentile(spreads, 0.25);
-  const bandHigh = percentile(spreads, 0.75);
-  const eligible = pool.filter(
-    (r) => r.coupledSpreadBps >= bandLow && r.coupledSpreadBps <= bandHigh
+  const bandHigh = spreads[spreads.length - 1] ?? bandLow;
+  const eligible = pool.filter((r) => r.coupledSpreadBps >= bandLow);
+  const pickPool = eligible.length > 0 ? eligible : pool;
+  const pick = pickPool.reduce((a, b) =>
+    b.coupledSpreadBps > a.coupledSpreadBps ? b : a
   );
-  const pick =
-    eligible.length > 0
-      ? eligible.reduce((a, b) =>
-          b.coupledSpreadBps > a.coupledSpreadBps ? b : a
-        )
-      : pool.reduce((a, b) =>
-          b.coupledSpreadBps > a.coupledSpreadBps ? b : a
-        );
   return {
     bandLow,
     bandHigh,

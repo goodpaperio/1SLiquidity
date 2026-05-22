@@ -116,9 +116,9 @@ async function main(): Promise<void> {
   console.log(
     `  coupled floor:         ${bot.scan.minCoupledSpreadBps} bps (reject worse)`
   );
-  console.log('\n--- Default selection (mid-range on coupled, max in band) ---');
+  console.log('\n--- Default selection (p25 floor, max coupled above) ---');
   console.log(
-    `  band (p25–p75 coupled bps): [${selection.bandLow}, ${selection.bandHigh}]  ` +
+    `  floor p25=${selection.bandLow} bps  best=${selection.bandHigh} bps  ` +
       `eligible=${selection.eligibleCount}`
   );
   if (selection.pick) {
