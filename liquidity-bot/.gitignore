@@ -6,6 +6,8 @@ ARCHITECTURE.md
 .env.local
 secrets/
 bots/*.state.json
+bots/*.cooldowns.json
+bots/*.trade-history.json
 bots/*.wallet.meta.json
 bots/*.withdraw-*.json
 data/
