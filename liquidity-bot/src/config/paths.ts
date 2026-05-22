@@ -25,6 +25,22 @@ export function getBotsDir(): string {
   return path.join(getPackageRoot(), 'bots');
 }
 
+export function getBotCooldownPath(botId: string): string {
+  const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  if (safe !== botId.toLowerCase()) {
+    throw new Error(`Invalid bot id: ${botId}`);
+  }
+  return path.join(getBotsDir(), `${safe}.cooldowns.json`);
+}
+
+export function getBotTradeHistoryPath(botId: string): string {
+  const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  if (safe !== botId.toLowerCase()) {
+    throw new Error(`Invalid bot id: ${botId}`);
+  }
+  return path.join(getBotsDir(), `${safe}.trade-history.json`);
+}
+
 export function getBotConfigPath(botId: string): string {
   const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
   if (safe !== botId.toLowerCase()) {

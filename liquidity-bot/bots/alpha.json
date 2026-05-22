@@ -4,23 +4,26 @@
   "address": "0xfa59F5143CE0d3AEe8D63Adb56bDd756e14BF2d3",
   "privateKeyEnv": "BOT_ALPHA_KEY",
   "baseTokens": [
-    "WETH",
-    "USDC",
-    "USDT",
-    "DAI",
-    "WBTC"
+    "WETH"
   ],
   "scan": {
-    "intervalMs": 180000,
-    "minSpreadBps": 1000,
-    "minLiquidityRatio": 2
+    "intervalMs": 900000,
+    "minSpreadBps": 300,
+    "minCoupledSpreadBps": -100,
+    "selectionMode": "mid_range_spread",
+    "maxSpreadBps": 2500,
+    "minLiquidityRatio": 2,
+    "maxSellReserveUsageBps": 1500
   },
   "trade": {
-    "nominalTradeUsd": 50,
+    "nominalTradeUsd": 10,
     "balanceUsagePct": 45,
     "maxOpenTrades": 3,
     "decastreamAmountOutMinBufferBps": 160,
     "directSwapSlippageBps": 50,
+    "pairCooldownMs": 900000,
+    "minTradesBetweenSamePair": 4,
+    "tradeHistoryMaxEntries": 32,
     "usePriceBased": false,
     "isInstasettlable": false,
     "instasettleBps": 100

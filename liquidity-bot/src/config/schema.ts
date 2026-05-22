@@ -17,8 +17,26 @@ export const botConfigSchema = z.object({
   baseTokens: z.array(baseTokenEnum).min(1),
   scan: z.object({
     intervalMs: z.number().int().positive(),
+    /** Minimum spread vs deep reference (default 300 = 3%). */
     minSpreadBps: z.number().int().nonnegative(),
+    /**
+     * Reject spreads above this (default 2500 = 25%) as likely bad/stale thin-pool quotes.
+     */
+    maxSpreadBps: z.number().int().positive(),
+    /**
+     * Floor on signed coupled round-trip (bps). e.g. -500 = reject quotes worse than -5%.
+     * For ~0.5% max quoted loss use -50.
+     */
+    minCoupledSpreadBps: z.number().int().max(0).default(-100),
+    selectionMode: z
+      .enum(['round_trip', 'mid_range_spread'])
+      .default('mid_range_spread'),
     minLiquidityRatio: z.number().positive(),
+    /**
+     * Reject if alt amount exceeds this % of sell-side reserveIn on deep pool
+     * (microscopic book guard; default 1500 = 15%).
+     */
+    maxSellReserveUsageBps: z.number().int().positive(),
   }),
   trade: z.object({
     nominalTradeUsd: z.number().positive(),
@@ -26,6 +44,15 @@ export const botConfigSchema = z.object({
     maxOpenTrades: z.number().int().positive(),
     decastreamAmountOutMinBufferBps: z.number().int().nonnegative().max(10_000),
     directSwapSlippageBps: z.number().int().nonnegative().max(10_000),
+    /** Do not re-trade the same base→alt pair within this window after a fill. */
+    pairCooldownMs: z.number().int().nonnegative(),
+    /**
+     * After a live trade on a pair, block that pair for this many subsequent picks.
+     * e.g. 4 = next 4 executions cannot be the same pair (forward or reverse).
+     */
+    minTradesBetweenSamePair: z.number().int().positive().default(4),
+    /** Max live trades stored on disk for repeat guard. */
+    tradeHistoryMaxEntries: z.number().int().positive().default(32),
     usePriceBased: z.boolean(),
     isInstasettlable: z.boolean(),
     instasettleBps: z.number().int().nonnegative().max(10_000),
