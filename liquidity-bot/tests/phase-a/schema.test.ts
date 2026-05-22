@@ -29,8 +29,10 @@ describe('phase A — bot schema', () => {
       baseTokens: ['WETH'],
       scan: {
         intervalMs: 180000,
-        minSpreadBps: 1000,
+        minSpreadBps: 300,
+        maxSpreadBps: 2500,
         minLiquidityRatio: 2,
+        maxSellReserveUsageBps: 1500,
       },
       trade: {
         nominalTradeUsd: 50,
@@ -38,6 +40,7 @@ describe('phase A — bot schema', () => {
         maxOpenTrades: 1,
         decastreamAmountOutMinBufferBps: 160,
         directSwapSlippageBps: 50,
+        pairCooldownMs: 1_800_000,
         usePriceBased: false,
         isInstasettlable: false,
         instasettleBps: 100,
