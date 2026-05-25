@@ -729,10 +729,23 @@ export class TradeMonitor {
       const tokenOutDecimals = getTokenDecimals(createdEvent.tokenOut);
 
       // Calculate total realized amount from executions
+      // Note: TradeStreamExecuted emits the per-stream amountOut delta, so summing
+      // across executions yields the GROSS realised total (before stream fees).
       const totalRealized = executions.reduce(
         (sum, exec) => sum + BigInt(exec.realisedAmountOut),
         BigInt(0)
       );
+
+      // Total tokenIn that has actually been streamed across all executions.
+      // We use this — not minAmountOut — to decide whether a trade has been
+      // fully drained on the input side. `minAmountOut` is the user-specified
+      // slippage floor (frequently set to 1 wei), so comparing against it
+      // falsely classifies still-streaming trades as "executed".
+      const totalStreamedIn = executions.reduce(
+        (sum, exec) => sum + BigInt(exec.amountIn),
+        BigInt(0)
+      );
+      const originalAmountIn = BigInt(createdEvent.amountIn);
 
       // Determine completion status (priority: cancelled > instasettled > completed > executed)
       let completionType:
@@ -756,14 +769,18 @@ export class TradeMonitor {
         completionType = "completed";
         completionTime = completed.timestamp;
         finalAmountOut = BigInt(completed.finalRealisedAmountOut);
-      } else if (executions.length > 0) {
-        // Check if trade is fully executed by comparing with target amount
-        const targetAmount = BigInt(createdEvent.minAmountOut);
-        if (totalRealized >= targetAmount) {
-          completionType = "executed";
-          completionTime = executions[executions.length - 1].timestamp;
-          finalAmountOut = totalRealized;
-        }
+      } else if (
+        executions.length > 0 &&
+        originalAmountIn > BigInt(0) &&
+        totalStreamedIn >= originalAmountIn
+      ) {
+        // Safety net for trades whose entire amountIn has been streamed but for
+        // which no TradeCompleted event was observed (e.g. older Core versions
+        // or a missed terminal log). The current contract reliably emits
+        // TradeCompleted in this case, so this branch should rarely trigger.
+        completionType = "executed";
+        completionTime = executions[executions.length - 1].timestamp;
+        finalAmountOut = totalRealized;
       }
 
       if (completionType) {

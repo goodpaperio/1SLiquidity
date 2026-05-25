@@ -35,9 +35,10 @@ import {
   FeeClaim,
   FeeRateUpdate,
   LowLevelError as LowLevelErrorEntity,
-  DataError as DataErrorEntity
+  DataError as DataErrorEntity,
+  PendingStreamFees
 } from '../generated/schema'
-import { BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
+import { BigInt, Bytes, ethereum, store } from '@graphprotocol/graph-ts'
 
 const STATUS_OPEN = 'OPEN'
 const STATUS_COMPLETED = 'COMPLETED'
@@ -49,7 +50,8 @@ function eventId(event: ethereum.Event): string {
 }
 
 export function handleTradeCreated(event: TradeCreated): void {
-  let trade = new Trade(event.params.tradeId.toString())
+  let tradeId = event.params.tradeId.toString()
+  let trade = new Trade(tradeId)
   trade.tradeId = event.params.tradeId
   trade.user = event.params.user
   trade.tokenIn = event.params.tokenIn
@@ -57,7 +59,6 @@ export function handleTradeCreated(event: TradeCreated): void {
   trade.amountIn = event.params.amountIn
   trade.amountRemaining = event.params.amountRemaining
   trade.minAmountOut = event.params.minAmountOut
-  trade.realisedAmountOut = event.params.realisedAmountOut
   trade.isInstasettlable = event.params.isInstasettlable
   trade.instasettleBps = event.params.instasettleBps
   trade.lastSweetSpot = event.params.lastSweetSpot
@@ -67,7 +68,20 @@ export function handleTradeCreated(event: TradeCreated): void {
   trade.status = STATUS_OPEN
   trade.createdAt = event.block.timestamp
   trade.updatedAt = event.block.timestamp
+
+  // The TradeCreated event carries the GROSS realisedAmountOut from the in-memory
+  // updatedTrade returned by executeStream, BEFORE _applyStreamFees subtracted the
+  // protocol/bot fees in placeTrade. On-chain storage at this point already holds
+  // the NET value. PendingStreamFees accumulates the fees taken by the initial
+  // stream (StreamFeesTaken fires before TradeCreated inside placeTrade).
+  let pending = PendingStreamFees.load(tradeId)
+  let priorFees = pending == null ? BigInt.fromI32(0) : pending.totalFees
+  trade.realisedAmountOut = event.params.realisedAmountOut.minus(priorFees)
   trade.save()
+
+  if (pending != null) {
+    store.remove('PendingStreamFees', tradeId)
+  }
 }
 
 export function handleTradeStreamExecuted(event: TradeStreamExecuted): void {
@@ -81,7 +95,13 @@ export function handleTradeStreamExecuted(event: TradeStreamExecuted): void {
   execution.txHash = event.transaction.hash
   execution.save()
 
-  // Reflect latest stream state on the parent Trade for easier querying.
+  // event.params.realisedAmountOut equals the in-memory storageTrade value right
+  // after `storageTrade.realisedAmountOut += amountOut`, i.e. NET-so-far plus the
+  // GROSS of this stream. handleStreamFeesTaken fires next and subtracts the
+  // fees, leaving the entity at the on-chain NET value.
+  // When this is the initial stream from placeTrade, the Trade entity does not
+  // exist yet; handleTradeCreated runs last and seeds the NET value via the
+  // PendingStreamFees helper.
   let trade = Trade.load(event.params.tradeId.toString())
   if (trade != null) {
     trade.realisedAmountOut = event.params.realisedAmountOut
@@ -183,6 +203,29 @@ export function handleStreamFeesTaken(event: StreamFeesTaken): void {
   streamFee.blockNumber = event.block.number
   streamFee.txHash = event.transaction.hash
   streamFee.save()
+
+  // Mirror the contract:
+  //   trades[tradeId].realisedAmountOut -= (protocolFee + botFee)
+  // so the subgraph's Trade.realisedAmountOut equals the on-chain (net) storage.
+  let totalFee = event.params.protocolFee.plus(event.params.botFee)
+  let tradeId = event.params.tradeId.toString()
+  let trade = Trade.load(tradeId)
+  if (trade != null) {
+    trade.realisedAmountOut = trade.realisedAmountOut.minus(totalFee)
+    trade.updatedAt = event.block.timestamp
+    trade.save()
+  } else {
+    // placeTrade's initial stream emits StreamFeesTaken BEFORE TradeCreated.
+    // Stash the fees so handleTradeCreated can subtract them from the gross
+    // realisedAmountOut carried by the TradeCreated event.
+    let pending = PendingStreamFees.load(tradeId)
+    if (pending == null) {
+      pending = new PendingStreamFees(tradeId)
+      pending.totalFees = BigInt.fromI32(0)
+    }
+    pending.totalFees = pending.totalFees.plus(totalFee)
+    pending.save()
+  }
 }
 
 export function handleInstasettleFeeTaken(event: InstasettleFeeTaken): void {

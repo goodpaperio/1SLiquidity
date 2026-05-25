@@ -2114,6 +2114,63 @@ export class DataError extends Entity {
   }
 }
 
+export class PendingStreamFees extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save PendingStreamFees entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type PendingStreamFees must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("PendingStreamFees", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): PendingStreamFees | null {
+    return changetype<PendingStreamFees | null>(
+      store.get_in_block("PendingStreamFees", id),
+    );
+  }
+
+  static load(id: string): PendingStreamFees | null {
+    return changetype<PendingStreamFees | null>(
+      store.get("PendingStreamFees", id),
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get totalFees(): BigInt {
+    let value = this.get("totalFees");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalFees(value: BigInt) {
+    this.set("totalFees", Value.fromBigInt(value));
+  }
+}
+
 export class TradeExecutionLoader extends Entity {
   _entity: string;
   _field: string;

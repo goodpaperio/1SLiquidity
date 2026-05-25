@@ -173,3 +173,14 @@ type DataError @entity(immutable: true) {
   blockNumber: BigInt!
   txHash: Bytes!
 }
+
+# Internal helper to bridge event ordering inside placeTrade.
+# In placeTrade the initial stream emits TradeStreamExecuted and StreamFeesTaken
+# BEFORE TradeCreated, so the Trade entity does not yet exist when the stream
+# fees fire. We accumulate them here keyed by tradeId; handleTradeCreated
+# consumes the pending total and removes the entity so Trade.realisedAmountOut
+# matches the on-chain (net) storage value.
+type PendingStreamFees @entity(immutable: false) {
+  id: ID!
+  totalFees: BigInt!
+}

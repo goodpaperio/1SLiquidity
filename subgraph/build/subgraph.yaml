@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710"
       abi: Core
-      startBlock: 25093744
+      startBlock: 25072029
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -28,6 +28,7 @@ dataSources:
         - BotEvent
         - LowLevelError
         - DataError
+        - PendingStreamFees
       abis:
         - name: Core
           file: Core\Core.json
@@ -68,7 +69,7 @@ dataSources:
     source:
       address: "0xfc61Dd8254F07b515b0529032181DA1cC42518c1"
       abi: StreamDaemon
-      startBlock: 25093744
+      startBlock: 25072029
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

@@ -28,6 +28,7 @@ dataSources:
         - BotEvent
         - LowLevelError
         - DataError
+        - PendingStreamFees
       abis:
         - name: Core
           file: ./abis/Core.json
