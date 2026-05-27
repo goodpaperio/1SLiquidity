@@ -8,6 +8,8 @@ export interface TradeHistoryEntry {
   pairKey: string;
   direction: TradeDirection;
   targetName: string;
+  tokenIn?: string;
+  tokenOut?: string;
   at: number;
 }
 
@@ -70,9 +72,18 @@ export class TradeHistoryStore {
     pairKey: string,
     direction: TradeDirection,
     targetName: string,
+    tokenIn?: string,
+    tokenOut?: string,
     tradedAt = Date.now()
   ): void {
-    this.trades.push({ pairKey, direction, targetName, at: tradedAt });
+    this.trades.push({
+      pairKey,
+      direction,
+      targetName,
+      tokenIn,
+      tokenOut,
+      at: tradedAt,
+    });
     if (this.trades.length > this.maxEntries) {
       this.trades = this.trades.slice(-this.maxEntries);
     }
@@ -89,6 +100,19 @@ export class TradeHistoryStore {
 
   listRecent(n = 8): TradeHistoryEntry[] {
     return this.trades.slice(-n);
+  }
+
+  /**
+   * Tokens seen in successful live trades for this bot.
+   * Used to expand trusted scan universe while ignoring random wallet dust.
+   */
+  provenTokenAddresses(): Set<string> {
+    const out = new Set<string>();
+    for (const t of this.trades) {
+      if (t.tokenIn) out.add(t.tokenIn.toLowerCase());
+      if (t.tokenOut) out.add(t.tokenOut.toLowerCase());
+    }
+    return out;
   }
 
   private load(): TradeHistoryFile {

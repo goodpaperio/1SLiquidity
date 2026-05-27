@@ -18,6 +18,7 @@ export function createBotConfigTemplate(
       selectionMode: 'mid_range_spread',
       maxSpreadBps: 2500,
       minLiquidityRatio: 2,
+      dustFloorUsd: 1,
       maxSellReserveUsageBps: 1500,
     },
     trade: {

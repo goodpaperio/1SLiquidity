@@ -1,12 +1,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { BotConfig } from '../config/schema.js';
+import { createBotWallet } from '../chain/wallet.js';
+import {
+  getCoreContract,
+  listOutstandingTradesForOwner,
+} from '../chain/core.js';
 import { getBotsDir } from '../config/paths.js';
 import { createProvider } from '../chain/provider.js';
+import { TradeExecutor } from '../execution/TradeExecutor.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
 import { PairCooldownStore } from '../scan/pairCooldown.js';
 import { TradeHistoryStore } from '../scan/tradeHistory.js';
 import { QuoteScanner, formatScanSummary } from '../scan/QuoteScanner.js';
+import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 
 export interface BotState {
   lastUpdatedAt: string;
@@ -35,6 +42,7 @@ export function writeBotState(botId: string, state: BotState): void {
  */
 export class BotRunner {
   private stopped = false;
+  private cycleInFlight = false;
   private readonly pairCooldown: PairCooldownStore;
   private readonly tradeHistory: TradeHistoryStore;
   private readonly opportunityCache: OpportunityCache;
@@ -71,9 +79,9 @@ export class BotRunner {
       scanner = new QuoteScanner(provider, this.opportunityCache, {
         pairDelayMs: 30,
       });
-      await this.runScan(id, scanner);
+      await this.runCycle(id, scanner, provider);
       this.scanTimer = setInterval(() => {
-        void this.runScan(id, scanner!);
+        void this.runCycle(id, scanner!, provider);
       }, this.config.scan.intervalMs);
     } catch (err) {
       console.warn(
@@ -95,17 +103,58 @@ export class BotRunner {
     if (this.scanTimer) clearInterval(this.scanTimer);
   }
 
-  private async runScan(id: string, scanner: QuoteScanner): Promise<void> {
+  private async runCycle(
+    id: string,
+    scanner: QuoteScanner,
+    provider: ReturnType<typeof createProvider>
+  ): Promise<void> {
+    if (this.cycleInFlight) {
+      console.log(`[${id}] previous cycle still running; skip this tick.`);
+      return;
+    }
+    this.cycleInFlight = true;
     try {
+      const core = getCoreContract(this.config, provider);
+      const outstanding = await listOutstandingTradesForOwner(
+        core,
+        this.config.address
+      );
+      if (outstanding.length >= this.config.trade.maxOpenTrades) {
+        console.log(
+          `[${id}] skipping cycle: outstanding trades ${outstanding.length}/${this.config.trade.maxOpenTrades}`
+        );
+        return;
+      }
+
       const result = await scanner.scanBot(this.config);
       console.log(
         formatScanSummary(id, this.config, result, this.opportunityCache)
       );
+
+      const sel = this.opportunityCache.executionSelection(this.config);
+      console.log(
+        formatSelectedTradeBlock(sel, {
+          headline: 'RUNNER: executing this cycle',
+          emptyMessage: 'No eligible pick this cycle.',
+        })
+      );
+      if (!sel.pick) return;
+
+      const wallet = createBotWallet(this.config, provider);
+      const executor = new TradeExecutor(
+        this.config,
+        provider,
+        this.pairCooldown,
+        this.tradeHistory
+      );
+      await executor.execute(sel.pick, wallet);
     } catch (err) {
       console.error(
-        `[${id}] scan failed:`,
+        `[${id}] cycle failed:`,
         err instanceof Error ? err.message : err
       );
+    } finally {
+      this.cycleInFlight = false;
     }
   }
 }

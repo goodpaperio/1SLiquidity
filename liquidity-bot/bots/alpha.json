@@ -13,12 +13,13 @@
     "selectionMode": "mid_range_spread",
     "maxSpreadBps": 2500,
     "minLiquidityRatio": 2,
+    "dustFloorUsd": 1,
     "maxSellReserveUsageBps": 1500
   },
   "trade": {
     "nominalTradeUsd": 10,
     "balanceUsagePct": 45,
-    "maxOpenTrades": 3,
+    "maxOpenTrades": 1,
     "decastreamAmountOutMinBufferBps": 160,
     "directSwapSlippageBps": 50,
     "pairCooldownMs": 900000,

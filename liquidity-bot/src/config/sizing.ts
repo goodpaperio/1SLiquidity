@@ -107,12 +107,13 @@ export function computeEffectiveInForBase(
   );
 }
 
-/** Minimum notionally ~$1 equivalent (dust floor for scanning). */
+/** Minimum notional USD equivalent (dust floor for scanning). */
 export function isAboveDustFloor(
   amountWei: bigint,
   baseSymbol: BaseTokenSymbol,
+  dustFloorUsd: number,
   hints: PriceHints = getPriceHintsFromEnv()
 ): boolean {
-  const oneUsd = nominalUsdToBaseAmount(baseSymbol, 1, hints);
-  return amountWei >= oneUsd;
+  const dustFloor = nominalUsdToBaseAmount(baseSymbol, dustFloorUsd, hints);
+  return amountWei >= dustFloor;
 }

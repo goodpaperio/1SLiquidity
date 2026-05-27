@@ -13,6 +13,7 @@ const botConfig: BotConfig = {
   scan: {
     intervalMs: 180000,
     minSpreadBps: 1000,
+    dustFloorUsd: 1,
     maxSpreadBps: 2500,
     minLiquidityRatio: 2,
   },

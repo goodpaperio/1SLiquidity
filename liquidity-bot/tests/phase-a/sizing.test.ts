@@ -32,7 +32,8 @@ describe('phase A — sizing', () => {
   });
 
   it('dust floor rejects tiny amounts', () => {
-    expect(isAboveDustFloor(100n, 'USDC', hints)).toBe(false);
-    expect(isAboveDustFloor(1_000_000n, 'USDC', hints)).toBe(true);
+    expect(isAboveDustFloor(100n, 'USDC', 1, hints)).toBe(false);
+    expect(isAboveDustFloor(1_000_000n, 'USDC', 1, hints)).toBe(true);
+    expect(isAboveDustFloor(1_000_000n, 'USDC', 2, hints)).toBe(false);
   });
 });

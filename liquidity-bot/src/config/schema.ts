@@ -32,6 +32,8 @@ export const botConfigSchema = z.object({
       .enum(['round_trip', 'mid_range_spread'])
       .default('mid_range_spread'),
     minLiquidityRatio: z.number().positive(),
+    /** Minimum notional USD for scan amount checks (dust filter). */
+    dustFloorUsd: z.number().positive().default(1),
     /**
      * Reject if alt amount exceeds this % of sell-side reserveIn on deep pool
      * (microscopic book guard; default 1500 = 15%).

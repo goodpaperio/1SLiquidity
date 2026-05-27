@@ -1,7 +1,11 @@
 import type { BotConfig } from '../config/schema.js';
-import type { BaseTokenSymbol } from '../config/baseTokens.js';
+import {
+  BASE_TOKEN_ADDRESSES,
+  BASE_TOKEN_SYMBOLS,
+  type BaseTokenSymbol,
+} from '../config/baseTokens.js';
 import type { TradePair } from '../config/loadPairs.js';
-import { buildTradePairsForBot } from '../config/loadPairs.js';
+import { buildTradePairsForBaseSymbols } from '../config/loadPairs.js';
 import {
   computeEffectiveInForBase,
   computeEffectiveTradeAmount,
@@ -28,6 +32,7 @@ export interface CollectQuotesResult {
   durationMs: number;
   totalPairsInUniverse: number;
   pairsConsidered: number;
+  scanBases: BaseTokenSymbol[];
 }
 
 export type ProgressCallback = (info: {
@@ -44,6 +49,7 @@ export async function collectQuoteSnapshots(
   options: {
     discoverMode: boolean;
     maxPairs?: number;
+    provenTokenAddresses?: Set<string>;
     onProgress?: ProgressCallback;
   }
 ): Promise<CollectQuotesResult> {
@@ -51,14 +57,44 @@ export async function collectQuoteSnapshots(
   const hints = getPriceHintsFromEnv();
   const discoverMode = options.discoverMode;
 
-  const baseBalances = await scanner.getBaseBalances(bot.address, bot.baseTokens);
-  const heldBases = bot.baseTokens.filter(
+  const baseBalances = await scanner.getBaseBalances(
+    bot.address,
+    [...BASE_TOKEN_SYMBOLS]
+  );
+  const heldBases = BASE_TOKEN_SYMBOLS.filter(
     (sym) => (baseBalances[sym as BaseTokenSymbol] ?? 0n) > 0n
   ) as BaseTokenSymbol[];
-  const scanBases = (discoverMode ? bot.baseTokens : heldBases) as BaseTokenSymbol[];
+  const configuredBases = bot.baseTokens as BaseTokenSymbol[];
+  const activeBaseSet = new Set<BaseTokenSymbol>(configuredBases);
+  if (!discoverMode) {
+    for (const sym of heldBases) activeBaseSet.add(sym);
+    for (const token of options.provenTokenAddresses ?? []) {
+      const lower = token.toLowerCase();
+      for (const sym of BASE_TOKEN_SYMBOLS) {
+        if (BASE_TOKEN_ADDRESSES[sym].toLowerCase() === lower) {
+          activeBaseSet.add(sym);
+        }
+      }
+    }
+  }
+  const scanBases = (discoverMode
+    ? configuredBases
+    : [...activeBaseSet]) as BaseTokenSymbol[];
+  const tradableTokens = new Set<string>(
+    [...(options.provenTokenAddresses ?? [])].map((x) => x.toLowerCase())
+  );
+  for (const sym of configuredBases) {
+    tradableTokens.add(BASE_TOKEN_ADDRESSES[sym].toLowerCase());
+  }
 
-  const allPairs = buildTradePairsForBot(bot);
-  const pairs = allPairs.filter((p) => scanBases.includes(p.baseSymbol));
+  const allPairs = buildTradePairsForBaseSymbols(scanBases);
+  const pairs = discoverMode
+    ? allPairs
+    : allPairs.filter((p) => {
+        const baseHeld = (baseBalances[p.baseSymbol] ?? 0n) > 0n;
+        const altTrusted = tradableTokens.has(p.targetAddress.toLowerCase());
+        return baseHeld || altTrusted;
+      });
   const slice = pairs.slice(0, options.maxPairs ?? pairs.length);
 
   const snapshots: PairQuoteSnapshot[] = [];
@@ -81,7 +117,12 @@ export async function collectQuoteSnapshots(
 
     if (
       effectiveBaseIn > 0n &&
-      isAboveDustFloor(effectiveBaseIn, tradePair.baseSymbol, hints)
+      isAboveDustFloor(
+        effectiveBaseIn,
+        tradePair.baseSymbol,
+        bot.scan.dustFloorUsd,
+        hints
+      )
     ) {
       try {
         const quotes = await scanner.fetchQuotesForPair(
@@ -129,7 +170,12 @@ export async function collectQuoteSnapshots(
             refBase.find((q) => q.amountOut > 0n)?.amountOut ?? 0n;
           const dustOk =
             refOut > 0n &&
-            isAboveDustFloor(refOut, tradePair.baseSymbol, hints);
+            isAboveDustFloor(
+              refOut,
+              tradePair.baseSymbol,
+              bot.scan.dustFloorUsd,
+              hints
+            );
 
           if (dustOk) {
             const sellQuotes = await scanner.fetchQuotesForPair(
@@ -173,5 +219,6 @@ export async function collectQuoteSnapshots(
     durationMs: Date.now() - start,
     totalPairsInUniverse: allPairs.length,
     pairsConsidered: pairs.length,
+    scanBases,
   };
 }

@@ -1,5 +1,8 @@
 import type { BotConfig } from '../config/schema.js';
-import type { BaseTokenSymbol } from '../config/baseTokens.js';
+import {
+  BASE_TOKEN_SYMBOLS,
+  type BaseTokenSymbol,
+} from '../config/baseTokens.js';
 import type { Provider } from 'ethers';
 import { BalanceService } from './BalanceService.js';
 import { DexQuoteService, STREAM_DEX_IDS } from './DexQuoteService.js';
@@ -103,23 +106,25 @@ export class QuoteScanner {
     const discoverMode = this.options.discoverMode === true;
     const baseBalances = await this.balances.getBaseBalances(
       bot.address,
-      bot.baseTokens
+      [...BASE_TOKEN_SYMBOLS]
     );
 
     const balanceStrings: Partial<Record<BaseTokenSymbol, string>> = {};
-    for (const sym of bot.baseTokens) {
+    for (const sym of BASE_TOKEN_SYMBOLS) {
       const b = baseBalances[sym as BaseTokenSymbol] ?? 0n;
       balanceStrings[sym as BaseTokenSymbol] = b.toString();
     }
 
-    const heldBases = bot.baseTokens.filter((sym) => {
+    const heldBases = BASE_TOKEN_SYMBOLS.filter((sym) => {
       const bal = baseBalances[sym as BaseTokenSymbol] ?? 0n;
       return bal > 0n;
     }) as BaseTokenSymbol[];
-
-    const scanBases = (
-      discoverMode ? bot.baseTokens : heldBases
-    ) as BaseTokenSymbol[];
+    const knownTokens =
+      this.cache.selectionStores().tradeHistory?.provenTokenAddresses() ??
+      new Set<string>();
+    const scanBases = discoverMode
+      ? (bot.baseTokens as BaseTokenSymbol[])
+      : heldBases;
 
     const diagnostics: ScanDiagnostics = {
       mode: discoverMode ? 'discover' : 'live',
@@ -130,12 +135,6 @@ export class QuoteScanner {
       baseBalances: balanceStrings,
     };
 
-    if (scanBases.length === 0) {
-      diagnostics.message =
-        'No base tokens to scan. Fund the wallet with USDC/WETH/etc., or use scan:dry-run (discover mode).';
-      return emptyResult(diagnostics, Date.now() - start);
-    }
-
     console.log(
       `  [1/2] Quoting pairs (mode=${discoverMode ? 'discover' : 'wallet balance'})…`
     );
@@ -143,6 +142,7 @@ export class QuoteScanner {
     const collected = await collectQuoteSnapshots(this, bot, {
       discoverMode,
       maxPairs: this.options.maxPairsPerRun,
+      provenTokenAddresses: knownTokens,
       onProgress: (p) => {
         if (p.index % 10 === 0 || p.index === p.total) {
           console.log(
@@ -153,6 +153,12 @@ export class QuoteScanner {
     });
     diagnostics.totalPairsInUniverse = collected.totalPairsInUniverse;
     diagnostics.pairsConsidered = collected.pairsConsidered;
+    diagnostics.scanBases = collected.scanBases;
+    if (!discoverMode && collected.pairsConsidered === 0) {
+      diagnostics.message =
+        'No trusted funded routes to scan yet. Hold a configured base or prior traded token, or use scan:dry-run.';
+      return emptyResult(diagnostics, Date.now() - start);
+    }
 
     const edgeStart = Date.now();
     console.log(

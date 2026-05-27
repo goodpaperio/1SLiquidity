@@ -51,10 +51,20 @@ export function loadPairsForBase(baseSymbol: BaseTokenSymbol): PairTarget[] {
  * Skips targets whose address equals the base (e.g. WETH in weth list).
  */
 export function buildTradePairsForBot(bot: BotConfig): TradePair[] {
+  return buildTradePairsForBaseSymbols(bot.baseTokens);
+}
+
+/**
+ * Build trade pairs (base → alt) for explicit base symbols.
+ * Skips targets whose address equals the base (e.g. WETH in weth list).
+ */
+export function buildTradePairsForBaseSymbols(
+  baseSymbols: readonly string[]
+): TradePair[] {
   const pairs: TradePair[] = [];
   const seen = new Set<string>();
 
-  for (const baseSymbol of bot.baseTokens) {
+  for (const baseSymbol of baseSymbols) {
     if (!isBaseTokenSymbol(baseSymbol)) {
       throw new Error(`Unknown base token in bot config: ${baseSymbol}`);
     }

@@ -291,7 +291,9 @@ export class TradeExecutor {
     this.tradeHistory?.recordLiveTrade(
       opportunity.pairKey,
       opportunity.direction,
-      opportunity.targetName
+      opportunity.targetName,
+      opportunity.tokenIn,
+      opportunity.tokenOut
     );
   }
 }

@@ -13,6 +13,7 @@ import type { TradePair } from '../../src/config/loadPairs.js';
 const botStub = {
   scan: {
     minSpreadBps: 300,
+    dustFloorUsd: 1,
     maxSpreadBps: 2500,
     minLiquidityRatio: 2,
     maxSellReserveUsageBps: 1500,
