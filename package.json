@@ -201,6 +201,8 @@
     "sync:mainnet-addresses:sol": "bash scripts/sync-mainnet-addresses-sol.sh",
     "redeploy-server": "bash scripts/redeploy-server.sh",
     "redeploy-liquidity-bot": "bash scripts/redeploy-liquidity-bot.sh",
+    "start-liquidity-bot": "bash scripts/start-liquidity-bot.sh",
+    "pause-liquidity-bot": "bash scripts/pause-liquidity-bot.sh",
     "deploy:and:extract": "npm run deploy:barebones:create2 && npm run extract:addresses && npm run sync:mainnet-addresses:sol",
     "deploy:god-mode:and:extract": "npm run deploy:barebones:god-mode && npm run extract:addresses",
     "deploy:mainnet:verify": "forge verify-contract $CORE_ADDRESS src/Core.sol:Core --etherscan-api-key $API_KEY_ETHERSCAN --chain mainnet --constructor-args $(cast abi-encode 'constructor(address,address,address)' $STREAM_DAEMON_ADDRESS $EXECUTOR_ADDRESS $REGISTRY_ADDRESS)",

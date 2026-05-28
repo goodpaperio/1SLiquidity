@@ -2,15 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { applySlippageBps } from '../../src/execution/slippage.js';
 import { encodePlaceTradeData } from '../../src/execution/placeTradeLeg.js';
 
-describe('phase D — slippage', () => {
-  it('applies bps haircut', () => {
+describe('integration — execution slippage and encoding', () => {
+  it('applies bps haircut to quoted amounts', () => {
     expect(applySlippageBps(10_000n, 50)).toBe(9950n);
     expect(applySlippageBps(1_000_000n, 160)).toBe(984_000n);
   });
-});
 
-describe('phase D — placeTrade encoding', () => {
-  it('encodes eight-field tradeData tuple', () => {
+  it('encodes eight-field placeTrade tuple for Core', () => {
     const data = encodePlaceTradeData({
       tokenIn: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       tokenOut: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',

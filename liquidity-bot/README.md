@@ -29,7 +29,9 @@ Do not paste `# comments` on the same line as shell commands.
 ```bash
 npm run verify:0    # scaffold
 npm run verify:a    # config, pairs, sizing
-npm run verify:b    # … (phase B+)
+npm run verify:b    # bot lifecycle (generate, deploy, pm2)
+npm run verify:c    # scan, selection, trade history
+npm run verify:integration   # execution + runner cycle (direct swap, placeTrade, gas refuel)
 npm run verify:all  # build + all tests
 ```
 
