@@ -1,19 +1,89 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TOKEN_ADDRESSES = exports.DEPLOYMENT_BLOCK = exports.CONTRACT_ADDRESSES = void 0;
+exports.TOKEN_ADDRESSES = exports.DEPLOYMENT_BLOCK = exports.BOT_VERSION = exports.CONTRACT_ADDRESSES = void 0;
 exports.getProvider = getProvider;
 exports.getSigner = getSigner;
 exports.getRpcUrl = getRpcUrl;
 const ethers_1 = require("ethers");
 require("dotenv/config");
+const child_process_1 = require("child_process");
+const fs_1 = require("fs");
+const path_1 = require("path");
 exports.CONTRACT_ADDRESSES = {
-    core: "0x4f055d064556ce4433c53b7c21ebe4f6ab96a8a3",
+    core: "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
     registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
-    executor: "0xA03762EFF4f98cDA57DeA0a8eB62ab872C832878",
-    streamDaemon: "0x4b62049fdbc935f4af89e7ccb9541c6f6a58d314",
+    executor: "0xb2194D54cD31A2c23B071ca68394CF9C35910545",
+    streamDaemon: "0x75C851Ea1f6461f65Fd04582b6E4BF49168632C5",
 };
-// Deployment block for Core contract v1.0.7
-exports.DEPLOYMENT_BLOCK = 25014137;
+function extractVersionNumber(version) {
+    return version.split(".").map((v) => Number(v));
+}
+function compareSemver(a, b) {
+    const av = extractVersionNumber(a);
+    const bv = extractVersionNumber(b);
+    const len = Math.max(av.length, bv.length);
+    for (let i = 0; i < len; i++) {
+        const ai = av[i] ?? 0;
+        const bi = bv[i] ?? 0;
+        if (ai !== bi)
+            return ai - bi;
+    }
+    return 0;
+}
+function getLatestDeploymentVersion(repoRoot) {
+    const versionsDir = (0, path_1.join)(repoRoot, "versions");
+    if (!(0, fs_1.existsSync)(versionsDir))
+        return null;
+    const matches = (0, fs_1.readdirSync)(versionsDir)
+        .map((name) => {
+        const m = name.match(/^deployment-addresses-mainnet-(\d+\.\d+\.\d+)\.json$/);
+        return m ? m[1] : null;
+    })
+        .filter((v) => Boolean(v));
+    if (matches.length === 0)
+        return null;
+    matches.sort(compareSemver);
+    return matches[matches.length - 1];
+}
+function detectBotVersion() {
+    const fromEnv = process.env.BOT_VERSION?.trim();
+    if (fromEnv)
+        return fromEnv;
+    const repoRoot = (0, path_1.join)(__dirname, "..", "..");
+    // Prefer deployment manifests first so runtime reflects deployed artifacts.
+    const latestDeploymentVersion = getLatestDeploymentVersion(repoRoot);
+    if (latestDeploymentVersion)
+        return latestDeploymentVersion;
+    // Fallback to latest git tag when manifests are unavailable.
+    try {
+        const latestTag = (0, child_process_1.execSync)("git describe --tags --abbrev=0", {
+            cwd: repoRoot,
+            stdio: ["ignore", "pipe", "ignore"],
+            encoding: "utf8",
+        }).trim();
+        if (latestTag)
+            return latestTag;
+    }
+    catch {
+        // fall through to package.json fallback
+    }
+    // Final fallback: root package.json version.
+    try {
+        const rootPackagePath = (0, path_1.join)(repoRoot, "package.json");
+        const rootPackage = JSON.parse((0, fs_1.readFileSync)(rootPackagePath, "utf8"));
+        if (rootPackage.version)
+            return rootPackage.version;
+    }
+    catch {
+        // ignore and use final default
+    }
+    return "unknown";
+}
+// Bot/deployment version shown in Telegram notifications.
+// Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
+exports.BOT_VERSION = detectBotVersion();
+// Deployment block for Core contract v1.0.9
+exports.DEPLOYMENT_BLOCK = 25072029;
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 exports.TOKEN_ADDRESSES = {
     "0x0000000000000000000000000000000000000000": "ETH",

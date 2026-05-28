@@ -6,7 +6,10 @@ export declare class TradeMonitor {
     private coreContract;
     private coreContractWithSigner;
     private localDataPath;
+    private alertStatePath;
     private constructor();
+    private loadAlertState;
+    private saveAlertState;
     /**
      * Create a new TradeMonitor instance (async factory method)
      */
@@ -115,6 +118,7 @@ export declare class TradeMonitor {
      * Execute trades for a specific pair ID (submits transaction and returns transaction response)
      */
     executeTrades(pairId: string): Promise<ethers.TransactionResponse>;
+    private buildRunTradeDetails;
     /**
      * Calculate run statistics including fees and gas costs
      */
@@ -127,6 +131,7 @@ export declare class TradeMonitor {
      * Display fee statistics
      */
     private displayFeeStats;
+    private displayStreamBreakdown;
     /**
      * Execute all outstanding trades from local data (sequential execution)
      */

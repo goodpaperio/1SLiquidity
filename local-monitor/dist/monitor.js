@@ -25,6 +25,27 @@ class TradeMonitor {
             this.coreContractWithSigner = null;
         }
         this.localDataPath = (0, path_1.join)(process.cwd(), "localData.json");
+        this.alertStatePath = (0, path_1.join)(process.cwd(), "telegramAlertState.json");
+    }
+    loadAlertState() {
+        if (!(0, fs_1.existsSync)(this.alertStatePath)) {
+            return {};
+        }
+        try {
+            const raw = (0, fs_1.readFileSync)(this.alertStatePath, "utf8");
+            return JSON.parse(raw);
+        }
+        catch {
+            return {};
+        }
+    }
+    saveAlertState(state) {
+        try {
+            (0, fs_1.writeFileSync)(this.alertStatePath, JSON.stringify(state, null, 2));
+        }
+        catch (error) {
+            console.warn("⚠️ Failed to save Telegram alert state:", error);
+        }
     }
     /**
      * Create a new TradeMonitor instance (async factory method)
@@ -174,15 +195,17 @@ class TradeMonitor {
     tradeToDisplay(trade) {
         const tokenInSymbol = this.getTokenSymbol(trade.tokenIn);
         const tokenOutSymbol = this.getTokenSymbol(trade.tokenOut);
+        const tokenInDecimals = (0, price_fetcher_1.getTokenDecimals)(trade.tokenIn);
+        const tokenOutDecimals = (0, price_fetcher_1.getTokenDecimals)(trade.tokenOut);
         return {
             tradeId: trade.tradeId,
             pair: `${tokenInSymbol}/${tokenOutSymbol}`,
             tokenIn: trade.tokenIn, // Use actual address, not symbol
             tokenOut: trade.tokenOut, // Use actual address, not symbol
-            amountIn: this.formatTokenAmount(trade.amountIn),
-            amountRemaining: this.formatTokenAmount(trade.amountRemaining),
-            targetAmountOut: this.formatTokenAmount(trade.targetAmountOut),
-            realisedAmountOut: this.formatTokenAmount(trade.realisedAmountOut),
+            amountIn: this.formatTokenAmount(trade.amountIn, tokenInDecimals),
+            amountRemaining: this.formatTokenAmount(trade.amountRemaining, tokenInDecimals),
+            targetAmountOut: this.formatTokenAmount(trade.targetAmountOut, tokenOutDecimals),
+            realisedAmountOut: this.formatTokenAmount(trade.realisedAmountOut, tokenOutDecimals),
             progress: this.calculateProgress(trade.realisedAmountOut, trade.targetAmountOut),
             isInstasettlable: trade.isInstasettlable,
             lastSweetSpot: trade.lastSweetSpot,
@@ -552,6 +575,7 @@ class TradeMonitor {
         // Determine completion status for each created trade (purely event-based)
         const completedTrades = [];
         const ongoingTrades = [];
+        let closedWithoutTerminalEvent = 0;
         for (const createdEvent of createdEvents) {
             const tradeId = createdEvent.tradeId;
             const executions = executionMap.get(tradeId) || [];
@@ -561,8 +585,19 @@ class TradeMonitor {
             const tokenInSymbol = this.getTokenSymbol(createdEvent.tokenIn);
             const tokenOutSymbol = this.getTokenSymbol(createdEvent.tokenOut);
             const pair = `${tokenInSymbol}/${tokenOutSymbol}`;
+            const tokenInDecimals = (0, price_fetcher_1.getTokenDecimals)(createdEvent.tokenIn);
+            const tokenOutDecimals = (0, price_fetcher_1.getTokenDecimals)(createdEvent.tokenOut);
             // Calculate total realized amount from executions
+            // Note: TradeStreamExecuted emits the per-stream amountOut delta, so summing
+            // across executions yields the GROSS realised total (before stream fees).
             const totalRealized = executions.reduce((sum, exec) => sum + BigInt(exec.realisedAmountOut), BigInt(0));
+            // Total tokenIn that has actually been streamed across all executions.
+            // We use this — not minAmountOut — to decide whether a trade has been
+            // fully drained on the input side. `minAmountOut` is the user-specified
+            // slippage floor (frequently set to 1 wei), so comparing against it
+            // falsely classifies still-streaming trades as "executed".
+            const totalStreamedIn = executions.reduce((sum, exec) => sum + BigInt(exec.amountIn), BigInt(0));
+            const originalAmountIn = BigInt(createdEvent.amountIn);
             // Determine completion status (priority: cancelled > instasettled > completed > executed)
             let completionType = null;
             let completionTime = 0;
@@ -582,14 +617,16 @@ class TradeMonitor {
                 completionTime = completed.timestamp;
                 finalAmountOut = BigInt(completed.finalRealisedAmountOut);
             }
-            else if (executions.length > 0) {
-                // Check if trade is fully executed by comparing with target amount
-                const targetAmount = BigInt(createdEvent.minAmountOut);
-                if (totalRealized >= targetAmount) {
-                    completionType = "executed";
-                    completionTime = executions[executions.length - 1].timestamp;
-                    finalAmountOut = totalRealized;
-                }
+            else if (executions.length > 0 &&
+                originalAmountIn > BigInt(0) &&
+                totalStreamedIn >= originalAmountIn) {
+                // Safety net for trades whose entire amountIn has been streamed but for
+                // which no TradeCompleted event was observed (e.g. older Core versions
+                // or a missed terminal log). The current contract reliably emits
+                // TradeCompleted in this case, so this branch should rarely trigger.
+                completionType = "executed";
+                completionTime = executions[executions.length - 1].timestamp;
+                finalAmountOut = totalRealized;
             }
             if (completionType) {
                 // Trade is completed - use event data
@@ -601,8 +638,8 @@ class TradeMonitor {
                     pair,
                     tokenIn: tokenInSymbol,
                     tokenOut: tokenOutSymbol,
-                    amountIn: this.formatTokenAmount(createdEvent.amountIn),
-                    finalAmountOut: this.formatTokenAmount(finalAmountOut.toString()),
+                    amountIn: this.formatTokenAmount(createdEvent.amountIn, tokenInDecimals),
+                    finalAmountOut: this.formatTokenAmount(finalAmountOut.toString(), tokenOutDecimals),
                     executionCount: executions.length,
                     completionTime,
                     completionType,
@@ -612,6 +649,13 @@ class TradeMonitor {
                 });
             }
             else {
+                // If the trade no longer exists on-chain (owner == zero), treat it as closed
+                // even when no terminal event was emitted.
+                const stillActive = await this.isTradeActive(tradeId);
+                if (!stillActive) {
+                    closedWithoutTerminalEvent++;
+                    continue;
+                }
                 // Trade is ongoing - build state from events
                 // Calculate current state from accumulated executions
                 const lastExecution = executions[executions.length - 1];
@@ -636,10 +680,10 @@ class TradeMonitor {
                     pair,
                     tokenIn: createdEvent.tokenIn,
                     tokenOut: createdEvent.tokenOut,
-                    amountIn: this.formatTokenAmount(createdEvent.amountIn),
-                    amountRemaining: this.formatTokenAmount(estimatedRemaining.toString()),
-                    targetAmountOut: this.formatTokenAmount(createdEvent.minAmountOut),
-                    realisedAmountOut: this.formatTokenAmount(totalRealized.toString()),
+                    amountIn: this.formatTokenAmount(createdEvent.amountIn, tokenInDecimals),
+                    amountRemaining: this.formatTokenAmount(estimatedRemaining.toString(), tokenInDecimals),
+                    targetAmountOut: this.formatTokenAmount(createdEvent.minAmountOut, tokenOutDecimals),
+                    realisedAmountOut: this.formatTokenAmount(totalRealized.toString(), tokenOutDecimals),
                     progress: this.calculateProgress(totalRealized.toString(), createdEvent.minAmountOut),
                     isInstasettlable: createdEvent.isInstasettlable,
                     lastSweetSpot: lastExecution?.lastSweetSpot?.toString() ||
@@ -649,6 +693,9 @@ class TradeMonitor {
                     onlyInstasettle: createdEvent.onlyInstasettle,
                 });
             }
+        }
+        if (closedWithoutTerminalEvent > 0) {
+            console.log(`ℹ️ Ignored ${closedWithoutTerminalEvent} closed trade(s) without terminal events (already removed on-chain).`);
         }
         // Sort completed trades by completion time (newest first)
         completedTrades.sort((a, b) => b.completionTime - a.completionTime);
@@ -862,14 +909,93 @@ class TradeMonitor {
             throw error;
         }
     }
+    buildRunTradeDetails(executionEvents, localData) {
+        const metadataByTradeId = new Map();
+        for (const trade of localData.outstandingTrades) {
+            metadataByTradeId.set(trade.tradeId, trade);
+        }
+        const streamDetails = executionEvents.map((event) => {
+            const meta = metadataByTradeId.get(event.tradeId);
+            const tokenIn = meta?.tokenIn;
+            const tokenOut = meta?.tokenOut;
+            const tokenInSymbol = tokenIn ? this.getTokenSymbol(tokenIn) : "TOKEN_IN";
+            const tokenOutSymbol = tokenOut
+                ? this.getTokenSymbol(tokenOut)
+                : "TOKEN_OUT";
+            const tokenInDecimals = tokenIn ? (0, price_fetcher_1.getTokenDecimals)(tokenIn) : 18;
+            const tokenOutDecimals = tokenOut ? (0, price_fetcher_1.getTokenDecimals)(tokenOut) : 18;
+            return {
+                tradeId: event.tradeId,
+                pair: meta?.pair || `${tokenInSymbol}/${tokenOutSymbol}`,
+                amountIn: this.formatTokenAmount(event.amountIn, tokenInDecimals),
+                amountOut: this.formatTokenAmount(event.realisedAmountOut, tokenOutDecimals),
+                tokenInSymbol,
+                tokenOutSymbol,
+                lastSweetSpot: event.lastSweetSpot,
+                transactionHash: event.transactionHash,
+            };
+        });
+        const rollupMap = new Map();
+        for (const event of executionEvents) {
+            const meta = metadataByTradeId.get(event.tradeId);
+            const tokenIn = meta?.tokenIn || "";
+            const tokenOut = meta?.tokenOut || "";
+            const tokenInSymbol = tokenIn ? this.getTokenSymbol(tokenIn) : "TOKEN_IN";
+            const tokenOutSymbol = tokenOut
+                ? this.getTokenSymbol(tokenOut)
+                : "TOKEN_OUT";
+            const pair = meta?.pair || `${tokenInSymbol}/${tokenOutSymbol}`;
+            if (!rollupMap.has(event.tradeId)) {
+                rollupMap.set(event.tradeId, {
+                    pair,
+                    tokenIn,
+                    tokenOut,
+                    totalAmountIn: BigInt(0),
+                    totalAmountOut: BigInt(0),
+                    streams: 0,
+                });
+            }
+            const rollup = rollupMap.get(event.tradeId);
+            rollup.totalAmountIn += BigInt(event.amountIn);
+            rollup.totalAmountOut += BigInt(event.realisedAmountOut);
+            rollup.streams += 1;
+        }
+        const tradeRollups = Array.from(rollupMap.entries()).map(([tradeId, rollup]) => {
+            const tokenInSymbol = rollup.tokenIn
+                ? this.getTokenSymbol(rollup.tokenIn)
+                : "TOKEN_IN";
+            const tokenOutSymbol = rollup.tokenOut
+                ? this.getTokenSymbol(rollup.tokenOut)
+                : "TOKEN_OUT";
+            const tokenInDecimals = rollup.tokenIn ? (0, price_fetcher_1.getTokenDecimals)(rollup.tokenIn) : 18;
+            const tokenOutDecimals = rollup.tokenOut
+                ? (0, price_fetcher_1.getTokenDecimals)(rollup.tokenOut)
+                : 18;
+            return {
+                tradeId,
+                pair: rollup.pair,
+                streams: rollup.streams,
+                totalAmountIn: this.formatTokenAmount(rollup.totalAmountIn.toString(), tokenInDecimals),
+                totalAmountOut: this.formatTokenAmount(rollup.totalAmountOut.toString(), tokenOutDecimals),
+                tokenInSymbol,
+                tokenOutSymbol,
+            };
+        });
+        tradeRollups.sort((a, b) => a.tradeId - b.tradeId);
+        return { streamDetails, tradeRollups };
+    }
     /**
      * Calculate run statistics including fees and gas costs
      */
-    async calculateRunStats(startBlock, receipts, successCount, failCount) {
+    async calculateRunStats(startBlock, receipts, successCount, failCount, localData) {
         const currentBlock = await this.provider.getBlockNumber();
         // Scan for fee events from this run
         const botAddress = this.signer ? this.signer.address : undefined;
         const feeEvents = await this.scanStreamFeeEvents(startBlock, botAddress);
+        const executionEvents = await this.scanExecutionEvents(startBlock);
+        const receiptHashes = new Set(receipts.map((receipt) => receipt.hash.toLowerCase()));
+        const runExecutionEvents = executionEvents.filter((event) => receiptHashes.has(event.transactionHash.toLowerCase()));
+        const { streamDetails, tradeRollups } = this.buildRunTradeDetails(runExecutionEvents, localData);
         // Calculate gas costs
         let totalGasUsed = BigInt(0);
         let totalGasCost = BigInt(0);
@@ -936,18 +1062,33 @@ class TradeMonitor {
             totalBotFeesUSD,
             totalProtocolFeesUSD,
             netProfitUSD,
+            streamDetails,
+            tradeRollups,
         };
     }
     /**
      * Send Telegram alert with run stats
      */
-    async sendTelegramAlert(stats, failedPairIds) {
+    async sendTelegramAlert(stats, failedPairIds, summary) {
         try {
             const secrets = await (0, secrets_1.getSecrets)();
             const botToken = secrets.TELEGRAM_BOT_TOKEN;
             const chatId = secrets.TELEGRAM_CHAT_ID;
             if (!botToken || !chatId) {
                 console.log("ℹ️  Telegram credentials not configured, skipping alert");
+                return;
+            }
+            const alertState = this.loadAlertState();
+            const versionChanged = alertState.lastNotifiedVersion !== config_1.BOT_VERSION;
+            const queueChanged = alertState.lastQueuedTrades !== summary.outstandingTrades;
+            const hasExecutionActivity = !!stats && (stats.successCount > 0 || stats.failCount > 0);
+            const shouldNotifyQueue = summary.outstandingTrades > 0 && queueChanged;
+            const shouldNotify = hasExecutionActivity ||
+                failedPairIds.length > 0 ||
+                shouldNotifyQueue ||
+                versionChanged;
+            if (!shouldNotify) {
+                console.log("ℹ️  No notable changes, skipping Telegram alert");
                 return;
             }
             console.log("📱 Sending Telegram alert...");
@@ -969,6 +1110,25 @@ class TradeMonitor {
                 const profitSign = stats.netProfitUSD >= 0 ? '+' : '';
                 const profitEmoji = stats.netProfitUSD >= 0 ? '📈' : '📉';
                 message += `\n${profitEmoji} <b>Net Profit:</b> ${profitSign}$${stats.netProfitUSD.toFixed(2)}`;
+                if (stats.tradeRollups.length > 0) {
+                    message += `\n\n📚 <b>Trades (run):</b>`;
+                    stats.tradeRollups.slice(0, 6).forEach((trade) => {
+                        message += `\n• #${trade.tradeId} ${trade.pair}: ${trade.streams} stream(s), in ${trade.totalAmountIn} ${trade.tokenInSymbol}, out ${trade.totalAmountOut} ${trade.tokenOutSymbol}`;
+                    });
+                    if (stats.tradeRollups.length > 6) {
+                        message += `\n• ... ${stats.tradeRollups.length - 6} more trade rollups`;
+                    }
+                }
+                if (stats.streamDetails.length > 0) {
+                    message += `\n\n🧩 <b>Streams (run):</b>`;
+                    stats.streamDetails.slice(0, 8).forEach((stream) => {
+                        const shortTx = `${stream.transactionHash.slice(0, 10)}...${stream.transactionHash.slice(-6)}`;
+                        message += `\n• #${stream.tradeId} ${stream.pair}: in ${stream.amountIn} ${stream.tokenInSymbol}, out ${stream.amountOut} ${stream.tokenOutSymbol}, ss ${stream.lastSweetSpot}, ${shortTx}`;
+                    });
+                    if (stats.streamDetails.length > 8) {
+                        message += `\n• ... ${stats.streamDetails.length - 8} more streams`;
+                    }
+                }
             }
             else if (stats && stats.failCount > 0) {
                 // Failure alert
@@ -981,10 +1141,26 @@ class TradeMonitor {
                     message += `\n<code>${id.slice(0, 10)}...${id.slice(-6)}</code>`;
                 });
             }
-            else {
-                // Heartbeat: run completed with nothing to report (0 trades executed, 0 failures)
-                message = `✅ <b>Bot run completed</b>\n\n📊 No trades to execute this round.`;
+            else if (shouldNotifyQueue) {
+                // Queue update when outstanding trade count changes.
+                message = `📥 <b>Queue Update</b>
+
+🧾 <b>Outstanding trades:</b> <code>${summary.outstandingTrades}</code>
+🗂️ <b>Pair queues:</b> <code>${summary.uniquePairQueues}</code>`;
             }
+            else if (versionChanged) {
+                // One-time notification when bot runtime version changes.
+                message = `🆕 <b>Bot Version Updated</b>
+
+📌 <b>Version:</b> <code>${config_1.BOT_VERSION}</code>`;
+            }
+            if (!message.includes("<b>Version:</b>")) {
+                message += `\n\n📌 <b>Version:</b> <code>${config_1.BOT_VERSION}</code>`;
+            }
+            message += `\n🧾 <b>Outstanding trades:</b> <code>${summary.outstandingTrades}</code>`;
+            message += `\n🗂️ <b>Pair queues:</b> <code>${summary.uniquePairQueues}</code>`;
+            message += `\n✅ <b>Queues settled:</b> <code>${summary.successfulQueues}</code>`;
+            message += `\n❌ <b>Queues failed:</b> <code>${summary.failedQueues}</code>`;
             message += `\n\n⏰ ${new Date().toISOString()}`;
             // Send to Telegram
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -1003,6 +1179,10 @@ class TradeMonitor {
             }
             else {
                 console.log("📱 Telegram alert sent.");
+                this.saveAlertState({
+                    lastNotifiedVersion: config_1.BOT_VERSION,
+                    lastQueuedTrades: summary.outstandingTrades,
+                });
             }
         }
         catch (error) {
@@ -1037,6 +1217,30 @@ class TradeMonitor {
         console.log(`${profitEmoji} Net Profit: ${profitSign}$${stats.netProfitUSD.toFixed(2)}`);
         console.log(`${"=".repeat(80)}\n`);
     }
+    displayStreamBreakdown(stats) {
+        if (stats.streamDetails.length === 0) {
+            console.log("ℹ️  No TradeStreamExecuted events detected for this run.\n");
+            return;
+        }
+        console.log(`${"=".repeat(80)}`);
+        console.log("🧩 Stream Breakdown (this run)");
+        console.log(`${"=".repeat(80)}`);
+        console.log("TRADE ROLLUP:");
+        for (const trade of stats.tradeRollups) {
+            console.log(`  • trade #${trade.tradeId} ${trade.pair}: ${trade.streams} stream(s), ` +
+                `in ${trade.totalAmountIn} ${trade.tokenInSymbol}, out ${trade.totalAmountOut} ${trade.tokenOutSymbol}`);
+        }
+        console.log("\nSTREAMS:");
+        for (const stream of stats.streamDetails.slice(0, 15)) {
+            console.log(`  • trade #${stream.tradeId} ${stream.pair}: ` +
+                `in ${stream.amountIn} ${stream.tokenInSymbol}, out ${stream.amountOut} ${stream.tokenOutSymbol}, ` +
+                `lastSweetSpot ${stream.lastSweetSpot}, tx ${stream.transactionHash.slice(0, 10)}...${stream.transactionHash.slice(-6)}`);
+        }
+        if (stats.streamDetails.length > 15) {
+            console.log(`  ... ${stats.streamDetails.length - 15} more streams omitted from console summary`);
+        }
+        console.log(`${"=".repeat(80)}\n`);
+    }
     /**
      * Execute all outstanding trades from local data (sequential execution)
      */
@@ -1048,10 +1252,27 @@ class TradeMonitor {
             const startTime = Date.now();
             // Load local data
             const localData = this.loadLocalData();
+            const outstandingTradesCount = localData.outstandingTrades.length;
             if (localData.outstandingTrades.length === 0) {
                 console.log("No outstanding trades — nothing to execute.");
-                await this.sendTelegramAlert(null, []);
+                await this.sendTelegramAlert(null, [], {
+                    outstandingTrades: 0,
+                    uniquePairQueues: 0,
+                    successfulQueues: 0,
+                    failedQueues: 0,
+                });
                 return null;
+            }
+            // If Core whitelist is active, fail fast unless this signer is authorised.
+            if (this.coreContractWithSigner) {
+                const signerAddress = this.signer.address;
+                const [botWhitelistCount, isWhitelisted] = await Promise.all([
+                    this.coreContract.botWhitelistCount(),
+                    this.coreContract.isBotWhitelisted(signerAddress),
+                ]);
+                if (botWhitelistCount > BigInt(0) && !isWhitelisted) {
+                    throw new Error(`Core bot whitelist is active (${botWhitelistCount} bot(s)), but signer ${signerAddress} is not whitelisted. As Core owner, call addBot(${signerAddress}) or use a whitelisted signer.`);
+                }
             }
             // Get unique pair IDs
             const uniquePairIds = [
@@ -1076,7 +1297,12 @@ class TradeMonitor {
                         `   Balance: ${ethers_1.ethers.formatEther(balance)} ETH\n` +
                         `   Required (approx): ${ethers_1.ethers.formatEther(requiredWei)} ETH for ${uniquePairIds.length} tx(s)\n` +
                         `   Fund this wallet on mainnet to run executeTrades. Skipping execution this round.\n`);
-                    await this.sendTelegramAlert(null, []);
+                    await this.sendTelegramAlert(null, [], {
+                        outstandingTrades: outstandingTradesCount,
+                        uniquePairQueues: uniquePairIds.length,
+                        successfulQueues: 0,
+                        failedQueues: 0,
+                    });
                     return null;
                 }
                 console.log(`💰 Executor balance: ${ethers_1.ethers.formatEther(balance)} ETH (sufficient for gas)\n`);
@@ -1153,12 +1379,26 @@ class TradeMonitor {
             let runStats = null;
             if (successCount > 0 && receipts.length > 0) {
                 console.log("💰 Calculating fees and gas costs...\n");
-                runStats = await this.calculateRunStats(startBlock, receipts, successCount, failCount);
+                runStats = await this.calculateRunStats(startBlock, receipts, successCount, failCount, localData);
                 // Display fee summary
                 this.displayFeeStats(runStats);
+                this.displayStreamBreakdown(runStats);
             }
             // Send Telegram alert when credentials are configured (success, failure, or heartbeat)
-            await this.sendTelegramAlert(runStats, failedPairIds);
+            let outstandingTradesAfterRun = outstandingTradesCount;
+            try {
+                const latest = await this.getAllActiveTrades();
+                outstandingTradesAfterRun = latest.activeTrades.length;
+            }
+            catch (error) {
+                console.warn("⚠️  Could not refresh outstanding trade count after execution, using pre-run count");
+            }
+            await this.sendTelegramAlert(runStats, failedPairIds, {
+                outstandingTrades: outstandingTradesAfterRun,
+                uniquePairQueues: uniquePairIds.length,
+                successfulQueues: successCount,
+                failedQueues: failCount,
+            });
             console.log("✅ Trade execution process completed!");
             return runStats;
         }
