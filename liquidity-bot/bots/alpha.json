@@ -1,0 +1,41 @@
+{
+  "id": "alpha",
+  "enabled": false,
+  "address": "0xfa59F5143CE0d3AEe8D63Adb56bDd756e14BF2d3",
+  "privateKeyEnv": "BOT_ALPHA_KEY",
+  "baseTokens": [
+    "WETH"
+  ],
+  "scan": {
+    "intervalMs": 900000,
+    "minSpreadBps": 300,
+    "minCoupledSpreadBps": -100,
+    "selectionMode": "mid_range_spread",
+    "maxSpreadBps": 2500,
+    "minLiquidityRatio": 2,
+    "dustFloorUsd": 1,
+    "maxSellReserveUsageBps": 1500
+  },
+  "trade": {
+    "nominalTradeUsd": 10,
+    "balanceUsagePct": 45,
+    "maxOpenTrades": 1,
+    "decastreamAmountOutMinBufferBps": 160,
+    "directSwapSlippageBps": 50,
+    "pairCooldownMs": 900000,
+    "minTradesBetweenSamePair": 4,
+    "tradeHistoryMaxEntries": 32,
+    "usePriceBased": false,
+    "isInstasettlable": false,
+    "instasettleBps": 100
+  },
+  "gas": {
+    "minEthWei": "1500000000000000",
+    "targetEthWei": "3000000000000000",
+    "refuelDex": "uniswap-v3-3000"
+  },
+  "contracts": {
+    "core": "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
+    "deploymentManifest": "../versions/deployment-addresses-mainnet-2.2.1.json"
+  }
+}

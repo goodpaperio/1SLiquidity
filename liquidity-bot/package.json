@@ -1,0 +1,65 @@
+{
+  "name": "liquidity-bot",
+  "version": "1.0.0",
+  "description": "DecaStream liquidity opportunity bot (scan, direct swap, placeTrade)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/cli/start-bot.ts",
+    "stop": "tsx src/cli/stop-bot.ts",
+    "status": "tsx src/cli/status-bot.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:0": "vitest run tests/phase-0",
+    "verify:a": "vitest run tests/phase-a",
+    "verify:b": "vitest run tests/phase-b",
+    "verify:c": "vitest run tests/phase-c",
+    "verify:d": "vitest run tests/phase-d",
+    "verify:e": "vitest run tests/phase-e",
+    "verify:f": "vitest run tests/phase-f",
+    "verify:g": "vitest run tests/phase-g",
+    "verify:all": "npm run build && vitest run",
+    "generate": "tsx src/cli/generate-bot.ts",
+    "deploy": "tsx src/cli/deploy-bot.ts",
+    "withdraw": "tsx src/cli/withdraw-bot.ts",
+    "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
+    "run:once": "tsx src/cli/run-once.ts",
+    "cancel:trade": "tsx src/cli/cancel-trade.ts",
+    "scan:bps-sweep": "tsx src/cli/scan-bps-sweep.ts",
+    "scan:nominal-sweep": "tsx src/cli/scan-nominal-sweep.ts",
+    "scan:ecosystem": "tsx src/cli/scan-ecosystem.ts",
+    "scan:spread-stats": "tsx src/cli/scan-spread-stats.ts",
+    "scan:pair-matrices": "tsx src/cli/scan-pair-matrices.ts",
+    "history": "tsx src/cli/history.ts",
+    "postinstall": "node scripts/ensure-rollup-native.mjs",
+    "install:clean": "rm -rf node_modules package-lock.json && npm install --include=optional",
+    "fix:rollup": "node scripts/ensure-rollup-native.mjs"
+  },
+  "keywords": [
+    "decastream",
+    "liquidity",
+    "arbitrage"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ethers": "^6.16.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-darwin-arm64": "4.46.3",
+    "@rollup/rollup-darwin-x64": "4.46.3",
+    "@rollup/rollup-linux-x64-gnu": "4.46.3"
+  }
+}
