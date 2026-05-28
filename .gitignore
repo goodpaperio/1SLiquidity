@@ -54,6 +54,8 @@ alpha/node_modules
 bot/.env.example
 bot/node_modules
 local-monitor/node_modules
+local-monitor/localData.json
+local-monitor/telegramAlertState.json
 bot/dist    
 .env.backup
 
