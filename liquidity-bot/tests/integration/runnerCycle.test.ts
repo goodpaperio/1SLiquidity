@@ -49,8 +49,8 @@ const botConfig: BotConfig = {
   },
 };
 
-describe('phase B — BotRunner cycle guards', () => {
-  it('skips scan when outstanding trades reached', async () => {
+describe('integration — BotRunner scan/execute cycle', () => {
+  it('skips scan when outstanding trades reached maxOpenTrades', async () => {
     vi.mocked(core.listOutstandingTradesForOwner).mockResolvedValueOnce([
       {
         owner: botConfig.address,
