@@ -33,6 +33,12 @@ import ImageFallback from '@/app/shared/ImageFallback'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { ethers } from 'ethers'
 import { InfoIcon } from '@/app/lib/icons'
+import {
+  amountUsd,
+  findTokenForTrade,
+  formatTradeTokenAmount,
+  getDisplayOutputAmountWei,
+} from '@/app/lib/utils/tradeDisplay'
 import Navbar from '@/app/components/navbar'
 import Link from 'next/link'
 import { Trade } from '@/app/lib/graphql/types/trade'
@@ -97,28 +103,6 @@ export default function TradePage() {
     navigator.clipboard.writeText(tradeId)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  // Find token information with ETH/WETH handling
-  const findTokenForTrade = (address: string) => {
-    const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    if (address?.toLowerCase() === ethWethAddress) {
-      return (
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase() &&
-            t.symbol.toLowerCase() === 'weth'
-        ) ||
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase()
-        )
-      )
-    }
-    return tokens.find(
-      (t: TOKENS_TYPE) =>
-        t.token_address?.toLowerCase() === address?.toLowerCase()
-    )
   }
 
   // Recalc function
@@ -186,17 +170,8 @@ export default function TradePage() {
 
   const isLoading = isLoadingTrade || isLoadingTokens
 
-  const tokenIn = trade ? findTokenForTrade(trade.tokenIn) : undefined
-  const tokenOut = trade ? findTokenForTrade(trade.tokenOut) : undefined
-
-  const formattedAmountIn =
-    tokenIn && trade
-      ? formatUnits(BigInt(trade.amountIn), tokenIn.decimals)
-      : '0'
-  const formattedMinAmountOut =
-    tokenOut && trade
-      ? formatUnits(BigInt(trade.minAmountOut), tokenOut.decimals)
-      : '0'
+  const tokenIn = trade ? findTokenForTrade(trade.tokenIn, tokens) : undefined
+  const tokenOut = trade ? findTokenForTrade(trade.tokenOut, tokens) : undefined
 
   const aggregates = trade ? calculateTradeAggregates(trade) : null
 
@@ -208,20 +183,28 @@ export default function TradePage() {
   const isStreamSettled =
     trade && trade.instasettlements && trade.instasettlements.length > 0
 
-  // Calculate amounts
+  const amountIn = trade ? BigInt(trade.amountIn) : BigInt(0)
   const amountRemaining = aggregates
     ? BigInt(aggregates.amountRemaining)
     : BigInt(0)
-  const amountIn = trade ? BigInt(trade.amountIn) : BigInt(0)
+  const inDecimals = tokenIn?.decimals ?? 18
+  const outDecimals = tokenOut?.decimals ?? 18
+  const displayOutputWei = trade
+    ? getDisplayOutputAmountWei(trade)
+    : BigInt(0)
+
+  const formattedAmountIn =
+    tokenIn && trade
+      ? formatTradeTokenAmount(amountIn, inDecimals)
+      : '0'
+  const formattedMinAmountOut =
+    tokenOut && trade
+      ? formatTradeTokenAmount(displayOutputWei, outDecimals)
+      : '0'
 
   const formattedSwapAmountOut =
     tokenOut && trade
-      ? isStreamCompleted
-        ? formatUnits(BigInt(trade.minAmountOut), tokenOut.decimals)
-        : formatUnits(
-            BigInt(aggregates?.realisedAmountOut || '0'),
-            tokenOut.decimals
-          )
+      ? formatTradeTokenAmount(displayOutputWei, outDecimals)
       : '0'
 
   const volumeExecutedPercentage =

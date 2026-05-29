@@ -1,15 +1,16 @@
 import type { Trade, TradeStatus } from '../graphql/types/trade'
 
 /** Prefer subgraph `status`; fall back to legacy heuristics for older data. */
+export type TradeStatusInput = {
+  status?: Trade['status'] | string
+  cancellations?: Trade['cancellations']
+  instasettlements?: Trade['instasettlements']
+  executions?: Trade['executions']
+  lastSweetSpot?: string
+}
+
 export function getTradeStatus(
-  trade: Pick<
-    Trade,
-    | 'status'
-    | 'cancellations'
-    | 'instasettlements'
-    | 'executions'
-    | 'lastSweetSpot'
-  >
+  trade: TradeStatusInput
 ): 'ongoing' | 'completed' | 'instasettled' | 'cancelled' | 'failed' {
   if (trade.status) {
     switch (trade.status) {
@@ -26,10 +27,11 @@ export function getTradeStatus(
     }
   }
 
-  if (trade.cancellations?.length > 0) {
-    return trade.cancellations[0].isAutocancelled ? 'failed' : 'cancelled'
+  const cancellation = trade.cancellations?.[0]
+  if (cancellation) {
+    return cancellation.isAutocancelled ? 'failed' : 'cancelled'
   }
-  if (trade.instasettlements?.length > 0) {
+  if ((trade.instasettlements?.length ?? 0) > 0) {
     return 'instasettled'
   }
   if (

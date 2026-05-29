@@ -16,13 +16,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useCustomTokenList } from '@/app/lib/hooks/useCustomTokensList'
 import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
-import { formatUnits } from 'viem'
 import { formatRelativeTime } from '@/app/lib/utils/time'
 import { formatWalletAddress } from '@/app/lib/helper'
 import ImageFallback from '@/app/shared/ImageFallback'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { cn } from '@/lib/utils'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
+import {
+  amountUsd,
+  findTokenForTrade,
+  formatTradeTokenAmount,
+  getDisplayOutputAmountWei,
+  getOutputAmountLabel,
+} from '@/app/lib/utils/tradeDisplay'
 
 type SortField = 'volume' | 'timestamp' | 'status' | null
 type SortDirection = 'asc' | 'desc'
@@ -63,28 +69,6 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const { trades, isLoading, error } = useTrades({ first: 1000, skip: 0 })
   const { tokens: tokenList, isLoading: isLoadingTokens } = useCustomTokenList()
 
-  // Find token for trade with ETH/WETH handling
-  const findTokenForTrade = (address: string) => {
-    const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    if (address?.toLowerCase() === ethWethAddress) {
-      return (
-        tokenList.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase() &&
-            t.symbol.toLowerCase() === 'weth'
-        ) ||
-        tokenList.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase()
-        )
-      )
-    }
-    return tokenList.find(
-      (t: TOKENS_TYPE) =>
-        t.token_address?.toLowerCase() === address?.toLowerCase()
-    )
-  }
-
   // Filter and sort trades
   const displayData = useMemo(() => {
     if (!trades.length || !tokenList.length) return []
@@ -116,22 +100,28 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
     // Add calculated fields
     const processedTrades = filteredTrades.map((trade) => {
-      const tokenIn = findTokenForTrade(trade.tokenIn)
-      const tokenOut = findTokenForTrade(trade.tokenOut)
+      const tokenIn = findTokenForTrade(trade.tokenIn, tokenList)
+      const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+
+      const amountInWei = BigInt(trade.amountIn || '0')
+      const outputWei = getDisplayOutputAmountWei(trade)
+      const inDecimals = tokenIn?.decimals ?? 18
+      const outDecimals = tokenOut?.decimals ?? 18
 
       const formattedAmountIn = tokenIn
-        ? formatUnits(BigInt(trade.amountIn || '0'), tokenIn.decimals || 18)
+        ? formatTradeTokenAmount(amountInWei, inDecimals)
         : '0'
       const formattedAmountOut = tokenOut
-        ? formatUnits(
-            BigInt(trade.minAmountOut || '0'),
-            tokenOut.decimals || 18
-          )
+        ? formatTradeTokenAmount(outputWei, outDecimals)
         : '0'
 
       const volumeUsd = tokenIn
-        ? Number(formattedAmountIn) * (tokenIn.usd_price || 0)
+        ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
         : 0
+      const outputUsd = tokenOut
+        ? amountUsd(outputWei, outDecimals, tokenOut.usd_price)
+        : 0
+      const outputLabel = getOutputAmountLabel(trade)
 
       return {
         ...trade,
@@ -140,6 +130,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         formattedAmountIn,
         formattedAmountOut,
         volumeUsd,
+        outputUsd,
+        outputLabel,
         status: getTradeStatus(trade),
       }
     })
@@ -394,16 +386,18 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     <div className="flex flex-col">
                       <span className="text-white">
                         {Number(trade.formattedAmountOut).toFixed(4)}{' '}
-                        {trade.tokenOutDetails?.symbol}
+                        {trade.tokenOutDetails?.symbol || '?'}
+                        {trade.outputLabel === 'realised' ? (
+                          <span className="text-white/40 text-xs ml-1 normal-case">
+                            received
+                          </span>
+                        ) : null}
                       </span>
-                      {trade.tokenOutDetails?.usd_price && (
+                      {trade.outputUsd > 0 ? (
                         <span className="text-white/50 text-xs">
-                          {formatVolume(
-                            Number(trade.formattedAmountOut) *
-                              trade.tokenOutDetails.usd_price
-                          )}
+                          {formatVolume(trade.outputUsd)}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </TableCell>
 

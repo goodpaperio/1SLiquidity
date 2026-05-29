@@ -3,38 +3,18 @@
 import { useMemo } from 'react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
-import { formatUnits } from 'viem'
-import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import SwapStream from '../swapStream'
 import { LiveStatisticsIcon } from '@/app/lib/icons'
 import Link from 'next/link'
 import { isTradeCompleted } from '@/app/lib/utils/tradeStatus'
+import {
+  amountUsd,
+  findTokenForTrade,
+} from '@/app/lib/utils/tradeDisplay'
 
 const DashboardTrades = () => {
   const { trades, isLoading } = useTrades({ first: 100, skip: 0 })
   const { tokens } = useTokenList()
-
-  // Find token for trade with ETH/WETH handling
-  const findTokenForTrade = (address: string) => {
-    const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    if (address?.toLowerCase() === ethWethAddress) {
-      return (
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase() &&
-            t.symbol.toLowerCase() === 'weth'
-        ) ||
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase()
-        )
-      )
-    }
-    return tokens.find(
-      (t: TOKENS_TYPE) =>
-        t.token_address?.toLowerCase() === address?.toLowerCase()
-    )
-  }
 
   // Filter ongoing and completed trades
   const { ongoingTrades, latestTrades, ongoingVolume } = useMemo(() => {
@@ -52,13 +32,13 @@ const DashboardTrades = () => {
     let volume = 0
     if (tokens && tokens.length > 0) {
       ongoing.forEach((trade) => {
-        const tokenIn = findTokenForTrade(trade.tokenIn)
+        const tokenIn = findTokenForTrade(trade.tokenIn, tokens)
         if (tokenIn) {
-          const formattedAmountIn = formatUnits(
+          volume += amountUsd(
             BigInt(trade.amountIn),
-            tokenIn.decimals
+            tokenIn.decimals,
+            tokenIn.usd_price
           )
-          volume += Number(formattedAmountIn) * (tokenIn.usd_price || 0)
         }
       })
     }

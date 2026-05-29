@@ -12,6 +12,12 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConfigTrade from './ConfigTrade'
 import { Trade } from '@/app/lib/graphql/types/trade'
+import {
+  amountUsd,
+  findTokenForTrade,
+  formatTradeTokenAmount,
+  getDisplayOutputAmountWei,
+} from '@/app/lib/utils/tradeDisplay'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import { formatRelativeTime } from '@/app/lib/utils/time'
 import { cn } from '@/lib/utils'
@@ -83,39 +89,19 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const remainingStreams = calculateRemainingStreams(selectedStream)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
-  // Find token information with ETH/WETH handling
-  const findTokenForTrade = (address: string) => {
-    const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    if (address?.toLowerCase() === ethWethAddress) {
-      // For streams, prefer WETH over ETH since most DeFi protocols use WETH
-      return (
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase() &&
-            t.symbol.toLowerCase() === 'weth'
-        ) ||
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase()
-        )
-      )
-    }
-    // For all other cases, use normal address matching
-    return tokens.find(
-      (t: TOKENS_TYPE) =>
-        t.token_address?.toLowerCase() === address?.toLowerCase()
-    )
-  }
+  const tokenIn = findTokenForTrade(selectedStream.tokenIn, tokens)
+  const tokenOut = findTokenForTrade(selectedStream.tokenOut, tokens)
 
-  const tokenIn = findTokenForTrade(selectedStream.tokenIn)
-  const tokenOut = findTokenForTrade(selectedStream.tokenOut)
+  const amountInWei = BigInt(selectedStream.amountIn)
+  const displayOutputWei = getDisplayOutputAmountWei(selectedStream)
+  const inDecimals = tokenIn?.decimals ?? 18
+  const outDecimals = tokenOut?.decimals ?? 18
 
-  // Format amounts using token decimals
   const formattedAmountIn = tokenIn
-    ? formatUnits(BigInt(selectedStream.amountIn), tokenIn.decimals)
+    ? formatTradeTokenAmount(amountInWei, inDecimals)
     : '0'
   const formattedMinAmountOut = tokenOut
-    ? formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals)
+    ? formatTradeTokenAmount(displayOutputWei, outDecimals)
     : '0'
 
   // Calculate effective price (tokens out per token in ratio)
@@ -181,12 +167,11 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   const desiredPrice = calculateDesiredPrice()
 
-  // Calculate USD values (using token price from tokenList)
   const amountInUsd = tokenIn
-    ? Number(formattedAmountIn) * (tokenIn.usd_price || 0)
+    ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
     : 0
   const amountOutUsd = tokenOut
-    ? Number(formattedMinAmountOut) * (tokenOut.usd_price || 0)
+    ? amountUsd(displayOutputWei, outDecimals, tokenOut.usd_price)
     : 0
 
   const aggregates = calculateTradeAggregates(selectedStream)
@@ -199,15 +184,11 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const isStreamSettled =
     selectedStream.instasettlements && selectedStream.instasettlements.length > 0
 
-  // Calculate swapped amount values
-  // If stream is completed (instasettled), show full expected output, otherwise show actually realized output
   const formattedSwapAmountOut = tokenOut
-    ? isStreamCompleted
-      ? formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals) // Show full expected output if instasettled
-      : formatUnits(BigInt(aggregates.realisedAmountOut), tokenOut.decimals) // Show actually realized output
+    ? formatTradeTokenAmount(displayOutputWei, outDecimals)
     : '0'
   const swapAmountOutUsd = tokenOut
-    ? Number(formattedSwapAmountOut) * (tokenOut.usd_price || 0)
+    ? amountUsd(displayOutputWei, outDecimals, tokenOut.usd_price)
     : 0
 
   // Calculate trade volume executed percentage

@@ -6,8 +6,6 @@ import React from 'react'
 import Link from 'next/link'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatUnits } from 'viem'
-import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
@@ -15,7 +13,14 @@ import { XIcon } from 'lucide-react'
 import { formatNumberSmart } from '@/app/lib/utils/number'
 import { calculateRemainingStreams } from '@/app/lib/utils/streams'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
-import { Cancellation } from '@/app/lib/graphql/types/trade'
+import { Cancellation, TradeStatus } from '@/app/lib/graphql/types/trade'
+import {
+  amountUsd,
+  findTokenForTrade,
+  formatTradeTokenAmount,
+  getDisplayOutputAmountWei,
+} from '@/app/lib/utils/tradeDisplay'
+import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
 type Trade = {
   id: string
@@ -31,6 +36,8 @@ type Trade = {
   executions: any[]
   instasettlements: any[]
   cancellations: Cancellation[]
+  completions?: { finalRealisedAmountOut: string }[]
+  status?: TradeStatus
   onlyInstasettle?: boolean
   createdAt?: string
   instasettleBps?: string
@@ -78,45 +85,31 @@ const SwapStream: React.FC<Props> = ({
   const remainingStreams = calculateRemainingStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
-  // Find token information with ETH/WETH handling
-  const findTokenForTrade = (address: string) => {
-    const ethWethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    if (address?.toLowerCase() === ethWethAddress) {
-      // For streams, prefer WETH over ETH since most DeFi protocols use WETH
-      return (
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase() &&
-            t.symbol.toLowerCase() === 'weth'
-        ) ||
-        tokens.find(
-          (t: TOKENS_TYPE) =>
-            t.token_address?.toLowerCase() === address?.toLowerCase()
-        )
-      )
-    }
-    // For all other cases, use normal address matching
-    return tokens.find(
-      (t: TOKENS_TYPE) =>
-        t.token_address?.toLowerCase() === address?.toLowerCase()
-    )
-  }
+  const tokenIn = findTokenForTrade(trade.tokenIn, tokens)
+  const tokenOut = findTokenForTrade(trade.tokenOut, tokens)
 
-  const tokenIn = findTokenForTrade(trade.tokenIn)
-  const tokenOut = findTokenForTrade(trade.tokenOut)
+  const amountInWei = BigInt(trade.amountIn || '0')
+  const outputWei = getDisplayOutputAmountWei(trade)
+  const inDecimals = tokenIn?.decimals ?? 18
+  const outDecimals = tokenOut?.decimals ?? 18
 
-  // Format amounts using token decimals
   const formattedAmountIn = tokenIn
-    ? formatUnits(BigInt(trade.amountIn), tokenIn.decimals)
+    ? formatTradeTokenAmount(amountInWei, inDecimals)
     : '0'
-  const formattedMinAmountOut = tokenOut
-    ? formatUnits(BigInt(trade.minAmountOut), tokenOut.decimals)
+  const formattedOutput = tokenOut
+    ? formatTradeTokenAmount(outputWei, outDecimals)
     : '0'
 
-  // Calculate USD values using CoinGecko prices
-  const outputUsdValue = tokenOut
-    ? Number(formattedMinAmountOut) * (tokenOut.usd_price || 0)
+  const inputUsdValue = tokenIn
+    ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
     : 0
+  const outputUsdValue = tokenOut
+    ? amountUsd(outputWei, outDecimals, tokenOut.usd_price)
+    : 0
+
+  const tradeStatus = getTradeStatus(trade)
+  const outputSuffix =
+    tradeStatus === 'ongoing' ? '(EST)' : outputWei > BigInt(0) ? '' : '(EST)'
 
   // Calculate BPS savings for instasettlable trades
   const bpsSavings =
@@ -125,7 +118,7 @@ const SwapStream: React.FC<Props> = ({
       : 0
   const savingsAmount =
     tokenOut && bpsSavings > 0
-      ? (Number(formattedMinAmountOut) * bpsSavings) / 10000
+      ? (Number(formattedOutput) * bpsSavings) / 10000
       : 0
   const savingsUsd = savingsAmount * (tokenOut?.usd_price || 0)
 
@@ -177,7 +170,14 @@ const SwapStream: React.FC<Props> = ({
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol}
+                  {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol || '?'}
+                  {inputUsdValue > 0 ? (
+                    <span className="text-white/50 text-sm ml-1 normal-case">
+                      (${inputUsdValue >= 1000
+                        ? `${(inputUsdValue / 1000).toFixed(1)}K`
+                        : inputUsdValue.toFixed(2)})
+                    </span>
+                  ) : null}
                 </p>
               </>
             )}
@@ -209,8 +209,9 @@ const SwapStream: React.FC<Props> = ({
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formatNumberSmart(formattedMinAmountOut)} {tokenOut?.symbol}{' '}
-                  (EST)
+                  {formatNumberSmart(formattedOutput)}{' '}
+                  {tokenOut?.symbol || '?'}{' '}
+                  {outputSuffix}
                 </p>
                 {outputUsdValue > 0 && (
                   <span className="text-white/50 text-sm ml-1">
