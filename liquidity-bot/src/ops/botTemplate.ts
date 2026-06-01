@@ -20,6 +20,7 @@ export function createBotConfigTemplate(
       minLiquidityRatio: 2,
       dustFloorUsd: 1,
       maxSellReserveUsageBps: 1500,
+      finalistCount: 10,
     },
     trade: {
       nominalTradeUsd: 50,

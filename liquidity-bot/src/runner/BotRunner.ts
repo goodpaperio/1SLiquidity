@@ -12,7 +12,11 @@ import { TradeExecutor } from '../execution/TradeExecutor.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
 import { PairCooldownStore } from '../scan/pairCooldown.js';
 import { TradeHistoryStore } from '../scan/tradeHistory.js';
-import { QuoteScanner, formatScanSummary } from '../scan/QuoteScanner.js';
+import {
+  QuoteScanner,
+  formatFinalistRefreshLog,
+  formatScanSummary,
+} from '../scan/QuoteScanner.js';
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 
 export interface BotState {
@@ -131,7 +135,13 @@ export class BotRunner {
         formatScanSummary(id, this.config, result, this.opportunityCache)
       );
 
-      const sel = this.opportunityCache.executionSelection(this.config);
+      const finalist = await scanner.finalizeExecutionSelection(
+        this.config,
+        result.opportunities,
+        this.opportunityCache.selectionStores()
+      );
+      console.log(formatFinalistRefreshLog(finalist, this.config));
+      const sel = finalist.final;
       console.log(
         formatSelectedTradeBlock(sel, {
           headline: 'RUNNER: executing this cycle',

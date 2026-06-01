@@ -39,6 +39,11 @@ export const botConfigSchema = z.object({
      * (microscopic book guard; default 1500 = 15%).
      */
     maxSellReserveUsageBps: z.number().int().positive(),
+    /**
+     * After the full scan, re-quote the top N pairs (by coarse coupled bps) and
+     * select from fresh edges. 0 disables. Default 10.
+     */
+    finalistCount: z.number().int().nonnegative().default(10),
   }),
   trade: z.object({
     nominalTradeUsd: z.number().positive(),

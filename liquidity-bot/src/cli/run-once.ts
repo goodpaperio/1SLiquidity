@@ -10,6 +10,7 @@ import { TradeHistoryStore } from '../scan/tradeHistory.js';
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 import {
   QuoteScanner,
+  formatFinalistRefreshLog,
   formatScanSummary,
 } from '../scan/QuoteScanner.js';
 import { parseCliArgs, requireBotId } from './parse-args.js';
@@ -57,7 +58,13 @@ async function main(): Promise<void> {
   }
   console.log(formatScanSummary(botId, bot, result, cache));
 
-  const sel = cache.executionSelection(bot);
+  const finalist = await scanner.finalizeExecutionSelection(
+    bot,
+    result.opportunities,
+    cache.selectionStores()
+  );
+  console.log(formatFinalistRefreshLog(finalist, bot));
+  const sel = finalist.final;
   console.log(
     formatSelectedTradeBlock(sel, {
       headline: isDryRun()

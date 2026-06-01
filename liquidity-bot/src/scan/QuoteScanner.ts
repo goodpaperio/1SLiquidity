@@ -13,6 +13,11 @@ import {
   formatSelectionLog,
   selectForExecution,
 } from '../selection/selectForExecution.js';
+import {
+  formatFinalistRefreshLog,
+  selectForExecutionWithFinalistRefresh,
+  type FinalistSelectionResult,
+} from '../selection/finalistRefresh.js';
 import { detectOpportunitiesForPair } from './opportunityDetector.js';
 import { OpportunityCache } from './OpportunityCache.js';
 import type { ScanOpportunity } from './types.js';
@@ -99,6 +104,22 @@ export class QuoteScanner {
       discoverMode: this.options.discoverMode === true,
       maxPairs: this.options.maxPairsPerRun,
     });
+  }
+
+  /**
+   * Coarse scan selection + optional top-N finalist re-quote (fresh coupled edges).
+   */
+  async finalizeExecutionSelection(
+    bot: BotConfig,
+    opportunities: ScanOpportunity[],
+    stores?: ReturnType<OpportunityCache['selectionStores']>
+  ): Promise<FinalistSelectionResult> {
+    return selectForExecutionWithFinalistRefresh(
+      bot,
+      opportunities,
+      this.quotes,
+      stores
+    );
   }
 
   async scanBot(bot: BotConfig): Promise<ScanResult> {
@@ -291,6 +312,8 @@ function formatBalanceRow(
   }
   return `${sym}: ${w} wei`;
 }
+
+export { formatFinalistRefreshLog };
 
 export function formatScanSummary(
   botId: string,
