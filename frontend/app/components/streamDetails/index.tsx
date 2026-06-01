@@ -17,6 +17,8 @@ import {
   findTokenForTrade,
   formatTradeTokenAmount,
   getDisplayOutputAmountWei,
+  getImpliedTradePrice,
+  isDustMinOut,
 } from '@/app/lib/utils/tradeDisplay'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import { formatRelativeTime } from '@/app/lib/utils/time'
@@ -146,26 +148,17 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   const effectivePrice = calculateEffectivePrice()
 
-  // Calculate desired price: amountOut / amountIn (normalized by decimals, scaled to 1 unit of tokenIn)
-  const calculateDesiredPrice = () => {
-    if (!tokenIn || !tokenOut) return 0
-    try {
-      const amountOutNormalized = Number(
-        formatUnits(BigInt(selectedStream.minAmountOut), tokenOut.decimals)
-      )
-      const amountInNormalized = Number(
-        formatUnits(BigInt(selectedStream.amountIn), tokenIn.decimals)
-      )
-      if (amountInNormalized > 0) {
-        return amountOutNormalized / amountInNormalized
-      }
-      return 0
-    } catch {
-      return 0
-    }
-  }
-
-  const desiredPrice = calculateDesiredPrice()
+  const minOutWei = BigInt(selectedStream.minAmountOut || '0')
+  const priceOutWei = isDustMinOut(minOutWei) ? displayOutputWei : minOutWei
+  const desiredPrice =
+    tokenIn && tokenOut
+      ? getImpliedTradePrice(
+          amountInWei,
+          priceOutWei,
+          inDecimals,
+          outDecimals
+        )
+      : 0
 
   const amountInUsd = tokenIn
     ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
@@ -261,8 +254,10 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
         ) // Show actually swapped amount
     : '0'
 
+  const swappedAmountInWei =
+    BigInt(amountIn) - BigInt(amountRemaining)
   const swappedAmountInUsd = tokenIn
-    ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
+    ? amountUsd(swappedAmountInWei, inDecimals, tokenIn.usd_price)
     : 0
 
   // Calculate remaining amounts - set to 0 if stream is completed
@@ -272,7 +267,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       : '0'
   const remainingAmountInUsd =
     tokenIn && !isStreamSettled
-      ? Number(remainingAmountIn) * (tokenIn.usd_price || 0)
+      ? amountUsd(BigInt(amountRemaining), inDecimals, tokenIn.usd_price)
       : 0
 
   // Calculate remaining output (estimated based on proportion) - set to 0 if stream is completed
@@ -286,7 +281,12 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
       : '0'
   const remainingAmountOutUsd =
     tokenOut && !isStreamSettled
-      ? Number(remainingAmountOut) * (tokenOut.usd_price || 0)
+      ? amountUsd(
+          (BigInt(selectedStream.minAmountOut) * BigInt(amountRemaining)) /
+            BigInt(amountIn || 1),
+          outDecimals,
+          tokenOut.usd_price
+        )
       : 0
 
   // Calculate BPS savings in token amount

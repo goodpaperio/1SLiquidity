@@ -38,6 +38,8 @@ import {
   findTokenForTrade,
   formatTradeTokenAmount,
   getDisplayOutputAmountWei,
+  getImpliedTradePrice,
+  isDustMinOut,
 } from '@/app/lib/utils/tradeDisplay'
 import Navbar from '@/app/components/navbar'
 import Link from 'next/link'
@@ -219,17 +221,14 @@ export default function TradePage() {
       ? Number(trade.executions[trade.executions.length - 1].lastSweetSpot || 0)
       : Number(trade?.lastSweetSpot || 0)
 
-  // USD calculations
-  const amountInUsd =
-    tokenIn && formattedAmountIn
-      ? Number(formattedAmountIn) * (tokenIn.usd_price || 0)
-      : 0
-  const amountOutUsd =
-    tokenOut && formattedMinAmountOut
-      ? Number(formattedMinAmountOut) * (tokenOut.usd_price || 0)
-      : 0
+  const amountInUsd = tokenIn
+    ? amountUsd(amountIn, inDecimals, tokenIn.usd_price)
+    : 0
+  const amountOutUsd = tokenOut
+    ? amountUsd(displayOutputWei, outDecimals, tokenOut.usd_price)
+    : 0
   const swapAmountOutUsd = tokenOut
-    ? Number(formattedSwapAmountOut) * (tokenOut.usd_price || 0)
+    ? amountUsd(displayOutputWei, outDecimals, tokenOut.usd_price)
     : 0
 
   const swappedAmountIn =
@@ -242,8 +241,9 @@ export default function TradePage() {
           )
       : '0'
 
+  const swappedAmountInWei = amountIn - amountRemaining
   const swappedAmountInUsd = tokenIn
-    ? Number(swappedAmountIn) * (tokenIn.usd_price || 0)
+    ? amountUsd(swappedAmountInWei, inDecimals, tokenIn.usd_price)
     : 0
 
   const remainingAmountIn =
@@ -252,7 +252,7 @@ export default function TradePage() {
       : '0'
   const remainingAmountInUsd =
     tokenIn && !isStreamSettled
-      ? Number(remainingAmountIn) * (tokenIn.usd_price || 0)
+      ? amountUsd(amountRemaining, inDecimals, tokenIn.usd_price)
       : 0
 
   const remainingAmountOut =
@@ -264,8 +264,12 @@ export default function TradePage() {
         )
       : '0'
   const remainingAmountOutUsd =
-    tokenOut && !isStreamSettled
-      ? Number(remainingAmountOut) * (tokenOut.usd_price || 0)
+    tokenOut && !isStreamSettled && amountIn > BigInt(0)
+      ? amountUsd(
+          (BigInt(trade!.minAmountOut) * amountRemaining) / amountIn,
+          outDecimals,
+          tokenOut.usd_price
+        )
       : 0
 
   const savingsInTokenOut = trade
@@ -276,24 +280,16 @@ export default function TradePage() {
       ? savingsInTokenOut * (tokenOut.usd_price || 0)
       : 0
 
-  // Calculate desired price
+  const minOutWei = trade ? BigInt(trade.minAmountOut || '0') : BigInt(0)
+  const priceOutWei = isDustMinOut(minOutWei) ? displayOutputWei : minOutWei
   const desiredPrice =
-    tokenIn && tokenOut && trade
-      ? (() => {
-          try {
-            const amountOutNormalized = Number(
-              formatUnits(BigInt(trade.minAmountOut), tokenOut.decimals)
-            )
-            const amountInNormalized = Number(
-              formatUnits(BigInt(trade.amountIn), tokenIn.decimals)
-            )
-            return amountInNormalized > 0
-              ? amountOutNormalized / amountInNormalized
-              : 0
-          } catch {
-            return 0
-          }
-        })()
+    tokenIn && tokenOut
+      ? getImpliedTradePrice(
+          amountIn,
+          priceOutWei,
+          inDecimals,
+          outDecimals
+        )
       : 0
 
   // Calculate effective price

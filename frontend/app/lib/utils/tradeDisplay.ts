@@ -58,6 +58,16 @@ const KNOWN_TRADE_TOKENS: Record<
     decimals: 18,
     name: 'The Graph',
   },
+  '0x00f3c42833c3170159af4e92dbb451fb3f708917': {
+    symbol: 'ICP',
+    decimals: 8,
+    name: 'Internet Computer',
+  },
+  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': {
+    symbol: 'WBTC',
+    decimals: 8,
+    name: 'Wrapped Bitcoin',
+  },
 }
 
 function syntheticToken(
@@ -156,10 +166,36 @@ export function findTokenForTrade(
 
   if (!match) return undefined
 
+  const knownOverride = KNOWN_TRADE_TOKENS[lower]
+  const merged = knownOverride
+    ? {
+        ...match,
+        symbol: knownOverride.symbol,
+        name: knownOverride.name,
+        decimals: knownOverride.decimals,
+      }
+    : match
+
   return {
-    ...match,
-    usd_price: resolveTokenUsdPrice(match, tokenList),
+    ...merged,
+    usd_price: resolveTokenUsdPrice(merged, tokenList),
   }
+}
+
+/** Implied price: display output per 1 unit of input (for detail panels). */
+export function getImpliedTradePrice(
+  amountInWei: bigint,
+  outputWei: bigint,
+  tokenInDecimals: number,
+  tokenOutDecimals: number
+): number {
+  if (amountInWei <= BigInt(0) || outputWei <= BigInt(0)) return 0
+  const amountIn = Number(formatUnits(amountInWei, tokenInDecimals))
+  const amountOut = Number(formatUnits(outputWei, tokenOutDecimals))
+  if (!Number.isFinite(amountIn) || !Number.isFinite(amountOut) || amountIn <= 0) {
+    return 0
+  }
+  return amountOut / amountIn
 }
 
 /** Output amount to show in tables — avoids displaying 1 wei minAmountOut as "0". */
