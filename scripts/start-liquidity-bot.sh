@@ -8,18 +8,13 @@
 #
 set -euo pipefail
 
-SERVER_IP="${1:-${LIQUIDITY_BOT_HOST:-}}"
-SSH_KEY="${2:-${LIQUIDITY_BOT_SSH_KEY:-}}"
+SERVER_IP="${1:-${LIQUIDITY_BOT_HOST:-13.40.113.237}}"
+SSH_KEY="${2:-${LIQUIDITY_BOT_SSH_KEY:-$HOME/.ssh/liquidity-bot-alpha.pem}}"
 BOT_ID="${3:-${LIQUIDITY_BOT_ID:-alpha}}"
 SSH_USER="${SSH_USER:-ubuntu}"
 REMOTE_ROOT="${REMOTE_ROOT:-~/1SLiquidity}"
 
-if [[ -z "$SERVER_IP" || -z "$SSH_KEY" ]]; then
-  echo "Usage: $0 <server-ip> <ssh-key-path> [bot-id]"
-  echo "Or set LIQUIDITY_BOT_HOST and LIQUIDITY_BOT_SSH_KEY"
-  echo "Example: $0 18.134.179.139 ~/.ssh/1sliquidity.pem alpha"
-  exit 1
-fi
+SSH_KEY="${SSH_KEY/#\~/$HOME}"
 
 if [[ ! -f "$SSH_KEY" ]]; then
   echo "ERROR: SSH key not found: $SSH_KEY"
@@ -35,7 +30,7 @@ if [[ -f ~/.nvm/nvm.sh ]]; then
   nvm use 22 >/dev/null || true
 fi
 npm run build
-npm run start -- --bot "$BOT_ID"
-npm run status -- --bot "$BOT_ID"
+npm run start bot -- "$BOT_ID"
+npm run status bot -- "$BOT_ID"
 EOF
 echo "==> liquidity-bot-$BOT_ID started (PM2)"

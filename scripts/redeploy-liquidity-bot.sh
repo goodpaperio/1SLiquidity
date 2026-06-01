@@ -4,14 +4,14 @@ set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
   echo "Usage: $0 <server-ip> <ssh-key-path> [bot-id] [branch]"
-  echo "Example: $0 18.134.179.139 ~/.ssh/1sliquidity.pem alpha feat/liquidity-bot"
+  echo "Example: $0 13.40.113.237 ~/.ssh/liquidity-bot-alpha.pem alpha main"
   exit 1
 fi
 
 SERVER_IP="$1"
 SSH_KEY="$2"
 BOT_ID="${3:-alpha}"
-BRANCH="${4:-feat/liquidity-bot}"
+BRANCH="${4:-main}"
 SSH_USER="${SSH_USER:-ubuntu}"
 REMOTE_ROOT="${REMOTE_ROOT:-~/1SLiquidity}"
 
@@ -40,9 +40,9 @@ fi
 cd liquidity-bot
 npm ci --include=optional
 npm run build
-npm run stop -- --bot "$BOT_ID" || true
-npm run start -- --bot "$BOT_ID"
-npm run status -- --bot "$BOT_ID"
+npm run stop bot -- "$BOT_ID" || true
+npm run start bot -- "$BOT_ID"
+npm run status bot -- "$BOT_ID"
 EOF
 
 echo "==> Redeploy complete for bot '$BOT_ID' on $SERVER_IP"
