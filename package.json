@@ -203,6 +203,7 @@
     "redeploy-liquidity-bot": "bash scripts/redeploy-liquidity-bot.sh",
     "start-liquidity-bot": "bash scripts/start-liquidity-bot.sh",
     "pause-liquidity-bot": "bash scripts/pause-liquidity-bot.sh",
+    "open-liquidity-bot-ssh": "bash scripts/open-liquidity-bot-ssh.sh",
     "deploy:and:extract": "npm run deploy:barebones:create2 && npm run extract:addresses && npm run sync:mainnet-addresses:sol",
     "deploy:god-mode:and:extract": "npm run deploy:barebones:god-mode && npm run extract:addresses",
     "deploy:mainnet:verify": "forge verify-contract $CORE_ADDRESS src/Core.sol:Core --etherscan-api-key $API_KEY_ETHERSCAN --chain mainnet --constructor-args $(cast abi-encode 'constructor(address,address,address)' $STREAM_DAEMON_ADDRESS $EXECUTOR_ADDRESS $REGISTRY_ADDRESS)",
@@ -212,7 +213,8 @@
     "verify:manual": "./scripts/verify-etherscan-v2.sh",
     "bot:pause": "./server/pause-bot.sh 18.134.179.139 ~/.ssh/1sliquidity.pem",
     "bot:start": "./server/restart-bot.sh 18.134.179.139 ~/.ssh/1sliquidity.pem",
-    "bot:open-ssh": "bash scripts/bot-open-ssh.sh"
+    "bot:open-ssh": "bash scripts/bot-open-ssh.sh",
+    "open-liq-bot-ssh": "ssh -i ~/.ssh/liquidity-bot-alpha.pem ubuntu@13.40.113.237"
   },
   "repository": {
     "type": "git",
