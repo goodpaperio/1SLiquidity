@@ -52,10 +52,7 @@ export class TradeExecutor {
       );
     }
 
-    const leg1MinOut = applySlippageBps(
-      opportunity.amountOutCandidate,
-      this.bot.trade.directSwapSlippageBps
-    );
+    const leg1MinOut = await this.freshLeg1MinOut(opportunity);
 
     console.log(
       `\n[execute] ${opportunity.baseSymbol}→${opportunity.targetName} forward ` +
@@ -149,10 +146,7 @@ export class TradeExecutor {
       );
     }
 
-    const leg1MinOut = applySlippageBps(
-      opportunity.amountOutCandidate,
-      this.bot.trade.directSwapSlippageBps
-    );
+    const leg1MinOut = await this.freshLeg1MinOut(opportunity);
 
     console.log(
       `\n[execute] ${opportunity.baseSymbol}→${opportunity.targetName} reverse ` +
@@ -284,6 +278,38 @@ export class TradeExecutor {
         `(current alt balance ${altBal})`
     );
     return { dryRun: true };
+  }
+
+  /** Re-quote leg-1 on the chosen DEX immediately before submit. */
+  private async freshLeg1MinOut(
+    opportunity: ScanOpportunity
+  ): Promise<bigint> {
+    const stale = applySlippageBps(
+      opportunity.amountOutCandidate,
+      this.bot.trade.directSwapSlippageBps
+    );
+    const fresh = await this.quotes.quoteDex(
+      opportunity.candidateDex,
+      opportunity.tokenIn,
+      opportunity.tokenOut,
+      opportunity.amountIn
+    );
+    if (!fresh || fresh.amountOut <= 0n) {
+      console.warn(
+        `[execute] leg1 fresh quote failed; using scan amountOutCandidate`
+      );
+      return stale;
+    }
+    const minOut = applySlippageBps(
+      fresh.amountOut,
+      this.bot.trade.directSwapSlippageBps
+    );
+    if (minOut !== stale) {
+      console.log(
+        `[execute] leg1 fresh quote ${fresh.amountOut} minOut=${minOut} (scan min was ${stale})`
+      );
+    }
+    return minOut;
   }
 
   private recordLiveTrade(opportunity: ScanOpportunity): void {
