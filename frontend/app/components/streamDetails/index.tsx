@@ -29,7 +29,10 @@ import { useCoreTrading } from '@/app/lib/hooks/useCoreTrading'
 import { formatNumberSmart } from '@/app/lib/utils/number'
 import { useCallback, useEffect, useState } from 'react'
 import NetworkFee from '../shared/NetworkFee'
-import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import {
+  calculateRemainingStreams,
+  calculateTotalStreams,
+} from '@/app/lib/utils/streams'
 import {
   Tooltip,
   TooltipContent,
@@ -89,6 +92,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   }
 
   const remainingStreams = calculateRemainingStreams(selectedStream)
+  const totalStreams = calculateTotalStreams(selectedStream)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
   const tokenIn = findTokenForTrade(selectedStream.tokenIn, tokens)
@@ -827,7 +831,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
                     ? `${selectedStream.instasettlements.length + executionsCount} / ${
                         selectedStream.instasettlements.length + executionsCount
                       }`
-                    : `${executionsCount} / ${remainingStreams}`
+                    : `${executionsCount} / ${totalStreams}`
               }
               infoDetail="Info"
               titleClassName="text-white52"

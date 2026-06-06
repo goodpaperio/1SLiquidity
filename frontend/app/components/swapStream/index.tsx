@@ -11,7 +11,10 @@ import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import ImageFallback from '@/app/shared/ImageFallback'
 import { XIcon } from 'lucide-react'
 import { formatNumberSmart } from '@/app/lib/utils/number'
-import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import {
+  calculateRemainingStreams,
+  calculateTotalStreams,
+} from '@/app/lib/utils/streams'
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { Cancellation, TradeStatus } from '@/app/lib/graphql/types/trade'
 import {
@@ -83,6 +86,7 @@ const SwapStream: React.FC<Props> = ({
 }) => {
   const { tokens, isLoading: isLoadingTokens } = useTokenList()
   const remainingStreams = calculateRemainingStreams(trade)
+  const totalStreams = calculateTotalStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
   const tokenIn = findTokenForTrade(trade.tokenIn, tokens)
@@ -243,7 +247,7 @@ const SwapStream: React.FC<Props> = ({
                     : trade.executions.length) /
                     (trade.instasettlements.length > 0
                       ? trade.instasettlements.length + trade.executions.length
-                      : remainingStreams)) *
+                      : totalStreams)) *
                     100,
                   100
                 )}%`,
@@ -277,7 +281,7 @@ const SwapStream: React.FC<Props> = ({
                     /{' '}
                     {trade.instasettlements.length > 0
                       ? trade.instasettlements.length + trade.executions.length
-                      : remainingStreams}{' '}
+                      : totalStreams}{' '}
                     completed
                   </p>
 
@@ -288,7 +292,7 @@ const SwapStream: React.FC<Props> = ({
                     : trade.executions.length) >=
                     (trade.instasettlements.length > 0
                       ? trade.instasettlements.length + trade.executions.length
-                      : remainingStreams) ? (
+                      : totalStreams) ? (
                     ''
                   ) : (
                     <div className="flex items-center whitespace-nowrap ml-auto">

@@ -77,18 +77,19 @@ export function calculateSweetSpot(
 ): number {
   const ZERO = BigInt(0)
 
+  const DEFAULT_SWEET_SPOT = 2
+
   // Mirror backend StreamDaemon _sweetSpotAlgo v4
   if (reserveA === ZERO || reserveB === ZERO) {
-    return 4
+    return DEFAULT_SWEET_SPOT
   }
 
   let sweetSpot = 1
   let effectiveVolume = tradeVolume / BigInt(sweetSpot)
   let slippage = calculateSlippage(effectiveVolume, reserveA, reserveB)
 
-  // Minimum sweet spot of 4 if already within 10 bps
   if (slippage <= 10) {
-    return 4
+    return DEFAULT_SWEET_SPOT
   }
 
   let lastSweetSpot = sweetSpot
@@ -128,9 +129,8 @@ export function calculateSweetSpot(
     }
   }
 
-  // Clamp between 4 and 500
   if (sweetSpot <= 4) {
-    sweetSpot = 4
+    sweetSpot = DEFAULT_SWEET_SPOT
   }
   if (sweetSpot > 500) {
     sweetSpot = 500

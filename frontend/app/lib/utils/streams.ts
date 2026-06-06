@@ -1,24 +1,37 @@
 /**
- * Calculate remaining streams from a trade's executions array
- * @param trade Trade object containing executions and lastSweetSpot
- * @returns Number of remaining streams
+ * Core stores `lastSweetSpot` as a countdown after each stream (see Core.executeStream:
+ * plan sweetSpot is decremented before persisting). Remaining streams = latest value;
+ * total = executions so far + remaining.
  */
-export function calculateRemainingStreams(trade: {
-  executions?: any[]
+
+export function getLatestLastSweetSpot(trade: {
+  executions?: { lastSweetSpot?: string }[]
   lastSweetSpot?: string
 }): number {
-  if (!trade.executions || trade.executions.length === 0) {
-    return Number(trade?.lastSweetSpot) || 0
+  if (trade.executions?.length) {
+    const last = trade.executions[trade.executions.length - 1]
+    const spot = Number(last?.lastSweetSpot ?? 0)
+    return Number.isFinite(spot) ? spot : 0
   }
+  const spot = Number(trade?.lastSweetSpot ?? 0)
+  return Number.isFinite(spot) ? spot : 0
+}
 
-  const lastSweetSpots = trade.executions
-    .map((execution) => Number(execution.lastSweetSpot))
-    .filter((spot) => !isNaN(spot))
+/** Remaining stream executions (0 when the trade has finished streaming). */
+export function calculateRemainingStreams(trade: {
+  executions?: { lastSweetSpot?: string }[]
+  lastSweetSpot?: string
+}): number {
+  return getLatestLastSweetSpot(trade)
+}
 
-  if (lastSweetSpots.length === 0) {
-    return Number(trade?.lastSweetSpot) || 0
-  }
-
-  const maxSweetSpot = Math.max(...lastSweetSpots)
-  return maxSweetSpot + 1
+/** Total planned streams = completed executions + remaining countdown. */
+export function calculateTotalStreams(trade: {
+  executions?: { lastSweetSpot?: string }[]
+  lastSweetSpot?: string
+}): number {
+  const executed = trade.executions?.length ?? 0
+  const remaining = getLatestLastSweetSpot(trade)
+  if (executed === 0 && remaining === 0) return 0
+  return executed + remaining
 }

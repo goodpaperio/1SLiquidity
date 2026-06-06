@@ -13,7 +13,10 @@ import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { formatWalletAddress } from '@/app/lib/helper'
 import { formatNumberSmart } from '@/app/lib/utils/number'
 import { formatRelativeTime } from '@/app/lib/utils/time'
-import { calculateRemainingStreams } from '@/app/lib/utils/streams'
+import {
+  calculateRemainingStreams,
+  calculateTotalStreams,
+} from '@/app/lib/utils/streams'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
 import { cn } from '@/lib/utils'
 import { ArrowLeft, Copy, Check, Search } from 'lucide-react'
@@ -70,6 +73,7 @@ export default function TradePage() {
 
   // Calculate remaining streams early for hook stability
   const remainingStreams = trade ? calculateRemainingStreams(trade) : 0
+  const totalStreams = trade ? calculateTotalStreams(trade) : 0
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
   useEffect(() => {
@@ -215,11 +219,6 @@ export default function TradePage() {
       : 0
 
   const executionsCount = trade?.executions?.length || 0
-
-  const lastSweetSpot =
-    trade?.executions && trade.executions.length > 0
-      ? Number(trade.executions[trade.executions.length - 1].lastSweetSpot || 0)
-      : Number(trade?.lastSweetSpot || 0)
 
   const amountInUsd = tokenIn
     ? amountUsd(amountIn, inDecimals, tokenIn.usd_price)
@@ -698,7 +697,7 @@ export default function TradePage() {
                       : (trade?.instasettlements?.length ?? 0) > 0 ||
                           (trade?.cancellations?.length ?? 0) > 0
                         ? `${Number(executionsCount) + 1} / ${Number(executionsCount) + 1}`
-                        : `${executionsCount} / ${executionsCount + lastSweetSpot}`
+                        : `${executionsCount} / ${totalStreams}`
                   }
                   infoDetail="Number of streams completed out of total"
                   titleClassName="text-white52"
