@@ -104,6 +104,8 @@ fi
 log ""
 log "🔄 Step 2/4: Executing trades..."
 EXECUTE_OUTPUT=$(mktemp)
+SUCCESS_COUNT=0
+FAIL_COUNT=0
 if npm run execute-trades > "$EXECUTE_OUTPUT" 2>&1; then
     cat "$EXECUTE_OUTPUT" >> "$LOG_FILE"
     log "✅ Trade execution completed"
@@ -155,12 +157,16 @@ log "⏳ Step 3/4: Waiting 24 seconds for confirmations..."
 sleep 24
 
 log ""
-log "🔍 Step 4/4: Running final historical analysis..."
-if npm run historical >> "$LOG_FILE" 2>&1; then
-    log "✅ Final analysis completed"
+if [ "$SUCCESS_COUNT" -gt 0 ]; then
+    log "🔍 Step 4/4: Running final historical analysis (post-execution refresh)..."
+    if npm run historical >> "$LOG_FILE" 2>&1; then
+        log "✅ Final analysis completed"
+    else
+        log_error "❌ Final analysis failed"
+        send_alert "⚠️ <b>Final Analysis Failed</b>%0A%0ACheck logs: <code>$LOG_FILE</code>"
+    fi
 else
-    log_error "❌ Final analysis failed"
-    send_alert "⚠️ <b>Final Analysis Failed</b>%0A%0ACheck logs: <code>$LOG_FILE</code>"
+    log "⏭️  Step 4/4: Skipping final historical analysis (no executions this round; incremental cache already fresh from step 1)"
 fi
 
 log ""
