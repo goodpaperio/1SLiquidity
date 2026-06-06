@@ -55,6 +55,7 @@ export interface TradeCreatedEvent {
   onlyInstasettle: boolean;
   blockNumber: number;
   transactionHash: string;
+  logIndex?: number;
   timestamp: number;
 }
 
@@ -65,6 +66,7 @@ export interface TradeStreamExecutedEvent {
   lastSweetSpot: number;
   blockNumber: number;
   transactionHash: string;
+  logIndex?: number;
   timestamp: number;
 }
 
@@ -75,6 +77,7 @@ export interface TradeCancelledEvent {
   realisedAmountOut: string;
   blockNumber: number;
   transactionHash: string;
+  logIndex?: number;
   timestamp: number;
 }
 
@@ -86,6 +89,7 @@ export interface TradeInstasettledEvent {
   totalFees: string;
   blockNumber: number;
   transactionHash: string;
+  logIndex?: number;
   timestamp: number;
 }
 
@@ -94,6 +98,7 @@ export interface TradeCompletedEvent {
   finalRealisedAmountOut: string;
   blockNumber: number;
   transactionHash: string;
+  logIndex?: number;
   timestamp: number;
 }
 
@@ -133,11 +138,26 @@ export interface TradeMetadata {
   lastUpdated: number; // timestamp
 }
 
+export interface CachedTradeRecord {
+  tradeId: number;
+  created: TradeCreatedEvent;
+  executions: TradeStreamExecutedEvent[];
+  cancelled?: TradeCancelledEvent;
+  instasettled?: TradeInstasettledEvent;
+  completed?: TradeCompletedEvent;
+}
+
+export const LOCAL_DATA_SCHEMA_VERSION = 2;
+
 export interface LocalData {
-  lastRun: number; // block number of last run
+  schemaVersion?: number;
+  /** @deprecated use lastScannedBlock */
+  lastRun?: number;
+  lastScannedBlock: number;
   outstandingTrades: TradeMetadata[];
-  lastUpdated: number; // timestamp
-  contractAddress?: string; // Core contract address (added for version validation)
+  tradeCache?: Record<string, CachedTradeRecord>;
+  lastUpdated: number;
+  contractAddress?: string;
 }
 
 export interface StreamFeesTakenEvent {
