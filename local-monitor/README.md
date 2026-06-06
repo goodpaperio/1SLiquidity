@@ -186,48 +186,51 @@ npm run historical
 
 ## 📁 Local Data Structure
 
-The system maintains `localData.json` with:
+The system maintains `localData.json` (schema v2) with:
 
 ```json
 {
-  "lastRun": 23412281,
+  "schemaVersion": 2,
+  "lastScannedBlock": 25258741,
+  "contractAddress": "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
   "outstandingTrades": [
     {
-      "tradeId": 2,
-      "pairId": "0xaf6b746f77c055a846b64dcac5db6158b1d14e2a292a024b0ba5cf0ccac086d0",
-      "lastSweetSpot": 3,
-      "tokenIn": "WETH",
-      "tokenOut": "USDC",
-      "pair": "WETH/USDC",
-      "owner": "0xBFC6...592C",
+      "tradeId": 18,
+      "pairId": "0x00675a748004d6bd8a18a6b614d1d721f7d92a434291c766eae5210234422656",
+      "lastSweetSpot": 1,
+      "tokenIn": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+      "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "pair": "SHIB/WETH",
+      "owner": "0xfa59...F2d3",
       "isInstasettlable": false,
-      "lastUpdated": 1758468066
+      "onlyInstasettle": false,
+      "lastUpdated": 1780753647
     }
   ],
-  "lastUpdated": 1758468066
+  "tradeCache": {
+    "18": {
+      "tradeId": 18,
+      "created": { "...": "TradeCreated event fields" },
+      "executions": []
+    }
+  },
+  "lastUpdated": 1780753647
 }
 ```
 
-## 🤖 GitHub Actions Workflow
-
-The system includes a GitHub Actions workflow (`.github/workflows/local-monitor.yml`) that:
-
-1. **Runs every 5 minutes** via cron
-2. **Step 1**: Runs `npm run historical` to cache outstanding trades
-3. **Step 2**: Runs `npm run execute-trades` to execute trades
-4. **Step 3**: Waits 24 seconds for transactions to be mined
-5. **Step 4**: Runs `npm run historical` again to check updated state
-
-### Required Secrets
-
-- `MAINNET_RPC_URL`: Ethereum mainnet RPC endpoint
-- `DFGSDFGTEH_PRIVATE_KEY`: Private key for transaction signing
+Legacy `lastRun` is migrated automatically to `lastScannedBlock` on load.
 
 ## 📈 Performance
 
-- **First Run**: Scans ~200k blocks (comprehensive historical analysis)
-- **Subsequent Runs**: Scans only new blocks since last run
-- **Example**: Second run scanned only 1 block instead of 200k
+- **Bootstrap (first run or missing tradeCache)**: Full scan from Core `DEPLOYMENT_BLOCK`
+- **Incremental runs**: Scan only `lastScannedBlock - 1` → head (~25 blocks per 5 min cron)
+- **EC2 cron**: Step 4 historical refresh runs only after successful executions (idle cycles skip it)
+
+Run unit tests:
+
+```bash
+cd local-monitor && npm test
+```
 
 ## 🔍 Trade Analysis
 
@@ -252,7 +255,9 @@ local-monitor/
 ├── src/
 │   ├── index.ts              # Main monitor entry point
 │   ├── execute-trades.ts     # Trade execution script
-│   ├── test-workflow.ts      # Complete workflow tester
+│   ├── scanRange.ts          # Bootstrap vs incremental block range
+│   ├── tradeCache.ts         # Event merge + history from cache
+│   ├── localDataMigration.ts # Schema v2 migration helpers
 │   ├── monitor.ts            # Core monitoring logic
 │   ├── config.ts             # Configuration and token mappings
 │   ├── types.ts              # TypeScript interfaces
@@ -266,8 +271,8 @@ local-monitor/
 ### Key Components
 
 - **TradeMonitor**: Core class handling all monitoring and execution
-- **Event Scanning**: Scans `TradeCreated`, `TradeStreamExecuted`, `TradeCancelled`, `TradeSettled` events
-- **Smart Caching**: Tracks last run block to avoid rescanning
+- **Event Scanning**: Incremental `queryFilter` from cached `lastScannedBlock`
+- **Smart Caching**: Persists full `tradeCache` in localData.json (schema v2)
 - **Execution Logic**: Calls `executeTrades(pairId)` for each unique pair ID
 
 ### Bot whitelist (Core v1.0.6+)
