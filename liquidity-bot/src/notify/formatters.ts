@@ -55,7 +55,8 @@ export function formatLeg1Alert(params: {
 }
 
 export function formatLeg2Alert(params: {
-  pair: string;
+  roundTripPair: string;
+  leg2Pair: string;
   tradeId: number;
   leg2TokenIn: string;
   leg2AmountIn: bigint;
@@ -65,7 +66,8 @@ export function formatLeg2Alert(params: {
 }): string {
   return (
     `🔵 <b>Leg2</b> Core placeTrade #${params.tradeId}\n` +
-    `pair: ${params.pair}\n` +
+    `round-trip: ${params.roundTripPair}\n` +
+    `sell on Core: ${params.leg2Pair}\n` +
     `in: ${params.leg2AmountIn.toString()} ${params.leg2TokenIn}\n` +
     `min out: ${params.leg2MinOut.toString()} ${params.settlementToken}\n` +
     `tx: ${txLink(params.txHash)}`

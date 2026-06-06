@@ -52,8 +52,10 @@ export class TradeNotifier {
     settlementToken: string;
   }): Promise<void> {
     const pair = `${params.opportunity.baseSymbol}→${params.opportunity.targetName}`;
+    const leg2Pair = `${params.leg2TokenLabel}→${params.settlementToken}`;
     const body = formatLeg2Alert({
-      pair,
+      roundTripPair: pair,
+      leg2Pair,
       tradeId: params.tradeId,
       leg2TokenIn: params.leg2TokenLabel,
       leg2AmountIn: params.leg2AmountIn,

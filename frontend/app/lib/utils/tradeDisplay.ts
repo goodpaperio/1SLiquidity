@@ -73,6 +73,39 @@ const KNOWN_TRADE_TOKENS: Record<
     decimals: 8,
     name: 'Wrapped Bitcoin',
   },
+  '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0': {
+    symbol: 'wstETH',
+    decimals: 18,
+    name: 'Wrapped liquid staked Ether 2.0',
+  },
+}
+
+/** LSTs / ETH derivatives — USD ≈ ETH when CoinGecko has no entry for the alt. */
+const ETH_PEGGED_SYMBOLS = new Set([
+  'wsteth',
+  'steth',
+  'reth',
+  'cbeth',
+  'sweth',
+  'ethx',
+  'sfrxeth',
+  'weeth',
+])
+
+function ethUsdFromList(tokenList: TOKENS_TYPE[]): number {
+  for (const t of tokenList) {
+    if (t.usd_price <= 0) continue
+    const sym = t.symbol?.toLowerCase()
+    const addr = t.token_address?.toLowerCase()
+    if (
+      addr === WETH_ADDRESS ||
+      sym === 'weth' ||
+      sym === 'eth'
+    ) {
+      return t.usd_price
+    }
+  }
+  return 0
 }
 
 function syntheticToken(
@@ -127,6 +160,13 @@ export function resolveTokenUsdPrice(
       (t) => t.symbol?.toLowerCase() === sym && t.usd_price > 0
     )
     if (bySymbol) return bySymbol.usd_price
+  }
+
+  const ethUsd = ethUsdFromList(tokenList)
+  if (ethUsd > 0) {
+    if (addr === WETH_ADDRESS || (sym && ETH_PEGGED_SYMBOLS.has(sym))) {
+      return ethUsd
+    }
   }
 
   return 0

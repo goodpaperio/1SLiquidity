@@ -930,10 +930,41 @@ export const useTokenList = () => {
           coingeckoTokens.map((t) => t.token_address.toLowerCase())
         )
 
+        const ethPeggedSymbols = new Set([
+          'wsteth',
+          'steth',
+          'reth',
+          'cbeth',
+          'sweth',
+          'ethx',
+          'sfrxeth',
+          'weeth',
+        ])
+        const wethUsd = coingeckoTokens.find(
+          (t) =>
+            t.symbol?.toLowerCase() === 'weth' &&
+            t.usd_price > 0
+        )?.usd_price
+
         fallbackTokens.forEach((fallbackToken) => {
           if (
             !coingeckoAddresses.has(fallbackToken.token_address.toLowerCase())
           ) {
+            if (fallbackToken.usd_price <= 0) {
+              const bySymbol = coingeckoTokens.find(
+                (t) =>
+                  t.symbol?.toLowerCase() ===
+                    fallbackToken.symbol.toLowerCase() && t.usd_price > 0
+              )
+              if (bySymbol) {
+                fallbackToken.usd_price = bySymbol.usd_price
+              } else if (
+                wethUsd &&
+                ethPeggedSymbols.has(fallbackToken.symbol.toLowerCase())
+              ) {
+                fallbackToken.usd_price = wethUsd
+              }
+            }
             mergedTokens.push(fallbackToken)
           }
         })
