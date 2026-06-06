@@ -9,6 +9,7 @@ require("dotenv/config");
 const child_process_1 = require("child_process");
 const fs_1 = require("fs");
 const path_1 = require("path");
+const deploymentBlock_1 = require("./deploymentBlock");
 exports.CONTRACT_ADDRESSES = {
     core: "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
     registry: "0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4",
@@ -79,11 +80,33 @@ function detectBotVersion() {
     }
     return "unknown";
 }
+function loadDeploymentManifests(repoRoot) {
+    const versionsDir = (0, path_1.join)(repoRoot, "versions");
+    if (!(0, fs_1.existsSync)(versionsDir))
+        return [];
+    return (0, fs_1.readdirSync)(versionsDir)
+        .filter((name) => name.startsWith("deployment-addresses-mainnet-"))
+        .map((name) => {
+        try {
+            return JSON.parse((0, fs_1.readFileSync)((0, path_1.join)(versionsDir, name), "utf8"));
+        }
+        catch {
+            return {};
+        }
+    });
+}
+function detectDeploymentBlock() {
+    const fromEnv = process.env.DEPLOYMENT_BLOCK?.trim();
+    if (fromEnv)
+        return Number(fromEnv);
+    const repoRoot = (0, path_1.join)(__dirname, "..", "..");
+    return (0, deploymentBlock_1.resolveDeploymentBlock)(exports.CONTRACT_ADDRESSES.core, loadDeploymentManifests(repoRoot), 25072029);
+}
 // Bot/deployment version shown in Telegram notifications.
 // Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
 exports.BOT_VERSION = detectBotVersion();
-// Deployment block for Core contract v1.0.9
-exports.DEPLOYMENT_BLOCK = 25072029;
+// Earliest known deployment block for the configured Core contract.
+exports.DEPLOYMENT_BLOCK = detectDeploymentBlock();
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 exports.TOKEN_ADDRESSES = {
     "0x0000000000000000000000000000000000000000": "ETH",

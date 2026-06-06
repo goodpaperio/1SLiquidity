@@ -8,7 +8,7 @@ export interface ContractAddresses {
 }
 export declare const CONTRACT_ADDRESSES: ContractAddresses;
 export declare const BOT_VERSION: string;
-export declare const DEPLOYMENT_BLOCK = 25072029;
+export declare const DEPLOYMENT_BLOCK: number;
 export declare const TOKEN_ADDRESSES: Record<string, string>;
 export declare function getProvider(): Promise<ethers.JsonRpcProvider>;
 export declare function getSigner(): Promise<ethers.Wallet>;

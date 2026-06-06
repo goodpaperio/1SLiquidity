@@ -11,6 +11,10 @@ const config_1 = require("./config");
 const Core_json_1 = __importDefault(require("./abi/Core.json"));
 const price_fetcher_1 = require("./price-fetcher");
 const secrets_1 = require("./secrets");
+const scanRange_1 = require("./scanRange");
+const tradeCache_1 = require("./tradeCache");
+const tradeFormat_1 = require("./tradeFormat");
+const localDataMigration_1 = require("./localDataMigration");
 class TradeMonitor {
     constructor(provider, signer) {
         this.provider = provider;
@@ -66,42 +70,16 @@ class TradeMonitor {
      */
     loadLocalData() {
         if (!(0, fs_1.existsSync)(this.localDataPath)) {
-            return {
-                lastRun: 0,
-                outstandingTrades: [],
-                lastUpdated: 0,
-                contractAddress: config_1.CONTRACT_ADDRESSES.core,
-            };
+            return (0, localDataMigration_1.migrateLocalData)({}, config_1.CONTRACT_ADDRESSES.core);
         }
         try {
             const data = (0, fs_1.readFileSync)(this.localDataPath, "utf8");
             const loadedData = JSON.parse(data);
-            // Validate contract address - if it changed, clear outstanding trades
-            if (loadedData.contractAddress &&
-                loadedData.contractAddress.toLowerCase() !==
-                    config_1.CONTRACT_ADDRESSES.core.toLowerCase()) {
-                console.warn(`⚠️ Contract address changed from ${loadedData.contractAddress} to ${config_1.CONTRACT_ADDRESSES.core}. Clearing outstanding trades from old contract.`);
-                return {
-                    lastRun: 0,
-                    outstandingTrades: [],
-                    lastUpdated: 0,
-                    contractAddress: config_1.CONTRACT_ADDRESSES.core,
-                };
-            }
-            // Ensure contract address is set for backward compatibility
-            if (!loadedData.contractAddress) {
-                loadedData.contractAddress = config_1.CONTRACT_ADDRESSES.core;
-            }
-            return loadedData;
+            return (0, localDataMigration_1.migrateLocalData)(loadedData, config_1.CONTRACT_ADDRESSES.core);
         }
         catch (error) {
             console.warn("⚠️ Failed to load local data, starting fresh:", error);
-            return {
-                lastRun: 0,
-                outstandingTrades: [],
-                lastUpdated: 0,
-                contractAddress: config_1.CONTRACT_ADDRESSES.core,
-            };
+            return (0, localDataMigration_1.migrateLocalData)({}, config_1.CONTRACT_ADDRESSES.core);
         }
     }
     /**
@@ -116,27 +94,16 @@ class TradeMonitor {
         }
     }
     /**
-     * Update local data with current outstanding trades
+     * Persist scan cursor, trade cache, and execution queue metadata.
      */
-    async updateLocalData(ongoingTrades) {
+    persistLocalData(params) {
         const currentTime = Math.floor(Date.now() / 1000);
-        const currentBlock = await this.provider.getBlockNumber();
-        // Convert TradeDisplay to TradeMetadata
-        const outstandingTrades = ongoingTrades.map((trade) => ({
-            tradeId: parseInt(trade.tradeId),
-            pairId: this.calculatePairId(trade.tokenIn, trade.tokenOut),
-            lastSweetSpot: parseInt(trade.lastSweetSpot),
-            tokenIn: trade.tokenIn,
-            tokenOut: trade.tokenOut,
-            pair: trade.pair,
-            owner: trade.owner,
-            isInstasettlable: trade.isInstasettlable,
-            onlyInstasettle: trade.onlyInstasettle,
-            lastUpdated: currentTime,
-        }));
+        const outstandingTrades = (0, localDataMigration_1.outstandingTradesFromMetadata)(params.ongoingTrades, (tokenIn, tokenOut) => this.calculatePairId(tokenIn, tokenOut), currentTime);
         const localData = {
-            lastRun: currentBlock,
+            schemaVersion: 2,
+            lastScannedBlock: params.lastScannedBlock,
             outstandingTrades,
+            tradeCache: params.tradeCache,
             lastUpdated: currentTime,
             contractAddress: config_1.CONTRACT_ADDRESSES.core,
         };
@@ -144,7 +111,9 @@ class TradeMonitor {
         if (outstandingTrades.length === 0) {
             console.log("No outstanding trades.");
         }
-        console.log(`💾 Updated local data with ${outstandingTrades.length} outstanding trades (contract: ${config_1.CONTRACT_ADDRESSES.core})`);
+        console.log(`💾 Updated local data: ${outstandingTrades.length} outstanding, ` +
+            `${Object.keys(params.tradeCache).length} cached trades, ` +
+            `lastScannedBlock=${params.lastScannedBlock}`);
     }
     /**
      * Calculate pair ID (keccak256 hash of token addresses) - matches contract logic
@@ -153,60 +122,21 @@ class TradeMonitor {
         // Use the same calculation as the smart contract: keccak256(abi.encode(tokenIn, tokenOut))
         return ethers_1.ethers.keccak256(ethers_1.ethers.AbiCoder.defaultAbiCoder().encode(["address", "address"], [tokenIn, tokenOut]));
     }
-    /**
-     * Get the symbol for a token address
-     */
-    getTokenSymbol(address) {
-        const lowerAddress = address.toLowerCase();
-        return config_1.TOKEN_ADDRESSES[lowerAddress] || address.slice(0, 6) + "...";
-    }
-    /**
-     * Format a token amount for display
-     */
-    formatTokenAmount(amount, decimals = 18) {
-        const value = ethers_1.ethers.formatUnits(amount, decimals);
-        const num = parseFloat(value);
-        if (num === 0)
-            return "0";
-        if (num < 0.0001)
-            return "< 0.0001";
-        if (num < 1)
-            return num.toFixed(6);
-        if (num < 1000)
-            return num.toFixed(4);
-        if (num < 1000000)
-            return (num / 1000).toFixed(2) + "K";
-        return (num / 1000000).toFixed(2) + "M";
-    }
-    /**
-     * Calculate trade progress percentage
-     */
-    calculateProgress(realised, target) {
-        const realisedNum = parseFloat(ethers_1.ethers.formatEther(realised));
-        const targetNum = parseFloat(ethers_1.ethers.formatEther(target));
-        if (targetNum === 0)
-            return "0%";
-        const progress = (realisedNum / targetNum) * 100;
-        return `${Math.min(progress, 100).toFixed(1)}%`;
-    }
-    /**
-     * Convert a trade to display format
-     */
     tradeToDisplay(trade) {
-        const tokenInSymbol = this.getTokenSymbol(trade.tokenIn);
-        const tokenOutSymbol = this.getTokenSymbol(trade.tokenOut);
+        const tokenInSymbol = (0, tradeFormat_1.getTokenSymbol)(trade.tokenIn);
+        const tokenOutSymbol = (0, tradeFormat_1.getTokenSymbol)(trade.tokenOut);
         const tokenInDecimals = (0, price_fetcher_1.getTokenDecimals)(trade.tokenIn);
         const tokenOutDecimals = (0, price_fetcher_1.getTokenDecimals)(trade.tokenOut);
         return {
             tradeId: trade.tradeId,
             pair: `${tokenInSymbol}/${tokenOutSymbol}`,
-            tokenIn: trade.tokenIn, // Use actual address, not symbol
-            tokenOut: trade.tokenOut, // Use actual address, not symbol
-            amountIn: this.formatTokenAmount(trade.amountIn, tokenInDecimals),
-            amountRemaining: this.formatTokenAmount(trade.amountRemaining, tokenInDecimals),
-            targetAmountOut: this.formatTokenAmount(trade.targetAmountOut, tokenOutDecimals),
-            realisedAmountOut: this.formatTokenAmount(trade.realisedAmountOut, tokenOutDecimals),
-            progress: this.calculateProgress(trade.realisedAmountOut, trade.targetAmountOut),
+            tokenIn: trade.tokenIn,
+            tokenOut: trade.tokenOut,
+            amountIn: (0, tradeFormat_1.formatTokenAmount)(trade.amountIn, tokenInDecimals),
+            amountRemaining: (0, tradeFormat_1.formatTokenAmount)(trade.amountRemaining, tokenInDecimals),
+            targetAmountOut: (0, tradeFormat_1.formatTokenAmount)(trade.targetAmountOut, tokenOutDecimals),
+            realisedAmountOut: (0, tradeFormat_1.formatTokenAmount)(trade.realisedAmountOut, tokenOutDecimals),
+            progress: (0, tradeFormat_1.calculateProgress)(trade.realisedAmountOut, trade.targetAmountOut),
             isInstasettlable: trade.isInstasettlable,
             lastSweetSpot: trade.lastSweetSpot,
             attempts: trade.attempts,
@@ -304,12 +234,12 @@ class TradeMonitor {
     /**
      * Scan for TradeCreated events
      */
-    async scanTradeCreatedEvents(fromBlock = 0) {
-        console.log(`🔍 Scanning TradeCreated events from block ${fromBlock}`);
+    async scanTradeCreatedEvents(fromBlock = 0, toBlock) {
+        console.log(`🔍 Scanning TradeCreated events from block ${fromBlock}` +
+            (toBlock !== undefined ? ` to ${toBlock}` : ""));
         try {
-            // Use the contract's built-in event filtering
             const filter = this.coreContract.filters.TradeCreated();
-            const events = await this.coreContract.queryFilter(filter, fromBlock);
+            const events = await this.coreContract.queryFilter(filter, fromBlock, toBlock);
             console.log(`📊 Found ${events.length} TradeCreated events`);
             return events.map((event) => {
                 const eventLog = event;
@@ -329,7 +259,8 @@ class TradeMonitor {
                     onlyInstasettle: eventLog.args?.onlyInstasettle,
                     blockNumber: eventLog.blockNumber,
                     transactionHash: eventLog.transactionHash,
-                    timestamp: 0, // Will be filled later
+                    logIndex: eventLog.index,
+                    timestamp: 0,
                 };
             });
         }
@@ -341,10 +272,10 @@ class TradeMonitor {
     /**
      * Scan for TradeStreamExecuted events
      */
-    async scanExecutionEvents(fromBlock = 0) {
+    async scanExecutionEvents(fromBlock = 0, toBlock) {
         try {
             const filter = this.coreContract.filters.TradeStreamExecuted();
-            const events = await this.coreContract.queryFilter(filter, fromBlock);
+            const events = await this.coreContract.queryFilter(filter, fromBlock, toBlock);
             return events.map((event) => {
                 const eventLog = event;
                 return {
@@ -354,7 +285,8 @@ class TradeMonitor {
                     lastSweetSpot: Number(eventLog.args?.lastSweetSpot),
                     blockNumber: eventLog.blockNumber,
                     transactionHash: eventLog.transactionHash,
-                    timestamp: 0, // Will be filled later
+                    logIndex: eventLog.index,
+                    timestamp: 0,
                 };
             });
         }
@@ -366,10 +298,10 @@ class TradeMonitor {
     /**
      * Scan for TradeCancelled events
      */
-    async scanCancelledEvents(fromBlock = 0) {
+    async scanCancelledEvents(fromBlock = 0, toBlock) {
         try {
             const filter = this.coreContract.filters.TradeCancelled();
-            const events = await this.coreContract.queryFilter(filter, fromBlock);
+            const events = await this.coreContract.queryFilter(filter, fromBlock, toBlock);
             return events.map((event) => {
                 const eventLog = event;
                 return {
@@ -379,7 +311,8 @@ class TradeMonitor {
                     realisedAmountOut: eventLog.args?.realisedAmountOut.toString(),
                     blockNumber: eventLog.blockNumber,
                     transactionHash: eventLog.transactionHash,
-                    timestamp: 0, // Will be filled later
+                    logIndex: eventLog.index,
+                    timestamp: 0,
                 };
             });
         }
@@ -391,10 +324,10 @@ class TradeMonitor {
     /**
      * Scan for TradeSettled events
      */
-    async scanTradeInstasettledEvents(fromBlock = 0) {
+    async scanTradeInstasettledEvents(fromBlock = 0, toBlock) {
         try {
             const filter = this.coreContract.filters.TradeInstasettled();
-            const events = await this.coreContract.queryFilter(filter, fromBlock);
+            const events = await this.coreContract.queryFilter(filter, fromBlock, toBlock);
             return events.map((event) => {
                 const eventLog = event;
                 return {
@@ -405,7 +338,8 @@ class TradeMonitor {
                     totalFees: eventLog.args?.totalFees.toString(),
                     blockNumber: eventLog.blockNumber,
                     transactionHash: eventLog.transactionHash,
-                    timestamp: 0, // Will be filled later
+                    logIndex: eventLog.index,
+                    timestamp: 0,
                 };
             });
         }
@@ -417,10 +351,10 @@ class TradeMonitor {
     /**
      * Scan for TradeCompleted events
      */
-    async scanTradeCompletedEvents(fromBlock = 0) {
+    async scanTradeCompletedEvents(fromBlock = 0, toBlock) {
         try {
             const filter = this.coreContract.filters.TradeCompleted();
-            const events = await this.coreContract.queryFilter(filter, fromBlock);
+            const events = await this.coreContract.queryFilter(filter, fromBlock, toBlock);
             return events.map((event) => {
                 const eventLog = event;
                 return {
@@ -428,7 +362,8 @@ class TradeMonitor {
                     finalRealisedAmountOut: eventLog.args?.finalRealisedAmountOut.toString(),
                     blockNumber: eventLog.blockNumber,
                     transactionHash: eventLog.transactionHash,
-                    timestamp: 0, // Will be filled later
+                    logIndex: eventLog.index,
+                    timestamp: 0,
                 };
             });
         }
@@ -504,209 +439,93 @@ class TradeMonitor {
         }
     }
     /**
+     * Scan historical Core events for a block range.
+     */
+    async scanHistoricalBatch(fromBlock, toBlock) {
+        const [createdEvents, executionEvents, cancelledEvents, instasettledEvents, completedEvents,] = await Promise.all([
+            this.scanTradeCreatedEvents(fromBlock, toBlock),
+            this.scanExecutionEvents(fromBlock, toBlock),
+            this.scanCancelledEvents(fromBlock, toBlock),
+            this.scanTradeInstasettledEvents(fromBlock, toBlock),
+            this.scanTradeCompletedEvents(fromBlock, toBlock),
+        ]);
+        console.log(`📊 Found events: Created=${createdEvents.length}, Executed=${executionEvents.length}, Cancelled=${cancelledEvents.length}, Instasettled=${instasettledEvents.length}, Completed=${completedEvents.length}`);
+        return {
+            createdEvents,
+            executionEvents,
+            cancelledEvents,
+            instasettledEvents,
+            completedEvents,
+        };
+    }
+    async fillBatchTimestamps(batch) {
+        const allBlocks = new Set();
+        for (const event of [
+            ...batch.createdEvents,
+            ...batch.executionEvents,
+            ...batch.cancelledEvents,
+            ...batch.instasettledEvents,
+            ...batch.completedEvents,
+        ]) {
+            allBlocks.add(event.blockNumber);
+        }
+        const blockTimestamps = new Map();
+        for (const blockNumber of allBlocks) {
+            blockTimestamps.set(blockNumber, await this.getBlockTimestamp(blockNumber));
+        }
+        const stamp = (events) => {
+            events.forEach((event) => {
+                event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
+            });
+        };
+        stamp(batch.createdEvents);
+        stamp(batch.executionEvents);
+        stamp(batch.cancelledEvents);
+        stamp(batch.instasettledEvents);
+        stamp(batch.completedEvents);
+    }
+    /**
      * Analyze trade history and determine completion status
      */
     async analyzeTradeHistory() {
         console.log("🔍 Scanning historical events...");
-        // Get current block
+        const localData = this.loadLocalData();
         const currentBlock = await this.provider.getBlockNumber();
-        // For historical analysis, always scan from deployment block to get complete history
-        // Start from the actual deployment block of the Core contract
-        const fromBlock = config_1.DEPLOYMENT_BLOCK;
-        console.log(`📊 Scanning from deployment block ${fromBlock} to ${currentBlock} for complete history`);
-        // Scan all events in parallel
-        const [createdEvents, executionEvents, cancelledEvents, instasettledEvents, completedEvents,] = await Promise.all([
-            this.scanTradeCreatedEvents(fromBlock),
-            this.scanExecutionEvents(fromBlock),
-            this.scanCancelledEvents(fromBlock),
-            this.scanTradeInstasettledEvents(fromBlock),
-            this.scanTradeCompletedEvents(fromBlock),
-        ]);
-        console.log(`📊 Found events: Created=${createdEvents.length}, Executed=${executionEvents.length}, Cancelled=${cancelledEvents.length}, Instasettled=${instasettledEvents.length}, Completed=${completedEvents.length}`);
-        // Fill timestamps
-        const allBlocks = new Set([
-            ...createdEvents.map((e) => e.blockNumber),
-            ...executionEvents.map((e) => e.blockNumber),
-            ...cancelledEvents.map((e) => e.blockNumber),
-            ...instasettledEvents.map((e) => e.blockNumber),
-            ...completedEvents.map((e) => e.blockNumber),
-        ]);
-        const blockTimestamps = new Map();
-        for (const blockNumber of allBlocks) {
-            const timestamp = await this.getBlockTimestamp(blockNumber);
-            blockTimestamps.set(blockNumber, timestamp);
+        const scanRange = (0, scanRange_1.resolveScanRange)({
+            lastScannedBlock: localData.lastScannedBlock,
+            currentBlock,
+            deploymentBlock: config_1.DEPLOYMENT_BLOCK,
+            hasTradeCache: (0, localDataMigration_1.hasUsableTradeCache)(localData),
+        });
+        if (scanRange.mode === "bootstrap") {
+            console.log(`📦 Bootstrap scan (${scanRange.reason})`);
         }
-        // Update timestamps
-        createdEvents.forEach((event) => {
-            event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
-        });
-        executionEvents.forEach((event) => {
-            event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
-        });
-        cancelledEvents.forEach((event) => {
-            event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
-        });
-        instasettledEvents.forEach((event) => {
-            event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
-        });
-        completedEvents.forEach((event) => {
-            event.timestamp = blockTimestamps.get(event.blockNumber) || 0;
-        });
-        // Group events by trade ID
-        const executionMap = new Map();
-        executionEvents.forEach((event) => {
-            if (!executionMap.has(event.tradeId)) {
-                executionMap.set(event.tradeId, []);
-            }
-            executionMap.get(event.tradeId).push(event);
-        });
-        const cancelledMap = new Map();
-        cancelledEvents.forEach((event) => {
-            cancelledMap.set(event.tradeId, event);
-        });
-        const instasettledMap = new Map();
-        instasettledEvents.forEach((event) => {
-            instasettledMap.set(event.tradeId, event);
-        });
-        const completedMap = new Map();
-        completedEvents.forEach((event) => {
-            completedMap.set(event.tradeId, event);
-        });
-        // Determine completion status for each created trade (purely event-based)
-        const completedTrades = [];
-        const ongoingTrades = [];
-        let closedWithoutTerminalEvent = 0;
-        for (const createdEvent of createdEvents) {
-            const tradeId = createdEvent.tradeId;
-            const executions = executionMap.get(tradeId) || [];
-            const cancelled = cancelledMap.get(tradeId);
-            const instasettled = instasettledMap.get(tradeId);
-            const completed = completedMap.get(tradeId);
-            const tokenInSymbol = this.getTokenSymbol(createdEvent.tokenIn);
-            const tokenOutSymbol = this.getTokenSymbol(createdEvent.tokenOut);
-            const pair = `${tokenInSymbol}/${tokenOutSymbol}`;
-            const tokenInDecimals = (0, price_fetcher_1.getTokenDecimals)(createdEvent.tokenIn);
-            const tokenOutDecimals = (0, price_fetcher_1.getTokenDecimals)(createdEvent.tokenOut);
-            // Calculate total realized amount from executions
-            // Note: TradeStreamExecuted emits the per-stream amountOut delta, so summing
-            // across executions yields the GROSS realised total (before stream fees).
-            const totalRealized = executions.reduce((sum, exec) => sum + BigInt(exec.realisedAmountOut), BigInt(0));
-            // Total tokenIn that has actually been streamed across all executions.
-            // We use this — not minAmountOut — to decide whether a trade has been
-            // fully drained on the input side. `minAmountOut` is the user-specified
-            // slippage floor (frequently set to 1 wei), so comparing against it
-            // falsely classifies still-streaming trades as "executed".
-            const totalStreamedIn = executions.reduce((sum, exec) => sum + BigInt(exec.amountIn), BigInt(0));
-            const originalAmountIn = BigInt(createdEvent.amountIn);
-            // Determine completion status (priority: cancelled > instasettled > completed > executed)
-            let completionType = null;
-            let completionTime = 0;
-            let finalAmountOut = totalRealized;
-            if (cancelled) {
-                completionType = "cancelled";
-                completionTime = cancelled.timestamp;
-                finalAmountOut = BigInt(cancelled.realisedAmountOut);
-            }
-            else if (instasettled) {
-                completionType = "instasettled";
-                completionTime = instasettled.timestamp;
-                finalAmountOut = BigInt(instasettled.totalAmountOut);
-            }
-            else if (completed) {
-                completionType = "completed";
-                completionTime = completed.timestamp;
-                finalAmountOut = BigInt(completed.finalRealisedAmountOut);
-            }
-            else if (executions.length > 0 &&
-                originalAmountIn > BigInt(0) &&
-                totalStreamedIn >= originalAmountIn) {
-                // Safety net for trades whose entire amountIn has been streamed but for
-                // which no TradeCompleted event was observed (e.g. older Core versions
-                // or a missed terminal log). The current contract reliably emits
-                // TradeCompleted in this case, so this branch should rarely trigger.
-                completionType = "executed";
-                completionTime = executions[executions.length - 1].timestamp;
-                finalAmountOut = totalRealized;
-            }
-            if (completionType) {
-                // Trade is completed - use event data
-                const finalProgress = createdEvent.minAmountOut !== "0"
-                    ? (Number(finalAmountOut) / Number(createdEvent.minAmountOut)) * 100
-                    : 0;
-                completedTrades.push({
-                    tradeId,
-                    pair,
-                    tokenIn: tokenInSymbol,
-                    tokenOut: tokenOutSymbol,
-                    amountIn: this.formatTokenAmount(createdEvent.amountIn, tokenInDecimals),
-                    finalAmountOut: this.formatTokenAmount(finalAmountOut.toString(), tokenOutDecimals),
-                    executionCount: executions.length,
-                    completionTime,
-                    completionType,
-                    owner: createdEvent.user.slice(0, 6) + "..." + createdEvent.user.slice(-4),
-                    totalExecutions: executions.length,
-                    finalProgress: Math.min(finalProgress, 100),
-                });
-            }
-            else {
-                // If the trade no longer exists on-chain (owner == zero), treat it as closed
-                // even when no terminal event was emitted.
-                const stillActive = await this.isTradeActive(tradeId);
-                if (!stillActive) {
-                    closedWithoutTerminalEvent++;
-                    continue;
-                }
-                // Trade is ongoing - build state from events
-                // Calculate current state from accumulated executions
-                const lastExecution = executions[executions.length - 1];
-                // Calculate remaining amount by subtracting executed amounts from initial amount
-                const totalExecuted = executions.reduce((sum, exec) => sum + BigInt(exec.amountIn), BigInt(0));
-                const estimatedRemaining = BigInt(createdEvent.amountIn) > totalExecuted
-                    ? BigInt(createdEvent.amountIn) - totalExecuted
-                    : BigInt(0);
-                // Read actual attempts from contract (not just counting events)
-                // This accounts for failed executions that increment attempts but don't emit TradeStreamExecuted
-                let actualAttempts = executions.length;
+        else {
+            console.log(`⚡ Incremental scan (${scanRange.reason})`);
+        }
+        console.log(`📊 Scanning blocks ${scanRange.fromBlock} → ${scanRange.toBlock}`);
+        const batch = await this.scanHistoricalBatch(scanRange.fromBlock, scanRange.toBlock);
+        await this.fillBatchTimestamps(batch);
+        const baseCache = scanRange.mode === "bootstrap" ? {} : { ...(localData.tradeCache || {}) };
+        const tradeCache = (0, tradeCache_1.mergeEventsIntoCache)(baseCache, batch);
+        const history = await (0, tradeCache_1.buildTradeHistoryFromCache)(tradeCache, {
+            isTradeActive: (tradeId) => this.isTradeActive(tradeId),
+            readAttempts: async (tradeId) => {
                 try {
                     const tradeFromContract = await this.coreContract.getTrade(tradeId);
-                    actualAttempts = Number(tradeFromContract.attempts);
+                    return Number(tradeFromContract.attempts);
                 }
-                catch (error) {
-                    // If read fails, fall back to event count
-                    console.warn(`⚠️ Could not read attempts for trade ${tradeId}, using event count`);
+                catch {
+                    return undefined;
                 }
-                ongoingTrades.push({
-                    tradeId: tradeId.toString(),
-                    pair,
-                    tokenIn: createdEvent.tokenIn,
-                    tokenOut: createdEvent.tokenOut,
-                    amountIn: this.formatTokenAmount(createdEvent.amountIn, tokenInDecimals),
-                    amountRemaining: this.formatTokenAmount(estimatedRemaining.toString(), tokenInDecimals),
-                    targetAmountOut: this.formatTokenAmount(createdEvent.minAmountOut, tokenOutDecimals),
-                    realisedAmountOut: this.formatTokenAmount(totalRealized.toString(), tokenOutDecimals),
-                    progress: this.calculateProgress(totalRealized.toString(), createdEvent.minAmountOut),
-                    isInstasettlable: createdEvent.isInstasettlable,
-                    lastSweetSpot: lastExecution?.lastSweetSpot?.toString() ||
-                        createdEvent.lastSweetSpot.toString(),
-                    attempts: actualAttempts,
-                    owner: createdEvent.user.slice(0, 6) + "..." + createdEvent.user.slice(-4),
-                    onlyInstasettle: createdEvent.onlyInstasettle,
-                });
-            }
-        }
-        if (closedWithoutTerminalEvent > 0) {
-            console.log(`ℹ️ Ignored ${closedWithoutTerminalEvent} closed trade(s) without terminal events (already removed on-chain).`);
-        }
-        // Sort completed trades by completion time (newest first)
-        completedTrades.sort((a, b) => b.completionTime - a.completionTime);
-        const totalTrades = createdEvents.length;
-        const completionRate = totalTrades > 0 ? (completedTrades.length / totalTrades) * 100 : 0;
-        return {
-            completedTrades,
-            ongoingTrades,
-            totalTrades,
-            completionRate,
-        };
+            },
+        });
+        this.persistLocalData({
+            lastScannedBlock: currentBlock,
+            tradeCache,
+            ongoingTrades: history.ongoingTrades,
+        });
+        return history;
     }
     /**
      * Display trades in a formatted table
@@ -851,8 +670,6 @@ class TradeMonitor {
             console.log("🚀 Starting 1SLiquidity Historical Trade Analysis...\n");
             const history = await this.analyzeTradeHistory();
             this.displayTradeHistory(history);
-            // Update local data with current outstanding trades (only for execution purposes)
-            await this.updateLocalData(history.ongoingTrades);
         }
         catch (error) {
             console.error("❌ Error during historical analysis:", error);
@@ -918,17 +735,17 @@ class TradeMonitor {
             const meta = metadataByTradeId.get(event.tradeId);
             const tokenIn = meta?.tokenIn;
             const tokenOut = meta?.tokenOut;
-            const tokenInSymbol = tokenIn ? this.getTokenSymbol(tokenIn) : "TOKEN_IN";
+            const tokenInSymbol = tokenIn ? (0, tradeFormat_1.getTokenSymbol)(tokenIn) : "TOKEN_IN";
             const tokenOutSymbol = tokenOut
-                ? this.getTokenSymbol(tokenOut)
+                ? (0, tradeFormat_1.getTokenSymbol)(tokenOut)
                 : "TOKEN_OUT";
             const tokenInDecimals = tokenIn ? (0, price_fetcher_1.getTokenDecimals)(tokenIn) : 18;
             const tokenOutDecimals = tokenOut ? (0, price_fetcher_1.getTokenDecimals)(tokenOut) : 18;
             return {
                 tradeId: event.tradeId,
                 pair: meta?.pair || `${tokenInSymbol}/${tokenOutSymbol}`,
-                amountIn: this.formatTokenAmount(event.amountIn, tokenInDecimals),
-                amountOut: this.formatTokenAmount(event.realisedAmountOut, tokenOutDecimals),
+                amountIn: (0, tradeFormat_1.formatTokenAmount)(event.amountIn, tokenInDecimals),
+                amountOut: (0, tradeFormat_1.formatTokenAmount)(event.realisedAmountOut, tokenOutDecimals),
                 tokenInSymbol,
                 tokenOutSymbol,
                 lastSweetSpot: event.lastSweetSpot,
@@ -940,9 +757,9 @@ class TradeMonitor {
             const meta = metadataByTradeId.get(event.tradeId);
             const tokenIn = meta?.tokenIn || "";
             const tokenOut = meta?.tokenOut || "";
-            const tokenInSymbol = tokenIn ? this.getTokenSymbol(tokenIn) : "TOKEN_IN";
+            const tokenInSymbol = tokenIn ? (0, tradeFormat_1.getTokenSymbol)(tokenIn) : "TOKEN_IN";
             const tokenOutSymbol = tokenOut
-                ? this.getTokenSymbol(tokenOut)
+                ? (0, tradeFormat_1.getTokenSymbol)(tokenOut)
                 : "TOKEN_OUT";
             const pair = meta?.pair || `${tokenInSymbol}/${tokenOutSymbol}`;
             if (!rollupMap.has(event.tradeId)) {
@@ -962,10 +779,10 @@ class TradeMonitor {
         }
         const tradeRollups = Array.from(rollupMap.entries()).map(([tradeId, rollup]) => {
             const tokenInSymbol = rollup.tokenIn
-                ? this.getTokenSymbol(rollup.tokenIn)
+                ? (0, tradeFormat_1.getTokenSymbol)(rollup.tokenIn)
                 : "TOKEN_IN";
             const tokenOutSymbol = rollup.tokenOut
-                ? this.getTokenSymbol(rollup.tokenOut)
+                ? (0, tradeFormat_1.getTokenSymbol)(rollup.tokenOut)
                 : "TOKEN_OUT";
             const tokenInDecimals = rollup.tokenIn ? (0, price_fetcher_1.getTokenDecimals)(rollup.tokenIn) : 18;
             const tokenOutDecimals = rollup.tokenOut
@@ -975,8 +792,8 @@ class TradeMonitor {
                 tradeId,
                 pair: rollup.pair,
                 streams: rollup.streams,
-                totalAmountIn: this.formatTokenAmount(rollup.totalAmountIn.toString(), tokenInDecimals),
-                totalAmountOut: this.formatTokenAmount(rollup.totalAmountOut.toString(), tokenOutDecimals),
+                totalAmountIn: (0, tradeFormat_1.formatTokenAmount)(rollup.totalAmountIn.toString(), tokenInDecimals),
+                totalAmountOut: (0, tradeFormat_1.formatTokenAmount)(rollup.totalAmountOut.toString(), tokenOutDecimals),
                 tokenInSymbol,
                 tokenOutSymbol,
             };
@@ -1414,8 +1231,12 @@ class TradeMonitor {
         try {
             const result = await this.getAllActiveTrades();
             this.displayTrades(result);
-            // Update local data with current outstanding trades
-            await this.updateLocalData(result.activeTrades);
+            const localData = this.loadLocalData();
+            this.persistLocalData({
+                lastScannedBlock: localData.lastScannedBlock,
+                tradeCache: localData.tradeCache || {},
+                ongoingTrades: result.activeTrades,
+            });
         }
         catch (error) {
             console.error("❌ Monitor failed:", error);

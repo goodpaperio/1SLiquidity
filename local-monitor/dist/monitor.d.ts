@@ -23,28 +23,13 @@ export declare class TradeMonitor {
      */
     private saveLocalData;
     /**
-     * Update local data with current outstanding trades
+     * Persist scan cursor, trade cache, and execution queue metadata.
      */
-    private updateLocalData;
+    private persistLocalData;
     /**
      * Calculate pair ID (keccak256 hash of token addresses) - matches contract logic
      */
     private calculatePairId;
-    /**
-     * Get the symbol for a token address
-     */
-    private getTokenSymbol;
-    /**
-     * Format a token amount for display
-     */
-    private formatTokenAmount;
-    /**
-     * Calculate trade progress percentage
-     */
-    private calculateProgress;
-    /**
-     * Convert a trade to display format
-     */
     private tradeToDisplay;
     /**
      * Check if a trade exists and is active
@@ -90,6 +75,11 @@ export declare class TradeMonitor {
      * Get block timestamp
      */
     private getBlockTimestamp;
+    /**
+     * Scan historical Core events for a block range.
+     */
+    private scanHistoricalBatch;
+    private fillBatchTimestamps;
     /**
      * Analyze trade history and determine completion status
      */
