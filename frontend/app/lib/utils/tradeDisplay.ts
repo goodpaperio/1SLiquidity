@@ -63,6 +63,11 @@ const KNOWN_TRADE_TOKENS: Record<
     decimals: 8,
     name: 'Internet Computer',
   },
+  '0x467bccd9d29f223bce8043b84e8c8b282827790f': {
+    symbol: 'TEL',
+    decimals: 2,
+    name: 'Telcoin',
+  },
   '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': {
     symbol: 'WBTC',
     decimals: 8,
