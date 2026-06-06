@@ -18,6 +18,7 @@ import {
   formatScanSummary,
 } from '../scan/QuoteScanner.js';
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
+import { pollTradeCompletions } from '../notify/completionWatcher.js';
 
 export interface BotState {
   lastUpdatedAt: string;
@@ -118,6 +119,11 @@ export class BotRunner {
     }
     this.cycleInFlight = true;
     try {
+      const notifiedEarly = await pollTradeCompletions(this.config, provider);
+      if (notifiedEarly > 0) {
+        console.log(`[${id}] trade completion alerts sent: ${notifiedEarly}`);
+      }
+
       const core = getCoreContract(this.config, provider);
       const outstanding = await listOutstandingTradesForOwner(
         core,

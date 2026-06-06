@@ -13,6 +13,7 @@ import {
   formatFinalistRefreshLog,
   formatScanSummary,
 } from '../scan/QuoteScanner.js';
+import { pollTradeCompletions } from '../notify/completionWatcher.js';
 import { parseCliArgs, requireBotId } from './parse-args.js';
 
 async function main(): Promise<void> {
@@ -90,6 +91,11 @@ async function main(): Promise<void> {
     tradeHistory
   );
   await executor.execute(opportunity, wallet);
+
+  const notified = await pollTradeCompletions(bot, provider);
+  if (notified > 0) {
+    console.log(`[run-once] trade completion alerts sent: ${notified}`);
+  }
 
   console.log('\n[run-once] Done — single run complete.');
 }

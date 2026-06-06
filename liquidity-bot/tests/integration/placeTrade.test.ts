@@ -1,5 +1,7 @@
+import { Interface } from 'ethers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BotConfig } from '../../src/config/schema.js';
+import { CORE_EVENT_ABI } from '../../src/notify/parseTradeEvents.js';
 
 const mockEnsureAllowance = vi.fn();
 const mockPlaceTrade = vi.fn();
@@ -59,9 +61,39 @@ const bot: BotConfig = {
   },
 };
 
+const tradeCreatedIface = new Interface([CORE_EVENT_ABI[0]]);
+
+function mockPlaceTradeReceipt(tradeId: number) {
+  const encoded = tradeCreatedIface.encodeEventLog('TradeCreated', [
+    tradeId,
+    bot.address,
+    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    1_000_000_000_000_000n,
+    1_000_000_000_000_000n,
+    2_000_000n,
+    0n,
+    false,
+    100n,
+    0n,
+    false,
+    false,
+  ]);
+  return {
+    hash: '0xdef',
+    logs: [
+      {
+        address: bot.contracts.core,
+        topics: encoded.topics as string[],
+        data: encoded.data,
+      },
+    ],
+  };
+}
+
 describe('integration — leg 2 placeTrade on Core', () => {
   beforeEach(() => {
-    mockWait.mockResolvedValue({ hash: '0xdef' });
+    mockWait.mockResolvedValue(mockPlaceTradeReceipt(42));
     mockPlaceTrade.mockResolvedValue({ wait: mockWait });
     mockEnsureAllowance.mockResolvedValue(undefined);
   });
@@ -84,6 +116,7 @@ describe('integration — leg 2 placeTrade on Core', () => {
     );
 
     expect(res.txHash).toBe('0xdef');
+    expect(res.tradeId).toBe(42);
     expect(mockEnsureAllowance).toHaveBeenCalledOnce();
     expect(mockPlaceTrade).toHaveBeenCalledOnce();
   });

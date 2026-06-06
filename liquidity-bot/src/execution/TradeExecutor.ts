@@ -7,6 +7,7 @@ import type { PairCooldownStore } from '../scan/pairCooldown.js';
 import type { TradeHistoryStore } from '../scan/tradeHistory.js';
 import { formatPredictedWin } from '../scan/formatOpportunity.js';
 import type { ScanOpportunity } from '../scan/types.js';
+import { TradeNotifier } from '../notify/tradeNotify.js';
 import { swapExactOnCandidateDex } from './directSwap.js';
 import { placeTradeOnCore } from './placeTradeLeg.js';
 import { applySlippageBps } from './slippage.js';
@@ -21,6 +22,7 @@ export interface ExecutionResult {
 
 export class TradeExecutor {
   private readonly quotes: DexQuoteService;
+  private readonly notifier: TradeNotifier;
 
   constructor(
     private readonly bot: BotConfig,
@@ -29,6 +31,7 @@ export class TradeExecutor {
     private readonly tradeHistory?: TradeHistoryStore
   ) {
     this.quotes = new DexQuoteService(provider);
+    this.notifier = new TradeNotifier(bot);
   }
 
   async execute(
@@ -81,6 +84,12 @@ export class TradeExecutor {
       signer
     );
     console.log(`[execute] leg1 confirmed ${leg1.txHash}`);
+    await this.notifier.leg1Confirmed(
+      opportunity,
+      opportunity.amountIn,
+      opportunity.baseSymbol,
+      leg1.txHash
+    );
 
     const altAfter = await getBalance(
       opportunity.tokenOut,
@@ -114,15 +123,34 @@ export class TradeExecutor {
       `[execute] leg2 placeTrade alt→base amountIn=${altReceived} minOut=${leg2MinOut}`
     );
 
-    const leg2 = await placeTradeOnCore(
-      this.bot,
-      opportunity.tokenOut,
-      opportunity.tokenIn,
-      altReceived,
+    let leg2: { txHash: string; tradeId: number };
+    try {
+      leg2 = await placeTradeOnCore(
+        this.bot,
+        opportunity.tokenOut,
+        opportunity.tokenIn,
+        altReceived,
+        leg2MinOut,
+        signer
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await this.notifier.leg2Failed(opportunity, leg1.txHash, msg);
+      throw err;
+    }
+    console.log(`[execute] leg2 confirmed ${leg2.txHash} tradeId=${leg2.tradeId}`);
+    await this.notifier.leg2Confirmed({
+      opportunity,
+      tradeId: leg2.tradeId,
+      leg2AmountIn: altReceived,
       leg2MinOut,
-      signer
-    );
-    console.log(`[execute] leg2 confirmed ${leg2.txHash}`);
+      leg1AmountIn: opportunity.amountIn,
+      leg1TxHash: leg1.txHash,
+      leg2TxHash: leg2.txHash,
+      leg1TokenLabel: opportunity.baseSymbol,
+      leg2TokenLabel: opportunity.targetName,
+      settlementToken: opportunity.baseSymbol,
+    });
 
     this.recordLiveTrade(opportunity);
 
@@ -197,6 +225,12 @@ export class TradeExecutor {
       signer
     );
     console.log(`[execute] leg1 confirmed ${leg1.txHash}`);
+    await this.notifier.leg1Confirmed(
+      opportunity,
+      opportunity.amountIn,
+      opportunity.targetName,
+      leg1.txHash
+    );
 
     const baseAfter = await getBalance(
       opportunity.tokenOut,
@@ -228,15 +262,34 @@ export class TradeExecutor {
       `[execute] leg2 placeTrade base→alt amountIn=${baseReceived} minAltOut=${leg2MinOut}`
     );
 
-    const leg2 = await placeTradeOnCore(
-      this.bot,
-      opportunity.tokenOut,
-      opportunity.tokenIn,
-      baseReceived,
+    let leg2: { txHash: string; tradeId: number };
+    try {
+      leg2 = await placeTradeOnCore(
+        this.bot,
+        opportunity.tokenOut,
+        opportunity.tokenIn,
+        baseReceived,
+        leg2MinOut,
+        signer
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await this.notifier.leg2Failed(opportunity, leg1.txHash, msg);
+      throw err;
+    }
+    console.log(`[execute] leg2 confirmed ${leg2.txHash} tradeId=${leg2.tradeId}`);
+    await this.notifier.leg2Confirmed({
+      opportunity,
+      tradeId: leg2.tradeId,
+      leg2AmountIn: baseReceived,
       leg2MinOut,
-      signer
-    );
-    console.log(`[execute] leg2 confirmed ${leg2.txHash}`);
+      leg1AmountIn: opportunity.amountIn,
+      leg1TxHash: leg1.txHash,
+      leg2TxHash: leg2.txHash,
+      leg1TokenLabel: opportunity.targetName,
+      leg2TokenLabel: opportunity.baseSymbol,
+      settlementToken: opportunity.targetName,
+    });
 
     this.recordLiveTrade(opportunity);
 

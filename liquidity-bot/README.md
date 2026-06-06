@@ -145,6 +145,40 @@ View logs for a specific bot:
 npm run open-liquidity-bot-ssh -- 'pm2 logs liquidity-bot-<id> --lines 100'
 ```
 
+## Telegram alerts (optional)
+
+Per-bot trade notifications: leg1 DEX swap, leg2 `placeTrade`, Core settlement P/L, and a daily rollup.
+
+### Setup (once per person / channel)
+
+1. Create a bot via [@BotFather](https://t.me/BotFather) → save **token**.
+2. Message the bot (or add it to a private group) → get **chat id** from  
+   `https://api.telegram.org/bot<TOKEN>/getUpdates`.
+3. Add to `liquidity-bot/.env`:
+
+```bash
+TELEGRAM_ENABLED=1
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+```
+
+Colleagues use **their own** token + chat id on **their** bot instance — same repo code, separate credentials. Messages are prefixed with `bot=<id>`.
+
+### Commands
+
+```bash
+npm run notify:test -- <bot-id>    # smoke test
+npm run notify:daily -- <bot-id>   # yesterday UTC summary (cron this on EC2)
+```
+
+Ledger + notify cursor: `bots/<id>.trade-ledger.jsonl`, `bots/<id>.notify-state.json`.
+
+**EC2 daily cron (example):**
+
+```bash
+pm2 start "npm run notify:daily -- sigma" --name notify-daily-sigma --cron "0 0 * * *" --no-autorestart
+```
+
 ## Development
 
 ```bash

@@ -41,6 +41,22 @@ export function getBotTradeHistoryPath(botId: string): string {
   return path.join(getBotsDir(), `${safe}.trade-history.json`);
 }
 
+export function getBotTradeLedgerPath(botId: string): string {
+  const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  if (safe !== botId.toLowerCase()) {
+    throw new Error(`Invalid bot id: ${botId}`);
+  }
+  return path.join(getBotsDir(), `${safe}.trade-ledger.jsonl`);
+}
+
+export function getBotNotifyStatePath(botId: string): string {
+  const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  if (safe !== botId.toLowerCase()) {
+    throw new Error(`Invalid bot id: ${botId}`);
+  }
+  return path.join(getBotsDir(), `${safe}.notify-state.json`);
+}
+
 export function getBotConfigPath(botId: string): string {
   const safe = botId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
   if (safe !== botId.toLowerCase()) {

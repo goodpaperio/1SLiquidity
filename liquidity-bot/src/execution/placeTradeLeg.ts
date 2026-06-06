@@ -2,6 +2,7 @@ import { AbiCoder, Contract, type Signer } from 'ethers';
 import { CORE_ABI } from '../chain/contracts.js';
 import { ensureAllowance } from '../chain/erc20.js';
 import type { BotConfig } from '../config/schema.js';
+import { parseTradeIdFromReceipt } from '../notify/parseTradeEvents.js';
 
 const coder = AbiCoder.defaultAbiCoder();
 
@@ -49,7 +50,7 @@ export async function placeTradeOnCore(
   amountIn: bigint,
   amountOutMin: bigint,
   signer: Signer
-): Promise<{ txHash: string }> {
+): Promise<{ txHash: string; tradeId: number }> {
   const owner = await signer.getAddress();
   await ensureAllowance(
     tokenIn,
@@ -73,5 +74,9 @@ export async function placeTradeOnCore(
   const core = new Contract(bot.contracts.core, CORE_ABI, signer);
   const tx = await core.placeTrade(tradeData);
   const receipt = await tx.wait();
-  return { txHash: receipt.hash };
+  const tradeId = parseTradeIdFromReceipt(receipt, bot.contracts.core);
+  if (tradeId == null) {
+    throw new Error('placeTrade receipt missing TradeCreated event');
+  }
+  return { txHash: receipt.hash, tradeId };
 }
