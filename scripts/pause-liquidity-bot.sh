@@ -1,35 +1,57 @@
 #!/usr/bin/env bash
 #
-# Pause liquidity-bot PM2 process on the dedicated EC2 host (from your laptop).
-# Not the local-monitor cron — use bot:pause / bot:start for that.
+# Turn liquidity-bot OFF on the dedicated EC2 host (from your laptop).
+#
+#   pm2 stop → enabled:false → pm2 save
 #
 # Usage: ./scripts/pause-liquidity-bot.sh [server-ip] [ssh-key-path] [bot-id]
-# Env defaults: LIQUIDITY_BOT_HOST, LIQUIDITY_BOT_SSH_KEY, LIQUIDITY_BOT_ID
+#   npm run liquidity-bot:off
+#   npm run pause-liquidity-bot
 #
 set -euo pipefail
 
-SERVER_IP="${1:-${LIQUIDITY_BOT_HOST:-13.40.113.237}}"
-SSH_KEY="${2:-${LIQUIDITY_BOT_SSH_KEY:-$HOME/.ssh/liquidity-bot-alpha.pem}}"
-BOT_ID="${3:-${LIQUIDITY_BOT_ID:-alpha}}"
-SSH_USER="${SSH_USER:-ubuntu}"
-REMOTE_ROOT="${REMOTE_ROOT:-~/1SLiquidity}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/liquidity-bot-remote.sh
+source "$SCRIPT_DIR/lib/liquidity-bot-remote.sh"
 
-SSH_KEY="${SSH_KEY/#\~/$HOME}"
+liquidity_bot_resolve_args "$@"
+liquidity_bot_require_key
 
-if [[ ! -f "$SSH_KEY" ]]; then
-  echo "ERROR: SSH key not found: $SSH_KEY"
-  exit 1
-fi
-
-echo "==> Pausing liquidity-bot ($BOT_ID) on $SSH_USER@$SERVER_IP"
+echo "==> Turning OFF liquidity-bot ($BOT_ID) @ $SSH_USER@$SERVER_IP"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "bash -s" <<EOF
 set -euo pipefail
-cd $REMOTE_ROOT/liquidity-bot
+BOT_ID="$BOT_ID"
+REMOTE_ROOT="$REMOTE_ROOT"
+
+REMOTE_ROOT="\${REMOTE_ROOT:-\$HOME/1SLiquidity}"
+REMOTE_ROOT="\${REMOTE_ROOT/#\~/\$HOME}"
+
 if [[ -f ~/.nvm/nvm.sh ]]; then
   source ~/.nvm/nvm.sh
   nvm use 22 >/dev/null || true
 fi
-npm run stop bot -- "$BOT_ID" || true
-pm2 list | grep -E 'liquidity-bot|name' || true
+
+cd "\$REMOTE_ROOT/liquidity-bot"
+BOT_JSON="bots/\${BOT_ID}.json"
+
+echo "→ pm2 stop"
+npm run stop bot -- "\$BOT_ID" 2>/dev/null || true
+
+if [[ -f "\$BOT_JSON" ]]; then
+  echo "→ enabled:false in \$BOT_JSON"
+  node -e "
+const fs = require('fs');
+const p = process.argv[1];
+const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+j.enabled = false;
+fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+" "\$BOT_JSON"
+fi
+
+pm2 save 2>/dev/null || true
+pm2 list | grep -E 'liquidity-bot|name' || pm2 list || true
 EOF
-echo "==> liquidity-bot-$BOT_ID stopped (PM2)"
+
+echo ""
+echo "✅ liquidity-bot-$BOT_ID is OFF (enabled:false, PM2 stopped)"
+echo "   on:    npm run liquidity-bot:on"

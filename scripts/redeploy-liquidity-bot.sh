@@ -26,8 +26,11 @@ ssh -i "$SSH_KEY" -o ConnectTimeout=10 -o StrictHostKeyChecking=no "$SSH_USER@$S
 echo "==> Redeploying liquidity bot on remote host"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "bash -s" <<EOF
 set -euo pipefail
+REMOTE_ROOT="$REMOTE_ROOT"
 
-cd $REMOTE_ROOT
+REMOTE_ROOT="\${REMOTE_ROOT:-\$HOME/1SLiquidity}"
+REMOTE_ROOT="\${REMOTE_ROOT/#\~/\$HOME}"
+cd "\$REMOTE_ROOT"
 git fetch origin
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
