@@ -2,8 +2,9 @@
 # SSH to the dedicated liquidity-bot EC2 (not local-monitor on 18.134.179.139).
 #
 # Usage:
-#   npm run open-liquidity-bot-ssh
-#   npm run open-liquidity-bot-ssh -- 'cd ~/1SLiquidity/liquidity-bot && ls -la'
+#   npm run open-liquidity-bot-ssh                    # interactive shell
+#   npm run open-liquidity-bot-ssh -- 'pm2 list'       # remote command (loads nvm/pm2)
+#   npm run liquidity-bot:logs
 #
 # Env: LIQUIDITY_BOT_HOST, LIQUIDITY_BOT_SSH_KEY, SSH_USER
 
@@ -20,5 +21,14 @@ if [ ! -f "$SSH_KEY_EXPANDED" ]; then
   exit 1
 fi
 
+SSH_OPTS=(-i "$SSH_KEY_EXPANDED" -o StrictHostKeyChecking=no)
+
 echo "→ liquidity-bot @ $SSH_USER@$SERVER_IP" >&2
-exec ssh -i "$SSH_KEY_EXPANDED" -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "$@"
+
+if [ "$#" -eq 0 ]; then
+  exec ssh "${SSH_OPTS[@]}" -t "$SSH_USER@$SERVER_IP" "bash -l"
+fi
+
+REMOTE_CMD="$*"
+REMOTE_WRAPPER="source \"\$HOME/.nvm/nvm.sh\" 2>/dev/null; nvm use 22 >/dev/null 2>&1; ${REMOTE_CMD}"
+exec ssh "${SSH_OPTS[@]}" "$SSH_USER@$SERVER_IP" "bash -lc $(printf '%q' "$REMOTE_WRAPPER")"
