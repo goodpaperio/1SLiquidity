@@ -3,6 +3,7 @@ import "dotenv/config";
 import { execSync } from "child_process";
 import { existsSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
+import { resolveDeploymentBlock } from "./deploymentBlock";
 
 export interface ContractAddresses {
   core: string;
@@ -86,12 +87,44 @@ function detectBotVersion(): string {
   return "unknown";
 }
 
+function loadDeploymentManifests(repoRoot: string): Array<{
+  contracts?: { Core?: string };
+  deploymentBlock?: number;
+}> {
+  const versionsDir = join(repoRoot, "versions");
+  if (!existsSync(versionsDir)) return [];
+
+  return readdirSync(versionsDir)
+    .filter((name) => name.startsWith("deployment-addresses-mainnet-"))
+    .map((name) => {
+      try {
+        return JSON.parse(
+          readFileSync(join(versionsDir, name), "utf8")
+        ) as { contracts?: { Core?: string }; deploymentBlock?: number };
+      } catch {
+        return {};
+      }
+    });
+}
+
+function detectDeploymentBlock(): number {
+  const fromEnv = process.env.DEPLOYMENT_BLOCK?.trim();
+  if (fromEnv) return Number(fromEnv);
+
+  const repoRoot = join(__dirname, "..", "..");
+  return resolveDeploymentBlock(
+    CONTRACT_ADDRESSES.core,
+    loadDeploymentManifests(repoRoot),
+    25_072_029
+  );
+}
+
 // Bot/deployment version shown in Telegram notifications.
 // Resolution order: BOT_VERSION env -> latest deployment file -> latest git tag -> root package.json.
 export const BOT_VERSION = detectBotVersion();
 
-// Deployment block for Core contract v1.0.9
-export const DEPLOYMENT_BLOCK = 25072029;
+// Earliest known deployment block for the configured Core contract.
+export const DEPLOYMENT_BLOCK = detectDeploymentBlock();
 
 // Common token addresses on Ethereum mainnet (all lowercase for lookup)
 export const TOKEN_ADDRESSES: Record<string, string> = {
