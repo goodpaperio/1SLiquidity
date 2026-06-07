@@ -22,6 +22,18 @@ export type NetworkContractMap = {
   }
 }
 
+// DECAStream protocol contracts (mainnet v2.2.1)
+// Source: versions/deployment-addresses-mainnet-2.2.1.json
+export const PROTOCOL_VERSION = '2.2.1'
+
+export const PROTOCOL_ADDRESSES = {
+  CORE: '0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710',
+  ETH_SUPPORT: '0x93A21f27BbC9ABdf725E09ae6FE714D5C9428Bf4',
+  STREAM_DAEMON: '0xfc61Dd8254F07b515b0529032181DA1cC42518c1',
+  REGISTRY: '0x34d4bd3D3424B4C06bA14D68a10e1DBA5Cfb11D4',
+  EXECUTOR: '0xb2194D54cD31A2c23B071ca68394CF9C35910545',
+} as const
+
 // Contract Addresses
 export const CONTRACT_ADDRESSES = {
   UNISWAP_V2: {

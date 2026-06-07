@@ -12,10 +12,23 @@ Before running the application, you need to set up your environment variables:
 cp .env.example .env
 ```
 
-2. Open the `.env` file and fill in the required values:
+2. Copy `deployment.env.example` to `.env.local` and fill in the required values:
    - `NEXT_PUBLIC_PROJECT_ID`: Your Web3 project ID
    - `NEXT_PUBLIC_BACKEND_URL`: The URL for the backend API
    - `NEXT_PUBLIC_MORALIS_API_KEY`: Your Moralis API key for fetching blockchain data
+   - `NEXT_PUBLIC_GRAPHQL_URL`: The Graph subgraph endpoint
+
+### Mainnet contract addresses (v2.2.1)
+
+Trading uses the Core and ETHSupport addresses in `app/lib/config/contracts.ts` by default:
+
+| Contract | Address |
+|----------|---------|
+| Core | `0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710` |
+| ETHSupport | `0x93A21f27BbC9ABdf725E09ae6FE714D5C9428Bf4` |
+| StreamDaemon | `0xfc61Dd8254F07b515b0529032181DA1cC42518c1` |
+
+If production still shows the legacy v1.0.5 Core (`0x62a1e4dc...`) in wallet approvals, remove any stale `NEXT_PUBLIC_CORE_ADDRESS` / `NEXT_PUBLIC_ETH_SUPPORT_ADDRESS` env vars from your hosting dashboard (e.g. Vercel) and redeploy.
 
 ### Development Server
 

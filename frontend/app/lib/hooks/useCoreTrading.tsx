@@ -5,6 +5,7 @@ import { erc20Abi, parseUnits } from 'viem'
 import { toast } from 'react-hot-toast'
 import coreAbi from '../config/trade-core-abi.json'
 import ethSupportAbi from '../config/eth-support-abi.json'
+import { PROTOCOL_ADDRESSES } from '../config/contracts'
 import { useToast } from '../context/toastProvider'
 import NotifiSwapStream from '@/app/components/toasts/notifiSwapStream'
 import wethAbi from '../config/eth-contract-abi.json'
@@ -54,10 +55,9 @@ export interface ContractInfo {
   instasettleProtocolFeeBps: string
 }
 
-// Constants - You should move these to environment variables
-const CORE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CORE_ADDRESS || ''
-const ETH_SUPPORT_ADDRESS =
-  process.env.NEXT_PUBLIC_ETH_SUPPORT_ADDRESS || ''
+// Mainnet v2.2.1 deployment (see app/lib/config/contracts.ts)
+const CORE_CONTRACT_ADDRESS = PROTOCOL_ADDRESSES.CORE
+const ETH_SUPPORT_ADDRESS = PROTOCOL_ADDRESSES.ETH_SUPPORT
 const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
 const ETH_SENTINEL = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
