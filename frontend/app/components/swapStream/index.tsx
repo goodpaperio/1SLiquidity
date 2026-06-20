@@ -20,8 +20,10 @@ import { Cancellation, TradeStatus } from '@/app/lib/graphql/types/trade'
 import {
   amountUsd,
   findTokenForTrade,
-  formatTradeTokenAmount,
+  formatTradeAmountForDisplay,
   getDisplayOutputAmountWei,
+  resolveTradeTokenDecimals,
+  resolveTradeTokenSymbol,
 } from '@/app/lib/utils/tradeDisplay'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
@@ -94,26 +96,42 @@ const SwapStream: React.FC<Props> = ({
 
   const amountInWei = BigInt(trade.amountIn || '0')
   const outputWei = getDisplayOutputAmountWei(trade)
-  const inDecimals = tokenIn?.decimals ?? 18
-  const outDecimals = tokenOut?.decimals ?? 18
+  const inDecimals = resolveTradeTokenDecimals(tokenIn, trade.tokenIn)
+  const outDecimals = resolveTradeTokenDecimals(tokenOut, trade.tokenOut)
+  const inSymbol = resolveTradeTokenSymbol(tokenIn, trade.tokenIn)
+  const outSymbol = resolveTradeTokenSymbol(tokenOut, trade.tokenOut)
 
-  const formattedAmountIn = tokenIn
-    ? formatTradeTokenAmount(amountInWei, inDecimals)
-    : '0'
-  const formattedOutput = tokenOut
-    ? formatTradeTokenAmount(outputWei, outDecimals)
-    : '0'
+  const formattedAmountIn = formatTradeAmountForDisplay(
+    amountInWei,
+    tokenIn,
+    trade.tokenIn
+  )
+  const formattedOutput = formatTradeAmountForDisplay(
+    outputWei,
+    tokenOut,
+    trade.tokenOut
+  )
 
-  const inputUsdValue = tokenIn
-    ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
-    : 0
-  const outputUsdValue = tokenOut
-    ? amountUsd(outputWei, outDecimals, tokenOut.usd_price)
-    : 0
+  const inputUsdValue = amountUsd(
+    amountInWei,
+    inDecimals,
+    tokenIn?.usd_price ?? 0
+  )
+  const outputUsdValue = amountUsd(
+    outputWei,
+    outDecimals,
+    tokenOut?.usd_price ?? 0
+  )
 
   const tradeStatus = getTradeStatus(trade)
   const outputSuffix =
     tradeStatus === 'ongoing' ? '(EST)' : outputWei > BigInt(0) ? '' : '(EST)'
+
+  const executedStreams = trade.executions.length
+  const displayTotalStreams =
+    tradeStatus === 'ongoing'
+      ? totalStreams
+      : Math.max(executedStreams, totalStreams)
 
   // Calculate BPS savings for instasettlable trades
   const bpsSavings =
@@ -174,7 +192,7 @@ const SwapStream: React.FC<Props> = ({
                   className="w-[18px] h-[18px] rounded-full overflow-hidden"
                 />
                 <p className="text-white uppercase">
-                  {formatNumberSmart(formattedAmountIn)} {tokenIn?.symbol || '?'}
+                  {formatNumberSmart(formattedAmountIn)} {inSymbol}
                   {inputUsdValue > 0 ? (
                     <span className="text-white/50 text-sm ml-1 normal-case">
                       (${inputUsdValue >= 1000
@@ -214,7 +232,7 @@ const SwapStream: React.FC<Props> = ({
                 />
                 <p className="text-white uppercase">
                   {formatNumberSmart(formattedOutput)}{' '}
-                  {tokenOut?.symbol || '?'}{' '}
+                  {outSymbol}{' '}
                   {outputSuffix}
                 </p>
                 {outputUsdValue > 0 && (
@@ -242,12 +260,10 @@ const SwapStream: React.FC<Props> = ({
               )}
               style={{
                 width: `${Math.min(
-                  ((trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
-                    : trade.executions.length) /
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
-                      : totalStreams)) *
+                  (executedStreams /
+                    (tradeStatus === 'ongoing'
+                      ? displayTotalStreams || 1
+                      : executedStreams || 1)) *
                     100,
                   100
                 )}%`,
@@ -275,26 +291,15 @@ const SwapStream: React.FC<Props> = ({
               {!trade.onlyInstasettle && (
                 <>
                   <p className="whitespace-nowrap">
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
-                      : trade.executions.length}{' '}
-                    /{' '}
-                    {trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
-                      : totalStreams}{' '}
-                    completed
+                    {tradeStatus === 'ongoing'
+                      ? `${executedStreams} / ${displayTotalStreams} completed`
+                      : `${executedStreams} / ${executedStreams} completed`}
                   </p>
 
-                  {trade.instasettlements.length > 0 ||
-                  trade.cancellations.length > 0 ||
-                  (trade.instasettlements.length > 0
-                    ? trade.instasettlements.length + trade.executions.length
-                    : trade.executions.length) >=
-                    (trade.instasettlements.length > 0
-                      ? trade.instasettlements.length + trade.executions.length
-                      : totalStreams) ? (
-                    ''
-                  ) : (
+                  {tradeStatus === 'ongoing' &&
+                  trade.instasettlements.length === 0 &&
+                  trade.cancellations.length === 0 &&
+                  executedStreams < displayTotalStreams ? (
                     <div className="flex items-center whitespace-nowrap ml-auto">
                       <Image
                         src="/icons/time.svg"
@@ -305,7 +310,7 @@ const SwapStream: React.FC<Props> = ({
                       />
                       <p>{estimatedTime || '..'}</p>
                     </div>
-                  )}
+                  ) : null}
                 </>
               )}
               {trade.isInstasettlable && !trade.onlyInstasettle && (

@@ -25,8 +25,9 @@ import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 import {
   amountUsd,
   findTokenForTrade,
-  formatTradeTokenAmount,
+  formatTradeAmountForDisplay,
   getDisplayOutputAmountWei,
+  resolveTradeTokenDecimals,
   getOutputAmountLabel,
 } from '@/app/lib/utils/tradeDisplay'
 
@@ -105,22 +106,30 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
       const amountInWei = BigInt(trade.amountIn || '0')
       const outputWei = getDisplayOutputAmountWei(trade)
-      const inDecimals = tokenIn?.decimals ?? 18
-      const outDecimals = tokenOut?.decimals ?? 18
+      const inDecimals = resolveTradeTokenDecimals(tokenIn, trade.tokenIn)
+      const outDecimals = resolveTradeTokenDecimals(tokenOut, trade.tokenOut)
 
-      const formattedAmountIn = tokenIn
-        ? formatTradeTokenAmount(amountInWei, inDecimals)
-        : '0'
-      const formattedAmountOut = tokenOut
-        ? formatTradeTokenAmount(outputWei, outDecimals)
-        : '0'
+      const formattedAmountIn = formatTradeAmountForDisplay(
+        amountInWei,
+        tokenIn,
+        trade.tokenIn
+      )
+      const formattedAmountOut = formatTradeAmountForDisplay(
+        outputWei,
+        tokenOut,
+        trade.tokenOut
+      )
 
-      const volumeUsd = tokenIn
-        ? amountUsd(amountInWei, inDecimals, tokenIn.usd_price)
-        : 0
-      const outputUsd = tokenOut
-        ? amountUsd(outputWei, outDecimals, tokenOut.usd_price)
-        : 0
+      const volumeUsd = amountUsd(
+        amountInWei,
+        inDecimals,
+        tokenIn?.usd_price ?? 0
+      )
+      const outputUsd = amountUsd(
+        outputWei,
+        outDecimals,
+        tokenOut?.usd_price ?? 0
+      )
       const outputLabel = getOutputAmountLabel(trade)
 
       return {

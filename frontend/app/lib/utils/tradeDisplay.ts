@@ -1,6 +1,11 @@
 import { formatUnits } from 'viem'
 import type { Trade } from '@/app/lib/graphql/types/trade'
 import type { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
+import {
+  getKnownTradeToken,
+  KNOWN_TRADE_TOKENS,
+  WETH_ADDRESS,
+} from '@/app/lib/utils/knownTradeTokens'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
 /** Subset of trade fields used for display; loose enough for list/card trade shapes. */
@@ -15,70 +20,7 @@ export type TradeDisplayInput = {
   executions?: Trade['executions']
 }
 
-export const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-
-/** Mainnet tokens we trade but may be missing from the CoinGecko/custom list. */
-const KNOWN_TRADE_TOKENS: Record<
-  string,
-  { symbol: string; decimals: number; name: string }
-> = {
-  [WETH_ADDRESS]: { symbol: 'WETH', decimals: 18, name: 'Wrapped Ether' },
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': {
-    symbol: 'USDC',
-    decimals: 6,
-    name: 'USD Coin',
-  },
-  '0xdac17f958d2ee523a2206206994597c13d831ec7': {
-    symbol: 'USDT',
-    decimals: 6,
-    name: 'Tether',
-  },
-  '0x6b175474e89094c44da98b954eedeac495271d0f': {
-    symbol: 'DAI',
-    decimals: 18,
-    name: 'Dai',
-  },
-  '0x514910771af9ca656af840dff83e8264ecf986ca': {
-    symbol: 'LINK',
-    decimals: 18,
-    name: 'Chainlink',
-  },
-  '0xc18360217d8f7ab5e7c516566761ea12ce7f9d72': {
-    symbol: 'ENS',
-    decimals: 18,
-    name: 'Ethereum Name Service',
-  },
-  '0xd33526068d116ce69f19a9ee46f0bd304f21a51f': {
-    symbol: 'RPL',
-    decimals: 18,
-    name: 'Rocket Pool',
-  },
-  '0xc944e90c64b2c07662a292be6244bdf05cda44a7': {
-    symbol: 'GRT',
-    decimals: 18,
-    name: 'The Graph',
-  },
-  '0x00f3c42833c3170159af4e92dbb451fb3f708917': {
-    symbol: 'ICP',
-    decimals: 8,
-    name: 'Internet Computer',
-  },
-  '0x467bccd9d29f223bce8043b84e8c8b282827790f': {
-    symbol: 'TEL',
-    decimals: 2,
-    name: 'Telcoin',
-  },
-  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': {
-    symbol: 'WBTC',
-    decimals: 8,
-    name: 'Wrapped Bitcoin',
-  },
-  '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0': {
-    symbol: 'wstETH',
-    decimals: 18,
-    name: 'Wrapped liquid staked Ether 2.0',
-  },
-}
+export { WETH_ADDRESS }
 
 /** LSTs / ETH derivatives — USD ≈ ETH when CoinGecko has no entry for the alt. */
 const ETH_PEGGED_SYMBOLS = new Set([
@@ -92,20 +34,25 @@ const ETH_PEGGED_SYMBOLS = new Set([
   'weeth',
 ])
 
+function fallbackEthUsd(): number {
+  const env = process.env.NEXT_PUBLIC_ETH_USD
+  if (env) {
+    const n = Number(env)
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  return 0
+}
+
 function ethUsdFromList(tokenList: TOKENS_TYPE[]): number {
   for (const t of tokenList) {
     if (t.usd_price <= 0) continue
     const sym = t.symbol?.toLowerCase()
     const addr = t.token_address?.toLowerCase()
-    if (
-      addr === WETH_ADDRESS ||
-      sym === 'weth' ||
-      sym === 'eth'
-    ) {
+    if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
       return t.usd_price
     }
   }
-  return 0
+  return fallbackEthUsd()
 }
 
 function syntheticToken(
@@ -164,12 +111,48 @@ export function resolveTokenUsdPrice(
 
   const ethUsd = ethUsdFromList(tokenList)
   if (ethUsd > 0) {
-    if (addr === WETH_ADDRESS || (sym && ETH_PEGGED_SYMBOLS.has(sym))) {
+    if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
+      return ethUsd
+    }
+    if (sym && ETH_PEGGED_SYMBOLS.has(sym)) {
       return ethUsd
     }
   }
 
   return 0
+}
+
+/** Decimals for display — known map, then token, then 18. */
+export function resolveTradeTokenDecimals(
+  token: TOKENS_TYPE | undefined,
+  address?: string
+): number {
+  const known = getKnownTradeToken(address)
+  if (known) return known.decimals
+  if (token?.decimals != null) return token.decimals
+  return 18
+}
+
+/** Symbol for display — known map, then token, then '?'. */
+export function resolveTradeTokenSymbol(
+  token: TOKENS_TYPE | undefined,
+  address?: string
+): string {
+  if (token?.symbol) return token.symbol
+  const known = getKnownTradeToken(address)
+  if (known) return known.symbol
+  return '?'
+}
+
+export function formatTradeAmountForDisplay(
+  amountWei: bigint,
+  token: TOKENS_TYPE | undefined,
+  address?: string
+): string {
+  return formatTradeTokenAmount(
+    amountWei,
+    resolveTradeTokenDecimals(token, address)
+  )
 }
 
 export function findTokenForTrade(

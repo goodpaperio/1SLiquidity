@@ -15,8 +15,9 @@ import { Trade } from '@/app/lib/graphql/types/trade'
 import {
   amountUsd,
   findTokenForTrade,
-  formatTradeTokenAmount,
+  formatTradeAmountForDisplay,
   getDisplayOutputAmountWei,
+  resolveTradeTokenDecimals,
   getImpliedTradePrice,
   isDustMinOut,
 } from '@/app/lib/utils/tradeDisplay'
@@ -100,15 +101,25 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
 
   const amountInWei = BigInt(selectedStream.amountIn)
   const displayOutputWei = getDisplayOutputAmountWei(selectedStream)
-  const inDecimals = tokenIn?.decimals ?? 18
-  const outDecimals = tokenOut?.decimals ?? 18
+  const inDecimals = resolveTradeTokenDecimals(
+    tokenIn,
+    selectedStream.tokenIn
+  )
+  const outDecimals = resolveTradeTokenDecimals(
+    tokenOut,
+    selectedStream.tokenOut
+  )
 
-  const formattedAmountIn = tokenIn
-    ? formatTradeTokenAmount(amountInWei, inDecimals)
-    : '0'
-  const formattedMinAmountOut = tokenOut
-    ? formatTradeTokenAmount(displayOutputWei, outDecimals)
-    : '0'
+  const formattedAmountIn = formatTradeAmountForDisplay(
+    amountInWei,
+    tokenIn,
+    selectedStream.tokenIn
+  )
+  const formattedMinAmountOut = formatTradeAmountForDisplay(
+    displayOutputWei,
+    tokenOut,
+    selectedStream.tokenOut
+  )
 
   // Calculate effective price (tokens out per token in ratio)
   const calculateEffectivePrice = () => {
@@ -181,12 +192,16 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const isStreamSettled =
     selectedStream.instasettlements && selectedStream.instasettlements.length > 0
 
-  const formattedSwapAmountOut = tokenOut
-    ? formatTradeTokenAmount(displayOutputWei, outDecimals)
-    : '0'
-  const swapAmountOutUsd = tokenOut
-    ? amountUsd(displayOutputWei, outDecimals, tokenOut.usd_price)
-    : 0
+  const formattedSwapAmountOut = formatTradeAmountForDisplay(
+    displayOutputWei,
+    tokenOut,
+    selectedStream.tokenOut
+  )
+  const swapAmountOutUsd = amountUsd(
+    displayOutputWei,
+    outDecimals,
+    tokenOut?.usd_price ?? 0
+  )
 
   // Calculate trade volume executed percentage
   const amountRemaining = BigInt(aggregates.amountRemaining)
