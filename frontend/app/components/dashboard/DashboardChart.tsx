@@ -260,21 +260,20 @@ const DashboardChart = ({
       return dayNames[date.getDay()]
     }
 
-    // Create a map to aggregate data by date
+    // Aggregate by date; only days with trades appear in the chart
     const dataMap = new Map<string, DailyData>()
 
-    // Initialize all dates in the range
-    const currentDate = new Date(startDate)
-    while (currentDate <= endDate) {
-      const key = getGroupKey(currentDate)
-      if (!dataMap.has(key)) {
+    const getOrCreateBucket = (date: Date): DailyData => {
+      const key = getGroupKey(date)
+      let data = dataMap.get(key)
+      if (!data) {
         const isCurrentPeriod =
           timePeriod === '1Y' || timePeriod === 'ALL'
-            ? currentDate.getFullYear() === today.getFullYear() &&
-              currentDate.getMonth() === today.getMonth()
-            : currentDate.toDateString() === today.toDateString()
+            ? date.getFullYear() === today.getFullYear() &&
+              date.getMonth() === today.getMonth()
+            : date.toDateString() === today.toDateString()
 
-        dataMap.set(key, {
+        data = {
           date: formatDisplayDate(key),
           fullDate: formatFullDate(key),
           dayName: getDayName(key),
@@ -284,14 +283,10 @@ const DashboardChart = ({
           fees: 0,
           isToday: isCurrentPeriod,
           sortKey: getSortKey(key),
-        })
+        }
+        dataMap.set(key, data)
       }
-
-      if (timePeriod === '1Y' || timePeriod === 'ALL') {
-        currentDate.setMonth(currentDate.getMonth() + 1)
-      } else {
-        currentDate.setDate(currentDate.getDate() + 1)
-      }
+      return data
     }
 
     // Process trades
@@ -316,9 +311,7 @@ const DashboardChart = ({
       }
       tradesInRange++
 
-      const key = getGroupKey(tradeDate)
-      const data = dataMap.get(key)
-      if (!data) return
+      const data = getOrCreateBucket(tradeDate)
 
       // Find tokens
       const tokenIn = tokenList.find(
@@ -384,17 +377,14 @@ const DashboardChart = ({
       (a, b) => a.sortKey - b.sortKey
     )
 
-    // Log data with values
-    const dataWithVolume = sortedData.filter(
-      (d) => d.volume > 0 || d.trades > 0
-    )
+    const dataWithActivity = sortedData.filter((d) => d.trades > 0)
     console.log(
       '[DashboardChart] Data with values:',
-      dataWithVolume.length,
-      dataWithVolume.slice(0, 3)
+      dataWithActivity.length,
+      dataWithActivity.slice(0, 3)
     )
 
-    return sortedData
+    return dataWithActivity
   }, [trades, tokenList, timePeriod, getTimeRange])
 
   // Calculate container width based on data length
