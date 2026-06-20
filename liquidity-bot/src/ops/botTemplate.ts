@@ -21,6 +21,7 @@ export function createBotConfigTemplate(
       dustFloorUsd: 1,
       maxSellReserveUsageBps: 1500,
       finalistCount: 10,
+      excludedTargets: ['ldo'],
     },
     trade: {
       nominalTradeUsd: 50,

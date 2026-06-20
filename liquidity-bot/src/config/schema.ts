@@ -44,6 +44,11 @@ export const botConfigSchema = z.object({
      * select from fresh edges. 0 disables. Default 10.
      */
     finalistCount: z.number().int().nonnegative().default(10),
+    /**
+     * Pair target names to omit from the scan universe (case-insensitive;
+     * matches `name` in config/*_pairs_clean.json, e.g. "ldo").
+     */
+    excludedTargets: z.array(z.string().min(1)).default([]),
   }),
   trade: z.object({
     nominalTradeUsd: z.number().positive(),

@@ -87,7 +87,10 @@ export async function collectQuoteSnapshots(
     tradableTokens.add(BASE_TOKEN_ADDRESSES[sym].toLowerCase());
   }
 
-  const allPairs = buildTradePairsForBaseSymbols(scanBases);
+  const allPairs = buildTradePairsForBaseSymbols(
+    scanBases,
+    bot.scan.excludedTargets
+  );
   const pairs = discoverMode
     ? allPairs
     : allPairs.filter((p) => {

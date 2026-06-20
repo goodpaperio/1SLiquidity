@@ -26,6 +26,7 @@ Edit `bots/<your-bot-id>.json` before going live:
 | `trade.nominalTradeUsd` | Target trade size in **USD** per leg (e.g. `10`). Converted to token amount using `ETH_USD` / `BTC_USD` in `.env` |
 | `trade.balanceUsagePct` | Max % of wallet balance per trade (e.g. `45` = 45%). Actual size = `min(nominalTradeUsd, balance × this %)` |
 | `scan.intervalMs` | Time between scan cycles in PM2 loop (e.g. `900000` = 15 min) |
+| `scan.excludedTargets` | Pair names to skip (case-insensitive; matches `name` in `config/*_pairs_clean.json`, e.g. `["ldo"]`) |
 | `enabled` | Keep `false` until you are ready for the PM2 loop; use `run:once` for testing first |
 
 Core mainnet address and pair manifest are pre-filled in the template — only change if deploying against a different Core version.

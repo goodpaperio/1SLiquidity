@@ -46,12 +46,24 @@ export function loadPairsForBase(baseSymbol: BaseTokenSymbol): PairTarget[] {
   return loadPairFile(BASE_PAIR_FILES[baseSymbol]);
 }
 
+/** Lowercase target names blocked from scan/execution (e.g. `ldo`). */
+export function excludedTargetNameSet(
+  excludedTargets: readonly string[] | undefined
+): Set<string> {
+  return new Set(
+    (excludedTargets ?? []).map((name) => name.trim().toLowerCase())
+  );
+}
+
 /**
  * Build trade pairs (base → alt) for a bot's configured bases.
  * Skips targets whose address equals the base (e.g. WETH in weth list).
  */
 export function buildTradePairsForBot(bot: BotConfig): TradePair[] {
-  return buildTradePairsForBaseSymbols(bot.baseTokens);
+  return buildTradePairsForBaseSymbols(
+    bot.baseTokens,
+    bot.scan.excludedTargets
+  );
 }
 
 /**
@@ -59,10 +71,12 @@ export function buildTradePairsForBot(bot: BotConfig): TradePair[] {
  * Skips targets whose address equals the base (e.g. WETH in weth list).
  */
 export function buildTradePairsForBaseSymbols(
-  baseSymbols: readonly string[]
+  baseSymbols: readonly string[],
+  excludedTargets?: readonly string[]
 ): TradePair[] {
   const pairs: TradePair[] = [];
   const seen = new Set<string>();
+  const excluded = excludedTargetNameSet(excludedTargets);
 
   for (const baseSymbol of baseSymbols) {
     if (!isBaseTokenSymbol(baseSymbol)) {
@@ -72,6 +86,9 @@ export function buildTradePairsForBaseSymbols(
     const targets = loadPairsForBase(baseSymbol);
 
     for (const t of targets) {
+      if (excluded.has(t.name.toLowerCase())) {
+        continue;
+      }
       if (t.address.toLowerCase() === baseAddress.toLowerCase()) {
         continue;
       }
