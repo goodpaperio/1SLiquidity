@@ -2,9 +2,12 @@
 
 import { useMemo } from 'react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
-import { useCustomTokenList } from '@/app/lib/hooks/useCustomTokensList'
-import { formatUnits } from 'viem'
-import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
+import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import {
+  formatUsdCompact,
+  tradeInputVolumeUsd,
+  tradeInstasettleSavingsUsd,
+} from '@/app/lib/utils/tradeDisplay'
 import { TimePeriod } from './index'
 
 interface StatCardProps {
@@ -112,8 +115,7 @@ const getSubPeriodLabel = (period: TimePeriod): string => {
 
 const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, isLoading: isLoadingTokenList } =
-    useCustomTokenList()
+  const { tokens: tokenList, isLoading: isLoadingTokenList } = useTokenList()
 
   // Calculate stats from trades data based on selected time period
   const stats = useMemo(() => {
@@ -121,7 +123,7 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
       tradesCount: trades?.length || 0,
       tokenListCount: tokenList?.length || 0,
       timePeriod,
-      sampleTokens: tokenList?.slice(0, 5).map((t: TOKENS_TYPE) => ({
+      sampleTokens: tokenList?.slice(0, 5).map((t) => ({
         symbol: t.symbol,
         address: t.token_address,
         usd_price: t.usd_price,
@@ -178,54 +180,21 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
         })
       }
 
-      // Find token for calculations
-      const tokenIn = tokenList.find(
-        (t: TOKENS_TYPE) =>
-          t.token_address?.toLowerCase() === trade.tokenIn?.toLowerCase()
-      )
-      const tokenOut = tokenList.find(
-        (t: TOKENS_TYPE) =>
-          t.token_address?.toLowerCase() === trade.tokenOut?.toLowerCase()
-      )
+      // Volume and savings (same pricing as trade cards / chart)
+      const tradeVolume = tradeInputVolumeUsd(trade, tokenList)
+      const tradeSavings = tradeInstasettleSavingsUsd(trade, tokenList)
 
-      if (tokenIn) {
+      if (tradeVolume > 0) {
         tradesWithToken++
       } else {
         tradesWithoutToken++
         if (tradesWithoutToken <= 3) {
-          console.log('[DashboardStats] Token not found for trade:', {
+          console.log('[DashboardStats] Zero USD volume for trade:', {
             tradeId: trade.id,
             tokenIn: trade.tokenIn,
-            availableTokens: tokenList
-              .slice(0, 5)
-              .map((t: TOKENS_TYPE) => t.token_address),
+            amountIn: trade.amountIn,
           })
         }
-      }
-
-      // Calculate volume (amountIn in USD)
-      let tradeVolume = 0
-      if (tokenIn) {
-        const formattedAmountIn = formatUnits(
-          BigInt(trade.amountIn || '0'),
-          tokenIn.decimals || 18
-        )
-        tradeVolume = Number(formattedAmountIn) * (tokenIn.usd_price || 0)
-      }
-
-      // Calculate savings
-      let tradeSavings = 0
-      if (tokenOut) {
-        const remainingAmountOut =
-          BigInt(trade.minAmountOut) - BigInt(trade.realisedAmountOut)
-        const formattedRemainingAmountOut = formatUnits(
-          remainingAmountOut > 0 ? remainingAmountOut : BigInt(0),
-          tokenOut.decimals || 18
-        )
-        const savingsInTokenOut =
-          (Number(formattedRemainingAmountOut) * Number(trade.instasettleBps)) /
-          10000
-        tradeSavings = savingsInTokenOut * (tokenOut.usd_price || 0)
       }
 
       // Period stats (based on selected time period)
@@ -266,14 +235,7 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
     }
   }, [trades, tokenList, timePeriod])
 
-  const formatCurrency = (value: number): string => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`
-    }
-    return `$${value.toFixed(2)}`
-  }
+  const formatCurrency = formatUsdCompact
 
   const formatNumber = (value: number): string => {
     return value.toLocaleString()

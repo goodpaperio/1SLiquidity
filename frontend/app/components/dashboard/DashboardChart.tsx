@@ -4,9 +4,12 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { Bar, BarChart, XAxis, YAxis, Cell } from 'recharts'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
-import { useCustomTokenList } from '@/app/lib/hooks/useCustomTokensList'
-import { formatUnits } from 'viem'
-import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
+import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import {
+  formatUsdCompact,
+  tradeInputVolumeUsd,
+  tradeInstasettleSavingsUsd,
+} from '@/app/lib/utils/tradeDisplay'
 import {
   type ChartConfig,
   ChartContainer,
@@ -69,8 +72,7 @@ const DashboardChart = ({
   const [activeArrow, setActiveArrow] = useState<'left' | 'right' | null>(null)
 
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, isLoading: isLoadingTokenList } =
-    useCustomTokenList()
+  const { tokens: tokenList, isLoading: isLoadingTokenList } = useTokenList()
 
   // Calculate the time range based on selected period
   const getTimeRange = useCallback((period: TimePeriod) => {
@@ -125,7 +127,7 @@ const DashboardChart = ({
       tradesCount: trades?.length || 0,
       tokenListCount: tokenList?.length || 0,
       timePeriod,
-      sampleTokens: tokenList?.slice(0, 5).map((t: TOKENS_TYPE) => ({
+      sampleTokens: tokenList?.slice(0, 5).map((t) => ({
         symbol: t.symbol,
         address: t.token_address,
         usd_price: t.usd_price,
@@ -319,56 +321,10 @@ const DashboardChart = ({
 
       const data = getOrCreateBucket(tradeDate)
 
-      // Find tokens
-      const tokenIn = tokenList.find(
-        (t: TOKENS_TYPE) =>
-          t.token_address?.toLowerCase() === trade.tokenIn?.toLowerCase()
-      )
-      const tokenOut = tokenList.find(
-        (t: TOKENS_TYPE) =>
-          t.token_address?.toLowerCase() === trade.tokenOut?.toLowerCase()
-      )
-
-      if (!tokenIn && tradesInRange <= 3) {
-        console.log('[DashboardChart] TokenIn not found:', {
-          tradeId: trade.id,
-          tokenInAddress: trade.tokenIn,
-        })
-      }
-
-      // Calculate volume
-      if (tokenIn) {
-        const formattedAmountIn = formatUnits(
-          BigInt(trade.amountIn || '0'),
-          tokenIn.decimals || 18
-        )
-        data.volume += Number(formattedAmountIn) * (tokenIn.usd_price || 0)
-      }
-
-      // Calculate fees (network fee - 15 bps)
-      if (tokenIn) {
-        const formattedAmountIn = formatUnits(
-          BigInt(trade.amountIn || '0'),
-          tokenIn.decimals || 18
-        )
-        const fee = (Number(formattedAmountIn) * 15) / 10000
-        data.fees += fee * (tokenIn.usd_price || 0)
-      }
-
-      // Calculate earnings (instasettleBps savings)
-      if (tokenOut) {
-        const remainingAmountOut =
-          BigInt(trade.minAmountOut) - BigInt(trade.realisedAmountOut)
-        const formattedRemainingAmountOut = formatUnits(
-          remainingAmountOut > 0 ? remainingAmountOut : BigInt(0),
-          tokenOut.decimals || 18
-        )
-        const earnings =
-          (Number(formattedRemainingAmountOut) * Number(trade.instasettleBps)) /
-          10000
-        data.earnings += earnings * (tokenOut.usd_price || 0)
-      }
-
+      const tradeVolume = tradeInputVolumeUsd(trade, tokenList)
+      data.volume += tradeVolume
+      data.fees += (tradeVolume * 15) / 10000
+      data.earnings += tradeInstasettleSavingsUsd(trade, tokenList)
       data.trades++
     })
 
@@ -533,13 +489,11 @@ const DashboardChart = ({
     )
   }
 
-  const formatValue = (value: number): string => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`
-    }
-    return `$${value.toFixed(0)}`
+  const formatValue = formatUsdCompact
+
+  const handleChartClick = (index: number | undefined) => {
+    if (index == null || index < 0) return
+    handleBarClick(index)
   }
 
   if (isLoading || isLoadingTokenList) {
@@ -735,6 +689,9 @@ const DashboardChart = ({
                   left: 50,
                   bottom: 40,
                 }}
+                onClick={(state) => {
+                  handleChartClick(state?.activeTooltipIndex as number | undefined)
+                }}
                 onMouseMove={(state) => {
                   if (state?.activeTooltipIndex !== undefined) {
                     setActiveBar(state.activeTooltipIndex)
@@ -774,8 +731,6 @@ const DashboardChart = ({
                   radius={8}
                   maxBarSize={60}
                   minPointSize={5}
-                  onClick={(_data, index) => handleBarClick(index)}
-                  style={{ cursor: 'pointer' }}
                 >
                   {chartData.map((entry, index) => (
                     <Cell
@@ -790,7 +745,7 @@ const DashboardChart = ({
                   ))}
                 </Bar>
                 <ChartTooltip
-                  cursor={false}
+                  cursor={{ fill: 'rgba(65, 252, 180, 0.08)' }}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload as DailyData

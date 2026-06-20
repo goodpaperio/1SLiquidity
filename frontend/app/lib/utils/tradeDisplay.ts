@@ -268,6 +268,56 @@ export function amountUsd(
   return human * usdPrice
 }
 
+/** USD value of trade input (amountIn) for dashboard volume. */
+export function tradeInputVolumeUsd(
+  trade: { tokenIn: string; amountIn: string },
+  tokenList: TOKENS_TYPE[]
+): number {
+  const tokenIn = findTokenForTrade(trade.tokenIn, tokenList)
+  if (!tokenIn) return 0
+  return amountUsd(
+    BigInt(trade.amountIn || '0'),
+    resolveTradeTokenDecimals(tokenIn, trade.tokenIn),
+    tokenIn.usd_price
+  )
+}
+
+/** USD instasettle savings on remaining output for dashboard earnings. */
+export function tradeInstasettleSavingsUsd(
+  trade: {
+    tokenOut: string
+    minAmountOut: string
+    realisedAmountOut: string
+    instasettleBps: string | number
+  },
+  tokenList: TOKENS_TYPE[]
+): number {
+  const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+  if (!tokenOut) return 0
+
+  const remainingAmountOut =
+    BigInt(trade.minAmountOut || '0') - BigInt(trade.realisedAmountOut || '0')
+  const savingsWei =
+    remainingAmountOut > BigInt(0) ? remainingAmountOut : BigInt(0)
+  const savingsTokens =
+    (Number(formatUnits(savingsWei, resolveTradeTokenDecimals(tokenOut, trade.tokenOut))) *
+      Number(trade.instasettleBps)) /
+    10000
+
+  if (!Number.isFinite(savingsTokens) || savingsTokens <= 0) return 0
+  return savingsTokens * tokenOut.usd_price
+}
+
+export function formatUsdCompact(value: number): string {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(2)}M`
+  }
+  if (value >= 1000) {
+    return `$${(value / 1000).toFixed(2)}K`
+  }
+  return `$${value.toFixed(2)}`
+}
+
 export function isDustMinOut(minAmountOutWei: bigint): boolean {
   return minAmountOutWei > BigInt(0) && minAmountOutWei <= BigInt(1)
 }
