@@ -7,7 +7,7 @@ import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import {
   formatUsdCompact,
-  tradeInputVolumeUsd,
+  tradeNotionalVolumeUsd,
   tradeInstasettleSavingsUsd,
 } from '@/app/lib/utils/tradeDisplay'
 import {
@@ -321,7 +321,7 @@ const DashboardChart = ({
 
       const data = getOrCreateBucket(tradeDate)
 
-      const tradeVolume = tradeInputVolumeUsd(trade, tokenList)
+      const tradeVolume = tradeNotionalVolumeUsd(trade, tokenList)
       data.volume += tradeVolume
       data.fees += (tradeVolume * 15) / 10000
       data.earnings += tradeInstasettleSavingsUsd(trade, tokenList)

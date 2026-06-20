@@ -32,6 +32,10 @@ const ETH_PEGGED_SYMBOLS = new Set([
   'ethx',
   'sfrxeth',
   'weeth',
+  'lseth',
+  'oseth',
+  'frxeth',
+  'eth+',
 ])
 
 function fallbackEthUsd(): number {
@@ -49,6 +53,13 @@ function ethUsdFromList(tokenList: TOKENS_TYPE[]): number {
     const sym = t.symbol?.toLowerCase()
     const addr = t.token_address?.toLowerCase()
     if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
+      return t.usd_price
+    }
+  }
+  for (const t of tokenList) {
+    if (t.usd_price <= 0) continue
+    const sym = t.symbol?.toLowerCase()
+    if (sym && ETH_PEGGED_SYMBOLS.has(sym)) {
       return t.usd_price
     }
   }
@@ -279,6 +290,31 @@ export function tradeInputVolumeUsd(
     BigInt(trade.amountIn || '0'),
     resolveTradeTokenDecimals(tokenIn, trade.tokenIn),
     tokenIn.usd_price
+  )
+}
+
+/**
+ * USD notional for dashboard volume — prefers input side, falls back to realised
+ * output when input has no price (common for WETH in when only alt prices load).
+ */
+export function tradeNotionalVolumeUsd(
+  trade: TradeDisplayInput & {
+    tokenIn: string
+    tokenOut: string
+    amountIn: string
+  },
+  tokenList: TOKENS_TYPE[]
+): number {
+  const inputUsd = tradeInputVolumeUsd(trade, tokenList)
+  if (inputUsd > 0) return inputUsd
+
+  const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+  if (!tokenOut) return 0
+
+  return amountUsd(
+    getDisplayOutputAmountWei(trade),
+    resolveTradeTokenDecimals(tokenOut, trade.tokenOut),
+    tokenOut.usd_price
   )
 }
 

@@ -5,7 +5,7 @@ import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import {
   formatUsdCompact,
-  tradeInputVolumeUsd,
+  tradeNotionalVolumeUsd,
   tradeInstasettleSavingsUsd,
 } from '@/app/lib/utils/tradeDisplay'
 import { TimePeriod } from './index'
@@ -181,7 +181,7 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
       }
 
       // Volume and savings (same pricing as trade cards / chart)
-      const tradeVolume = tradeInputVolumeUsd(trade, tokenList)
+      const tradeVolume = tradeNotionalVolumeUsd(trade, tokenList)
       const tradeSavings = tradeInstasettleSavingsUsd(trade, tokenList)
 
       if (tradeVolume > 0) {
