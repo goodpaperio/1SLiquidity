@@ -14,11 +14,16 @@ import {
 } from '@/components/ui/chart'
 import { Spinner } from '../ui/spinner'
 import { InstasettleIcon } from '@/app/lib/icons'
-import { TimePeriod } from './index'
+import {
+  type ChartBarSelection,
+  type TimePeriod,
+  getTradeGroupKey,
+} from '@/app/lib/utils/dashboardChartGrouping'
 
 type DataViewType = 'volume' | 'earnings'
 
 interface DailyData {
+  groupKey: string
   date: string
   fullDate: string
   dayName: string
@@ -44,11 +49,15 @@ const TIME_PERIODS: TimePeriod[] = ['1D', '1W', '1M', '1Y', 'ALL']
 interface DashboardChartProps {
   timePeriod: TimePeriod
   onTimePeriodChange: (period: TimePeriod) => void
+  selectedBar: ChartBarSelection | null
+  onBarSelect: (bar: ChartBarSelection | null) => void
 }
 
 const DashboardChart = ({
   timePeriod,
   onTimePeriodChange,
+  selectedBar,
+  onBarSelect,
 }: DashboardChartProps) => {
   const [dataView, setDataView] = useState<DataViewType>('volume')
   const [activeBar, setActiveBar] = useState<number | null>(null)
@@ -149,12 +158,8 @@ const DashboardChart = ({
     })
 
     // Determine grouping interval
-    const getGroupKey = (date: Date): string => {
-      if (timePeriod === '1Y' || timePeriod === 'ALL') {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      }
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    }
+    const getGroupKey = (date: Date): string =>
+      getTradeGroupKey(date, timePeriod)
 
     const getSortKey = (dateStr: string): number => {
       if (timePeriod === '1Y' || timePeriod === 'ALL') {
@@ -274,6 +279,7 @@ const DashboardChart = ({
             : date.toDateString() === today.toDateString()
 
         data = {
+          groupKey: key,
           date: formatDisplayDate(key),
           fullDate: formatFullDate(key),
           dayName: getDayName(key),
@@ -506,10 +512,25 @@ const DashboardChart = ({
     }
   }, [])
 
-  const getBarColor = (isToday: boolean, isActive: boolean) => {
-    if (isActive) return '#00e0ff'
+  const getBarColor = (
+    isToday: boolean,
+    isHovered: boolean,
+    isSelected: boolean
+  ) => {
+    if (isSelected || isHovered) return '#00e0ff'
     if (isToday) return '#FAEE40'
     return '#41fcb4'
+  }
+
+  const handleBarClick = (index: number) => {
+    const entry = chartData[index]
+    if (!entry) return
+
+    onBarSelect(
+      selectedBar?.groupKey === entry.groupKey
+        ? null
+        : { groupKey: entry.groupKey, fullDate: entry.fullDate }
+    )
   }
 
   const formatValue = (value: number): string => {
@@ -722,6 +743,7 @@ const DashboardChart = ({
                 onMouseLeave={() => {
                   setActiveBar(null)
                 }}
+                style={{ cursor: 'pointer' }}
               >
                 <XAxis
                   dataKey="date"
@@ -752,12 +774,18 @@ const DashboardChart = ({
                   radius={8}
                   maxBarSize={60}
                   minPointSize={5}
+                  onClick={(_data, index) => handleBarClick(index)}
+                  style={{ cursor: 'pointer' }}
                 >
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={getBarColor(entry.isToday, activeBar === index)}
-                      style={{ transition: 'fill 0.2s ease' }}
+                      fill={getBarColor(
+                        entry.isToday,
+                        activeBar === index,
+                        selectedBar?.groupKey === entry.groupKey
+                      )}
+                      style={{ transition: 'fill 0.2s ease', cursor: 'pointer' }}
                     />
                   ))}
                 </Bar>

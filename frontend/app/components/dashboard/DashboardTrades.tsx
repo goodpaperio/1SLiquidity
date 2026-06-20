@@ -11,9 +11,24 @@ import {
   amountUsd,
   findTokenForTrade,
 } from '@/app/lib/utils/tradeDisplay'
+import type { TimePeriod } from '@/app/lib/utils/dashboardChartGrouping'
+import {
+  type ChartBarSelection,
+  tradeMatchesChartBar,
+} from '@/app/lib/utils/dashboardChartGrouping'
 
-const DashboardTrades = () => {
-  const { trades, isLoading } = useTrades({ first: 100, skip: 0 })
+interface DashboardTradesProps {
+  timePeriod: TimePeriod
+  selectedBar: ChartBarSelection | null
+  onClearBarFilter: () => void
+}
+
+const DashboardTrades = ({
+  timePeriod,
+  selectedBar,
+  onClearBarFilter,
+}: DashboardTradesProps) => {
+  const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
   const { tokens } = useTokenList()
 
   // Filter ongoing and completed trades
@@ -22,11 +37,18 @@ const DashboardTrades = () => {
       return { ongoingTrades: [], latestTrades: [], ongoingVolume: 0 }
     }
 
-    const ongoing = trades.filter((trade) => !isTradeCompleted(trade))
-    const completed = trades
+    const filteredTrades = trades.filter(
+      (trade) =>
+        !selectedBar ||
+        tradeMatchesChartBar(trade.createdAt, selectedBar.groupKey, timePeriod)
+    )
+
+    const ongoing = filteredTrades.filter((trade) => !isTradeCompleted(trade))
+    const completed = filteredTrades
       .filter((trade) => isTradeCompleted(trade))
       .sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
-      .slice(0, 4)
+
+    const latestLimit = selectedBar ? completed.length : 4
 
     // Calculate ongoing volume
     let volume = 0
@@ -45,10 +67,10 @@ const DashboardTrades = () => {
 
     return {
       ongoingTrades: ongoing,
-      latestTrades: completed,
+      latestTrades: completed.slice(0, latestLimit),
       ongoingVolume: volume,
     }
-  }, [trades, tokens])
+  }, [trades, tokens, selectedBar, timePeriod])
 
   const formatVolume = (value: number): string => {
     if (value >= 1000000) {
@@ -115,7 +137,7 @@ const DashboardTrades = () => {
             </div>
           ) : (
             ongoingTrades
-              .slice(0, 3)
+              .slice(0, selectedBar ? ongoingTrades.length : 3)
               .map((trade) => (
                 <SwapStream
                   key={trade.id}
@@ -131,13 +153,31 @@ const DashboardTrades = () => {
       {/* Latest Trades Section */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Latest Trades</h2>
-          <Link
-            href="/transactions"
-            className="text-white/50 hover:text-primary text-sm transition-colors"
-          >
-            View More →
-          </Link>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-2xl font-bold text-white">Latest Trades</h2>
+            {selectedBar && (
+              <>
+                <span className="text-sm text-white/50">
+                  {selectedBar.fullDate}
+                </span>
+                <button
+                  type="button"
+                  onClick={onClearBarFilter}
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  Clear filter
+                </button>
+              </>
+            )}
+          </div>
+          {!selectedBar && (
+            <Link
+              href="/transactions"
+              className="text-white/50 hover:text-primary text-sm transition-colors"
+            >
+              View More →
+            </Link>
+          )}
         </div>
 
         {/* Latest Trades List */}
@@ -167,7 +207,9 @@ const DashboardTrades = () => {
               ))
           ) : latestTrades.length === 0 ? (
             <div className="text-white/50 text-center py-8">
-              No completed trades yet
+              {selectedBar
+                ? 'No trades for this period'
+                : 'No completed trades yet'}
             </div>
           ) : (
             latestTrades.map((trade) => (

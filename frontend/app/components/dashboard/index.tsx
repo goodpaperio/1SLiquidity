@@ -8,12 +8,19 @@ import DashboardStats from './DashboardStats'
 import DashboardChart from './DashboardChart'
 import DashboardSearchBar from './DashboardSearchBar'
 import DashboardTrades from './DashboardTrades'
+import type { ChartBarSelection, TimePeriod } from '@/app/lib/utils/dashboardChartGrouping'
 
-export type TimePeriod = '1D' | '1W' | '1M' | '1Y' | 'ALL'
+export type { TimePeriod } from '@/app/lib/utils/dashboardChartGrouping'
 
 const Dashboard = () => {
   const controls = useAnimation()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1Y')
+  const [selectedBar, setSelectedBar] = useState<ChartBarSelection | null>(null)
+
+  const handleTimePeriodChange = (period: TimePeriod) => {
+    setTimePeriod(period)
+    setSelectedBar(null)
+  }
 
   useEffect(() => {
     controls.start('visible')
@@ -88,7 +95,9 @@ const Dashboard = () => {
           >
             <DashboardChart
               timePeriod={timePeriod}
-              onTimePeriodChange={setTimePeriod}
+              onTimePeriodChange={handleTimePeriodChange}
+              selectedBar={selectedBar}
+              onBarSelect={setSelectedBar}
             />
           </motion.div>
 
@@ -98,7 +107,11 @@ const Dashboard = () => {
             animate={controls}
             variants={titleVariants}
           >
-            <DashboardTrades />
+            <DashboardTrades
+              timePeriod={timePeriod}
+              selectedBar={selectedBar}
+              onClearBarFilter={() => setSelectedBar(null)}
+            />
           </motion.div>
         </div>
       </div>
