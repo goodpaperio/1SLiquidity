@@ -106,9 +106,7 @@ export function resolveTokenUsdPrice(
   if (addr === WETH_ADDRESS) {
     const priced = tokenList.find(
       (t) =>
-        t.token_address?.toLowerCase() === WETH_ADDRESS &&
-        t.usd_price > 0 &&
-        (t.symbol.toLowerCase() === 'weth' || t.symbol.toLowerCase() === 'eth')
+        t.token_address?.toLowerCase() === WETH_ADDRESS && t.usd_price > 0
     )
     if (priced) return priced.usd_price
   }
@@ -306,16 +304,17 @@ export function tradeNotionalVolumeUsd(
   tokenList: TOKENS_TYPE[]
 ): number {
   const inputUsd = tradeInputVolumeUsd(trade, tokenList)
-  if (inputUsd > 0) return inputUsd
 
   const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
-  if (!tokenOut) return 0
+  const outputUsd = tokenOut
+    ? amountUsd(
+        getDisplayOutputAmountWei(trade),
+        resolveTradeTokenDecimals(tokenOut, trade.tokenOut),
+        tokenOut.usd_price
+      )
+    : 0
 
-  return amountUsd(
-    getDisplayOutputAmountWei(trade),
-    resolveTradeTokenDecimals(tokenOut, trade.tokenOut),
-    tokenOut.usd_price
-  )
+  return Math.max(inputUsd, outputUsd)
 }
 
 /** USD instasettle savings on remaining output for dashboard earnings. */
