@@ -35,6 +35,7 @@ export function createBotConfigTemplate(
       usePriceBased: false,
       isInstasettlable: false,
       instasettleBps: 100,
+      stuckCancelAfterCycles: 3,
     },
     gas: {
       minEthWei: '1500000000000000',

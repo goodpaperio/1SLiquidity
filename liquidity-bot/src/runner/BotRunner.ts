@@ -19,6 +19,7 @@ import {
 } from '../scan/QuoteScanner.js';
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 import { pollTradeCompletions } from '../notify/completionWatcher.js';
+import { maybeCancelStuckTrade } from '../ops/stuckTradeGuard.js';
 
 export interface BotState {
   lastUpdatedAt: string;
@@ -125,6 +126,17 @@ export class BotRunner {
       }
 
       const core = getCoreContract(this.config, provider);
+      const stuck = await maybeCancelStuckTrade(this.config, core, provider);
+      if (stuck.cancelled) {
+        console.log(
+          `[${id}] auto-cancelled stuck trade #${stuck.tradeId} (${stuck.txHash})`
+        );
+      } else if (stuck.dryRun && stuck.tradeId != null) {
+        console.log(
+          `[${id}] stuck trade #${stuck.tradeId} would be cancelled next live cycle`
+        );
+      }
+
       const outstanding = await listOutstandingTradesForOwner(
         core,
         this.config.address

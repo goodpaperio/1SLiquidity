@@ -1,6 +1,7 @@
 import {
   Contract,
-  solidityPackedKeccak256,
+  AbiCoder,
+  keccak256,
   type Provider,
   type Signer,
 } from 'ethers';
@@ -31,10 +32,13 @@ export interface CoreTradeView {
   onlyInstasettle: boolean;
 }
 
+/** Matches Core: keccak256(abi.encode(tokenIn, tokenOut)). */
 export function pairIdFromTokens(tokenIn: string, tokenOut: string): string {
-  return solidityPackedKeccak256(
-    ['address', 'address'],
-    [tokenIn, tokenOut]
+  return keccak256(
+    AbiCoder.defaultAbiCoder().encode(
+      ['address', 'address'],
+      [tokenIn, tokenOut]
+    )
   );
 }
 
@@ -90,7 +94,8 @@ export async function listOutstandingTradesForOwner(
   const ownerLower = owner.toLowerCase();
   const out: CoreTradeView[] = [];
 
-  for (let id = 0n; id < lastId; id++) {
+  // Newest trades first — typical open trade is near lastTradeId.
+  for (let id = lastId - 1n; id >= 0n; id--) {
     const trade = await fetchTrade(core, id);
     if (
       trade &&

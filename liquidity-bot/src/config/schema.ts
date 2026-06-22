@@ -67,7 +67,13 @@ export const botConfigSchema = z.object({
     tradeHistoryMaxEntries: z.number().int().positive().default(32),
     usePriceBased: z.boolean(),
     isInstasettlable: z.boolean(),
+    /** Instasettle bps passed to Core placeTrade. */
     instasettleBps: z.number().int().nonnegative().max(10_000),
+    /**
+     * After this many consecutive bot scan cycles with the same open Core trade,
+     * call cancelTrade and resume scanning (default 3 ≈ 45 min at 15 min interval).
+     */
+    stuckCancelAfterCycles: z.number().int().nonnegative().default(3),
   }),
   gas: z.object({
     minEthWei: z.string().regex(/^\d+$/),
