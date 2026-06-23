@@ -60,16 +60,16 @@ export function resetProvider() {
 // }
 
 export function createProvider(): ethers.providers.JsonRpcProvider {
-  // Return existing provider if already created
   if (sharedProvider) {
     return sharedProvider
   }
 
-  // Infura endpoint URL
-  const INFURA_URL =
-    'https://mainnet.infura.io/v3/47907acd16d2498d962484d4d7b513fc'
+  const rpcUrl =
+    process.env.NEXT_PUBLIC_MAINNET_RPC_URL ||
+    process.env.NEXT_PUBLIC_RPC_HTTP_URL ||
+    'https://ethereum.publicnode.com'
 
-  sharedProvider = new ethers.providers.JsonRpcProvider(INFURA_URL)
+  sharedProvider = new ethers.providers.JsonRpcProvider(rpcUrl)
 
   return sharedProvider
 }

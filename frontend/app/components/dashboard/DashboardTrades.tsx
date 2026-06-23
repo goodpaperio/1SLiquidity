@@ -8,8 +8,7 @@ import { LiveStatisticsIcon } from '@/app/lib/icons'
 import Link from 'next/link'
 import { isTradeCompleted } from '@/app/lib/utils/tradeStatus'
 import {
-  amountUsd,
-  findTokenForTrade,
+  tradeDisplayNotionalUsd,
 } from '@/app/lib/utils/tradeDisplay'
 import type { TimePeriod } from '@/app/lib/utils/dashboardChartGrouping'
 import {
@@ -54,14 +53,7 @@ const DashboardTrades = ({
     let volume = 0
     if (tokens && tokens.length > 0) {
       ongoing.forEach((trade) => {
-        const tokenIn = findTokenForTrade(trade.tokenIn, tokens)
-        if (tokenIn) {
-          volume += amountUsd(
-            BigInt(trade.amountIn),
-            tokenIn.decimals,
-            tokenIn.usd_price
-          )
-        }
+        volume += tradeDisplayNotionalUsd(trade, tokens)
       })
     }
 

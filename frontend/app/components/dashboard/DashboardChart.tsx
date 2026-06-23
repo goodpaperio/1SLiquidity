@@ -7,7 +7,7 @@ import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
 import {
   formatUsdCompact,
-  tradeNotionalVolumeUsd,
+  tradeDisplayNotionalUsd,
   tradeInstasettleSavingsUsd,
 } from '@/app/lib/utils/tradeDisplay'
 import {
@@ -36,6 +36,59 @@ interface DailyData {
   fees: number
   isToday: boolean
   sortKey: number
+}
+
+type TooltipCursorProps = {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+}
+
+function HoverCursor({ x = 0, y = 0, width = 0, height = 0 }: TooltipCursorProps) {
+  return (
+    <g pointerEvents="none">
+      <defs>
+        <pattern
+          id="dashboard-hover-texture"
+          patternUnits="userSpaceOnUse"
+          width="8"
+          height="8"
+          patternTransform="rotate(45)"
+        >
+          <line
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="8"
+            stroke="rgba(110, 231, 255, 0.16)"
+            strokeWidth="2"
+          />
+        </pattern>
+        <linearGradient id="dashboard-hover-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(0, 224, 255, 0.14)" />
+          <stop offset="100%" stopColor="rgba(65, 252, 180, 0.10)" />
+        </linearGradient>
+      </defs>
+      <rect
+        x={x}
+        y={y + 8}
+        width={width}
+        height={Math.max(height - 16, 0)}
+        rx={14}
+        fill="url(#dashboard-hover-fill)"
+        stroke="rgba(65, 252, 180, 0.22)"
+      />
+      <rect
+        x={x}
+        y={y + 8}
+        width={width}
+        height={Math.max(height - 16, 0)}
+        rx={14}
+        fill="url(#dashboard-hover-texture)"
+      />
+    </g>
+  )
 }
 
 const chartConfig = {
@@ -321,7 +374,7 @@ const DashboardChart = ({
 
       const data = getOrCreateBucket(tradeDate)
 
-      const tradeVolume = tradeNotionalVolumeUsd(trade, tokenList)
+      const tradeVolume = tradeDisplayNotionalUsd(trade, tokenList)
       data.volume += tradeVolume
       data.fees += (tradeVolume * 15) / 10000
       data.earnings += tradeInstasettleSavingsUsd(trade, tokenList)
@@ -745,7 +798,7 @@ const DashboardChart = ({
                   ))}
                 </Bar>
                 <ChartTooltip
-                  cursor={{ fill: 'rgba(65, 252, 180, 0.08)' }}
+                  cursor={<HoverCursor />}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload as DailyData

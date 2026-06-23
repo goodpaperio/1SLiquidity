@@ -44,7 +44,7 @@ function fallbackEthUsd(): number {
     const n = Number(env)
     if (Number.isFinite(n) && n > 0) return n
   }
-  return 0
+  return 3500
 }
 
 function ethUsdFromList(tokenList: TOKENS_TYPE[]): number {
@@ -315,6 +315,18 @@ export function tradeNotionalVolumeUsd(
     : 0
 
   return Math.max(inputUsd, outputUsd)
+}
+
+/** The USD notional users expect from trade cards: higher of input/output side. */
+export function tradeDisplayNotionalUsd(
+  trade: TradeDisplayInput & {
+    tokenIn: string
+    tokenOut: string
+    amountIn: string
+  },
+  tokenList: TOKENS_TYPE[]
+): number {
+  return tradeNotionalVolumeUsd(trade, tokenList)
 }
 
 /** USD instasettle savings on remaining output for dashboard earnings. */
