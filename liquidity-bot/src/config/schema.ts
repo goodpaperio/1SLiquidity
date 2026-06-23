@@ -49,6 +49,11 @@ export const botConfigSchema = z.object({
      * matches `name` in config/*_pairs_clean.json, e.g. "ldo").
      */
     excludedTargets: z.array(z.string().min(1)).default([]),
+    /**
+     * Skip RPC quote collection for targets seen in the last N live trades.
+     * Helps cut quote load for recently-traded names (default 10, 0 disables).
+     */
+    skipRecentTargetsCount: z.number().int().nonnegative().default(10),
   }),
   trade: z.object({
     nominalTradeUsd: z.number().positive(),

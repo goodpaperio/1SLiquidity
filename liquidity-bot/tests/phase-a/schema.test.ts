@@ -33,6 +33,7 @@ describe('phase A — bot schema', () => {
         maxSpreadBps: 2500,
         minLiquidityRatio: 2,
         maxSellReserveUsageBps: 1500,
+        skipRecentTargetsCount: 10,
       },
       trade: {
         nominalTradeUsd: 50,

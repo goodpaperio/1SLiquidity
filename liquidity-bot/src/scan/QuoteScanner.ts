@@ -143,6 +143,11 @@ export class QuoteScanner {
     const knownTokens =
       this.cache.selectionStores().tradeHistory?.provenTokenAddresses() ??
       new Set<string>();
+    const recentTargets =
+      this.cache
+        .selectionStores()
+        .tradeHistory?.recentTargetNames(bot.scan.skipRecentTargetsCount) ??
+      new Set<string>();
     const scanBases = discoverMode
       ? (bot.baseTokens as BaseTokenSymbol[])
       : heldBases;
@@ -164,6 +169,7 @@ export class QuoteScanner {
       discoverMode,
       maxPairs: this.options.maxPairsPerRun,
       provenTokenAddresses: knownTokens,
+      recentTargetNames: recentTargets,
       onProgress: (p) => {
         if (p.index % 10 === 0 || p.index === p.total) {
           console.log(

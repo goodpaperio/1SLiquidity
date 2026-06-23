@@ -10,7 +10,8 @@
     "maxSpreadBps": 2500,
     "minLiquidityRatio": 2,
     "dustFloorUsd": 1,
-    "maxSellReserveUsageBps": 1500
+    "maxSellReserveUsageBps": 1500,
+    "skipRecentTargetsCount": 10
   },
   "trade": {
     "nominalTradeUsd": 50,

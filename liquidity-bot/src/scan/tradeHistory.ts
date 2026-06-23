@@ -102,6 +102,16 @@ export class TradeHistoryStore {
     return this.trades.slice(-n);
   }
 
+  recentTargetNames(n = 10): Set<string> {
+    if (n <= 0) return new Set<string>();
+    return new Set(
+      this.trades
+        .slice(-n)
+        .map((t) => t.targetName.trim().toLowerCase())
+        .filter(Boolean)
+    );
+  }
+
   /**
    * Tokens seen in successful live trades for this bot.
    * Used to expand trusted scan universe while ignoring random wallet dust.

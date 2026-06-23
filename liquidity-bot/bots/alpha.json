@@ -7,7 +7,7 @@
     "WETH"
   ],
   "scan": {
-    "intervalMs": 900000,
+    "intervalMs": 1500000,
     "minSpreadBps": 300,
     "minCoupledSpreadBps": -100,
     "selectionMode": "mid_range_spread",
@@ -15,7 +15,8 @@
     "minLiquidityRatio": 2,
     "dustFloorUsd": 1,
     "maxSellReserveUsageBps": 1500,
-    "finalistCount": 10,
+    "finalistCount": 5,
+    "skipRecentTargetsCount": 10,
     "excludedTargets": ["ldo"]
   },
   "trade": {

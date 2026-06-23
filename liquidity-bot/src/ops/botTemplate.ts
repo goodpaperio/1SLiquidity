@@ -22,6 +22,7 @@ export function createBotConfigTemplate(
       maxSellReserveUsageBps: 1500,
       finalistCount: 10,
       excludedTargets: ['ldo'],
+      skipRecentTargetsCount: 10,
     },
     trade: {
       nominalTradeUsd: 50,

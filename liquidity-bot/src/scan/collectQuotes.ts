@@ -50,6 +50,7 @@ export async function collectQuoteSnapshots(
     discoverMode: boolean;
     maxPairs?: number;
     provenTokenAddresses?: Set<string>;
+    recentTargetNames?: Set<string>;
     onProgress?: ProgressCallback;
   }
 ): Promise<CollectQuotesResult> {
@@ -91,9 +92,11 @@ export async function collectQuoteSnapshots(
     scanBases,
     bot.scan.excludedTargets
   );
+  const recentTargets = options.recentTargetNames ?? new Set<string>();
   const pairs = discoverMode
     ? allPairs
     : allPairs.filter((p) => {
+        if (recentTargets.has(p.targetName.trim().toLowerCase())) return false;
         const baseHeld = (baseBalances[p.baseSymbol] ?? 0n) > 0n;
         const altTrusted = tradableTokens.has(p.targetAddress.toLowerCase());
         return baseHeld || altTrusted;
