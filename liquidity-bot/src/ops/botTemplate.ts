@@ -43,6 +43,13 @@ export function createBotConfigTemplate(
       targetEthWei: '3000000000000000',
       refuelDex: 'uniswap-v3-3000',
     },
+    liquify: {
+      enabled: true,
+      contract: '0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95',
+      dailySweepHourUtc: 11,
+      minNativeEthUsd: 10,
+      slippageBps: 300,
+    },
     contracts: {
       core: '0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710',
       deploymentManifest:

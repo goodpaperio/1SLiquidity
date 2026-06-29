@@ -30,6 +30,7 @@
     "cancel:trade": "tsx src/cli/cancel-trade.ts",
     "notify:test": "tsx src/cli/notify-test.ts",
     "notify:daily": "tsx src/cli/notify-daily.ts",
+    "liquify:sweep": "tsx src/cli/liquify-sweep.ts",
     "scan:bps-sweep": "tsx src/cli/scan-bps-sweep.ts",
     "scan:nominal-sweep": "tsx src/cli/scan-nominal-sweep.ts",
     "scan:ecosystem": "tsx src/cli/scan-ecosystem.ts",

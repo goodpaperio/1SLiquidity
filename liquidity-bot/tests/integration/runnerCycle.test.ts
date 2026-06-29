@@ -6,6 +6,23 @@ vi.mock('../../src/chain/core.js', () => ({
   listOutstandingTradesForOwner: vi.fn(),
 }));
 
+vi.mock('../../src/ops/botOps.js', () => ({
+  runBotMaintenance: vi.fn().mockResolvedValue({
+    swept: false,
+    skippedTrading: false,
+  }),
+  startTelegramCommandLoop: vi.fn().mockReturnValue(null),
+  buildStatusMessage: vi.fn(),
+}));
+
+vi.mock('../../src/notify/completionWatcher.js', () => ({
+  pollTradeCompletions: vi.fn().mockResolvedValue(0),
+}));
+
+vi.mock('../../src/ops/stuckTradeGuard.js', () => ({
+  maybeCancelStuckTrade: vi.fn().mockResolvedValue({ cancelled: false }),
+}));
+
 import * as core from '../../src/chain/core.js';
 import { BotRunner } from '../../src/runner/BotRunner.js';
 
@@ -42,6 +59,13 @@ const botConfig: BotConfig = {
     minEthWei: '1',
     targetEthWei: '2',
     refuelDex: 'uniswap-v3-3000',
+  },
+  liquify: {
+    enabled: false,
+    contract: '0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95',
+    dailySweepHourUtc: 11,
+    minNativeEthUsd: 10,
+    slippageBps: 300,
   },
   contracts: {
     core: '0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710',
@@ -99,10 +123,16 @@ describe('integration — BotRunner scan/execute cycle', () => {
       },
       durationMs: 1,
     });
+    const finalizeExecutionSelection = vi.fn().mockResolvedValue({
+      final: { pick: null },
+    });
     const runner = new BotRunner(botConfig);
     await (runner as any).runCycle(
       botConfig.id,
-      { scanBot } as unknown as { scanBot: () => Promise<unknown> },
+      {
+        scanBot,
+        finalizeExecutionSelection,
+      } as unknown as { scanBot: () => Promise<unknown> },
       {} as never
     );
 

@@ -20,12 +20,21 @@ import {
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 import { pollTradeCompletions } from '../notify/completionWatcher.js';
 import { maybeCancelStuckTrade } from '../ops/stuckTradeGuard.js';
+import {
+  runBotMaintenance,
+  startTelegramCommandLoop,
+} from '../ops/botOps.js';
+import { runLiquifySweep } from '../ops/liquifySweep.js';
 
 export interface BotState {
   lastUpdatedAt: string;
   lastEthBalanceWei: string;
   status: 'idle' | 'running';
   note?: string;
+  /** UTC date YYYY-MM-DD of last successful daily liquify sweep. */
+  lastDustSweepDate?: string;
+  /** ISO timestamp of last low-ETH Telegram alert. */
+  lastLowEthAlertAt?: string;
 }
 
 export function getStatePath(botId: string): string {
@@ -49,6 +58,9 @@ export function writeBotState(botId: string, state: BotState): void {
 export class BotRunner {
   private stopped = false;
   private cycleInFlight = false;
+  private liquifyInFlight = false;
+  private pausedByOperator = false;
+  private telegramTimer: ReturnType<typeof setInterval> | null = null;
   private readonly pairCooldown: PairCooldownStore;
   private readonly tradeHistory: TradeHistoryStore;
   private readonly opportunityCache: OpportunityCache;
@@ -73,6 +85,10 @@ export class BotRunner {
       clearInterval(this.scanTimer);
       this.scanTimer = null;
     }
+    if (this.telegramTimer) {
+      clearInterval(this.telegramTimer);
+      this.telegramTimer = null;
+    }
   }
 
   async run(): Promise<void> {
@@ -85,6 +101,16 @@ export class BotRunner {
       scanner = new QuoteScanner(provider, this.opportunityCache, {
         pairDelayMs: 30,
       });
+      this.telegramTimer = startTelegramCommandLoop(
+        this.config,
+        provider,
+        () => this.pausedByOperator,
+        (v) => {
+          this.pausedByOperator = v;
+        },
+        () => this.runLiquifyCommand(provider)
+      );
+
       await this.runCycle(id, scanner, provider);
       this.scanTimer = setInterval(() => {
         void this.runCycle(id, scanner!, provider);
@@ -114,12 +140,24 @@ export class BotRunner {
     scanner: QuoteScanner,
     provider: ReturnType<typeof createProvider>
   ): Promise<void> {
-    if (this.cycleInFlight) {
+    if (this.cycleInFlight || this.liquifyInFlight) {
       console.log(`[${id}] previous cycle still running; skip this tick.`);
       return;
     }
     this.cycleInFlight = true;
     try {
+      this.liquifyInFlight = true;
+      try {
+        await runBotMaintenance(this.config, provider);
+      } finally {
+        this.liquifyInFlight = false;
+      }
+
+      if (this.pausedByOperator) {
+        console.log(`[${id}] paused by operator — skipping trade cycle.`);
+        return;
+      }
+
       const notifiedEarly = await pollTradeCompletions(this.config, provider);
       if (notifiedEarly > 0) {
         console.log(`[${id}] trade completion alerts sent: ${notifiedEarly}`);
@@ -183,6 +221,32 @@ export class BotRunner {
       );
     } finally {
       this.cycleInFlight = false;
+    }
+  }
+
+  private async runLiquifyCommand(
+    provider: ReturnType<typeof createProvider>
+  ): Promise<string> {
+    if (this.liquifyInFlight) {
+      return 'Liquify sweep already in progress.';
+    }
+    this.liquifyInFlight = true;
+    try {
+      const wallet = createBotWallet(this.config, provider);
+      const sweep = await runLiquifySweep(this.config, provider, wallet);
+      if (!sweep.dryRun && sweep.tokensAttempted > 0) {
+        writeBotState(this.config.id, {
+          ...(readBotState(this.config.id) ?? {
+            lastUpdatedAt: new Date().toISOString(),
+            lastEthBalanceWei: '0',
+            status: 'running' as const,
+          }),
+          lastDustSweepDate: new Date().toISOString().slice(0, 10),
+        });
+      }
+      return sweep.message;
+    } finally {
+      this.liquifyInFlight = false;
     }
   }
 }

@@ -89,6 +89,25 @@ export const botConfigSchema = z.object({
     core: ethereumAddress,
     deploymentManifest: z.string().min(1),
   }),
+  liquify: z
+    .object({
+      enabled: z.boolean().default(true),
+      contract: ethereumAddress.default(
+        '0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95'
+      ),
+      /** UTC hour (0–23) for daily dust sweep; catch-up on next cycle if bot was down. */
+      dailySweepHourUtc: z.number().int().min(0).max(23).default(11),
+      /** Alert threshold reference (native ETH below this USD notional). */
+      minNativeEthUsd: z.number().positive().default(10),
+      slippageBps: z.number().int().min(0).max(10_000).default(300),
+    })
+    .default({
+      enabled: true,
+      contract: '0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95',
+      dailySweepHourUtc: 11,
+      minNativeEthUsd: 10,
+      slippageBps: 300,
+    }),
 });
 
 export type BotConfig = z.infer<typeof botConfigSchema>;

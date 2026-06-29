@@ -76,7 +76,7 @@ Example: id `sigma` → env var `BOT_SIGMA_KEY`.
 | Field | What to set |
 |--------|-------------|
 | `baseTokens` | Bases you hold and scan from, e.g. `["WETH"]` |
-| `trade.nominalTradeUsd` | Target trade size in USD per leg (uses `ETH_USD` / `BTC_USD` in `.env`) |
+| `trade.nominalTradeUsd` | Target trade size in USD per leg (uses daily cached ETH/BTC spot from CoinGecko) |
 | `trade.balanceUsagePct` | Max % of wallet balance per trade (e.g. `45`) |
 | `trade.maxOpenTrades` | Max concurrent open Core trades (default `1` for conservative ops) |
 | `trade.stuckCancelAfterCycles` | Auto-`cancelTrade` after N scan cycles with same open trade (default `3`; `0` = off) |
@@ -100,7 +100,7 @@ Core address and deployment manifest are pre-filled for mainnet v2.2.1 — only 
 | `MAINNET_RPC_URL` | **Yes** | Ethereum mainnet HTTP RPC ([Alchemy](https://www.alchemy.com/) / [Infura](https://www.infura.io/)) |
 | `BOT_<ID>_KEY` | **Yes** | Set by `generate bot` (e.g. `BOT_SIGMA_KEY`) |
 | `DRY_RUN` | **Yes** | `1` = scan only, no txs. `0` = live trades |
-| `ETH_USD` | Recommended | Spot ETH/USD for sizing (defaults to `3500` if unset) |
+| `TELEGRAM_ENABLED` | If alerts | Set `1` + token + chat id for trade alerts and `/commands` |
 | `BTC_USD` | Optional | Only if `WBTC` is in `baseTokens` |
 | `TELEGRAM_ENABLED` | Optional | `1` to enable alerts |
 | `TELEGRAM_BOT_TOKEN` | If Telegram | From [@BotFather](https://t.me/BotFather) |
@@ -318,6 +318,30 @@ npm run liquidity-bot:off -- ... && npm run liquidity-bot:on -- ...
 | **Trade completed** | Core `TradeCompleted` event detected; includes P/L vs leg1 |
 
 Auto-cancel and manual cancel are logged to **PM2 logs** and `token-issues.jsonl` / ledger — they do not yet send a dedicated Telegram message.
+
+### Remote commands (same bot token / chat id)
+
+When the runner is live, it polls Telegram every ~5s for commands **from `TELEGRAM_CHAT_ID` only**:
+
+| Command | Action |
+|---------|--------|
+| `/status` | Native ETH balance, cached ETH/USD, pause state |
+| `/liquify` | Sweep allowlisted dust → WETH via LiquifierV1 |
+| `/pause` | Skip trading cycles (maintenance still runs) |
+| `/resume` | Resume trading |
+| `/help` | Command list |
+
+Manual sweep without SSH: `npm run liquify:sweep -- --bot=<id>`
+
+### Dust sweep & gas (automatic)
+
+Configured under `liquify` in `bots/<id>.json`:
+
+- **Daily 11:00 UTC** — sweep dust tokens (pair list + trade history allowlist only) → WETH via [LiquifierV1](https://etherscan.io/address/0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95) (0.5% fee). Catch-up on next cycle if the bot was down at 11:00.
+- **Each cycle** — if native ETH &lt; `gas.minEthWei`, auto `WETH.withdraw()` up to `gas.targetEthWei`.
+- **Low ETH alert** — Telegram ping if still low after unwrap (max once per 6h).
+
+Spot prices: `data/price-cache.json` (CoinGecko, refreshed daily).
 
 ### Daily summary (optional cron on EC2)
 

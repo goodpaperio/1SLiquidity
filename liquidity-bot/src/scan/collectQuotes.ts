@@ -9,7 +9,7 @@ import { buildTradePairsForBaseSymbols } from '../config/loadPairs.js';
 import {
   computeEffectiveInForBase,
   computeEffectiveTradeAmount,
-  getPriceHintsFromEnv,
+  getPriceHints,
   isAboveDustFloor,
   nominalUsdToBaseAmount,
 } from '../config/sizing.js';
@@ -55,7 +55,7 @@ export async function collectQuoteSnapshots(
   }
 ): Promise<CollectQuotesResult> {
   const start = Date.now();
-  const hints = getPriceHintsFromEnv();
+  const hints = await getPriceHints();
   const discoverMode = options.discoverMode;
 
   const baseBalances = await scanner.getBaseBalances(

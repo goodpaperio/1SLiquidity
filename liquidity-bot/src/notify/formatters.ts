@@ -2,10 +2,12 @@ import { formatEther } from 'ethers';
 
 const ETHERSCAN_TX = 'https://etherscan.io/tx/';
 
+import { readPriceHints } from '../ops/priceCache.js';
+
 function ethUsd(): number {
-  const raw = process.env.ETH_USD?.trim();
-  const n = raw ? Number(raw) : 3500;
-  return Number.isFinite(n) && n > 0 ? n : 3500;
+  const cached = readPriceHints();
+  if (!cached) return 0;
+  return cached.ethUsd;
 }
 
 function usdHint(ethWei: bigint): string {
@@ -30,7 +32,9 @@ function signedDelta(amount: bigint, token: string): string {
   const sign = amount >= 0n ? '+' : '−';
   const abs = amount < 0n ? -amount : amount;
   const usd =
-    token === 'WETH' || token === 'ETH' ? usdHint(abs) : '';
+    token === 'WETH' || token === 'ETH'
+      ? usdHint(abs)
+      : '';
   return `${sign}${formatTokenAmount(abs, token)}${usd}`;
 }
 

@@ -10,6 +10,7 @@ bots/*.cooldowns.json
 bots/*.stuck-trade.json
 bots/*.token-issues.jsonl
 bots/*.trade-history.json
+bots/*.telegram-state.json
 bots/*.wallet.meta.json
 bots/*.withdraw-*.json
 data/

@@ -7,31 +7,23 @@ export interface PriceHints {
   btcUsd: number;
 }
 
-const DEFAULT_ETH_USD = 3500;
-const DEFAULT_BTC_USD = 95_000;
-
+/** @deprecated use ensurePriceCache() */
 export function getPriceHintsFromEnv(): PriceHints {
-  return {
-    ethUsd: parsePositiveEnv('ETH_USD', DEFAULT_ETH_USD),
-    btcUsd: parsePositiveEnv('BTC_USD', DEFAULT_BTC_USD),
-  };
+  throw new Error(
+    'ETH_USD env removed — call ensurePriceCache() from ops/priceCache.ts'
+  );
 }
 
-function parsePositiveEnv(name: string, fallback: number): number {
-  const raw = process.env[name]?.trim();
-  if (!raw) return fallback;
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) {
-    throw new Error(`${name} must be a positive number`);
-  }
-  return n;
+export async function getPriceHints(): Promise<PriceHints> {
+  const { ensurePriceCache } = await import('../ops/priceCache.js');
+  return ensurePriceCache();
 }
 
 /** Convert nominal USD to base token amount in wei/smallest unit. */
 export function nominalUsdToBaseAmount(
   baseSymbol: BaseTokenSymbol,
   nominalUsd: number,
-  hints: PriceHints = getPriceHintsFromEnv()
+  hints: PriceHints
 ): bigint {
   if (nominalUsd <= 0) {
     throw new Error('nominalUsd must be positive');
@@ -93,7 +85,7 @@ export function computeEffectiveInForBase(
   bot: BotConfig,
   baseSymbol: BaseTokenSymbol,
   balanceWei: bigint,
-  hints?: PriceHints
+  hints: PriceHints
 ): bigint {
   const nominal = nominalUsdToBaseAmount(
     baseSymbol,
@@ -112,7 +104,7 @@ export function isAboveDustFloor(
   amountWei: bigint,
   baseSymbol: BaseTokenSymbol,
   dustFloorUsd: number,
-  hints: PriceHints = getPriceHintsFromEnv()
+  hints: PriceHints
 ): boolean {
   const dustFloor = nominalUsdToBaseAmount(baseSymbol, dustFloorUsd, hints);
   return amountWei >= dustFloor;
