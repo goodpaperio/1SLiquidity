@@ -413,6 +413,76 @@ DRY_RUN=1 npm run scan:dry-run
 
 ---
 
+## 12. Deploy to Railway (alternative to EC2 + PM2)
+
+The bot is a long-running Node worker, so it runs on [Railway](https://railway.com) without EC2, PM2, or SSH. You deploy from Git; Railway runs and restarts the process.
+
+You do **not** regenerate the bot — the same `bots/<id>.json` + `BOT_<ID>_KEY` and the same wallet address are used. Only the host changes.
+
+### Files in this repo
+
+| File | Purpose |
+|------|---------|
+| `liquidity-bot/Dockerfile` | Build context is the **repo root** so `config/` + `versions/` are included (the bot resolves pair files via `REPO_ROOT`) |
+| `liquidity-bot/railway.json` | Service config: Dockerfile builder + start command. Scoped to `liquidity-bot/` so it never affects other services (keeper, frontend, …) |
+| `.dockerignore` (repo root) | Keeps local `node_modules`/`dist` out of the image |
+
+> **Monorepo note:** `railway.json` lives in `liquidity-bot/`, not the repo root, so other Railway services deploying from this repo are unaffected. Each service should set its own **Root Directory** (e.g. `keeper/`) and/or config path.
+
+### Steps
+
+1. **Commit** the deploy files and your bot config (the JSON holds only the public address — never commit `.env` or keys):
+
+```bash
+git add liquidity-bot/Dockerfile liquidity-bot/railway.json .dockerignore liquidity-bot/bots/<id>.json
+git commit -m "Add Railway deploy for liquidity-bot"
+git push
+```
+
+2. **Create the service:** Railway → New Project → Deploy from GitHub repo → pick this repo.
+
+3. **Point the service at the scoped config:** service → **Settings**
+   - **Root Directory:** repo root (leave default — the Docker build needs `config/` + `versions/`)
+   - **Config file path:** `liquidity-bot/railway.json`
+
+4. **Variables** (service → Variables):
+
+```
+BOT_ID=<id>
+MAINNET_RPC_URL=https://...
+BOT_<ID>_KEY=0x...
+DRY_RUN=1
+# optional Telegram
+TELEGRAM_ENABLED=1
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+```
+
+5. **No public port** — this is a worker. Don't generate a domain or set an HTTP healthcheck, or Railway will mark it unhealthy waiting for a port.
+
+6. **Enable the runner:** the main process (`dist/index.js`) exits if `enabled:false`. Set `"enabled": true` in `bots/<id>.json`, commit, and push (Railway auto-redeploys).
+
+7. **Watch logs** with `DRY_RUN=1` until scan cycles look right, then set `DRY_RUN=0` and redeploy for live trades.
+
+### Persist runtime state (optional)
+
+Railway's filesystem resets on redeploy. To keep the trade ledger and stuck-trade counter across deploys, add a **Volume** mounted at `/app/liquidity-bot/bots`. Because the volume shadows the baked-in `bots/<id>.json`, upload that file into the volume once (via `railway run` shell or the volume browser). The `data/` price cache regenerates daily, so it can stay ephemeral.
+
+### Still required: local-monitor
+
+Railway hosts **liquidity-bot** only. Something must still call `executeTrades` on Core (see [`local-monitor/README.md`](../local-monitor/README.md)) or trades sit open until auto-cancel.
+
+### CLI alternative
+
+```bash
+npm i -g @railway/cli
+railway login
+railway init
+railway up   # uploads repo root as build context
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Check |
