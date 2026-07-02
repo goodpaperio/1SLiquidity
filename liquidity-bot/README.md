@@ -338,8 +338,8 @@ Manual sweep without SSH: `npm run liquify:sweep -- --bot=<id>`
 Configured under `liquify` in `bots/<id>.json`:
 
 - **Daily 11:00 UTC** — sweep dust tokens (pair list + trade history allowlist only) → WETH via [LiquifierV1](https://etherscan.io/address/0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95) (0.5% fee). Catch-up on next cycle if the bot was down at 11:00.
-- **Each cycle** — if native ETH &lt; `gas.minEthWei`, auto `WETH.withdraw()` up to `gas.targetEthWei`.
-- **Low ETH alert** — Telegram ping if still low after unwrap (max once per 6h).
+- **Each cycle** — if native ETH &lt; `gas.minEthWei`, first auto `WETH.withdraw()` up to `gas.targetEthWei`; if there is no usable WETH, the bot falls back to swapping the first funded configured base token (for example `USDT`) → `WETH` on `gas.refuelDex`, then unwraps to ETH.
+- **Low ETH alert** — Telegram ping if still low after the unwrap/swap refuel attempt (max once per 6h).
 
 Spot prices: `data/price-cache.json` (CoinGecko, refreshed daily).
 

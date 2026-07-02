@@ -50,7 +50,7 @@ import {
 } from "./localDataMigration";
 
 export class TradeMonitor {
-  private provider: ethers.JsonRpcProvider;
+  private provider: ethers.AbstractProvider;
   private signer: ethers.Wallet;
   private coreContract: ethers.Contract;
   private coreContractWithSigner: ethers.Contract;
@@ -58,7 +58,7 @@ export class TradeMonitor {
   private alertStatePath: string;
 
   private constructor(
-    provider: ethers.JsonRpcProvider,
+    provider: ethers.AbstractProvider,
     signer: ethers.Wallet | null
   ) {
     this.provider = provider;

@@ -144,23 +144,47 @@ exports.TOKEN_ADDRESSES = {
 };
 const secrets_1 = require("./secrets");
 // These will be initialized from secrets (AWS Secrets Manager or env vars)
-let RPC_URL = null;
+let RPC_URLS = [];
 let PRIVATE_KEY = null;
+let CACHED_PROVIDER = null;
+function buildProvider(urls) {
+    const uniqueUrls = Array.from(new Set(urls.map((u) => u.trim()).filter(Boolean)));
+    if (uniqueUrls.length === 0) {
+        throw new Error("No RPC URLs configured");
+    }
+    if (uniqueUrls.length === 1) {
+        return new ethers_1.ethers.JsonRpcProvider(uniqueUrls[0]);
+    }
+    const configs = uniqueUrls.map((url, index) => ({
+        provider: new ethers_1.ethers.JsonRpcProvider(url),
+        priority: index + 1,
+        // low stall timeout pushes faster failover when primary rate-limits.
+        stallTimeout: 750,
+        weight: index === 0 ? 2 : 1,
+    }));
+    return new ethers_1.ethers.FallbackProvider(configs, undefined, { quorum: 1 });
+}
 // Initialize secrets (called at startup)
 async function initializeSecrets() {
     const secrets = await (0, secrets_1.getSecrets)();
-    RPC_URL = secrets.MAINNET_RPC_HTTP_URL;
+    RPC_URLS = [secrets.MAINNET_RPC_HTTP_URL, secrets.MAINNET_RPC_HTTP_URL_FALLBACK || ""]
+        .map((v) => v.trim())
+        .filter(Boolean);
+    CACHED_PROVIDER = null;
     PRIVATE_KEY = secrets.PRIVATE_KEY;
 }
 // Export async versions that ensure secrets are loaded
 async function getProvider() {
-    if (!RPC_URL) {
+    if (RPC_URLS.length === 0) {
         await initializeSecrets();
     }
-    if (!RPC_URL) {
-        throw new Error("Failed to load RPC_URL from secrets");
+    if (RPC_URLS.length === 0) {
+        throw new Error("Failed to load MAINNET_RPC_HTTP_URL from secrets");
     }
-    return new ethers_1.ethers.JsonRpcProvider(RPC_URL);
+    if (!CACHED_PROVIDER) {
+        CACHED_PROVIDER = buildProvider(RPC_URLS);
+    }
+    return CACHED_PROVIDER;
 }
 async function getSigner() {
     if (!PRIVATE_KEY) {
@@ -174,9 +198,9 @@ async function getSigner() {
 }
 // For compatibility with existing code that expects synchronous access
 function getRpcUrl() {
-    if (!RPC_URL) {
+    if (RPC_URLS.length === 0) {
         throw new Error("Secrets not initialized. Call getProvider() or getSigner() first.");
     }
-    return RPC_URL;
+    return RPC_URLS[0];
 }
 //# sourceMappingURL=config.js.map

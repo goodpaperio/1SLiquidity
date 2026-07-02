@@ -53,6 +53,7 @@ function getSecretsFromEnv() {
     const secrets = {
         PRIVATE_KEY: process.env.PRIVATE_KEY || "",
         MAINNET_RPC_HTTP_URL: process.env.MAINNET_RPC_HTTP_URL || process.env.RPC_HTTP_URL || "",
+        MAINNET_RPC_HTTP_URL_FALLBACK: process.env.MAINNET_RPC_HTTP_URL_FALLBACK || process.env.RPC_HTTP_URL_FALLBACK || "",
         TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
         TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
     };

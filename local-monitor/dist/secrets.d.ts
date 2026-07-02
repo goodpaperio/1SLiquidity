@@ -6,6 +6,7 @@
 interface BotSecrets {
     PRIVATE_KEY: string;
     MAINNET_RPC_HTTP_URL: string;
+    MAINNET_RPC_HTTP_URL_FALLBACK?: string;
     TELEGRAM_BOT_TOKEN?: string;
     TELEGRAM_CHAT_ID?: string;
 }

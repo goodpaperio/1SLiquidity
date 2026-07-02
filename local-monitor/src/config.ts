@@ -165,25 +165,51 @@ export const TOKEN_ADDRESSES: Record<string, string> = {
 import { getSecrets } from "./secrets";
 
 // These will be initialized from secrets (AWS Secrets Manager or env vars)
-let RPC_URL: string | null = null;
+let RPC_URLS: string[] = [];
 let PRIVATE_KEY: string | null = null;
+let CACHED_PROVIDER: ethers.AbstractProvider | null = null;
+
+function buildProvider(urls: string[]): ethers.AbstractProvider {
+  const uniqueUrls = Array.from(new Set(urls.map((u) => u.trim()).filter(Boolean)));
+  if (uniqueUrls.length === 0) {
+    throw new Error("No RPC URLs configured");
+  }
+  if (uniqueUrls.length === 1) {
+    return new ethers.JsonRpcProvider(uniqueUrls[0]);
+  }
+
+  const configs = uniqueUrls.map((url, index) => ({
+    provider: new ethers.JsonRpcProvider(url),
+    priority: index + 1,
+    // low stall timeout pushes faster failover when primary rate-limits.
+    stallTimeout: 750,
+    weight: index === 0 ? 2 : 1,
+  }));
+  return new ethers.FallbackProvider(configs, undefined, { quorum: 1 });
+}
 
 // Initialize secrets (called at startup)
 async function initializeSecrets() {
   const secrets = await getSecrets();
-  RPC_URL = secrets.MAINNET_RPC_HTTP_URL;
+  RPC_URLS = [secrets.MAINNET_RPC_HTTP_URL, secrets.MAINNET_RPC_HTTP_URL_FALLBACK || ""]
+    .map((v) => v.trim())
+    .filter(Boolean);
+  CACHED_PROVIDER = null;
   PRIVATE_KEY = secrets.PRIVATE_KEY;
 }
 
 // Export async versions that ensure secrets are loaded
-export async function getProvider(): Promise<ethers.JsonRpcProvider> {
-  if (!RPC_URL) {
+export async function getProvider(): Promise<ethers.AbstractProvider> {
+  if (RPC_URLS.length === 0) {
     await initializeSecrets();
   }
-  if (!RPC_URL) {
-    throw new Error("Failed to load RPC_URL from secrets");
+  if (RPC_URLS.length === 0) {
+    throw new Error("Failed to load MAINNET_RPC_HTTP_URL from secrets");
   }
-  return new ethers.JsonRpcProvider(RPC_URL);
+  if (!CACHED_PROVIDER) {
+    CACHED_PROVIDER = buildProvider(RPC_URLS);
+  }
+  return CACHED_PROVIDER;
 }
 
 export async function getSigner(): Promise<ethers.Wallet> {
@@ -199,8 +225,8 @@ export async function getSigner(): Promise<ethers.Wallet> {
 
 // For compatibility with existing code that expects synchronous access
 export function getRpcUrl(): string {
-  if (!RPC_URL) {
+  if (RPC_URLS.length === 0) {
     throw new Error("Secrets not initialized. Call getProvider() or getSigner() first.");
   }
-  return RPC_URL;
+  return RPC_URLS[0];
 }

@@ -3,6 +3,7 @@ import {
   MaxUint256,
   ZeroAddress,
   concat,
+  getAddress,
   getBytes,
   toBeHex,
   type Provider,
@@ -89,7 +90,7 @@ async function quoteV2(
   }
 }
 
-async function buildRoute(
+export async function buildRoute(
   provider: Provider,
   token: string,
   amount: bigint,
@@ -124,7 +125,10 @@ async function buildRoute(
     }
   }
 
-  const v2Path = [token, WETH, outputToken];
+  const v2Hop =
+    outputToken.toLowerCase() === WETH.toLowerCase()
+      ? [token, WETH]
+      : [token, WETH, outputToken];
   if (bestQuote === 0n) {
     const v2q = await quoteV2(provider, [token, outputToken], amount);
     if (v2q != null && v2q > 0n) {
@@ -135,24 +139,30 @@ async function buildRoute(
         quotedOut: bestQuote,
       };
     }
-    const v2hop = await quoteV2(provider, v2Path, amount);
+    const v2hop = await quoteV2(provider, v2Hop, amount);
     if (v2hop != null && v2hop > 0n) {
       bestQuote = v2hop;
       return {
-        input: { token, amount, v3Path: '0x', v2Path: v2Path },
+        input: { token, amount, v3Path: '0x', v2Path: v2Hop },
         quotedOut: bestQuote,
       };
     }
     return null;
   }
 
+  const v2Fallback =
+    outputToken.toLowerCase() === WETH.toLowerCase()
+      ? [token, WETH]
+      : [token, WETH, outputToken];
+
+  // v3 route — always include v2 fallback path per LiquifierV1 integration guide.
   return {
-    input: { token, amount, v3Path: bestPath, v2Path: v2Path },
+    input: { token, amount, v3Path: bestPath, v2Path: v2Fallback },
     quotedOut: bestQuote,
   };
 }
 
-async function getNextPermit2Nonce(
+export async function getNextPermit2Nonce(
   provider: Provider,
   owner: string
 ): Promise<bigint> {
@@ -165,11 +175,12 @@ async function getNextPermit2Nonce(
   throw new Error('Permit2 nonce word 0 exhausted');
 }
 
-async function signPermit2Batch(
+export async function signPermit2Batch(
   signer: Signer,
   inputs: TokenInput[],
   nonce: bigint,
-  deadline: bigint
+  deadline: bigint,
+  spender: string
 ): Promise<string> {
   const chainId = (await signer.provider!.getNetwork()).chainId;
   return signer.signTypedData(
@@ -191,15 +202,30 @@ async function signPermit2Batch(
       ],
     },
     {
-      permitted: inputs.map((i) => ({ token: i.token, amount: i.amount })),
-      spender: LIQUIFIER_V1,
+      permitted: inputs.map((i) => ({
+        token: getAddress(i.token),
+        amount: i.amount,
+      })),
+      spender: getAddress(spender),
       nonce,
       deadline,
     }
   );
 }
 
-async function ensurePermit2Approval(
+async function sendErc20Approve(
+  erc20: Contract,
+  spender: string,
+  amount: bigint,
+  signer: Signer
+): Promise<void> {
+  const from = await signer.getAddress();
+  const nonce = await signer.provider!.getTransactionCount(from, 'latest');
+  const tx = await erc20.approve(spender, amount, { nonce });
+  await tx.wait();
+}
+
+export async function ensurePermit2Approval(
   token: string,
   owner: string,
   signer: Signer
@@ -207,15 +233,18 @@ async function ensurePermit2Approval(
   const erc20 = new Contract(token, ERC20_ABI, signer);
   const allowance = await erc20.allowance(owner, PERMIT2);
   if (allowance >= MaxUint256 / 2n) return;
-  try {
-    await (await erc20.approve(PERMIT2, 0n)).wait();
-  } catch {
-    /* USDT-style reset not required */
+  // USDT-style tokens need reset-to-zero only when replacing a non-zero allowance.
+  if (allowance > 0n) {
+    try {
+      await sendErc20Approve(erc20, PERMIT2, 0n, signer);
+    } catch {
+      /* reset not supported or unnecessary */
+    }
   }
-  await (await erc20.approve(PERMIT2, MaxUint256)).wait();
+  await sendErc20Approve(erc20, PERMIT2, MaxUint256, signer);
 }
 
-function omitTokenList(bot: BotConfig): string[] {
+export function omitTokenList(bot: BotConfig): string[] {
   const omit = new Set<string>([
     ZeroAddress,
     WETH,
@@ -224,7 +253,7 @@ function omitTokenList(bot: BotConfig): string[] {
   return [...omit];
 }
 
-function primaryBaseOutput(bot: BotConfig): string {
+export function primaryBaseOutput(bot: BotConfig): string {
   const base = bot.baseTokens[0] ?? 'WETH';
   return BASE_TOKEN_ADDRESSES[base as BaseTokenSymbol];
 }
@@ -312,9 +341,11 @@ export async function runLiquifySweep(
       await ensurePermit2Approval(inp.token, owner, signer);
     }
 
+    const latest = await provider.getBlock('latest');
+    if (!latest) throw new Error('Failed to fetch latest block for liquify deadline');
     const nonce = await getNextPermit2Nonce(provider, owner);
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
-    const sig = await signPermit2Batch(signer, inputs, nonce, deadline);
+    const deadline = BigInt(latest.timestamp + 30 * 60);
+    const sig = await signPermit2Batch(signer, inputs, nonce, deadline, bot.liquify.contract);
 
     const liquifier = new Contract(LIQUIFIER_V1, LIQUIFIER_ABI, signer);
     const tx = await liquifier.liquify(
@@ -353,9 +384,32 @@ export function shouldRunDailySweep(
   lastDustSweepDate: string | undefined,
   now: Date = new Date()
 ): boolean {
-  if (now.getUTCHours() < dailySweepHourUtc) return false;
-  const today = now.toISOString().slice(0, 10);
-  return lastDustSweepDate !== today;
+  const today = utcDateLabel(now);
+  if (lastDustSweepDate === today) return false;
+  // Only during the configured UTC hour (e.g. 11:00–11:59).
+  return now.getUTCHours() === dailySweepHourUtc;
+}
+
+/** Milliseconds until the next occurrence of `hourUtc:00` UTC. */
+export function msUntilNextSweepUtcHour(
+  hourUtc: number,
+  now: Date = new Date()
+): number {
+  const next = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      hourUtc,
+      0,
+      0,
+      0
+    )
+  );
+  if (now.getTime() >= next.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+  return next.getTime() - now.getTime();
 }
 
 export function utcDateLabel(d = new Date()): string {

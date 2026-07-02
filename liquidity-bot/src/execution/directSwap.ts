@@ -32,9 +32,10 @@ export async function swapExactOnCandidateDex(
   signer: Signer
 ): Promise<{ txHash: string }> {
   const routerAddress = routerForDex(dex);
+  const owner = await signer.getAddress();
   await ensureAllowance(
     tokenIn,
-    recipient,
+    owner,
     routerAddress,
     amountIn,
     signer

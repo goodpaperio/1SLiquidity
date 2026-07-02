@@ -22,9 +22,11 @@ import { pollTradeCompletions } from '../notify/completionWatcher.js';
 import { maybeCancelStuckTrade } from '../ops/stuckTradeGuard.js';
 import {
   runBotMaintenance,
+  runDailyLiquifySweep,
+  startDailyLiquifyScheduler,
   startTelegramCommandLoop,
 } from '../ops/botOps.js';
-import { runLiquifySweep } from '../ops/liquifySweep.js';
+import { maybeAlertStaleTrades } from '../ops/tradeHealthCheck.js';
 
 export interface BotState {
   lastUpdatedAt: string;
@@ -35,6 +37,8 @@ export interface BotState {
   lastDustSweepDate?: string;
   /** ISO timestamp of last low-ETH Telegram alert. */
   lastLowEthAlertAt?: string;
+  /** ISO timestamp of last no-trade staleness Telegram alert. */
+  lastStaleTradeAlertAt?: string;
 }
 
 export function getStatePath(botId: string): string {
@@ -61,6 +65,7 @@ export class BotRunner {
   private liquifyInFlight = false;
   private pausedByOperator = false;
   private telegramTimer: ReturnType<typeof setInterval> | null = null;
+  private liquifySchedulerStop: (() => void) | null = null;
   private readonly pairCooldown: PairCooldownStore;
   private readonly tradeHistory: TradeHistoryStore;
   private readonly opportunityCache: OpportunityCache;
@@ -89,6 +94,10 @@ export class BotRunner {
       clearInterval(this.telegramTimer);
       this.telegramTimer = null;
     }
+    if (this.liquifySchedulerStop) {
+      this.liquifySchedulerStop();
+      this.liquifySchedulerStop = null;
+    }
   }
 
   async run(): Promise<void> {
@@ -110,6 +119,10 @@ export class BotRunner {
         },
         () => this.runLiquifyCommand(provider)
       );
+      this.liquifySchedulerStop = startDailyLiquifyScheduler(
+        this.config,
+        provider
+      );
 
       await this.runCycle(id, scanner, provider);
       this.scanTimer = setInterval(() => {
@@ -123,11 +136,15 @@ export class BotRunner {
     }
 
     while (!this.stopped) {
+      const prev = readBotState(id);
       writeBotState(id, {
         lastUpdatedAt: new Date().toISOString(),
-        lastEthBalanceWei: '0',
+        lastEthBalanceWei: prev?.lastEthBalanceWei ?? '0',
         status: 'running',
         note: `cached_opportunities=${this.opportunityCache.list().length}`,
+        lastDustSweepDate: prev?.lastDustSweepDate,
+        lastLowEthAlertAt: prev?.lastLowEthAlertAt,
+        lastStaleTradeAlertAt: prev?.lastStaleTradeAlertAt,
       });
       await sleep(this.heartbeatMs);
     }
@@ -146,11 +163,22 @@ export class BotRunner {
     }
     this.cycleInFlight = true;
     try {
-      this.liquifyInFlight = true;
-      try {
-        await runBotMaintenance(this.config, provider);
-      } finally {
-        this.liquifyInFlight = false;
+      await runBotMaintenance(this.config, provider);
+
+      const opsState = readBotState(id) ?? {
+        lastUpdatedAt: new Date().toISOString(),
+        lastEthBalanceWei: '0',
+        status: 'running' as const,
+      };
+      const staleAlertAt = await maybeAlertStaleTrades(this.config, {
+        paused: this.pausedByOperator,
+        lastAlertAt: opsState.lastStaleTradeAlertAt,
+      });
+      if (staleAlertAt) {
+        writeBotState(id, {
+          ...opsState,
+          lastStaleTradeAlertAt: staleAlertAt,
+        });
       }
 
       if (this.pausedByOperator) {
@@ -232,19 +260,10 @@ export class BotRunner {
     }
     this.liquifyInFlight = true;
     try {
-      const wallet = createBotWallet(this.config, provider);
-      const sweep = await runLiquifySweep(this.config, provider, wallet);
-      if (!sweep.dryRun && sweep.tokensAttempted > 0) {
-        writeBotState(this.config.id, {
-          ...(readBotState(this.config.id) ?? {
-            lastUpdatedAt: new Date().toISOString(),
-            lastEthBalanceWei: '0',
-            status: 'running' as const,
-          }),
-          lastDustSweepDate: new Date().toISOString().slice(0, 10),
-        });
-      }
-      return sweep.message;
+      const result = await runDailyLiquifySweep(this.config, provider, {
+        force: true,
+      });
+      return result.message ?? 'Liquify sweep finished.';
     } finally {
       this.liquifyInFlight = false;
     }

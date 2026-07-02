@@ -10,6 +10,7 @@ import {
 import {
   runLiquifySweep,
   shouldRunDailySweep,
+  msUntilNextSweepUtcHour,
   utcDateLabel,
 } from './liquifySweep.js';
 import {
@@ -25,6 +26,118 @@ export interface OpsRunResult {
   skippedTrading: boolean;
 }
 
+/** Run the daily dust sweep (at most once per UTC day unless `force`). */
+export async function runDailyLiquifySweep(
+  bot: BotConfig,
+  provider: Provider,
+  options: {
+    force?: boolean;
+    signer?: Signer;
+  } = {}
+): Promise<{ swept: boolean; message?: string }> {
+  if (!bot.liquify.enabled) {
+    return { swept: false };
+  }
+
+  await ensurePriceCache();
+  const state = readBotState(bot.id) ?? defaultOpsState();
+  const today = utcDateLabel();
+  if (!options.force && state.lastDustSweepDate === today) {
+    return { swept: false, message: 'Daily liquify already attempted today.' };
+  }
+
+  const wallet = options.signer ?? createBotWallet(bot, provider);
+  let swept = false;
+  let message: string | undefined;
+
+  try {
+    const sweep = await runLiquifySweep(bot, provider, wallet);
+    message = sweep.message;
+    swept = sweep.tokensAttempted > 0 && !sweep.dryRun;
+    if (sweep.tokensAttempted > 0 || options.force) {
+      const body = `🧹 <b>Liquify sweep</b>\n${escapeHtml(sweep.message)}`;
+      await sendTelegram(prefixBotMessage(bot.id, body));
+    }
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    const short = reason.length > 400 ? `${reason.slice(0, 400)}…` : reason;
+    message = `Liquify sweep failed: ${short}`;
+    console.error(`[${bot.id}] ${message}`);
+    await sendTelegram(
+      prefixBotMessage(
+        bot.id,
+        `🧹 <b>Liquify sweep failed</b>\n${escapeHtml(short)}`
+      )
+    );
+  } finally {
+    // One scheduled attempt per UTC day — do not retry until tomorrow 11:00.
+    if (!options.force) {
+      writeBotState(bot.id, {
+        ...state,
+        lastDustSweepDate: utcDateLabel(),
+      });
+    }
+  }
+
+  return { swept, message };
+}
+
+/**
+ * Fire liquify once per day at `liquify.dailySweepHourUtc` (default 11:00 UTC).
+ * Independent of the trade scan interval.
+ */
+export function startDailyLiquifyScheduler(
+  bot: BotConfig,
+  provider: Provider
+): (() => void) | null {
+  if (!bot.liquify.enabled) return null;
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancelled = false;
+
+  const scheduleNext = () => {
+    if (cancelled) return;
+    const delay = msUntilNextSweepUtcHour(bot.liquify.dailySweepHourUtc);
+    const at = new Date(Date.now() + delay);
+    console.log(
+      `[${bot.id}] next daily liquify sweep scheduled for ${at.toISOString()}`
+    );
+    timer = setTimeout(() => {
+      void (async () => {
+        try {
+          console.log(`[${bot.id}] running scheduled daily liquify sweep`);
+          await runDailyLiquifySweep(bot, provider);
+        } catch (err) {
+          console.error(
+            `[${bot.id}] scheduled liquify failed:`,
+            err instanceof Error ? err.message : err
+          );
+        } finally {
+          scheduleNext();
+        }
+      })();
+    }, delay);
+  };
+
+  // If the bot restarts during the 11:00 UTC hour and hasn't swept yet, run now.
+  const state = readBotState(bot.id);
+  if (
+    shouldRunDailySweep(
+      bot.liquify.dailySweepHourUtc,
+      state?.lastDustSweepDate
+    )
+  ) {
+    void runDailyLiquifySweep(bot, provider).finally(scheduleNext);
+  } else {
+    scheduleNext();
+  }
+
+  return () => {
+    cancelled = true;
+    if (timer) clearTimeout(timer);
+  };
+}
+
 export async function runBotMaintenance(
   bot: BotConfig,
   provider: Provider,
@@ -33,43 +146,21 @@ export async function runBotMaintenance(
     signer?: Signer;
   } = {}
 ): Promise<OpsRunResult> {
-  if (!bot.liquify.enabled) {
-    return { swept: false, skippedTrading: false };
+  if (options.forceLiquify) {
+    const sweep = await runDailyLiquifySweep(bot, provider, {
+      force: true,
+      signer: options.signer,
+    });
+    return {
+      swept: sweep.swept,
+      sweepMessage: sweep.message,
+      skippedTrading: false,
+    };
   }
 
   await ensurePriceCache();
   const state = readBotState(bot.id) ?? defaultOpsState();
   const wallet = options.signer ?? createBotWallet(bot, provider);
-
-  let swept = false;
-  let sweepMessage: string | undefined;
-  const dailyDue =
-    options.forceLiquify ||
-    shouldRunDailySweep(bot.liquify.dailySweepHourUtc, state.lastDustSweepDate);
-
-  if (dailyDue) {
-    const sweep = await runLiquifySweep(bot, provider, wallet);
-    sweepMessage = sweep.message;
-    swept = sweep.tokensAttempted > 0 && !sweep.dryRun;
-    if (sweep.tokensAttempted > 0 || options.forceLiquify) {
-      const body =
-        swept || sweep.dryRun
-          ? `🧹 <b>Liquify sweep</b>\n${escapeHtml(sweep.message)}`
-          : `🧹 <b>Liquify sweep</b>\n${escapeHtml(sweep.message)}`;
-      await sendTelegram(prefixBotMessage(bot.id, body));
-    }
-    if (!sweep.dryRun && dailyDue && !options.forceLiquify) {
-      writeBotState(bot.id, {
-        ...state,
-        lastDustSweepDate: utcDateLabel(),
-      });
-    } else if (options.forceLiquify && !sweep.dryRun && sweep.tokensAttempted > 0) {
-      writeBotState(bot.id, {
-        ...state,
-        lastDustSweepDate: utcDateLabel(),
-      });
-    }
-  }
 
   const gas = await runGasSelfSustain(bot, provider, wallet);
   if (gas.unwrappedWei > 0n && !gas.dryRun) {
@@ -95,7 +186,7 @@ export async function runBotMaintenance(
     }
   }
 
-  return { swept, sweepMessage, gasMessage: gas.message, skippedTrading: false };
+  return { swept: false, sweepMessage: undefined, gasMessage: gas.message, skippedTrading: false };
 }
 
 export async function buildStatusMessage(
@@ -116,7 +207,7 @@ export async function buildStatusMessage(
     `address: <code>${bot.address}</code>\n` +
     `native ETH: ${ethStr}${usd}\n` +
     `ETH/USD: ${hints.ethUsd.toFixed(2)} (cached)\n` +
-    `next daily sweep: ${bot.liquify.dailySweepHourUtc}:00 UTC`
+    `next daily sweep: ${bot.liquify.dailySweepHourUtc}:00 UTC (once per day)`
   );
 }
 

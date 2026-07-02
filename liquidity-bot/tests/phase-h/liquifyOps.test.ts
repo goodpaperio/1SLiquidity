@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   shouldRunDailySweep,
+  msUntilNextSweepUtcHour,
   utcDateLabel,
 } from '../../src/ops/liquifySweep.js';
 
@@ -14,6 +15,17 @@ describe('liquify sweep scheduler', () => {
   it('does not run before sweep hour', () => {
     const early = new Date('2026-06-26T09:00:00.000Z');
     expect(shouldRunDailySweep(11, undefined, early)).toBe(false);
+  });
+
+  it('does not run after the sweep hour on the same day', () => {
+    const afternoon = new Date('2026-06-26T15:30:00.000Z');
+    expect(shouldRunDailySweep(11, '2026-06-25', afternoon)).toBe(false);
+    expect(shouldRunDailySweep(11, undefined, afternoon)).toBe(false);
+  });
+
+  it('computes delay until next sweep hour', () => {
+    const before = new Date('2026-06-26T09:30:00.000Z');
+    expect(msUntilNextSweepUtcHour(11, before)).toBe(90 * 60 * 1000);
   });
 });
 

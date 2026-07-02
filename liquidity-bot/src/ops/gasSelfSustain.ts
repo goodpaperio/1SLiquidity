@@ -1,13 +1,28 @@
-import { Contract, formatEther, type Provider, type Signer } from 'ethers';
-import { BASE_TOKEN_ADDRESSES } from '../config/baseTokens.js';
+import { Contract, NonceManager, formatEther, type Provider, type Signer } from 'ethers';
+import {
+  BASE_TOKEN_ADDRESSES,
+  type BaseTokenSymbol,
+} from '../config/baseTokens.js';
 import type { BotConfig } from '../config/schema.js';
 import { WETH_WITHDRAW_ABI } from '../chain/liquifier.js';
 import { isDryRun } from '../chain/wallet.js';
 import { computeGasRefuel } from '../execution/gasRefuel.js';
+import { swapExactOnCandidateDex } from '../execution/directSwap.js';
 import { readPriceHints } from './priceCache.js';
 import { prefixBotMessage, sendTelegram } from '../notify/telegram.js';
+import {
+  ERC20_ABI,
+  UNISWAP_V2_ROUTER,
+  UNISWAP_V2_ROUTER_ABI,
+  UNISWAP_V3_QUOTER_V2,
+  UNISWAP_V3_QUOTER_V2_ABI,
+} from '../chain/contracts.js';
+import { feeTierFromDexId } from '../scan/DexQuoteService.js';
+import type { StreamDexId } from '../scan/types.js';
 
 const WETH = BASE_TOKEN_ADDRESSES.WETH;
+const GAS_SWAP_BUFFER_BPS = 10_200n;
+const BPS_DENOMINATOR = 10_000n;
 
 export interface GasSelfSustainResult {
   dryRun: boolean;
@@ -24,7 +39,8 @@ export async function runGasSelfSustain(
   signer: Signer
 ): Promise<GasSelfSustainResult> {
   const owner = await signer.getAddress();
-  const ethBefore = await provider.getBalance(owner);
+  const txSigner = new NonceManager(signer);
+  const ethBefore = await readNativeBalance(provider, owner);
   const minEth = BigInt(bot.gas.minEthWei);
   const targetEth = BigInt(bot.gas.targetEthWei);
 
@@ -42,54 +58,189 @@ export async function runGasSelfSustain(
 
   const weth = new Contract(WETH, [...WETH_WITHDRAW_ABI, 'function balanceOf(address) view returns (uint256)'], provider);
   const wethBal = BigInt((await weth.balanceOf(owner)).toString());
+  const directTopUp = decision.topUpWei > wethBal ? wethBal : decision.topUpWei;
 
-  if (wethBal <= 0n) {
+  if (directTopUp > 0n) {
+    if (isDryRun()) {
+      return {
+        dryRun: true,
+        unwrappedWei: directTopUp,
+        ethBefore,
+        ethAfter: ethBefore + directTopUp,
+        message: `DRY_RUN would unwrap ${formatEther(directTopUp)} WETH → ETH`,
+        needsOperator: false,
+      };
+    }
+
+    const wethSigner = new Contract(WETH, WETH_WITHDRAW_ABI, txSigner);
+    const tx = await wethSigner.withdraw(directTopUp);
+    await tx.wait();
+    const ethAfter = await readNativeBalance(provider, owner);
+
     return {
-      dryRun: isDryRun(),
-      unwrappedWei: 0n,
+      dryRun: false,
+      unwrappedWei: directTopUp,
       ethBefore,
-      ethAfter: ethBefore,
-      message: 'Native ETH low and no WETH to unwrap.',
-      needsOperator: true,
+      ethAfter,
+      message: `Unwrapped ${formatEther(directTopUp)} WETH → ETH for gas.`,
+      needsOperator: ethAfter < minEth,
     };
   }
 
-  const topUp = decision.topUpWei > wethBal ? wethBal : decision.topUpWei;
-  if (topUp <= 0n) {
+  const fallback = await refuelFromConfiguredBase(bot, provider, owner, decision.topUpWei);
+  if (!fallback) {
     return {
       dryRun: isDryRun(),
       unwrappedWei: 0n,
       ethBefore,
       ethAfter: ethBefore,
-      message: 'Nothing to unwrap.',
-      needsOperator: ethBefore < minEth,
+      message: 'Native ETH low and no refuellable WETH/base token balance.',
+      needsOperator: true,
     };
   }
 
   if (isDryRun()) {
     return {
       dryRun: true,
-      unwrappedWei: topUp,
+      unwrappedWei: fallback.estimatedWethOut,
       ethBefore,
-      ethAfter: ethBefore + topUp,
-      message: `DRY_RUN would unwrap ${formatEther(topUp)} WETH → ETH`,
+      ethAfter: ethBefore + fallback.estimatedWethOut,
+      message:
+        `DRY_RUN would swap ${fallback.symbol} → WETH on ${fallback.dex} ` +
+        `and unwrap ≈ ${formatEther(fallback.estimatedWethOut)} ETH for gas`,
       needsOperator: false,
     };
   }
 
-  const wethSigner = new Contract(WETH, WETH_WITHDRAW_ABI, signer);
-  const tx = await wethSigner.withdraw(topUp);
-  await tx.wait();
-  const ethAfter = await provider.getBalance(owner);
+  await swapExactOnCandidateDex(
+    fallback.dex,
+    fallback.tokenAddress,
+    WETH,
+    fallback.amountIn,
+    fallback.minWethOut,
+    owner,
+    txSigner
+  );
+
+  const wethAfterSwap = BigInt((await weth.balanceOf(owner)).toString());
+  if (wethAfterSwap <= 0n) {
+    return {
+      dryRun: false,
+      unwrappedWei: 0n,
+      ethBefore,
+      ethAfter: ethBefore,
+      message: `Gas refuel swap from ${fallback.symbol} completed but produced no unwrapable WETH.`,
+      needsOperator: true,
+    };
+  }
+
+  const wethSigner = new Contract(WETH, WETH_WITHDRAW_ABI, txSigner);
+  const unwrapTx = await wethSigner.withdraw(wethAfterSwap);
+  await unwrapTx.wait();
+  const ethAfter = await readNativeBalance(provider, owner);
+  const unwrappedWei = ethAfter > ethBefore ? ethAfter - ethBefore : wethAfterSwap;
 
   return {
     dryRun: false,
-    unwrappedWei: topUp,
+    unwrappedWei,
     ethBefore,
     ethAfter,
-    message: `Unwrapped ${formatEther(topUp)} WETH → ETH for gas.`,
+    message:
+      `Swapped ${fallback.symbol} → WETH on ${fallback.dex} and unwrapped ` +
+      `${formatEther(unwrappedWei)} ETH for gas.`,
     needsOperator: ethAfter < minEth,
   };
+}
+
+interface RefuelFallbackPlan {
+  symbol: BaseTokenSymbol;
+  tokenAddress: string;
+  dex: StreamDexId;
+  amountIn: bigint;
+  estimatedWethOut: bigint;
+  minWethOut: bigint;
+}
+
+async function refuelFromConfiguredBase(
+  bot: BotConfig,
+  provider: Provider,
+  owner: string,
+  targetWethOut: bigint
+): Promise<RefuelFallbackPlan | null> {
+  const dex = bot.gas.refuelDex as StreamDexId;
+
+  for (const symbol of bot.baseTokens as BaseTokenSymbol[]) {
+    if (symbol === 'WETH') continue;
+    const tokenAddress = BASE_TOKEN_ADDRESSES[symbol];
+    const erc20 = new Contract(tokenAddress, ERC20_ABI, provider);
+    const balance = BigInt((await erc20.balanceOf(owner)).toString());
+    if (balance <= 0n) continue;
+
+    const quotedOut = await quoteGasRefuelDex(provider, dex, tokenAddress, balance);
+    if (quotedOut == null || quotedOut <= 0n) continue;
+
+    const rawAmountIn = ceilDiv(balance * targetWethOut, quotedOut);
+    const bufferedAmountIn = ceilDiv(rawAmountIn * GAS_SWAP_BUFFER_BPS, BPS_DENOMINATOR);
+    const amountIn = bufferedAmountIn > balance ? balance : bufferedAmountIn;
+    if (amountIn <= 0n) continue;
+
+    const estimatedWethOut = amountIn === balance
+      ? quotedOut
+      : (quotedOut * amountIn) / balance;
+    const minWethOut = (estimatedWethOut * 9_500n) / BPS_DENOMINATOR;
+    if (estimatedWethOut <= 0n || minWethOut <= 0n) continue;
+
+    return {
+      symbol,
+      tokenAddress,
+      dex,
+      amountIn,
+      estimatedWethOut,
+      minWethOut,
+    };
+  }
+
+  return null;
+}
+
+async function quoteGasRefuelDex(
+  provider: Provider,
+  dex: StreamDexId,
+  tokenIn: string,
+  amountIn: bigint
+): Promise<bigint | null> {
+  if (amountIn <= 0n) return null;
+
+  if (dex === 'uniswap-v2' || dex === 'sushiswap') {
+    const router = new Contract(UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI, provider);
+    try {
+      const amounts = await router.getAmountsOut.staticCall(amountIn, [tokenIn, WETH]);
+      return BigInt(amounts[amounts.length - 1].toString());
+    } catch {
+      return null;
+    }
+  }
+
+  const fee = feeTierFromDexId(dex);
+  if (fee == null) return null;
+
+  const quoter = new Contract(UNISWAP_V3_QUOTER_V2, UNISWAP_V3_QUOTER_V2_ABI, provider);
+  try {
+    const result = await quoter.quoteExactInputSingle.staticCall({
+      tokenIn,
+      tokenOut: WETH,
+      amountIn,
+      fee,
+      sqrtPriceLimitX96: 0,
+    });
+    return BigInt(result[0].toString());
+  } catch {
+    return null;
+  }
+}
+
+function ceilDiv(a: bigint, b: bigint): bigint {
+  return a === 0n ? 0n : ((a - 1n) / b) + 1n;
 }
 
 export async function maybeAlertLowEth(
@@ -97,7 +248,7 @@ export async function maybeAlertLowEth(
   provider: Provider,
   lastAlertAt: string | undefined
 ): Promise<string | undefined> {
-  const eth = await provider.getBalance(bot.address);
+  const eth = await readNativeBalance(provider, bot.address);
   const minEth = BigInt(bot.gas.minEthWei);
   if (eth >= minEth) return undefined;
 
@@ -119,7 +270,7 @@ export async function maybeAlertLowEth(
     (ethUsd > 0 ? ` (~$${(Number(formatEther(eth)) * ethUsd).toFixed(2)})` : '') +
     `\nmin: ${formatEther(minEth)} ETH` +
     (ethUsd > 0 ? ` (~$${minUsd})` : '') +
-    `\n/auto unwrap failed or insufficient WETH — fund wallet or /liquify`;
+    `\n/auto refuel failed or insufficient WETH/base token balance — fund wallet or /liquify`;
 
   await sendTelegram(prefixBotMessage(bot.id, body));
   return new Date().toISOString();
@@ -133,4 +284,18 @@ export function nativeEthBelowUsdThreshold(
   if (ethUsd <= 0) return false;
   const eth = Number(formatEther(ethWei));
   return eth * ethUsd < minNativeEthUsd;
+}
+
+async function readNativeBalance(
+  provider: Provider,
+  address: string
+): Promise<bigint> {
+  try {
+    const raw = await (provider as Provider & {
+      send(method: string, params: unknown[]): Promise<string>;
+    }).send('eth_getBalance', [address, 'latest']);
+    return BigInt(raw);
+  } catch {
+    return provider.getBalance(address);
+  }
 }

@@ -29,8 +29,10 @@ describe('integration — leg 1 direct swap', () => {
     const { swapExactOnCandidateDex } = await import(
       '../../src/execution/directSwap.js'
     );
-    const signer = {} as import('ethers').Signer;
     const recipient = '0x1111111111111111111111111111111111111111';
+    const signer = {
+      getAddress: vi.fn().mockResolvedValue(recipient),
+    } as unknown as import('ethers').Signer;
     const tokenIn = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
     const tokenOut = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
@@ -54,8 +56,10 @@ describe('integration — leg 1 direct swap', () => {
     const { swapExactOnCandidateDex } = await import(
       '../../src/execution/directSwap.js'
     );
-    const signer = {} as import('ethers').Signer;
     const recipient = '0x1111111111111111111111111111111111111111';
+    const signer = {
+      getAddress: vi.fn().mockResolvedValue(recipient),
+    } as unknown as import('ethers').Signer;
     const tokenIn = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
     const tokenOut = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
