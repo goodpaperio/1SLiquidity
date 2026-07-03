@@ -197,6 +197,14 @@ export class BotRunner {
         console.log(
           `[${id}] auto-cancelled stuck trade #${stuck.tradeId} (${stuck.txHash})`
         );
+      } else if (stuck.settlementAttempted && stuck.settlementTxHash) {
+        console.log(
+          `[${id}] settlement attempt via executeTrades for trade #${stuck.tradeId} (${stuck.settlementTxHash})`
+        );
+      } else if (stuck.settlementAttempted && stuck.dryRun) {
+        console.log(
+          `[${id}] would attempt executeTrades settlement for trade #${stuck.tradeId}`
+        );
       } else if (stuck.dryRun && stuck.tradeId != null) {
         console.log(
           `[${id}] stuck trade #${stuck.tradeId} would be cancelled next live cycle`

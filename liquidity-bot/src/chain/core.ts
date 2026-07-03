@@ -7,11 +7,12 @@ import {
 } from 'ethers';
 import type { BotConfig } from '../config/schema.js';
 
-/** Minimal Core ABI for trade cancel / inspection. */
+/** Minimal Core ABI for trade cancel / inspection / settlement. */
 export const CORE_TRADE_ABI = [
   'function lastTradeId() view returns (uint256)',
   'function getTrade(uint256 tradeId) view returns (tuple(address owner, uint8 attempts, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountRemaining, uint256 targetAmountOut, uint256 realisedAmountOut, uint256 tradeId, uint256 instasettleBps, uint256 lastSweetSpot, bool isInstasettlable, bool usePriceBased, bool onlyInstasettle))',
   'function getPairIdTradeIds(bytes32 pairId) view returns (uint256[])',
+  'function executeTrades(bytes32 pairId)',
   'function cancelTrade(uint256 tradeId) returns (bool)',
 ] as const;
 
@@ -113,6 +114,47 @@ export async function cancelTradeOnCore(
   tradeId: bigint | number
 ): Promise<{ txHash: string }> {
   const tx = await core.cancelTrade(tradeId);
+  const receipt = await tx.wait();
+  return { txHash: receipt.hash };
+}
+
+const EXECUTE_TRADES_GAS_FLOOR = 800_000n;
+
+/** Stream/settle open trades for a Core pair queue (same as local-monitor). */
+export async function executeTradesOnCore(
+  core: Contract,
+  pairId: string
+): Promise<{ txHash: string }> {
+  const runner = core.runner;
+  if (!runner || !('provider' in runner) || !('sendTransaction' in runner)) {
+    throw new Error('executeTradesOnCore requires a signer-connected Core contract');
+  }
+  const signer = runner as Signer;
+  const feeData = await signer.provider!.getFeeData();
+
+  let gasLimitEst: bigint;
+  try {
+    gasLimitEst = BigInt((await core.executeTrades.estimateGas(pairId)).toString());
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`executeTrades estimateGas failed: ${reason}`);
+  }
+
+  let gasLimit = gasLimitEst + gasLimitEst / 2n;
+  if (gasLimit < EXECUTE_TRADES_GAS_FLOOR) {
+    gasLimit = EXECUTE_TRADES_GAS_FLOOR;
+  }
+
+  const maxFeePerGas =
+    feeData.maxFeePerGas ?? feeData.gasPrice ?? 50_000_000_000n;
+  const maxPriorityFeePerGas =
+    feeData.maxPriorityFeePerGas ?? maxFeePerGas / 2n;
+
+  const tx = await core.executeTrades(pairId, {
+    gasLimit,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+  });
   const receipt = await tx.wait();
   return { txHash: receipt.hash };
 }

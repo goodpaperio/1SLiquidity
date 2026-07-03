@@ -75,19 +75,23 @@ liquidity_bot_require_key
 cd "$REPO_ROOT"
 
 if [[ "$NO_COMMIT" -eq 0 ]]; then
-  if [[ -n "$(git status --porcelain)" ]]; then
-    echo "==> Staging changes (excluding .env and .pem files)"
-    git add -A
-    while IFS= read -r secret; do
-      [[ -n "$secret" ]] && git reset HEAD -- "$secret" 2>/dev/null || true
-    done < <(git diff --cached --name-only | grep -E '(^|/)\.env$|\.pem$|protocol-fresh-mainnet\.env$' || true)
-
-    if [[ -n "$(git diff --cached --name-only)" ]]; then
-      echo "==> Committing: $COMMIT_MSG"
-      git commit -m "$COMMIT_MSG"
-    else
-      echo "==> No committable changes after excluding secrets"
+  STAGE_PATHS=(liquidity-bot scripts/redeploy-liquidity-bot.sh scripts/lib/liquidity-bot-remote.sh)
+  STAGED_ANY=0
+  for path in "${STAGE_PATHS[@]}"; do
+    if [[ -e "$REPO_ROOT/$path" ]] || [[ -n "$(git -C "$REPO_ROOT" status --porcelain -- "$path" 2>/dev/null)" ]]; then
+      git add -- "$path"
+      STAGED_ANY=1
     fi
+  done
+
+  if [[ "$STAGED_ANY" -eq 1 && -n "$(git diff --cached --name-only)" ]]; then
+    echo "==> Staging liquidity-bot deploy paths only:"
+    git diff --cached --name-only | sed 's/^/    /'
+    echo "==> Committing: $COMMIT_MSG"
+    git commit -m "$COMMIT_MSG"
+  elif [[ -n "$(git status --porcelain)" ]]; then
+    echo "==> No liquidity-bot changes to commit (other local edits left unstaged)"
+    echo "    Tip: commit those separately, or use npm run redeploy -- --no-commit after committing"
   else
     echo "==> Working tree clean — skipping commit"
   fi

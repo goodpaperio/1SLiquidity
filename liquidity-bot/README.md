@@ -208,7 +208,7 @@ npm run redeploy -- "fix: liquify before gas refuel"
 npm run redeploy -- --no-commit   # push existing commits only
 ```
 
-This stages repo changes (skips `.env` / `.pem`), commits, pushes the current branch, then SSHs to EC2 for `git pull`, `npm ci`, `npm run build`, and PM2 restart.
+This stages **only** `liquidity-bot/` and related deploy scripts (not the whole monorepo), commits, pushes the current branch, then SSHs to EC2 for `git pull`, `npm ci`, `npm run build`, and PM2 restart. `.env` files stay gitignored and are never committed.
 
 ### Initial deploy (git pull + build + PM2)
 
@@ -258,7 +258,7 @@ The bot is designed to probe DecaStream pair quality safely. Key guards:
 |-------|--------|-----------|
 | **Dry run** | `DRY_RUN=1` in `.env` | Full scan cycle, no on-chain txs |
 | **Max open trades** | `trade.maxOpenTrades` | Skip new cycles while Core has ≥ N open trades for this wallet |
-| **Stuck trade auto-cancel** | `trade.stuckCancelAfterCycles` (default `3`) | Each scan cycle (~15 min) increments a counter in `bots/<id>.stuck-trade.json`. After **3 consecutive cycles** with the same open trade (~45 min), bot calls `cancelTrade`, updates ledger, logs token issue. Set `0` to disable. |
+| **Stuck trade auto-cancel** | `trade.stuckCancelAfterCycles` (default `3`) | Each scan cycle (~15 min) increments a counter in `bots/<id>.stuck-trade.json`. At **cycle 2** the bot tries one `executeTrades(pairId)` settlement backstop. After **3 consecutive cycles** (~45 min) with the same open trade, it calls `cancelTrade`, updates ledger, logs token issue. Set `0` to disable. |
 | **Manual cancel** | CLI | `npm run cancel:trade -- --bot <id> --list` / `--trade-id <n>` |
 
 ### Token / pair quality
