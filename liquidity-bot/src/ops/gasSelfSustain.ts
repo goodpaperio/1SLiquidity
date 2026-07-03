@@ -19,6 +19,7 @@ import {
 } from '../chain/contracts.js';
 import { feeTierFromDexId } from '../scan/DexQuoteService.js';
 import type { StreamDexId } from '../scan/types.js';
+import { runLiquifySweep } from './liquifySweep.js';
 
 const WETH = BASE_TOKEN_ADDRESSES.WETH;
 const GAS_SWAP_BUFFER_BPS = 10_200n;
@@ -31,6 +32,8 @@ export interface GasSelfSustainResult {
   ethAfter: bigint;
   message: string;
   needsOperator: boolean;
+  /** True when a gas-triggered liquify sweep ran (not the daily scheduler). */
+  liquifiedForGas?: boolean;
 }
 
 export async function runGasSelfSustain(
@@ -56,8 +59,24 @@ export async function runGasSelfSustain(
     };
   }
 
-  const weth = new Contract(WETH, [...WETH_WITHDRAW_ABI, 'function balanceOf(address) view returns (uint256)'], provider);
-  const wethBal = BigInt((await weth.balanceOf(owner)).toString());
+  const weth = new Contract(
+    WETH,
+    [...WETH_WITHDRAW_ABI, 'function balanceOf(address) view returns (uint256)'],
+    provider
+  );
+  let wethBal = BigInt((await weth.balanceOf(owner)).toString());
+  let liquifiedForGas = false;
+  let liquifyNote: string | undefined;
+
+  if (wethBal < decision.topUpWei) {
+    const liquify = await maybeLiquifyForGasRefuel(bot, provider, signer);
+    liquifyNote = liquify.message;
+    if (liquify.ran) {
+      liquifiedForGas = true;
+      wethBal = BigInt((await weth.balanceOf(owner)).toString());
+    }
+  }
+
   const directTopUp = decision.topUpWei > wethBal ? wethBal : decision.topUpWei;
 
   if (directTopUp > 0n) {
@@ -67,8 +86,12 @@ export async function runGasSelfSustain(
         unwrappedWei: directTopUp,
         ethBefore,
         ethAfter: ethBefore + directTopUp,
-        message: `DRY_RUN would unwrap ${formatEther(directTopUp)} WETH → ETH`,
+        message: formatGasRefuelMessage(
+          `DRY_RUN would unwrap ${formatEther(directTopUp)} WETH → ETH`,
+          liquifyNote
+        ),
         needsOperator: false,
+        liquifiedForGas,
       };
     }
 
@@ -82,8 +105,12 @@ export async function runGasSelfSustain(
       unwrappedWei: directTopUp,
       ethBefore,
       ethAfter,
-      message: `Unwrapped ${formatEther(directTopUp)} WETH → ETH for gas.`,
+      message: formatGasRefuelMessage(
+        `Unwrapped ${formatEther(directTopUp)} WETH → ETH for gas.`,
+        liquifyNote
+      ),
       needsOperator: ethAfter < minEth,
+      liquifiedForGas,
     };
   }
 
@@ -94,8 +121,12 @@ export async function runGasSelfSustain(
       unwrappedWei: 0n,
       ethBefore,
       ethAfter: ethBefore,
-      message: 'Native ETH low and no refuellable WETH/base token balance.',
+      message: formatGasRefuelMessage(
+        'Native ETH low and no refuellable WETH/base token balance.',
+        liquifyNote
+      ),
       needsOperator: true,
+      liquifiedForGas,
     };
   }
 
@@ -105,10 +136,13 @@ export async function runGasSelfSustain(
       unwrappedWei: fallback.estimatedWethOut,
       ethBefore,
       ethAfter: ethBefore + fallback.estimatedWethOut,
-      message:
+      message: formatGasRefuelMessage(
         `DRY_RUN would swap ${fallback.symbol} → WETH on ${fallback.dex} ` +
-        `and unwrap ≈ ${formatEther(fallback.estimatedWethOut)} ETH for gas`,
+          `and unwrap ≈ ${formatEther(fallback.estimatedWethOut)} ETH for gas`,
+        liquifyNote
+      ),
       needsOperator: false,
+      liquifiedForGas,
     };
   }
 
@@ -129,8 +163,12 @@ export async function runGasSelfSustain(
       unwrappedWei: 0n,
       ethBefore,
       ethAfter: ethBefore,
-      message: `Gas refuel swap from ${fallback.symbol} completed but produced no unwrapable WETH.`,
+      message: formatGasRefuelMessage(
+        `Gas refuel swap from ${fallback.symbol} completed but produced no unwrapable WETH.`,
+        liquifyNote
+      ),
       needsOperator: true,
+      liquifiedForGas,
     };
   }
 
@@ -145,11 +183,46 @@ export async function runGasSelfSustain(
     unwrappedWei,
     ethBefore,
     ethAfter,
-    message:
+    message: formatGasRefuelMessage(
       `Swapped ${fallback.symbol} → WETH on ${fallback.dex} and unwrapped ` +
-      `${formatEther(unwrappedWei)} ETH for gas.`,
+        `${formatEther(unwrappedWei)} ETH for gas.`,
+      liquifyNote
+    ),
     needsOperator: ethAfter < minEth,
+    liquifiedForGas,
   };
+}
+
+function formatGasRefuelMessage(main: string, liquifyNote?: string): string {
+  if (!liquifyNote) return main;
+  return `${liquifyNote}\n${main}`;
+}
+
+/**
+ * When native ETH is low and WETH alone cannot top up, sweep allowlisted dust
+ * alts → WETH via Liquifier before unwrap / base-token gas refuel.
+ */
+async function maybeLiquifyForGasRefuel(
+  bot: BotConfig,
+  provider: Provider,
+  signer: Signer
+): Promise<{ ran: boolean; message?: string }> {
+  if (!bot.liquify?.enabled) {
+    return { ran: false };
+  }
+
+  try {
+    const sweep = await runLiquifySweep(bot, provider, signer);
+    const ran = sweep.tokensAttempted > 0 && !sweep.dryRun;
+    if (sweep.tokensAttempted === 0) {
+      return { ran: false };
+    }
+    return { ran, message: sweep.message };
+  } catch (err) {
+    const short = err instanceof Error ? err.message : String(err);
+    console.warn(`[${bot.id}] gas-refuel liquify failed:`, short);
+    return { ran: false, message: `Liquify for gas failed: ${short}` };
+  }
 }
 
 interface RefuelFallbackPlan {
@@ -270,7 +343,7 @@ export async function maybeAlertLowEth(
     (ethUsd > 0 ? ` (~$${(Number(formatEther(eth)) * ethUsd).toFixed(2)})` : '') +
     `\nmin: ${formatEther(minEth)} ETH` +
     (ethUsd > 0 ? ` (~$${minUsd})` : '') +
-    `\n/auto refuel failed or insufficient WETH/base token balance — fund wallet or /liquify`;
+    `\n/auto refuel (liquify + unwrap) failed or insufficient balance — fund wallet or /liquify`;
 
   await sendTelegram(prefixBotMessage(bot.id, body));
   return new Date().toISOString();

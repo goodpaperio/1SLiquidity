@@ -18,11 +18,10 @@ import {
 import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { Cancellation, TradeStatus } from '@/app/lib/graphql/types/trade'
 import {
-  amountUsd,
   findTokenForTrade,
   formatTradeAmountForDisplay,
   getDisplayOutputAmountWei,
-  resolveTradeTokenDecimals,
+  getTradeUsdBreakdown,
   resolveTradeTokenSymbol,
 } from '@/app/lib/utils/tradeDisplay'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
@@ -91,13 +90,11 @@ const SwapStream: React.FC<Props> = ({
   const totalStreams = calculateTotalStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
-  const tokenIn = findTokenForTrade(trade.tokenIn, tokens)
-  const tokenOut = findTokenForTrade(trade.tokenOut, tokens)
+  const tokenIn = findTokenForTrade(trade.tokenIn, tokens, undefined, tokens)
+  const tokenOut = findTokenForTrade(trade.tokenOut, tokens, undefined, tokens)
 
   const amountInWei = BigInt(trade.amountIn || '0')
   const outputWei = getDisplayOutputAmountWei(trade)
-  const inDecimals = resolveTradeTokenDecimals(tokenIn, trade.tokenIn)
-  const outDecimals = resolveTradeTokenDecimals(tokenOut, trade.tokenOut)
   const inSymbol = resolveTradeTokenSymbol(tokenIn, trade.tokenIn)
   const outSymbol = resolveTradeTokenSymbol(tokenOut, trade.tokenOut)
 
@@ -112,16 +109,8 @@ const SwapStream: React.FC<Props> = ({
     trade.tokenOut
   )
 
-  const inputUsdValue = amountUsd(
-    amountInWei,
-    inDecimals,
-    tokenIn?.usd_price ?? 0
-  )
-  const outputUsdValue = amountUsd(
-    outputWei,
-    outDecimals,
-    tokenOut?.usd_price ?? 0
-  )
+  const { inputUsd: inputUsdValue, outputUsd: outputUsdValue } =
+    getTradeUsdBreakdown(trade, tokens, tokens)
 
   const tradeStatus = getTradeStatus(trade)
   const outputSuffix =

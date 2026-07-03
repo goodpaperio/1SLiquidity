@@ -22,6 +22,32 @@ export type TradeDisplayInput = {
 
 export { WETH_ADDRESS }
 
+export const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+export const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7'
+export const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f'
+export const WBTC_ADDRESS = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
+
+/** Base tokens merged into custom lists so WETH/stables always have live prices. */
+export const REFERENCE_TOKEN_ADDRESSES = [
+  WETH_ADDRESS,
+  USDC_ADDRESS,
+  USDT_ADDRESS,
+  DAI_ADDRESS,
+  WBTC_ADDRESS,
+] as const
+
+const STABLE_ADDRESSES = new Set([USDC_ADDRESS, USDT_ADDRESS, DAI_ADDRESS])
+
+const NOTIONAL_AGREEMENT_THRESHOLD = 0.05
+
+export type TradeUsdBreakdown = {
+  inputUsd: number
+  outputUsd: number
+  notionalUsd: number
+}
+
+type ReferenceLeg = 'weth' | 'stable' | false
+
 /** LSTs / ETH derivatives — USD ≈ ETH when CoinGecko has no entry for the alt. */
 const ETH_PEGGED_SYMBOLS = new Set([
   'wsteth',
@@ -47,23 +73,102 @@ function fallbackEthUsd(): number {
   return 3500
 }
 
-function ethUsdFromList(tokenList: TOKENS_TYPE[]): number {
+/** Merge bot-universe tokens with the full CoinGecko feed for price resolution. */
+export function mergePricingLists(
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
+): TOKENS_TYPE[] {
+  if (!priceFeed?.length) return tokenList
+
+  const byAddress = new Map<string, TOKENS_TYPE>()
   for (const t of tokenList) {
-    if (t.usd_price <= 0) continue
-    const sym = t.symbol?.toLowerCase()
-    const addr = t.token_address?.toLowerCase()
-    if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
-      return t.usd_price
+    byAddress.set(t.token_address.toLowerCase(), t)
+  }
+  for (const t of priceFeed) {
+    const key = t.token_address.toLowerCase()
+    if (!byAddress.has(key)) {
+      byAddress.set(key, t)
     }
   }
-  for (const t of tokenList) {
-    if (t.usd_price <= 0) continue
-    const sym = t.symbol?.toLowerCase()
-    if (sym && ETH_PEGGED_SYMBOLS.has(sym)) {
-      return t.usd_price
+  return Array.from(byAddress.values())
+}
+
+function referenceLeg(address: string): ReferenceLeg {
+  const lower = address.toLowerCase()
+  if (lower === WETH_ADDRESS) return 'weth'
+  if (STABLE_ADDRESSES.has(lower)) return 'stable'
+
+  const known = getKnownTradeToken(lower)
+  if (known) {
+    const sym = known.symbol.toLowerCase()
+    if (sym === 'weth' || sym === 'eth') return 'weth'
+    if (sym === 'usdc' || sym === 'usdt' || sym === 'dai') return 'stable'
+  }
+  return false
+}
+
+/** Live ETH/USD — prefers the full price feed over a partial custom token list. */
+export function getEthUsdPrice(
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
+): number {
+  const lists = priceFeed?.length ? [priceFeed, tokenList] : [tokenList]
+
+  for (const list of lists) {
+    for (const t of list) {
+      if (t.usd_price <= 0) continue
+      const sym = t.symbol?.toLowerCase()
+      const addr = t.token_address?.toLowerCase()
+      if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
+        return t.usd_price
+      }
     }
   }
+
+  for (const list of lists) {
+    for (const t of list) {
+      if (t.usd_price <= 0) continue
+      const sym = t.symbol?.toLowerCase()
+      if (sym && ETH_PEGGED_SYMBOLS.has(sym)) {
+        return t.usd_price
+      }
+    }
+  }
+
   return fallbackEthUsd()
+}
+
+/** Single notional for volume/stats — avoids max(input, output) inflation. */
+export function resolveCanonicalNotionalUsd(
+  inputUsd: number,
+  outputUsd: number,
+  tokenIn: string,
+  tokenOut: string
+): number {
+  if (inputUsd <= 0 && outputUsd <= 0) return 0
+  if (inputUsd <= 0) return outputUsd
+  if (outputUsd <= 0) return inputUsd
+
+  const inRef = referenceLeg(tokenIn)
+  const outRef = referenceLeg(tokenOut)
+
+  if (outRef && !inRef) return outputUsd
+  if (inRef && !outRef) return inputUsd
+
+  const max = Math.max(inputUsd, outputUsd)
+  const min = Math.min(inputUsd, outputUsd)
+  if (max > 0 && (max - min) / max <= NOTIONAL_AGREEMENT_THRESHOLD) {
+    return (inputUsd + outputUsd) / 2
+  }
+
+  if (outRef === 'weth' || inRef === 'weth') {
+    return outRef === 'weth' ? outputUsd : inputUsd
+  }
+  if (outRef === 'stable' || inRef === 'stable') {
+    return outRef === 'stable' ? outputUsd : inputUsd
+  }
+
+  return Math.min(inputUsd, outputUsd)
 }
 
 function syntheticToken(
@@ -95,16 +200,18 @@ function syntheticToken(
 /** Resolve USD price with WETH/ETH and same-symbol fallbacks when list entry has price 0. */
 export function resolveTokenUsdPrice(
   token: TOKENS_TYPE | null | undefined,
-  tokenList: TOKENS_TYPE[]
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
 ): number {
   if (!token) return 0
   if (token.usd_price > 0) return token.usd_price
 
+  const pricingList = mergePricingLists(tokenList, priceFeed)
   const addr = token.token_address?.toLowerCase()
   const sym = token.symbol?.toLowerCase()
 
   if (addr === WETH_ADDRESS) {
-    const priced = tokenList.find(
+    const priced = pricingList.find(
       (t) =>
         t.token_address?.toLowerCase() === WETH_ADDRESS && t.usd_price > 0
     )
@@ -112,13 +219,13 @@ export function resolveTokenUsdPrice(
   }
 
   if (sym) {
-    const bySymbol = tokenList.find(
+    const bySymbol = pricingList.find(
       (t) => t.symbol?.toLowerCase() === sym && t.usd_price > 0
     )
     if (bySymbol) return bySymbol.usd_price
   }
 
-  const ethUsd = ethUsdFromList(tokenList)
+  const ethUsd = getEthUsdPrice(pricingList, priceFeed)
   if (ethUsd > 0) {
     if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
       return ethUsd
@@ -167,10 +274,12 @@ export function formatTradeAmountForDisplay(
 export function findTokenForTrade(
   address: string,
   tokenList: TOKENS_TYPE[],
-  selectedToken?: TOKENS_TYPE | null
+  selectedToken?: TOKENS_TYPE | null,
+  priceFeed?: TOKENS_TYPE[]
 ): TOKENS_TYPE | undefined {
   if (!address) return undefined
 
+  const pricingList = mergePricingLists(tokenList, priceFeed)
   const lower = address.toLowerCase()
   let match: TOKENS_TYPE | undefined
 
@@ -183,15 +292,15 @@ export function findTokenForTrade(
       match = selectedToken
     } else {
       match =
-        tokenList.find(
+        pricingList.find(
           (t) =>
             t.token_address?.toLowerCase() === lower &&
             t.symbol.toLowerCase() === 'weth'
         ) ||
-        tokenList.find((t) => t.token_address?.toLowerCase() === lower)
+        pricingList.find((t) => t.token_address?.toLowerCase() === lower)
     }
   } else {
-    match = tokenList.find((t) => t.token_address?.toLowerCase() === lower)
+    match = pricingList.find((t) => t.token_address?.toLowerCase() === lower)
   }
 
   if (!match) {
@@ -215,7 +324,7 @@ export function findTokenForTrade(
 
   return {
     ...merged,
-    usd_price: resolveTokenUsdPrice(merged, tokenList),
+    usd_price: resolveTokenUsdPrice(merged, pricingList, priceFeed),
   }
 }
 
@@ -277,35 +386,37 @@ export function amountUsd(
   return human * usdPrice
 }
 
-/** USD value of trade input (amountIn) for dashboard volume. */
-export function tradeInputVolumeUsd(
-  trade: { tokenIn: string; amountIn: string },
-  tokenList: TOKENS_TYPE[]
-): number {
-  const tokenIn = findTokenForTrade(trade.tokenIn, tokenList)
-  if (!tokenIn) return 0
-  return amountUsd(
-    BigInt(trade.amountIn || '0'),
-    resolveTradeTokenDecimals(tokenIn, trade.tokenIn),
-    tokenIn.usd_price
-  )
-}
-
-/**
- * USD notional for dashboard volume — prefers input side, falls back to realised
- * output when input has no price (common for WETH in when only alt prices load).
- */
-export function tradeNotionalVolumeUsd(
+/** Input, output, and canonical notional USD from one shared price snapshot. */
+export function getTradeUsdBreakdown(
   trade: TradeDisplayInput & {
     tokenIn: string
     tokenOut: string
     amountIn: string
   },
-  tokenList: TOKENS_TYPE[]
-): number {
-  const inputUsd = tradeInputVolumeUsd(trade, tokenList)
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
+): TradeUsdBreakdown {
+  const tokenIn = findTokenForTrade(
+    trade.tokenIn,
+    tokenList,
+    undefined,
+    priceFeed
+  )
+  const tokenOut = findTokenForTrade(
+    trade.tokenOut,
+    tokenList,
+    undefined,
+    priceFeed
+  )
 
-  const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+  const inputUsd = tokenIn
+    ? amountUsd(
+        BigInt(trade.amountIn || '0'),
+        resolveTradeTokenDecimals(tokenIn, trade.tokenIn),
+        tokenIn.usd_price
+      )
+    : 0
+
   const outputUsd = tokenOut
     ? amountUsd(
         getDisplayOutputAmountWei(trade),
@@ -314,19 +425,58 @@ export function tradeNotionalVolumeUsd(
       )
     : 0
 
-  return Math.max(inputUsd, outputUsd)
+  const notionalUsd = resolveCanonicalNotionalUsd(
+    inputUsd,
+    outputUsd,
+    trade.tokenIn,
+    trade.tokenOut
+  )
+
+  return { inputUsd, outputUsd, notionalUsd }
 }
 
-/** The USD notional users expect from trade cards: higher of input/output side. */
+/** USD value of trade input (amountIn) for dashboard volume. */
+export function tradeInputVolumeUsd(
+  trade: { tokenIn: string; amountIn: string },
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
+): number {
+  return getTradeUsdBreakdown(
+    {
+      ...trade,
+      tokenOut: '',
+      minAmountOut: '0',
+      realisedAmountOut: '0',
+    },
+    tokenList,
+    priceFeed
+  ).inputUsd
+}
+
+/** USD notional for dashboard volume — single canonical value per trade. */
+export function tradeNotionalVolumeUsd(
+  trade: TradeDisplayInput & {
+    tokenIn: string
+    tokenOut: string
+    amountIn: string
+  },
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
+): number {
+  return getTradeUsdBreakdown(trade, tokenList, priceFeed).notionalUsd
+}
+
+/** The USD notional users expect from trade cards. */
 export function tradeDisplayNotionalUsd(
   trade: TradeDisplayInput & {
     tokenIn: string
     tokenOut: string
     amountIn: string
   },
-  tokenList: TOKENS_TYPE[]
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
 ): number {
-  return tradeNotionalVolumeUsd(trade, tokenList)
+  return tradeNotionalVolumeUsd(trade, tokenList, priceFeed)
 }
 
 /** USD instasettle savings on remaining output for dashboard earnings. */
@@ -337,9 +487,15 @@ export function tradeInstasettleSavingsUsd(
     realisedAmountOut: string
     instasettleBps: string | number
   },
-  tokenList: TOKENS_TYPE[]
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[]
 ): number {
-  const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+  const tokenOut = findTokenForTrade(
+    trade.tokenOut,
+    tokenList,
+    undefined,
+    priceFeed
+  )
   if (!tokenOut) return 0
 
   const remainingAmountOut =

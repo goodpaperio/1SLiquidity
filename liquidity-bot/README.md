@@ -198,6 +198,18 @@ Repo-root helpers (override host/key/id with args or env):
 | `LIQUIDITY_BOT_SSH_KEY` | `~/.ssh/liquidity-bot-alpha.pem` | Your `.pem` path |
 | `LIQUIDITY_BOT_ID` | `alpha` | Your bot id |
 
+### Sync local changes → EC2 (commit, push, redeploy)
+
+From `liquidity-bot/`:
+
+```bash
+npm run redeploy
+npm run redeploy -- "fix: liquify before gas refuel"
+npm run redeploy -- --no-commit   # push existing commits only
+```
+
+This stages repo changes (skips `.env` / `.pem`), commits, pushes the current branch, then SSHs to EC2 for `git pull`, `npm ci`, `npm run build`, and PM2 restart.
+
 ### Initial deploy (git pull + build + PM2)
 
 ```bash
@@ -338,7 +350,7 @@ Manual sweep without SSH: `npm run liquify:sweep -- --bot=<id>`
 Configured under `liquify` in `bots/<id>.json`:
 
 - **Daily 11:00 UTC** — sweep dust tokens (pair list + trade history allowlist only) → WETH via [LiquifierV1](https://etherscan.io/address/0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95) (0.5% fee). Catch-up on next cycle if the bot was down at 11:00.
-- **Each cycle** — if native ETH &lt; `gas.minEthWei`, first auto `WETH.withdraw()` up to `gas.targetEthWei`; if there is no usable WETH, the bot falls back to swapping the first funded configured base token (for example `USDT`) → `WETH` on `gas.refuelDex`, then unwraps to ETH.
+- **Each cycle** — if native ETH &lt; `gas.minEthWei` and WETH is insufficient: run **liquify** on allowlisted dust alts → WETH (when `liquify.enabled`), then auto `WETH.withdraw()` up to `gas.targetEthWei`; if still short, swap the first funded configured base token (e.g. `USDT`) → `WETH` on `gas.refuelDex`, then unwrap to ETH.
 - **Low ETH alert** — Telegram ping if still low after the unwrap/swap refuel attempt (max once per 6h).
 
 Spot prices: `data/price-cache.json` (CoinGecko, refreshed daily).

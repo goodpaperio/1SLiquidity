@@ -163,7 +163,7 @@ export async function runBotMaintenance(
   const wallet = options.signer ?? createBotWallet(bot, provider);
 
   const gas = await runGasSelfSustain(bot, provider, wallet);
-  if (gas.unwrappedWei > 0n && !gas.dryRun) {
+  if (!gas.dryRun && (gas.unwrappedWei > 0n || gas.liquifiedForGas)) {
     await sendTelegram(
       prefixBotMessage(
         bot.id,

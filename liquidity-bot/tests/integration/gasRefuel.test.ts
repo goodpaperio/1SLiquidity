@@ -8,6 +8,11 @@ const mockWithdraw = vi.fn();
 const mockWithdrawWait = vi.fn();
 const mockQuoteExactInputSingle = vi.fn();
 const mockSwapExactOnCandidateDex = vi.fn();
+const mockRunLiquifySweep = vi.fn();
+
+vi.mock('../../src/ops/liquifySweep.js', () => ({
+  runLiquifySweep: (...args: unknown[]) => mockRunLiquifySweep(...args),
+}));
 
 vi.mock('../../src/execution/directSwap.js', () => ({
   swapExactOnCandidateDex: (...args: unknown[]) => mockSwapExactOnCandidateDex(...args),
@@ -52,6 +57,14 @@ describe('integration — gas refuel decision', () => {
     mockWithdrawWait.mockResolvedValue({ hash: '0xunwrap' });
     mockSwapExactOnCandidateDex.mockResolvedValue({ txHash: '0xswap' });
     mockSignerGetAddress.mockResolvedValue('0x1111111111111111111111111111111111111111');
+    mockRunLiquifySweep.mockResolvedValue({
+      dryRun: false,
+      tokensAttempted: 0,
+      batches: 0,
+      txHashes: [],
+      skipped: [],
+      message: 'No allowlisted dust tokens with balance.',
+    });
   });
 
   it('requests top-up when current ETH is below minimum', () => {
@@ -90,6 +103,7 @@ describe('integration — gas refuel decision', () => {
       id: 'test-bot',
       address: '0x1111111111111111111111111111111111111111',
       baseTokens: ['USDT'],
+      liquify: { enabled: true },
       gas: {
         minEthWei: '1500000000000000',
         targetEthWei: '3000000000000000',
@@ -119,5 +133,53 @@ describe('integration — gas refuel decision', () => {
     expect(result.needsOperator).toBe(false);
     expect(result.unwrappedWei).toBe(2_500_000_000_000_000n);
     expect(result.message).toContain('Swapped USDT');
+  });
+
+  it('liquifies dust alts to WETH then unwraps when WETH was insufficient', async () => {
+    const { runGasSelfSustain } = await import('../../src/ops/gasSelfSustain.js');
+
+    mockProviderGetBalance
+      .mockResolvedValueOnce(500_000_000_000_000n)
+      .mockResolvedValueOnce(3_000_000_000_000_000n);
+    mockBalanceOf
+      .mockResolvedValueOnce(0n)
+      .mockResolvedValueOnce(2_500_000_000_000_000n);
+    mockRunLiquifySweep.mockResolvedValueOnce({
+      dryRun: false,
+      tokensAttempted: 2,
+      batches: 1,
+      txHashes: ['0xliquify'],
+      skipped: [],
+      message: 'Liquified 2 token(s) → WETH.',
+    });
+
+    const bot = {
+      id: 'test-bot',
+      address: '0x1111111111111111111111111111111111111111',
+      baseTokens: ['WETH'],
+      liquify: { enabled: true },
+      gas: {
+        minEthWei: '1500000000000000',
+        targetEthWei: '3000000000000000',
+        refuelDex: 'uniswap-v3-3000',
+      },
+    } as unknown as import('../../src/config/schema.js').BotConfig;
+
+    const provider = {
+      getBalance: (...args: unknown[]) => mockProviderGetBalance(...args),
+    } as unknown as import('ethers').Provider;
+    const signer = {
+      getAddress: (...args: unknown[]) => mockSignerGetAddress(...args),
+    } as unknown as import('ethers').Signer;
+
+    const result = await runGasSelfSustain(bot, provider, signer);
+
+    expect(mockRunLiquifySweep).toHaveBeenCalledOnce();
+    expect(mockSwapExactOnCandidateDex).not.toHaveBeenCalled();
+    expect(mockWithdraw).toHaveBeenCalledWith(2_500_000_000_000_000n);
+    expect(result.liquifiedForGas).toBe(true);
+    expect(result.message).toContain('Liquified 2 token(s)');
+    expect(result.message).toContain('Unwrapped');
+    expect(result.needsOperator).toBe(false);
   });
 });

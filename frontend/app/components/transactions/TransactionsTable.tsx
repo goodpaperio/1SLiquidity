@@ -23,12 +23,11 @@ import InstasettlePill from '@/app/components/shared/InstasettlePill'
 import { cn } from '@/lib/utils'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 import {
-  amountUsd,
   findTokenForTrade,
   formatTradeAmountForDisplay,
   getDisplayOutputAmountWei,
-  resolveTradeTokenDecimals,
   getOutputAmountLabel,
+  getTradeUsdBreakdown,
 } from '@/app/lib/utils/tradeDisplay'
 
 type SortField = 'volume' | 'timestamp' | 'status' | null
@@ -68,7 +67,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const { trades, isLoading, error } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, isLoading: isLoadingTokens } = useCustomTokenList()
+  const { tokens: tokenList, priceFeed, isLoading: isLoadingTokens } =
+    useCustomTokenList()
 
   // Filter and sort trades
   const displayData = useMemo(() => {
@@ -101,13 +101,21 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
     // Add calculated fields
     const processedTrades = filteredTrades.map((trade) => {
-      const tokenIn = findTokenForTrade(trade.tokenIn, tokenList)
-      const tokenOut = findTokenForTrade(trade.tokenOut, tokenList)
+      const tokenIn = findTokenForTrade(
+        trade.tokenIn,
+        tokenList,
+        undefined,
+        priceFeed
+      )
+      const tokenOut = findTokenForTrade(
+        trade.tokenOut,
+        tokenList,
+        undefined,
+        priceFeed
+      )
 
       const amountInWei = BigInt(trade.amountIn || '0')
       const outputWei = getDisplayOutputAmountWei(trade)
-      const inDecimals = resolveTradeTokenDecimals(tokenIn, trade.tokenIn)
-      const outDecimals = resolveTradeTokenDecimals(tokenOut, trade.tokenOut)
 
       const formattedAmountIn = formatTradeAmountForDisplay(
         amountInWei,
@@ -120,15 +128,10 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         trade.tokenOut
       )
 
-      const volumeUsd = amountUsd(
-        amountInWei,
-        inDecimals,
-        tokenIn?.usd_price ?? 0
-      )
-      const outputUsd = amountUsd(
-        outputWei,
-        outDecimals,
-        tokenOut?.usd_price ?? 0
+      const { inputUsd, outputUsd, notionalUsd } = getTradeUsdBreakdown(
+        trade,
+        tokenList,
+        priceFeed
       )
       const outputLabel = getOutputAmountLabel(trade)
 
@@ -138,7 +141,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         tokenOutDetails: tokenOut,
         formattedAmountIn,
         formattedAmountOut,
-        volumeUsd,
+        volumeUsd: notionalUsd,
+        inputUsd,
         outputUsd,
         outputLabel,
         status: getTradeStatus(trade),
@@ -182,6 +186,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     walletId,
     sortField,
     sortDirection,
+    priceFeed,
   ])
 
   const handleSort = (field: SortField) => {

@@ -249,7 +249,8 @@ Main maintenance entrypoints:
 Maintenance does two main things:
 
 1. low-ETH mitigation
-   - if native ETH is below `gas.minEthWei`, the bot first tries to unwrap WETH up to `gas.targetEthWei`
+   - if native ETH is below `gas.minEthWei` and WETH is insufficient for the top-up, run **liquify** on allowlisted dust alts → WETH (when `liquify.enabled`)
+   - then unwrap WETH up to `gas.targetEthWei`
    - if there is not enough WETH, it falls back to swapping the first funded configured base token (for example `USDT`) → `WETH` on `gas.refuelDex`, then unwraps to ETH
    - if it still cannot self-fund, it sends a Telegram warning
 

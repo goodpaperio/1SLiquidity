@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTokenList } from './useTokenList'
 import { TOKENS_TYPE } from './useWalletTokens'
 import tokensListData from '@/app/lib/utils/tokens-list-04-09-2025.json'
+import { REFERENCE_TOKEN_ADDRESSES } from '@/app/lib/utils/tradeDisplay'
 
 // Interface for test result token
 interface TestResultToken {
@@ -21,7 +22,7 @@ const extractSuccessfulTokens = (): TestResultToken[] => {
   // Loop through all test result objects
   tokensListData.testResults.forEach((testResult) => {
     testResult.results.forEach((token) => {
-      // Only include successful tokens
+      // Only include tokens where success is true
       if (token.success) {
         const normalizedAddress = token.tokenAddress.toLowerCase()
 
@@ -37,11 +38,6 @@ const extractSuccessfulTokens = (): TestResultToken[] => {
   return allTokens
 }
 
-// Get default token icon based on symbol
-const getDefaultTokenIcon = (symbol: string): string => {
-  return `/tokens/${symbol.toLowerCase()}.svg`
-}
-
 // Check if a token should be marked as popular
 const isPopularToken = (symbol: string): boolean => {
   const popularTokens = ['ETH', 'WETH', 'WBTC', 'USDT', 'USDC']
@@ -49,7 +45,6 @@ const isPopularToken = (symbol: string): boolean => {
 }
 
 export const useCustomTokenList = () => {
-  // Get tokens from CoinGecko via useTokenList
   const {
     tokens: coingeckoTokens,
     isLoading,
@@ -59,21 +54,17 @@ export const useCustomTokenList = () => {
     platform,
   } = useTokenList()
 
-  // Extract successful tokens from test results
   const customTokens = useMemo(() => {
     const testTokens = extractSuccessfulTokens()
     const customTokenList: TOKENS_TYPE[] = []
 
     testTokens.forEach((testToken) => {
-      // Try to find matching token in CoinGecko data
       const matchingCoinGeckoToken = coingeckoTokens.find(
         (cgToken) =>
           cgToken.token_address.toLowerCase() ===
-            testToken.tokenAddress.toLowerCase() ||
-          cgToken.symbol.toLowerCase() === testToken.tokenSymbol.toLowerCase()
+          testToken.tokenAddress.toLowerCase()
       )
 
-      // Create the token object with CoinGecko data if available, otherwise use defaults
       const customToken: TOKENS_TYPE = {
         name: matchingCoinGeckoToken?.name || testToken.tokenName.toUpperCase(),
         symbol: testToken.tokenSymbol,
@@ -95,8 +86,18 @@ export const useCustomTokenList = () => {
       customTokenList.push(customToken)
     })
 
-    // Sort by market cap rank (popular tokens first)
-    return customTokenList.sort((a, b) => {
+    const customAddresses = new Set(
+      customTokenList.map((t) => t.token_address.toLowerCase())
+    )
+    const referenceTokens = REFERENCE_TOKEN_ADDRESSES.map((addr) => {
+      const lower = addr.toLowerCase()
+      if (customAddresses.has(lower)) return null
+      return coingeckoTokens.find(
+        (t) => t.token_address.toLowerCase() === lower && t.usd_price > 0
+      )
+    }).filter(Boolean) as TOKENS_TYPE[]
+
+    return [...referenceTokens, ...customTokenList].sort((a, b) => {
       if (a.popular && !b.popular) return -1
       if (!a.popular && b.popular) return 1
       return (a.market_cap_rank || 999999) - (b.market_cap_rank || 999999)
@@ -105,6 +106,8 @@ export const useCustomTokenList = () => {
 
   return {
     tokens: customTokens,
+    /** Full CoinGecko list — pass to trade USD helpers for WETH/stable pricing. */
+    priceFeed: coingeckoTokens,
     isLoading,
     error,
     refetch,
