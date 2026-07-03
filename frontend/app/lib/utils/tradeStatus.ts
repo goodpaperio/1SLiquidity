@@ -3,9 +3,9 @@ import type { Trade, TradeStatus } from '../graphql/types/trade'
 /** Prefer subgraph `status`; fall back to legacy heuristics for older data. */
 export type TradeStatusInput = {
   status?: Trade['status'] | string
-  cancellations?: Trade['cancellations']
-  instasettlements?: Trade['instasettlements']
-  executions?: Trade['executions']
+  cancellations?: { isAutocancelled?: boolean; timestamp?: string }[]
+  instasettlements?: { totalAmountOut?: string; timestamp?: string }[]
+  executions?: { lastSweetSpot?: string; timestamp?: string }[]
   lastSweetSpot?: string
 }
 

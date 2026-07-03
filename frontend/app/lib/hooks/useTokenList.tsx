@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { TOKENS_TYPE } from './useWalletTokens'
 import { useAppKitState } from '@reown/appkit/react'
 import tokensListData from '../utils/tokens-list-04-09-2025.json'
+import { applyLiveReferencePrices } from '../utils/referencePrices'
+import { useLiveReferencePrices } from './useLiveReferencePrices'
 
 // Update the CoinGeckoToken interface to better match our needs
 interface CoinGeckoToken {
@@ -1017,8 +1019,17 @@ export const useTokenList = () => {
     retry: false,
   })
 
+  const { prices: livePrices, ethUsd } = useLiveReferencePrices()
+
+  const tokensWithLivePrices = useMemo(() => {
+    if (!tokens.length || Object.keys(livePrices).length === 0) return tokens
+    return applyLiveReferencePrices(tokens, livePrices)
+  }, [tokens, livePrices])
+
   return {
-    tokens,
+    tokens: tokensWithLivePrices,
+    ethUsd,
+    livePrices,
     isLoading,
     error,
     refetch,

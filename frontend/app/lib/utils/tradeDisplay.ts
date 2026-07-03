@@ -6,6 +6,14 @@ import {
   KNOWN_TRADE_TOKENS,
   WETH_ADDRESS,
 } from '@/app/lib/utils/knownTradeTokens'
+import {
+  DAI_ADDRESS,
+  ETH_USD_OVERRIDE,
+  isReferenceTokenAddress,
+  resolveLiveEthUsd,
+  USDC_ADDRESS,
+  USDT_ADDRESS,
+} from '@/app/lib/utils/referencePrices'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
 /** Subset of trade fields used for display; loose enough for list/card trade shapes. */
@@ -14,27 +22,22 @@ export type TradeDisplayInput = {
   realisedAmountOut?: string
   lastSweetSpot?: string
   status?: Trade['status'] | string
-  instasettlements?: Trade['instasettlements']
-  completions?: { finalRealisedAmountOut: string }[]
-  cancellations?: Trade['cancellations']
-  executions?: Trade['executions']
+  instasettlements?: { totalAmountOut?: string; timestamp?: string }[]
+  completions?: { finalRealisedAmountOut?: string; timestamp?: string }[]
+  cancellations?: { isAutocancelled?: boolean; timestamp?: string }[]
+  executions?: { lastSweetSpot?: string; timestamp?: string }[]
+  createdAt?: string
 }
 
-export { WETH_ADDRESS }
-
-export const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
-export const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7'
-export const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f'
-export const WBTC_ADDRESS = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
-
-/** Base tokens merged into custom lists so WETH/stables always have live prices. */
-export const REFERENCE_TOKEN_ADDRESSES = [
-  WETH_ADDRESS,
+export { WETH_ADDRESS } from '@/app/lib/utils/knownTradeTokens'
+export {
+  DAI_ADDRESS,
+  ETH_USD_OVERRIDE,
+  REFERENCE_TOKEN_ADDRESSES,
   USDC_ADDRESS,
   USDT_ADDRESS,
-  DAI_ADDRESS,
   WBTC_ADDRESS,
-] as const
+} from '@/app/lib/utils/referencePrices'
 
 const STABLE_ADDRESSES = new Set([USDC_ADDRESS, USDT_ADDRESS, DAI_ADDRESS])
 
@@ -44,6 +47,9 @@ export type TradeUsdBreakdown = {
   inputUsd: number
   outputUsd: number
   notionalUsd: number
+  /** Use on trade cards — single USD for both legs when settled. */
+  displayInputUsd: number
+  displayOutputUsd: number
 }
 
 type ReferenceLeg = 'weth' | 'stable' | false
@@ -65,12 +71,19 @@ const ETH_PEGGED_SYMBOLS = new Set([
 ])
 
 function fallbackEthUsd(): number {
-  const env = process.env.NEXT_PUBLIC_ETH_USD
-  if (env) {
-    const n = Number(env)
-    if (Number.isFinite(n) && n > 0) return n
+  return resolveLiveEthUsd(0)
+}
+
+function usdPriceForToken(
+  address: string,
+  token: TOKENS_TYPE | undefined,
+  settlementPrices?: Record<string, number>
+): number {
+  const lower = address.toLowerCase()
+  if (settlementPrices?.[lower] && settlementPrices[lower] > 0) {
+    return settlementPrices[lower]
   }
-  return 3500
+  return token?.usd_price ?? 0
 }
 
 /** Merge bot-universe tokens with the full CoinGecko feed for price resolution. */
@@ -84,11 +97,9 @@ export function mergePricingLists(
   for (const t of tokenList) {
     byAddress.set(t.token_address.toLowerCase(), t)
   }
+  // Price feed wins on collision — reference tokens get live prices from useTokenList
   for (const t of priceFeed) {
-    const key = t.token_address.toLowerCase()
-    if (!byAddress.has(key)) {
-      byAddress.set(key, t)
-    }
+    byAddress.set(t.token_address.toLowerCase(), t)
   }
   return Array.from(byAddress.values())
 }
@@ -107,11 +118,14 @@ function referenceLeg(address: string): ReferenceLeg {
   return false
 }
 
-/** Live ETH/USD — prefers the full price feed over a partial custom token list. */
+/** Live ETH/USD — API price wins, then token list, then env override only. */
 export function getEthUsdPrice(
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number
 ): number {
+  if (liveEthUsd && liveEthUsd > 0) return liveEthUsd
+
   const lists = priceFeed?.length ? [priceFeed, tokenList] : [tokenList]
 
   for (const list of lists) {
@@ -197,18 +211,35 @@ function syntheticToken(
   }
 }
 
+export type TradePricingOptions = {
+  priceFeed?: TOKENS_TYPE[]
+  liveEthUsd?: number
+  /** Settlement-time prices by lowercase address (DefiLlama). */
+  settlementPrices?: Record<string, number>
+}
+
 /** Resolve USD price with WETH/ETH and same-symbol fallbacks when list entry has price 0. */
 export function resolveTokenUsdPrice(
   token: TOKENS_TYPE | null | undefined,
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number
 ): number {
   if (!token) return 0
-  if (token.usd_price > 0) return token.usd_price
 
   const pricingList = mergePricingLists(tokenList, priceFeed)
   const addr = token.token_address?.toLowerCase()
   const sym = token.symbol?.toLowerCase()
+  const isReference =
+    isReferenceTokenAddress(addr ?? '') ||
+    sym === 'weth' ||
+    sym === 'eth' ||
+    sym === 'usdc' ||
+    sym === 'usdt' ||
+    sym === 'dai'
+
+  // Reference tokens always re-resolve — never trust stale cached usd_price
+  if (!isReference && token.usd_price > 0) return token.usd_price
 
   if (addr === WETH_ADDRESS) {
     const priced = pricingList.find(
@@ -225,7 +256,7 @@ export function resolveTokenUsdPrice(
     if (bySymbol) return bySymbol.usd_price
   }
 
-  const ethUsd = getEthUsdPrice(pricingList, priceFeed)
+  const ethUsd = getEthUsdPrice(pricingList, priceFeed, liveEthUsd)
   if (ethUsd > 0) {
     if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
       return ethUsd
@@ -235,6 +266,7 @@ export function resolveTokenUsdPrice(
     }
   }
 
+  if (token.usd_price > 0) return token.usd_price
   return 0
 }
 
@@ -275,7 +307,8 @@ export function findTokenForTrade(
   address: string,
   tokenList: TOKENS_TYPE[],
   selectedToken?: TOKENS_TYPE | null,
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number
 ): TOKENS_TYPE | undefined {
   if (!address) return undefined
 
@@ -324,7 +357,12 @@ export function findTokenForTrade(
 
   return {
     ...merged,
-    usd_price: resolveTokenUsdPrice(merged, pricingList, priceFeed),
+    usd_price: resolveTokenUsdPrice(
+      merged,
+      pricingList,
+      priceFeed,
+      liveEthUsd
+    ),
   }
 }
 
@@ -394,26 +432,30 @@ export function getTradeUsdBreakdown(
     amountIn: string
   },
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number,
+  settlementPrices?: Record<string, number>
 ): TradeUsdBreakdown {
   const tokenIn = findTokenForTrade(
     trade.tokenIn,
     tokenList,
     undefined,
-    priceFeed
+    priceFeed,
+    liveEthUsd
   )
   const tokenOut = findTokenForTrade(
     trade.tokenOut,
     tokenList,
     undefined,
-    priceFeed
+    priceFeed,
+    liveEthUsd
   )
 
   const inputUsd = tokenIn
     ? amountUsd(
         BigInt(trade.amountIn || '0'),
         resolveTradeTokenDecimals(tokenIn, trade.tokenIn),
-        tokenIn.usd_price
+        usdPriceForToken(trade.tokenIn, tokenIn, settlementPrices)
       )
     : 0
 
@@ -421,7 +463,7 @@ export function getTradeUsdBreakdown(
     ? amountUsd(
         getDisplayOutputAmountWei(trade),
         resolveTradeTokenDecimals(tokenOut, trade.tokenOut),
-        tokenOut.usd_price
+        usdPriceForToken(trade.tokenOut, tokenOut, settlementPrices)
       )
     : 0
 
@@ -432,14 +474,31 @@ export function getTradeUsdBreakdown(
     trade.tokenOut
   )
 
-  return { inputUsd, outputUsd, notionalUsd }
+  const status = getTradeStatus(trade)
+  const isSettled =
+    status === 'completed' ||
+    status === 'instasettled' ||
+    status === 'cancelled'
+
+  const useUnified =
+    isSettled && notionalUsd > 0 && (inputUsd > 0 || outputUsd > 0)
+
+  return {
+    inputUsd,
+    outputUsd,
+    notionalUsd,
+    displayInputUsd: useUnified ? notionalUsd : inputUsd,
+    displayOutputUsd: useUnified ? notionalUsd : outputUsd,
+  }
 }
 
 /** USD value of trade input (amountIn) for dashboard volume. */
 export function tradeInputVolumeUsd(
   trade: { tokenIn: string; amountIn: string },
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number,
+  settlementPrices?: Record<string, number>
 ): number {
   return getTradeUsdBreakdown(
     {
@@ -449,7 +508,9 @@ export function tradeInputVolumeUsd(
       realisedAmountOut: '0',
     },
     tokenList,
-    priceFeed
+    priceFeed,
+    liveEthUsd,
+    settlementPrices
   ).inputUsd
 }
 
@@ -461,9 +522,17 @@ export function tradeNotionalVolumeUsd(
     amountIn: string
   },
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number,
+  settlementPrices?: Record<string, number>
 ): number {
-  return getTradeUsdBreakdown(trade, tokenList, priceFeed).notionalUsd
+  return getTradeUsdBreakdown(
+    trade,
+    tokenList,
+    priceFeed,
+    liveEthUsd,
+    settlementPrices
+  ).notionalUsd
 }
 
 /** The USD notional users expect from trade cards. */
@@ -474,9 +543,17 @@ export function tradeDisplayNotionalUsd(
     amountIn: string
   },
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number,
+  settlementPrices?: Record<string, number>
 ): number {
-  return tradeNotionalVolumeUsd(trade, tokenList, priceFeed)
+  return tradeNotionalVolumeUsd(
+    trade,
+    tokenList,
+    priceFeed,
+    liveEthUsd,
+    settlementPrices
+  )
 }
 
 /** USD instasettle savings on remaining output for dashboard earnings. */
@@ -488,13 +565,16 @@ export function tradeInstasettleSavingsUsd(
     instasettleBps: string | number
   },
   tokenList: TOKENS_TYPE[],
-  priceFeed?: TOKENS_TYPE[]
+  priceFeed?: TOKENS_TYPE[],
+  liveEthUsd?: number,
+  settlementPrices?: Record<string, number>
 ): number {
   const tokenOut = findTokenForTrade(
     trade.tokenOut,
     tokenList,
     undefined,
-    priceFeed
+    priceFeed,
+    liveEthUsd
   )
   if (!tokenOut) return 0
 
@@ -508,7 +588,12 @@ export function tradeInstasettleSavingsUsd(
     10000
 
   if (!Number.isFinite(savingsTokens) || savingsTokens <= 0) return 0
-  return savingsTokens * tokenOut.usd_price
+  const outPrice = usdPriceForToken(
+    trade.tokenOut,
+    tokenOut,
+    settlementPrices
+  )
+  return savingsTokens * outPrice
 }
 
 export function formatUsdCompact(value: number): string {

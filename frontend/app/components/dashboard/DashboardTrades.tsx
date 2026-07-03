@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import { useSettlementPricesMap } from '@/app/lib/hooks/useSettlementPrices'
 import SwapStream from '../swapStream'
 import { LiveStatisticsIcon } from '@/app/lib/icons'
 import Link from 'next/link'
@@ -28,7 +29,8 @@ const DashboardTrades = ({
   onClearBarFilter,
 }: DashboardTradesProps) => {
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens } = useTokenList()
+  const { tokens, ethUsd } = useTokenList()
+  const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Filter ongoing and completed trades
   const { ongoingTrades, latestTrades, ongoingVolume } = useMemo(() => {
@@ -53,7 +55,7 @@ const DashboardTrades = ({
     let volume = 0
     if (tokens && tokens.length > 0) {
       ongoing.forEach((trade) => {
-        volume += tradeDisplayNotionalUsd(trade, tokens)
+        volume += tradeDisplayNotionalUsd(trade, tokens, tokens, ethUsd)
       })
     }
 
@@ -62,7 +64,7 @@ const DashboardTrades = ({
       latestTrades: completed.slice(0, latestLimit),
       ongoingVolume: volume,
     }
-  }, [trades, tokens, selectedBar, timePeriod])
+  }, [trades, tokens, ethUsd, selectedBar, timePeriod])
 
   const formatVolume = (value: number): string => {
     if (value >= 1000000) {

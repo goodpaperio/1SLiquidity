@@ -47,6 +47,8 @@ const isPopularToken = (symbol: string): boolean => {
 export const useCustomTokenList = () => {
   const {
     tokens: coingeckoTokens,
+    ethUsd,
+    livePrices,
     isLoading,
     error,
     refetch,
@@ -108,6 +110,8 @@ export const useCustomTokenList = () => {
     tokens: customTokens,
     /** Full CoinGecko list — pass to trade USD helpers for WETH/stable pricing. */
     priceFeed: coingeckoTokens,
+    ethUsd,
+    livePrices,
     isLoading,
     error,
     refetch,

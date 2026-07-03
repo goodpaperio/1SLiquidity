@@ -15,6 +15,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useCustomTokenList } from '@/app/lib/hooks/useCustomTokensList'
+import { useSettlementPricesMap } from '@/app/lib/hooks/useSettlementPrices'
 import { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
 import { formatRelativeTime } from '@/app/lib/utils/time'
 import { formatWalletAddress } from '@/app/lib/helper'
@@ -67,8 +68,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const { trades, isLoading, error } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, priceFeed, isLoading: isLoadingTokens } =
+  const { tokens: tokenList, priceFeed, ethUsd, isLoading: isLoadingTokens } =
     useCustomTokenList()
+  const { pricesByTradeId } = useSettlementPricesMap(trades)
 
   // Filter and sort trades
   const displayData = useMemo(() => {
@@ -105,13 +107,15 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         trade.tokenIn,
         tokenList,
         undefined,
-        priceFeed
+        priceFeed,
+        ethUsd
       )
       const tokenOut = findTokenForTrade(
         trade.tokenOut,
         tokenList,
         undefined,
-        priceFeed
+        priceFeed,
+        ethUsd
       )
 
       const amountInWei = BigInt(trade.amountIn || '0')
@@ -128,10 +132,12 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         trade.tokenOut
       )
 
-      const { inputUsd, outputUsd, notionalUsd } = getTradeUsdBreakdown(
+      const breakdown = getTradeUsdBreakdown(
         trade,
         tokenList,
-        priceFeed
+        priceFeed,
+        ethUsd,
+        trade.id ? pricesByTradeId.get(trade.id) : undefined
       )
       const outputLabel = getOutputAmountLabel(trade)
 
@@ -141,9 +147,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         tokenOutDetails: tokenOut,
         formattedAmountIn,
         formattedAmountOut,
-        volumeUsd: notionalUsd,
-        inputUsd,
-        outputUsd,
+        volumeUsd: breakdown.notionalUsd,
+        inputUsd: breakdown.displayInputUsd,
+        outputUsd: breakdown.displayOutputUsd,
         outputLabel,
         status: getTradeStatus(trade),
       }
@@ -187,6 +193,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     sortField,
     sortDirection,
     priceFeed,
+    ethUsd,
+    pricesByTradeId,
   ])
 
   const handleSort = (field: SortField) => {

@@ -5,6 +5,7 @@ import { Bar, BarChart, XAxis, YAxis, Cell } from 'recharts'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import { useSettlementPricesMap } from '@/app/lib/hooks/useSettlementPrices'
 import {
   formatUsdCompact,
   tradeDisplayNotionalUsd,
@@ -125,7 +126,9 @@ const DashboardChart = ({
   const [activeArrow, setActiveArrow] = useState<'left' | 'right' | null>(null)
 
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, isLoading: isLoadingTokenList } = useTokenList()
+  const { tokens: tokenList, ethUsd, isLoading: isLoadingTokenList } =
+    useTokenList()
+  const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Calculate the time range based on selected period
   const getTimeRange = useCallback((period: TimePeriod) => {
@@ -374,10 +377,25 @@ const DashboardChart = ({
 
       const data = getOrCreateBucket(tradeDate)
 
-      const tradeVolume = tradeDisplayNotionalUsd(trade, tokenList)
+      const settlementPrices = trade.id
+        ? pricesByTradeId.get(trade.id)
+        : undefined
+      const tradeVolume = tradeDisplayNotionalUsd(
+        trade,
+        tokenList,
+        tokenList,
+        ethUsd,
+        settlementPrices
+      )
       data.volume += tradeVolume
       data.fees += (tradeVolume * 15) / 10000
-      data.earnings += tradeInstasettleSavingsUsd(trade, tokenList)
+      data.earnings += tradeInstasettleSavingsUsd(
+        trade,
+        tokenList,
+        tokenList,
+        ethUsd,
+        settlementPrices
+      )
       data.trades++
     })
 
@@ -400,7 +418,7 @@ const DashboardChart = ({
     )
 
     return dataWithActivity
-  }, [trades, tokenList, timePeriod, getTimeRange])
+  }, [trades, tokenList, ethUsd, timePeriod, getTimeRange, pricesByTradeId])
 
   // Calculate container width based on data length
   const containerWidth = useMemo(() => {

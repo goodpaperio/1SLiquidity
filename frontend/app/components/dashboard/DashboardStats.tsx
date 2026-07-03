@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useTrades } from '@/app/lib/hooks/useTrades'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import { useSettlementPricesMap } from '@/app/lib/hooks/useSettlementPrices'
 import {
   formatUsdCompact,
   tradeNotionalVolumeUsd,
@@ -115,7 +116,9 @@ const getSubPeriodLabel = (period: TimePeriod): string => {
 
 const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, isLoading: isLoadingTokenList } = useTokenList()
+  const { tokens: tokenList, ethUsd, isLoading: isLoadingTokenList } =
+    useTokenList()
+  const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Calculate stats from trades data based on selected time period
   const stats = useMemo(() => {
@@ -181,8 +184,23 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
       }
 
       // Volume and savings (same pricing as trade cards / chart)
-      const tradeVolume = tradeNotionalVolumeUsd(trade, tokenList)
-      const tradeSavings = tradeInstasettleSavingsUsd(trade, tokenList)
+      const settlementPrices = trade.id
+        ? pricesByTradeId.get(trade.id)
+        : undefined
+      const tradeVolume = tradeNotionalVolumeUsd(
+        trade,
+        tokenList,
+        tokenList,
+        ethUsd,
+        settlementPrices
+      )
+      const tradeSavings = tradeInstasettleSavingsUsd(
+        trade,
+        tokenList,
+        tokenList,
+        ethUsd,
+        settlementPrices
+      )
 
       if (tradeVolume > 0) {
         tradesWithToken++
@@ -233,7 +251,7 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
       subPeriodSavings,
       streamsCount: trades.length,
     }
-  }, [trades, tokenList, timePeriod])
+  }, [trades, tokenList, ethUsd, timePeriod, pricesByTradeId])
 
   const formatCurrency = formatUsdCompact
 

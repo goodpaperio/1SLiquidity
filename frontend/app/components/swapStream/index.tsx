@@ -5,6 +5,7 @@ import Image from 'next/image'
 import React from 'react'
 import Link from 'next/link'
 import { useTokenList } from '@/app/lib/hooks/useTokenList'
+import { useTradeSettlementPrices } from '@/app/lib/hooks/useSettlementPrices'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useStreamTime } from '@/app/lib/hooks/useStreamTime'
@@ -85,13 +86,26 @@ const SwapStream: React.FC<Props> = ({
   isLoading,
   linkToTradePage = false,
 }) => {
-  const { tokens, isLoading: isLoadingTokens } = useTokenList()
+  const { tokens, ethUsd, isLoading: isLoadingTokens } = useTokenList()
+  const { settlementPrices } = useTradeSettlementPrices(trade)
   const remainingStreams = calculateRemainingStreams(trade)
   const totalStreams = calculateTotalStreams(trade)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
-  const tokenIn = findTokenForTrade(trade.tokenIn, tokens, undefined, tokens)
-  const tokenOut = findTokenForTrade(trade.tokenOut, tokens, undefined, tokens)
+  const tokenIn = findTokenForTrade(
+    trade.tokenIn,
+    tokens,
+    undefined,
+    tokens,
+    ethUsd
+  )
+  const tokenOut = findTokenForTrade(
+    trade.tokenOut,
+    tokens,
+    undefined,
+    tokens,
+    ethUsd
+  )
 
   const amountInWei = BigInt(trade.amountIn || '0')
   const outputWei = getDisplayOutputAmountWei(trade)
@@ -109,8 +123,15 @@ const SwapStream: React.FC<Props> = ({
     trade.tokenOut
   )
 
-  const { inputUsd: inputUsdValue, outputUsd: outputUsdValue } =
-    getTradeUsdBreakdown(trade, tokens, tokens)
+  const usdBreakdown = getTradeUsdBreakdown(
+    trade,
+    tokens,
+    tokens,
+    ethUsd,
+    settlementPrices
+  )
+  const inputUsdValue = usdBreakdown.displayInputUsd
+  const outputUsdValue = usdBreakdown.displayOutputUsd
 
   const tradeStatus = getTradeStatus(trade)
   const outputSuffix =
