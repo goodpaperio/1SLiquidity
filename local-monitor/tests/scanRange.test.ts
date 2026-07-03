@@ -5,7 +5,7 @@ import { resolveScanRange, REORG_OVERLAP_BLOCKS } from "../src/scanRange";
 const DEPLOYMENT = 25_072_029;
 
 describe("resolveScanRange", () => {
-  it("bootstraps when tradeCache is missing", () => {
+  it("bootstraps when tradeCache and lastScannedBlock are both missing", () => {
     const range = resolveScanRange({
       lastScannedBlock: 0,
       currentBlock: 25_260_000,
@@ -16,6 +16,19 @@ describe("resolveScanRange", () => {
     assert.equal(range.mode, "bootstrap");
     assert.equal(range.fromBlock, DEPLOYMENT);
     assert.equal(range.toBlock, 25_260_000);
+  });
+
+  it("scans incrementally when lastScannedBlock is set but tradeCache is empty", () => {
+    const range = resolveScanRange({
+      lastScannedBlock: 25_260_000,
+      currentBlock: 25_260_025,
+      deploymentBlock: DEPLOYMENT,
+      hasTradeCache: false,
+    });
+
+    assert.equal(range.mode, "incremental");
+    assert.equal(range.fromBlock, 25_260_000 - REORG_OVERLAP_BLOCKS);
+    assert.equal(range.toBlock, 25_260_025);
   });
 
   it("bootstraps on cold start even with zero lastScannedBlock", () => {

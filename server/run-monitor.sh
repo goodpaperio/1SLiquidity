@@ -73,7 +73,7 @@ cd "$MONITOR_DIR"
 
 # Check wallet balance
 log "💰 Checking wallet balance..."
-if npm run balance-check >> "$LOG_FILE" 2>&1; then
+if npm run balance-check:prod >> "$LOG_FILE" 2>&1; then
     # Extract balance from log (looks for pattern like "Balance: 0.0042 ETH")
     BALANCE=$(grep "Balance:" "$LOG_FILE" | tail -1 | grep -oP '\d+\.\d+' || echo "0")
     THRESHOLD="${ALERT_LOW_BALANCE_THRESHOLD:-0.02}"
@@ -93,7 +93,7 @@ fi
 
 log ""
 log "📊 Step 1/4: Running historical analysis..."
-if npm run historical >> "$LOG_FILE" 2>&1; then
+if npm run historical:prod >> "$LOG_FILE" 2>&1; then
     log "✅ Historical analysis completed"
 else
     log_error "❌ Historical analysis failed"
@@ -159,7 +159,7 @@ sleep 24
 log ""
 if [ "$SUCCESS_COUNT" -gt 0 ]; then
     log "🔍 Step 4/4: Running final historical analysis (post-execution refresh)..."
-    if npm run historical >> "$LOG_FILE" 2>&1; then
+    if npm run historical:prod >> "$LOG_FILE" 2>&1; then
         log "✅ Final analysis completed"
     else
         log_error "❌ Final analysis failed"

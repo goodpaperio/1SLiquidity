@@ -31,16 +31,19 @@ export function resolveScanRange(input: ScanRangeInput): ScanRange {
   } = input;
 
   const toBlock = Math.max(deploymentBlock, currentBlock);
+  const hasScanProgress =
+    hasTradeCache ||
+    (lastScannedBlock >= deploymentBlock && lastScannedBlock > 0);
 
-  if (forceBootstrap || !hasTradeCache || lastScannedBlock < deploymentBlock) {
+  if (forceBootstrap || !hasScanProgress || lastScannedBlock < deploymentBlock) {
     return {
       mode: "bootstrap",
       fromBlock: deploymentBlock,
       toBlock,
       reason: forceBootstrap
         ? "forced bootstrap"
-        : !hasTradeCache
-          ? "no tradeCache"
+        : !hasScanProgress
+          ? "no scan progress (empty cache and lastScannedBlock)"
           : "lastScannedBlock before deployment",
     };
   }

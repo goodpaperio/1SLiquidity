@@ -174,12 +174,13 @@ function buildProvider(urls: string[]): ethers.AbstractProvider {
   if (uniqueUrls.length === 0) {
     throw new Error("No RPC URLs configured");
   }
+  const providerOpts = { staticNetwork: true, batchMaxCount: 1 as const };
   if (uniqueUrls.length === 1) {
-    return new ethers.JsonRpcProvider(uniqueUrls[0]);
+    return new ethers.JsonRpcProvider(uniqueUrls[0], 1, providerOpts);
   }
 
   const configs = uniqueUrls.map((url, index) => ({
-    provider: new ethers.JsonRpcProvider(url),
+    provider: new ethers.JsonRpcProvider(url, 1, providerOpts),
     priority: index + 1,
     // low stall timeout pushes faster failover when primary rate-limits.
     stallTimeout: 750,
@@ -208,6 +209,9 @@ export async function getProvider(): Promise<ethers.AbstractProvider> {
   }
   if (!CACHED_PROVIDER) {
     CACHED_PROVIDER = buildProvider(RPC_URLS);
+    console.log(
+      `ℹ️  RPC provider ready (${RPC_URLS.length} endpoint${RPC_URLS.length === 1 ? "" : "s"})`
+    );
   }
   return CACHED_PROVIDER;
 }

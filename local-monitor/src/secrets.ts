@@ -54,7 +54,7 @@ async function fetchFromSecretsManager(): Promise<BotSecrets> {
     }
 
     console.log("✅ Secrets loaded from AWS Secrets Manager");
-    return secrets;
+    return applyEnvRpcOverrides(secrets);
   } catch (error) {
     console.error("❌ Failed to fetch secrets from AWS Secrets Manager:", error);
     throw error;
@@ -82,7 +82,18 @@ function getSecretsFromEnv(): BotSecrets {
   }
 
   console.log("ℹ️  Using secrets from environment variables (local mode)");
-  return secrets;
+  return applyEnvRpcOverrides(secrets);
+}
+
+/** server/.env can supply RPC fallback without editing Secrets Manager. */
+function applyEnvRpcOverrides(secrets: BotSecrets): BotSecrets {
+  const fallback =
+    process.env.MAINNET_RPC_HTTP_URL_FALLBACK?.trim() ||
+    process.env.RPC_HTTP_URL_FALLBACK?.trim();
+  if (!fallback) {
+    return secrets;
+  }
+  return { ...secrets, MAINNET_RPC_HTTP_URL_FALLBACK: fallback };
 }
 
 /**
@@ -101,6 +112,10 @@ export async function getSecrets(): Promise<BotSecrets> {
   } else {
     console.log("💻 Running locally - using environment variables...");
     cachedSecrets = getSecretsFromEnv();
+  }
+
+  if (cachedSecrets.MAINNET_RPC_HTTP_URL_FALLBACK) {
+    console.log("ℹ️  RPC fallback endpoint configured");
   }
 
   return cachedSecrets;
