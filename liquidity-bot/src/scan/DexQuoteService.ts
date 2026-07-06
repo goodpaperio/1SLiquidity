@@ -12,45 +12,31 @@ import {
   UNISWAP_V3_POOL_ABI,
   UNISWAP_V3_QUOTER_V2,
   UNISWAP_V3_QUOTER_V2_ABI,
-  V3_FEE_TIERS,
   ZERO_ADDRESS,
 } from '../chain/contracts.js';
+import { MulticallClient } from '../chain/multicall3.js';
+import {
+  getSellReserveInByDexMulticall,
+  quotePairMulticall,
+} from './dexQuoteMulticall.js';
+import {
+  STREAM_DEX_IDS,
+  feeTierFromDexId,
+  isV3FeeTier,
+  liquidityScoreFromReserves,
+  v3DexId,
+} from './dexQuoteUtils.js';
 import type { StreamDexId, DexQuote } from './types.js';
 
 const SUSHISWAP_FACTORY_ABI = UNISWAP_V2_FACTORY_ABI;
 const SUSHISWAP_PAIR_ABI = UNISWAP_V2_PAIR_ABI;
 const SUSHISWAP_ROUTER_ABI = UNISWAP_V2_ROUTER_ABI;
 
-export const STREAM_DEX_IDS: StreamDexId[] = [
-  'uniswap-v2',
-  'uniswap-v3-100',
-  'uniswap-v3-500',
-  'uniswap-v3-3000',
-  'uniswap-v3-10000',
-  'sushiswap',
-];
+export { STREAM_DEX_IDS, feeTierFromDexId, isV3FeeTier };
 
-function liquidityScoreFromReserves(
-  reserveIn: bigint,
-  reserveOut: bigint
-): bigint {
-  if (reserveIn <= 0n || reserveOut <= 0n) return 0n;
-  return sqrtBigInt(reserveIn * reserveOut);
-}
-
-function sqrtBigInt(value: bigint): bigint {
-  if (value <= 0n) return 0n;
-  let x = value;
-  let y = (x + 1n) / 2n;
-  while (y < x) {
-    x = y;
-    y = (x + value / x) / 2n;
-  }
-  return x;
-}
-
-function v3DexId(fee: number): StreamDexId {
-  return `uniswap-v3-${fee}` as StreamDexId;
+export interface DexQuoteServiceOptions {
+  multicall?: MulticallClient;
+  useMulticall?: boolean;
 }
 
 export class DexQuoteService {
@@ -60,8 +46,16 @@ export class DexQuoteService {
   private readonly uniV3Quoter: Contract;
   private readonly sushiFactory: Contract;
   private readonly sushiRouter: Contract;
+  private readonly multicall: MulticallClient;
+  private readonly useMulticall: boolean;
 
-  constructor(private readonly provider: Provider) {
+  constructor(
+    private readonly provider: Provider,
+    options: DexQuoteServiceOptions = {}
+  ) {
+    this.multicall =
+      options.multicall ?? new MulticallClient(provider);
+    this.useMulticall = options.useMulticall ?? true;
     this.uniV2Factory = new Contract(
       UNISWAP_V2_FACTORY,
       UNISWAP_V2_FACTORY_ABI,
@@ -102,6 +96,18 @@ export class DexQuoteService {
     tokenIn: string,
     tokenOut: string
   ): Promise<Map<StreamDexId, bigint>> {
+    if (this.useMulticall) {
+      try {
+        return await getSellReserveInByDexMulticall(
+          this.multicall,
+          tokenIn,
+          tokenOut
+        );
+      } catch {
+        // fall through to sequential reads
+      }
+    }
+
     const map = new Map<StreamDexId, bigint>();
     for (const dex of STREAM_DEX_IDS) {
       const r = await this.getReserveIn(dex, tokenIn, tokenOut);
@@ -188,6 +194,19 @@ export class DexQuoteService {
     tokenOut: string,
     amountIn: bigint
   ): Promise<DexQuote[]> {
+    if (this.useMulticall) {
+      try {
+        return await quotePairMulticall(
+          this.multicall,
+          tokenIn,
+          tokenOut,
+          amountIn
+        );
+      } catch {
+        // fall through to sequential reads
+      }
+    }
+
     const quotes: DexQuote[] = [];
     for (const dex of STREAM_DEX_IDS) {
       const q = await this.quoteDex(dex, tokenIn, tokenOut, amountIn);
@@ -308,13 +327,4 @@ export class DexQuoteService {
       pairOrPoolAddress: poolAddress,
     };
   }
-}
-
-export function feeTierFromDexId(dex: StreamDexId): number | null {
-  if (!dex.startsWith('uniswap-v3-')) return null;
-  return Number(dex.replace('uniswap-v3-', ''));
-}
-
-export function isV3FeeTier(fee: number): boolean {
-  return (V3_FEE_TIERS as readonly number[]).includes(fee);
 }
