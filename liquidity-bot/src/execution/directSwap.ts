@@ -7,7 +7,7 @@ import {
   UNISWAP_V3_SWAP_ROUTER_ABI,
 } from '../chain/contracts.js';
 import { ensureAllowance } from '../chain/erc20.js';
-import { feeTierFromDexId } from '../scan/DexQuoteService.js';
+import { feeTierFromDexId } from '../scan/dexQuoteUtils.js';
 import type { StreamDexId } from '../scan/types.js';
 
 const SWAP_DEADLINE_SEC = 20 * 60;

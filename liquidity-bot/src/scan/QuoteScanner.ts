@@ -5,7 +5,7 @@ import {
 } from '../config/baseTokens.js';
 import type { Provider } from 'ethers';
 import { BalanceService } from './BalanceService.js';
-import { DexQuoteService, STREAM_DEX_IDS } from './DexQuoteService.js';
+import { DexQuoteService } from './DexQuoteService.js';
 import { formatOpportunityLine } from './formatOpportunity.js';
 import { collectCandidateOpportunities } from '../selection/collectCandidates.js';
 import {
@@ -60,7 +60,6 @@ export interface QuoteScannerOptions {
 }
 
 const DEFAULT_PAIR_DELAY = 50;
-const DEFAULT_DEX_DELAY = 0;
 
 export interface QuoteScannerDeps {
   balanceService?: BalanceService;
@@ -270,14 +269,7 @@ export class QuoteScanner {
     tokenOut: string,
     amountIn: bigint
   ) {
-    const dexDelay = this.options.dexDelayMs ?? DEFAULT_DEX_DELAY;
-    const results = [];
-    for (const dex of STREAM_DEX_IDS) {
-      const q = await this.quotes.quoteDex(dex, tokenIn, tokenOut, amountIn);
-      if (q) results.push(q);
-      if (dexDelay > 0) await sleep(dexDelay);
-    }
-    return results;
+    return this.quotes.quotePair(tokenIn, tokenOut, amountIn);
   }
 }
 

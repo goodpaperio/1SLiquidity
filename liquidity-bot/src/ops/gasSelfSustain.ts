@@ -17,7 +17,7 @@ import {
   UNISWAP_V3_QUOTER_V2,
   UNISWAP_V3_QUOTER_V2_ABI,
 } from '../chain/contracts.js';
-import { feeTierFromDexId } from '../scan/DexQuoteService.js';
+import { feeTierFromDexId } from '../scan/dexQuoteUtils.js';
 import type { StreamDexId } from '../scan/types.js';
 import { runLiquifySweep } from './liquifySweep.js';
 
