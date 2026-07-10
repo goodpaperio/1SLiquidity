@@ -9,7 +9,10 @@ import {
   ZERO_ADDRESS,
 } from '../../src/chain/contracts.js';
 import { MulticallClient } from '../../src/chain/multicall3.js';
-import { quotePairMulticall } from '../../src/scan/dexQuoteMulticall.js';
+import {
+  quoteManyOnDexMulticall,
+  quotePairMulticall,
+} from '../../src/scan/dexQuoteMulticall.js';
 import { DexQuoteService } from '../../src/scan/DexQuoteService.js';
 
 const v2FactoryIface = new Interface(UNISWAP_V2_FACTORY_ABI);
@@ -248,5 +251,72 @@ describe('phase C — DexQuoteService multicall', () => {
     );
     expect(quotes).toHaveLength(0);
     expect(aggregate3).toHaveBeenCalledTimes(3);
+  });
+
+  it('quoteManyOnDexMulticall batches multiple amounts on one V2 DEX', async () => {
+    const amountsIn = [1_000_000n, 2_000_000n, 3_000_000n];
+    const outs = [1_100_000n, 2_100_000n, 3_100_000n];
+
+    let round = 0;
+    const aggregate3 = vi.fn(async (calls: unknown[]) => {
+      round += 1;
+      if (round === 1) {
+        return [
+          {
+            success: true,
+            returnData: v2FactoryIface.encodeFunctionResult('getPair', [PAIR]),
+          },
+          {
+            success: true,
+            returnData: v2FactoryIface.encodeFunctionResult('getPair', [
+              ZERO_ADDRESS,
+            ]),
+          },
+          ...emptyV3Pools(),
+        ];
+      }
+      if (round === 2) {
+        return [
+          {
+            success: true,
+            returnData: v2PairIface.encodeFunctionResult('getReserves', [
+              1_000_000_000n,
+              2_000_000_000n,
+              1,
+            ]),
+          },
+          {
+            success: true,
+            returnData: v2PairIface.encodeFunctionResult('token0', [WETH]),
+          },
+        ];
+      }
+      expect(calls).toHaveLength(3);
+      return outs.map((amountOut, i) => ({
+        success: true,
+        returnData: v2RouterIface.encodeFunctionResult('getAmountsOut', [
+          [amountsIn[i], amountOut],
+        ]),
+      }));
+    });
+
+    const helper = new MulticallClient({} as never);
+    const client = {
+      aggregate3,
+      encodeCall: helper.encodeCall.bind(helper),
+      decodeResult: helper.decodeResult.bind(helper),
+      chunkSize: 50,
+    } as unknown as MulticallClient;
+
+    const quotes = await quoteManyOnDexMulticall(
+      client,
+      'uniswap-v2',
+      WETH,
+      USDC,
+      amountsIn
+    );
+    expect(aggregate3).toHaveBeenCalledTimes(3);
+    expect(quotes).toHaveLength(3);
+    expect(quotes.map((q) => q?.amountOut)).toEqual(outs);
   });
 });

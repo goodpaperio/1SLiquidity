@@ -436,3 +436,160 @@ export async function quotePairMulticall(
       STREAM_DEX_IDS.indexOf(a.dex) - STREAM_DEX_IDS.indexOf(b.dex)
   );
 }
+
+/**
+ * Quote many amountIns on a single DEX in one multicall (shared pool lookup).
+ * Returns one result per input amount (null when that quote fails).
+ */
+export async function quoteManyOnDexMulticall(
+  client: MulticallClient,
+  dex: StreamDexId,
+  tokenIn: string,
+  tokenOut: string,
+  amountsIn: readonly bigint[]
+): Promise<(DexQuote | null)[]> {
+  if (amountsIn.length === 0) return [];
+  const positive = amountsIn.map((a) => (a > 0n ? a : 0n));
+  if (positive.every((a) => a <= 0n)) {
+    return amountsIn.map(() => null);
+  }
+
+  const { v2, v3 } = await resolvePoolAddresses(client, tokenIn, tokenOut);
+
+  if (dex === 'uniswap-v2' || dex === 'sushiswap') {
+    const pool = v2.find((p) => p.dex === dex);
+    if (!pool) return amountsIn.map(() => null);
+
+    const roundB = await client.aggregate3([
+      {
+        target: pool.pairAddress,
+        allowFailure: true,
+        callData: client.encodeCall(v2PairIf(), 'getReserves', []),
+      },
+      {
+        target: pool.pairAddress,
+        allowFailure: true,
+        callData: client.encodeCall(v2PairIf(), 'token0', []),
+      },
+    ]);
+    if (!roundB[0]?.success || !roundB[1]?.success) {
+      return amountsIn.map(() => null);
+    }
+    const reserves = client.decodeResult(
+      v2PairIf(),
+      'getReserves',
+      roundB[0].returnData
+    ) as [bigint, bigint, number] | null;
+    const token0Decoded = client.decodeResult(
+      v2PairIf(),
+      'token0',
+      roundB[1].returnData
+    ) as [string] | null;
+    if (!reserves || !token0Decoded) return amountsIn.map(() => null);
+
+    const token0 = String(token0Decoded[0]);
+    const isToken0In = tokenIn.toLowerCase() === token0.toLowerCase();
+    const reserveIn = BigInt(
+      (isToken0In ? reserves[0] : reserves[1]).toString()
+    );
+    const reserveOut = BigInt(
+      (isToken0In ? reserves[1] : reserves[0]).toString()
+    );
+    const liquidityScore = liquidityScoreFromReserves(reserveIn, reserveOut);
+    const router =
+      dex === 'uniswap-v2' ? UNISWAP_V2_ROUTER : SUSHISWAP_ROUTER;
+
+    const roundC: Call3[] = positive.map((amountIn) => ({
+      target: router,
+      allowFailure: true,
+      callData: client.encodeCall(v2RouterIf(), 'getAmountsOut', [
+        amountIn > 0n ? amountIn : 1n,
+        [tokenIn, tokenOut],
+      ]),
+    }));
+    const roundCResults = await client.aggregate3(roundC);
+
+    return positive.map((amountIn, i) => {
+      if (amountIn <= 0n) return null;
+      const result = roundCResults[i];
+      if (!result?.success) return null;
+      const amounts = client.decodeResult(
+        v2RouterIf(),
+        'getAmountsOut',
+        result.returnData
+      ) as [bigint[]] | null;
+      if (!amounts || amounts[0].length < 2) return null;
+      return {
+        dex,
+        amountOut: BigInt(amounts[0][1].toString()),
+        liquidityScore,
+        pairOrPoolAddress: pool.pairAddress,
+      } satisfies DexQuote;
+    });
+  }
+
+  if (dex.startsWith('uniswap-v3-')) {
+    const fee = Number(dex.replace('uniswap-v3-', ''));
+    const pool = v3.find((p) => p.fee === fee);
+    if (!pool) return amountsIn.map(() => null);
+
+    const roundB = await client.aggregate3([
+      {
+        target: pool.poolAddress,
+        allowFailure: true,
+        callData: client.encodeCall(v3PoolIf(), 'liquidity', []),
+      },
+      {
+        target: pool.poolAddress,
+        allowFailure: true,
+        callData: client.encodeCall(v3PoolIf(), 'token0', []),
+      },
+    ]);
+    if (!roundB[0]?.success || !roundB[1]?.success) {
+      return amountsIn.map(() => null);
+    }
+    const liqDecoded = client.decodeResult(
+      v3PoolIf(),
+      'liquidity',
+      roundB[0].returnData
+    ) as [bigint] | null;
+    if (!liqDecoded) return amountsIn.map(() => null);
+    const liquidity = BigInt(liqDecoded[0].toString());
+    if (liquidity === 0n) return amountsIn.map(() => null);
+
+    const roundC: Call3[] = positive.map((amountIn) => ({
+      target: UNISWAP_V3_QUOTER_V2,
+      allowFailure: true,
+      callData: client.encodeCall(v3QuoterIf(), 'quoteExactInputSingle', [
+        {
+          tokenIn,
+          tokenOut,
+          amountIn: amountIn > 0n ? amountIn : 1n,
+          fee,
+          sqrtPriceLimitX96: 0,
+        },
+      ]),
+    }));
+    const roundCResults = await client.aggregate3(roundC);
+
+    return positive.map((amountIn, i) => {
+      if (amountIn <= 0n) return null;
+      const result = roundCResults[i];
+      if (!result?.success) return null;
+      const quoted = client.decodeResult(
+        v3QuoterIf(),
+        'quoteExactInputSingle',
+        result.returnData
+      ) as [bigint, bigint, number, bigint] | null;
+      if (!quoted) return null;
+      return {
+        dex: v3DexId(fee),
+        amountOut: BigInt(quoted[0].toString()),
+        liquidityScore: liquidity,
+        pairOrPoolAddress: pool.poolAddress,
+      } satisfies DexQuote;
+    });
+  }
+
+  return amountsIn.map(() => null);
+}

@@ -85,23 +85,30 @@ export async function buildCandidateEdges(
     q.liquidityScore > best.liquidityScore ? q : best
   );
 
+  const candidates = validBuy.filter(
+    (candidate) =>
+      candidate.dex !== deepBuy.dex &&
+      candidate.liquidityScore < deepBuy.liquidityScore
+  );
+  if (candidates.length === 0) return [];
+
+  const sellQuotes = await quoteService.quoteManyOnDex(
+    deepSellDex,
+    alt,
+    base,
+    candidates.map((c) => c.amountOut)
+  );
+
   const edges: ScanOpportunity[] = [];
   const now = Date.now();
   const key = pairKey(base, alt);
 
-  for (const candidate of validBuy) {
-    if (candidate.dex === deepBuy.dex) continue;
-    if (candidate.liquidityScore >= deepBuy.liquidityScore) continue;
-
-    const altOut = candidate.amountOut;
-    const sellQuote = await quoteService.quoteDex(
-      deepSellDex,
-      alt,
-      base,
-      altOut
-    );
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    const sellQuote = sellQuotes[i];
     if (!sellQuote || sellQuote.amountOut <= 0n) continue;
 
+    const altOut = candidate.amountOut;
     const baseBack = sellQuote.amountOut;
     const rtSigned = signedRoundTripBps(amountIn, baseBack);
     const buySpreadBps = spreadBps(candidate.amountOut, deepBuy.amountOut);
@@ -161,54 +168,62 @@ export async function buildReverseCandidateEdges(
     q.liquidityScore > best.liquidityScore ? q : best
   );
 
-  const buyQuotes: DexQuote[] = [];
-  for (const dex of STREAM_DEX_IDS) {
-    const q = await quoteService.quoteDex(dex, base, alt, 10n ** 15n);
-    if (q && q.amountOut > 0n && q.liquidityScore > 0n) {
-      buyQuotes.push(q);
-    }
-  }
+  const buyQuotes = (
+    await quoteService.quotePair(base, alt, 10n ** 15n)
+  ).filter((q) => q.amountOut > 0n && q.liquidityScore > 0n);
   if (buyQuotes.length === 0) return [];
 
   const deepBuy = buyQuotes.reduce((best, q) =>
     q.liquidityScore > best.liquidityScore ? q : best
   );
 
-  const baseStartQuote = await quoteService.quoteDex(
+  const baseStartQuotes = await quoteService.quoteManyOnDex(
     deepSellDex,
     alt,
     base,
-    altAmountIn
+    [altAmountIn]
   );
+  const baseStartQuote = baseStartQuotes[0];
   if (!baseStartQuote || baseStartQuote.amountOut <= 0n) return [];
   const baseStart = baseStartQuote.amountOut;
+
+  const candidates = validSell.filter(
+    (candidate) =>
+      candidate.dex !== deepSell.dex &&
+      candidate.liquidityScore < deepSell.liquidityScore
+  );
+  if (candidates.length === 0) return [];
+
+  const buyMids = await quoteService.quoteManyOnDex(
+    deepBuy.dex,
+    base,
+    alt,
+    candidates.map((c) => c.amountOut)
+  );
+
+  const altEnds = buyMids.map((q) =>
+    q && q.amountOut > 0n ? q.amountOut : 0n
+  );
+  const finalSells = await quoteService.quoteManyOnDex(
+    deepSellDex,
+    alt,
+    base,
+    altEnds
+  );
 
   const edges: ScanOpportunity[] = [];
   const now = Date.now();
   const key = pairKey(base, alt);
 
-  for (const candidate of validSell) {
-    if (candidate.dex === deepSell.dex) continue;
-    if (candidate.liquidityScore >= deepSell.liquidityScore) continue;
-
-    const baseMid = candidate.amountOut;
-    const buyQuote = await quoteService.quoteDex(
-      deepBuy.dex,
-      base,
-      alt,
-      baseMid
-    );
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    const buyQuote = buyMids[i];
     if (!buyQuote || buyQuote.amountOut <= 0n) continue;
 
-    const altEnd = buyQuote.amountOut;
-    const finalSell = await quoteService.quoteDex(
-      deepSellDex,
-      alt,
-      base,
-      altEnd
-    );
+    const finalSell = finalSells[i];
     if (!finalSell || finalSell.amountOut <= 0n) continue;
 
+    const baseMid = candidate.amountOut;
     const baseFinal = finalSell.amountOut;
     const rtSigned = signedRoundTripBps(baseStart, baseFinal);
     const sellSpreadBps = spreadBps(candidate.amountOut, deepSell.amountOut);

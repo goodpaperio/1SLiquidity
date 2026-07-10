@@ -17,6 +17,7 @@ import {
 import { MulticallClient } from '../chain/multicall3.js';
 import {
   getSellReserveInByDexMulticall,
+  quoteManyOnDexMulticall,
   quotePairMulticall,
 } from './dexQuoteMulticall.js';
 import {
@@ -251,6 +252,37 @@ export class DexQuoteService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Quote many amountIns on one DEX. Multicall batches pool lookup + quotes;
+   * falls back to sequential quoteDex on failure.
+   */
+  async quoteManyOnDex(
+    dex: StreamDexId,
+    tokenIn: string,
+    tokenOut: string,
+    amountsIn: readonly bigint[]
+  ): Promise<(DexQuote | null)[]> {
+    if (amountsIn.length === 0) return [];
+    if (this.useMulticall) {
+      try {
+        return await quoteManyOnDexMulticall(
+          this.multicall,
+          dex,
+          tokenIn,
+          tokenOut,
+          amountsIn
+        );
+      } catch {
+        // fall through
+      }
+    }
+    const out: (DexQuote | null)[] = [];
+    for (const amountIn of amountsIn) {
+      out.push(await this.quoteDex(dex, tokenIn, tokenOut, amountIn));
+    }
+    return out;
   }
 
   private async quoteV2Like(

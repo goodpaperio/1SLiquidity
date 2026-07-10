@@ -37,21 +37,51 @@ function mockQuoteService(opts: {
   const sellReserveIn = new Map(
     Object.entries(opts.sellReserveIn) as [StreamDexId, bigint][]
   );
+  const quoteDex = vi.fn(
+    async (dex: StreamDexId, tokenIn: string, tokenOut: string) => {
+      if (
+        tokenIn === tradePair.tokenOut &&
+        tokenOut === tradePair.tokenIn
+      ) {
+        return {
+          dex,
+          amountOut: opts.sellBaseOut,
+          liquidityScore: 1n,
+        } satisfies DexQuote;
+      }
+      return null;
+    }
+  );
   return {
     getSellReserveInByDex: vi.fn(async () => sellReserveIn),
-    quoteDex: vi.fn(
-      async (dex: StreamDexId, tokenIn: string, tokenOut: string) => {
-        if (
-          tokenIn === tradePair.tokenOut &&
-          tokenOut === tradePair.tokenIn
-        ) {
-          return {
-            dex,
-            amountOut: opts.sellBaseOut,
-            liquidityScore: 1n,
-          } satisfies DexQuote;
+    quoteDex,
+    quotePair: vi.fn(async (tokenIn: string, tokenOut: string, amountIn: bigint) => {
+      const out: DexQuote[] = [];
+      for (const dex of [
+        'uniswap-v2',
+        'uniswap-v3-100',
+        'uniswap-v3-500',
+        'uniswap-v3-3000',
+        'uniswap-v3-10000',
+        'sushiswap',
+      ] as StreamDexId[]) {
+        const q = await quoteDex(dex, tokenIn, tokenOut, amountIn);
+        if (q) out.push(q);
+      }
+      return out;
+    }),
+    quoteManyOnDex: vi.fn(
+      async (
+        dex: StreamDexId,
+        tokenIn: string,
+        tokenOut: string,
+        amountsIn: readonly bigint[]
+      ) => {
+        const out: (DexQuote | null)[] = [];
+        for (const amountIn of amountsIn) {
+          out.push(await quoteDex(dex, tokenIn, tokenOut, amountIn));
         }
-        return null;
+        return out;
       }
     ),
   } as unknown as DexQuoteService;
