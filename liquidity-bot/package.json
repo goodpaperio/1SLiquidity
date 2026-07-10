@@ -27,6 +27,7 @@
     "deploy": "tsx src/cli/deploy-bot.ts",
     "redeploy": "bash scripts/redeploy.sh",
     "withdraw": "tsx src/cli/withdraw-bot.ts",
+    "pull": "tsx src/cli/pull-bot.ts",
     "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
     "run:once": "tsx src/cli/run-once.ts",
     "cancel:trade": "tsx src/cli/cancel-trade.ts",
