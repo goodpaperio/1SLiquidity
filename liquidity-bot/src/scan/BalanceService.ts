@@ -33,30 +33,63 @@ export class BalanceService {
   }
 
   async getTokenBalance(holder: string, tokenAddress: string): Promise<bigint> {
+    const map = await this.getTokenBalances(holder, [tokenAddress]);
+    return map.get(tokenAddress.toLowerCase()) ?? 0n;
+  }
+
+  /** Batch balanceOf for many tokens in one aggregate3 (or sequential fallback). */
+  async getTokenBalances(
+    holder: string,
+    tokenAddresses: readonly string[]
+  ): Promise<Map<string, bigint>> {
+    const out = new Map<string, bigint>();
+    if (tokenAddresses.length === 0) return out;
+
+    const unique: string[] = [];
+    const seen = new Set<string>();
+    for (const addr of tokenAddresses) {
+      const lower = addr.toLowerCase();
+      if (seen.has(lower)) continue;
+      seen.add(lower);
+      unique.push(addr);
+    }
+
     if (this.useMulticall) {
       try {
-        const results = await this.multicall.aggregate3([
-          {
+        const results = await this.multicall.aggregate3Chunked(
+          unique.map((tokenAddress) => ({
             target: tokenAddress,
             allowFailure: true,
             callData: this.multicall.encodeCall(erc20If(), 'balanceOf', [
               holder,
             ]),
-          },
-        ]);
-        const decoded = this.multicall.decodeResult(
-          erc20If(),
-          'balanceOf',
-          results[0]?.returnData ?? '0x'
-        ) as [bigint] | null;
-        if (decoded) return BigInt(decoded[0].toString());
+          }))
+        );
+        unique.forEach((tokenAddress, index) => {
+          const decoded = this.multicall.decodeResult(
+            erc20If(),
+            'balanceOf',
+            results[index]?.returnData ?? '0x'
+          ) as [bigint] | null;
+          out.set(
+            tokenAddress.toLowerCase(),
+            decoded ? BigInt(decoded[0].toString()) : 0n
+          );
+        });
+        return out;
       } catch {
         // fall through
       }
     }
 
-    const erc20 = new Contract(tokenAddress, ERC20_ABI, this.provider);
-    return erc20.balanceOf(holder);
+    await Promise.all(
+      unique.map(async (tokenAddress) => {
+        const erc20 = new Contract(tokenAddress, ERC20_ABI, this.provider);
+        const bal = await erc20.balanceOf(holder);
+        out.set(tokenAddress.toLowerCase(), BigInt(bal.toString()));
+      })
+    );
+    return out;
   }
 
   async getBaseBalances(

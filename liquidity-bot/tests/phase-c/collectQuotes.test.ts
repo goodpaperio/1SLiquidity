@@ -59,6 +59,7 @@ describe('phase C — collectQuoteSnapshots trusted routes', () => {
           WBTC: 0n,
         }) as Record<BaseTokenSymbol, bigint>,
       getTokenBalance: async () => 0n,
+      getTokenBalances: async () => new Map<string, bigint>(),
       fetchQuotesForPair: async () => [],
     } as const;
 
@@ -78,6 +79,7 @@ describe('phase C — collectQuoteSnapshots trusted routes', () => {
     const firstWethPair = loadPairsForBase('WETH')[0];
     expect(firstWethPair).toBeDefined();
     const alt = firstWethPair.address.toLowerCase();
+    let quoteCalls = 0;
 
     const scanner = {
       getBaseBalances: async () =>
@@ -90,13 +92,26 @@ describe('phase C — collectQuoteSnapshots trusted routes', () => {
         }) as Record<BaseTokenSymbol, bigint>,
       getTokenBalance: async (_holder: string, token: string) =>
         token.toLowerCase() === alt ? 1_000_000_000_000_000n : 0n,
-      fetchQuotesForPair: async () => [
-        {
-          dex: 'uniswap-v2',
-          amountOut: 1_000_000_000_000_000_000n,
-          liquidityScore: 1_000_000n,
-        },
-      ],
+      getTokenBalances: async (_holder: string, tokens: readonly string[]) => {
+        const map = new Map<string, bigint>();
+        for (const t of tokens) {
+          map.set(
+            t.toLowerCase(),
+            t.toLowerCase() === alt ? 1_000_000_000_000_000n : 0n
+          );
+        }
+        return map;
+      },
+      fetchQuotesForPair: async () => {
+        quoteCalls++;
+        return [
+          {
+            dex: 'uniswap-v2',
+            amountOut: 1_000_000_000_000_000_000n,
+            liquidityScore: 1_000_000n,
+          },
+        ];
+      },
     } as const;
 
     const result = await collectQuoteSnapshots(scanner as never, botConfig, {
@@ -107,5 +122,52 @@ describe('phase C — collectQuoteSnapshots trusted routes', () => {
 
     expect(result.pairsConsidered).toBeGreaterThan(0);
     expect(result.snapshots.some((s) => s.direction === 'reverse')).toBe(true);
+    // reverse path quotes once (deduped dust check + sell quotes)
+    const reverseCount = result.snapshots.filter(
+      (s) => s.direction === 'reverse'
+    ).length;
+    expect(quoteCalls).toBe(reverseCount);
+  });
+
+  it('prefers batched getTokenBalances over per-pair getTokenBalance', async () => {
+    const firstWethPair = loadPairsForBase('WETH')[0];
+    const alt = firstWethPair.address.toLowerCase();
+    let batchCalls = 0;
+    let singleCalls = 0;
+
+    const scanner = {
+      getBaseBalances: async () =>
+        ({
+          WETH: 0n,
+          USDC: 0n,
+          USDT: 0n,
+          DAI: 0n,
+          WBTC: 0n,
+        }) as Record<BaseTokenSymbol, bigint>,
+      getTokenBalance: async () => {
+        singleCalls++;
+        return 0n;
+      },
+      getTokenBalances: async () => {
+        batchCalls++;
+        return new Map([[alt, 1_000_000_000_000_000n]]);
+      },
+      fetchQuotesForPair: async () => [
+        {
+          dex: 'uniswap-v2',
+          amountOut: 1_000_000_000_000_000_000n,
+          liquidityScore: 1_000_000n,
+        },
+      ],
+    } as const;
+
+    await collectQuoteSnapshots(scanner as never, botConfig, {
+      discoverMode: false,
+      maxPairs: 5,
+      provenTokenAddresses: new Set([alt]),
+    });
+
+    expect(batchCalls).toBe(1);
+    expect(singleCalls).toBe(0);
   });
 });

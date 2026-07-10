@@ -86,6 +86,48 @@ describe('phase C — BalanceService multicall', () => {
     expect(provider.call).toHaveBeenCalledTimes(1);
   });
 
+  it('getTokenBalances batches many tokens in one aggregate3', async () => {
+    const holder = '0x4444444444444444444444444444444444444444';
+    const tokens = [
+      BASE_TOKEN_ADDRESSES.WETH,
+      BASE_TOKEN_ADDRESSES.USDC,
+      BASE_TOKEN_ADDRESSES.DAI,
+    ];
+    const balanceByTarget = new Map([
+      [BASE_TOKEN_ADDRESSES.WETH.toLowerCase(), 11n],
+      [BASE_TOKEN_ADDRESSES.USDC.toLowerCase(), 22n],
+      [BASE_TOKEN_ADDRESSES.DAI.toLowerCase(), 33n],
+    ]);
+
+    const aggregate3 = vi.fn(
+      async (calls: Array<[string, boolean, string]>) =>
+        calls.map(([target]) => ({
+          success: true,
+          returnData: erc20Iface.encodeFunctionResult('balanceOf', [
+            balanceByTarget.get(target.toLowerCase()) ?? 0n,
+          ]),
+        }))
+    );
+    const provider = {
+      call: vi.fn(async (tx: { data: string }) => {
+        const decoded = multicallIface.decodeFunctionData(
+          'aggregate3',
+          tx.data
+        ) as [Array<[string, boolean, string]>];
+        const results = await aggregate3(decoded[0]);
+        return multicallIface.encodeFunctionResult('aggregate3', [results]);
+      }),
+    };
+
+    const service = new BalanceService(provider as never);
+    const map = await service.getTokenBalances(holder, tokens);
+    expect(map.get(BASE_TOKEN_ADDRESSES.WETH.toLowerCase())).toBe(11n);
+    expect(map.get(BASE_TOKEN_ADDRESSES.USDC.toLowerCase())).toBe(22n);
+    expect(map.get(BASE_TOKEN_ADDRESSES.DAI.toLowerCase())).toBe(33n);
+    expect(provider.call).toHaveBeenCalledTimes(1);
+    expect(aggregate3.mock.calls[0][0]).toHaveLength(3);
+  });
+
   it('falls back to sequential reads when multicall fails', async () => {
     const holder = '0x3333333333333333333333333333333333333333';
     const iface = new Interface(ERC20_ABI);

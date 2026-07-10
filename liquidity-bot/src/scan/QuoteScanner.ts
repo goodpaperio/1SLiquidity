@@ -88,6 +88,10 @@ export class QuoteScanner {
     return this.balances.getTokenBalance(holder, token);
   }
 
+  getTokenBalances(holder: string, tokens: readonly string[]) {
+    return this.balances.getTokenBalances(holder, tokens);
+  }
+
   async fetchQuotesForPair(
     tokenIn: string,
     tokenOut: string,

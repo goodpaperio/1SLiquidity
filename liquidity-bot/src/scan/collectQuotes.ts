@@ -103,6 +103,18 @@ export async function collectQuoteSnapshots(
       });
   const slice = pairs.slice(0, options.maxPairs ?? pairs.length);
 
+  let altBalances = new Map<string, bigint>();
+  if (!discoverMode && slice.length > 0) {
+    try {
+      altBalances = await scanner.getTokenBalances(
+        bot.address,
+        slice.map((p) => p.tokenOut)
+      );
+    } catch {
+      // per-pair getTokenBalance fallback below
+    }
+  }
+
   const snapshots: PairQuoteSnapshot[] = [];
   let pairsScanned = 0;
   let pairsSkipped = 0;
@@ -149,14 +161,17 @@ export async function collectQuoteSnapshots(
     }
 
     if (!discoverMode) {
-      let altBalance = 0n;
-      try {
-        altBalance = await scanner.getTokenBalance(
-          bot.address,
-          tradePair.tokenOut
-        );
-      } catch {
-        errors++;
+      let altBalance =
+        altBalances.get(tradePair.tokenOut.toLowerCase()) ?? 0n;
+      if (altBalances.size === 0) {
+        try {
+          altBalance = await scanner.getTokenBalance(
+            bot.address,
+            tradePair.tokenOut
+          );
+        } catch {
+          errors++;
+        }
       }
 
       const effectiveAltIn = computeEffectiveTradeAmount(
@@ -167,13 +182,13 @@ export async function collectQuoteSnapshots(
 
       if (effectiveAltIn > 0n) {
         try {
-          const refBase = await scanner.fetchQuotesForPair(
+          const sellQuotes = await scanner.fetchQuotesForPair(
             tradePair.tokenOut,
             tradePair.tokenIn,
             effectiveAltIn
           );
           const refOut =
-            refBase.find((q) => q.amountOut > 0n)?.amountOut ?? 0n;
+            sellQuotes.find((q) => q.amountOut > 0n)?.amountOut ?? 0n;
           const dustOk =
             refOut > 0n &&
             isAboveDustFloor(
@@ -184,11 +199,6 @@ export async function collectQuoteSnapshots(
             );
 
           if (dustOk) {
-            const sellQuotes = await scanner.fetchQuotesForPair(
-              tradePair.tokenOut,
-              tradePair.tokenIn,
-              effectiveAltIn
-            );
             snapshots.push({
               tradePair,
               direction: 'reverse',
