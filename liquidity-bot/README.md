@@ -339,6 +339,8 @@ When the runner is live, it polls Telegram every ~5s for commands **from `TELEGR
 |---------|--------|
 | `/status` | Native ETH balance, cached ETH/USD, pause state |
 | `/liquify` | Sweep allowlisted dust → WETH via LiquifierV1 |
+| `/pull` | Sync this EC2 host to `origin/main`, rebuild, restart PM2 |
+| `/pull status` | Show local vs `origin/main` SHA |
 | `/pause` | Skip trading cycles (maintenance still runs) |
 | `/resume` | Resume trading |
 | `/help` | Command list |

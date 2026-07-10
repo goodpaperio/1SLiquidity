@@ -18,6 +18,11 @@ import {
   pollTelegramCommands,
 } from '../notify/telegramCommands.js';
 import { readBotState, writeBotState, type BotState } from '../runner/BotRunner.js';
+import {
+  canStartPull,
+  getPullStatus,
+  startSelfUpdate,
+} from './selfUpdate.js';
 
 export interface OpsRunResult {
   swept: boolean;
@@ -231,7 +236,8 @@ export function startTelegramCommandLoop(
   provider: Provider,
   getPaused: () => boolean,
   setPaused: (v: boolean) => void,
-  runLiquify: () => Promise<string>
+  runLiquify: () => Promise<string>,
+  isBusy: () => boolean = () => false
 ): ReturnType<typeof setInterval> | null {
   const tg = loadTelegramConfig();
   if (!tg) return null;
@@ -249,6 +255,36 @@ export function startTelegramCommandLoop(
         return 'Trading resumed.';
       },
       help: () => formatHelpMessage(),
+      pullStatus: () => {
+        const status = getPullStatus(process.env.PULL_BRANCH ?? 'main');
+        return `bot=${bot.id}\n${status.message}`;
+      },
+      pull: () => {
+        if (isBusy()) {
+          return 'Busy (scan/liquify in progress). Try /pull again in a minute.';
+        }
+        const prev = readBotState(bot.id);
+        const cooldown = canStartPull({ lastPullAt: prev?.lastPullAt });
+        if (!cooldown.ok) return cooldown.reason;
+
+        const result = startSelfUpdate({
+          botId: bot.id,
+          detached: true,
+        });
+        if (result.started) {
+          writeBotState(bot.id, {
+            lastUpdatedAt: new Date().toISOString(),
+            lastEthBalanceWei: prev?.lastEthBalanceWei ?? '0',
+            status: prev?.status ?? 'running',
+            note: prev?.note,
+            lastDustSweepDate: prev?.lastDustSweepDate,
+            lastLowEthAlertAt: prev?.lastLowEthAlertAt,
+            lastStaleTradeAlertAt: prev?.lastStaleTradeAlertAt,
+            lastPullAt: new Date().toISOString(),
+          });
+        }
+        return result.message;
+      },
     });
   }, 5000);
 }

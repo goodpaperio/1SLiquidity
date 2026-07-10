@@ -44,13 +44,19 @@ export interface CommandHandlers {
   pause: () => string;
   resume: () => string;
   help: () => string;
+  pull: () => Promise<string> | string;
+  pullStatus: () => Promise<string> | string;
 }
 
-export function parseTelegramCommand(text: string): string | null {
+export function parseTelegramCommand(
+  text: string
+): { cmd: string; args: string[] } | null {
   const trimmed = text.trim();
   if (!trimmed.startsWith('/')) return null;
-  const cmd = trimmed.split(/\s+/)[0]?.toLowerCase().replace(/@\w+$/, '');
-  return cmd ?? null;
+  const parts = trimmed.split(/\s+/);
+  const cmd = parts[0]?.toLowerCase().replace(/@\w+$/, '');
+  if (!cmd) return null;
+  return { cmd, args: parts.slice(1).map((a) => a.toLowerCase()) };
 }
 
 export async function pollTelegramCommands(
@@ -83,8 +89,9 @@ export async function pollTelegramCommands(
     if (!msg?.text) continue;
     if (String(msg.chat.id) !== authorizedChatId) continue;
 
-    const cmd = parseTelegramCommand(msg.text);
-    if (!cmd) continue;
+    const parsed = parseTelegramCommand(msg.text);
+    if (!parsed) continue;
+    const { cmd, args } = parsed;
 
     let reply = '';
     try {
@@ -103,6 +110,15 @@ export async function pollTelegramCommands(
           break;
         case '/help':
           reply = handlers.help();
+          break;
+        case '/pull':
+        case '/run-pull':
+        case '/update':
+          if (args[0] === 'status') {
+            reply = await handlers.pullStatus();
+          } else {
+            reply = await handlers.pull();
+          }
           break;
         default:
           reply = 'Unknown command. Try /help';
@@ -144,6 +160,8 @@ export function formatHelpMessage(): string {
     '/liquify — sweep allowlisted dust → base token\n' +
     '/pause — skip trading cycles\n' +
     '/resume — resume trading\n' +
+    '/pull — sync EC2 to origin/main and restart\n' +
+    '/pull status — local vs origin SHA\n' +
     '/help — this message'
   );
 }

@@ -39,6 +39,8 @@ export interface BotState {
   lastLowEthAlertAt?: string;
   /** ISO timestamp of last no-trade staleness Telegram alert. */
   lastStaleTradeAlertAt?: string;
+  /** ISO timestamp of last /pull self-update request. */
+  lastPullAt?: string;
 }
 
 export function getStatePath(botId: string): string {
@@ -117,7 +119,8 @@ export class BotRunner {
         (v) => {
           this.pausedByOperator = v;
         },
-        () => this.runLiquifyCommand(provider)
+        () => this.runLiquifyCommand(provider),
+        () => this.cycleInFlight || this.liquifyInFlight
       );
       this.liquifySchedulerStop = startDailyLiquifyScheduler(
         this.config,
@@ -145,6 +148,7 @@ export class BotRunner {
         lastDustSweepDate: prev?.lastDustSweepDate,
         lastLowEthAlertAt: prev?.lastLowEthAlertAt,
         lastStaleTradeAlertAt: prev?.lastStaleTradeAlertAt,
+        lastPullAt: prev?.lastPullAt,
       });
       await sleep(this.heartbeatMs);
     }
