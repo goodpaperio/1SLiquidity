@@ -1,16 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { WETH_ADDRESS } from '@/app/lib/utils/knownTradeTokens'
-import { fetchLiveReferencePrices, resolveLiveEthUsd } from '@/app/lib/utils/referencePrices'
+import {
+  fetchLiveReferencePrices,
+  resolveLiveBtcUsd,
+  resolveLiveEthUsd,
+  WBTC_ADDRESS,
+} from '@/app/lib/utils/referencePrices'
 
 export const LIVE_REFERENCE_PRICES_QUERY_KEY = [
   'live-reference-prices',
 ] as const
 
-/** Re-fetch live ETH/stables every 5 minutes (never uses localStorage). */
+/** Re-fetch live ETH/BTC/stables every 5 minutes (never uses localStorage). */
 const LIVE_PRICE_STALE_MS = 5 * 60 * 1000
 
 /**
- * Dedicated live price feed for WETH / stables.
+ * Dedicated live price feed for WETH / WBTC / stables.
  * Always calls CoinGecko — independent of the token-list cache.
  */
 export function useLiveReferencePrices() {
@@ -26,11 +31,18 @@ export function useLiveReferencePrices() {
 
   const prices = data ?? {}
   const fetchedEth = prices[WETH_ADDRESS] ?? 0
+  const fetchedBtc = prices[WBTC_ADDRESS] ?? 0
   const ethUsd = resolveLiveEthUsd(fetchedEth)
+  const btcUsd = resolveLiveBtcUsd(fetchedBtc)
 
   return {
-    prices: { ...prices, [WETH_ADDRESS]: ethUsd },
+    prices: {
+      ...prices,
+      [WETH_ADDRESS]: ethUsd,
+      [WBTC_ADDRESS]: btcUsd,
+    },
     ethUsd,
+    btcUsd,
     isLoading,
     isFetching,
     error,

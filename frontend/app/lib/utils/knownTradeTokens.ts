@@ -1,5 +1,9 @@
 import tokensListData from './tokens-list-04-09-2025.json'
 import wethPairsData from '../../../../config/weth_pairs_clean.json'
+import wbtcPairsData from '../../../../config/wbtc_pairs_clean.json'
+import daiPairsData from '../../../../config/dai_pairs_clean.json'
+import usdcPairsData from '../../../../config/usdc_pairs_clean.json'
+import usdtPairsData from '../../../../config/usdt_pairs_clean.json'
 
 export type KnownTradeTokenMeta = {
   symbol: string
@@ -8,6 +12,7 @@ export type KnownTradeTokenMeta = {
 }
 
 export const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+export const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f'
 
 /** Non-18-decimal tokens in the bot universe. */
 const DECIMAL_OVERRIDES: Record<string, number> = {
@@ -19,9 +24,11 @@ const DECIMAL_OVERRIDES: Record<string, number> = {
   '0x00f3c42833c3170159af4e92dbb451fb3f708917': 8, // ICP
   '0x467bccd9d29f223bce8043b84e8c8b282827790f': 2, // TEL
   '0xd1d2eb1b1e90b638588728b4130137d262c87cae': 8, // GALA
+  // tBTC is 18 decimals — listed explicitly so symbol/name resolve even if pair files lag
+  '0x18084fba666a33d37592fa2633fd49a74dd93a88': 18, // tBTC
 }
 
-/** Display symbols for weth-pair names when tokens-list has no entry. */
+/** Display symbols for pair names when tokens-list has no entry. */
 const SYMBOL_FROM_PAIR_NAME: Record<string, string> = {
   cbeth: 'cbETH',
   reth: 'rETH',
@@ -35,9 +42,14 @@ const SYMBOL_FROM_PAIR_NAME: Record<string, string> = {
   sfrxeth: 'sfrxETH',
   cbbtc: 'cbBTC',
   lbtc: 'LBTC',
+  tbtc: 'tBTC',
+  solvbtc: 'SolvBTC',
   ethplus: 'ETH+',
   'eth+': 'ETH+',
   wbtc: 'WBTC',
+  dai: 'DAI',
+  usdc: 'USDC',
+  usdt: 'USDT',
   shib: 'SHIB',
   link: 'LINK',
   aave: 'AAVE',
@@ -60,12 +72,33 @@ function symbolFromPairName(name: string): string {
   return name.toUpperCase()
 }
 
+function addPairsToMap(
+  map: Record<string, KnownTradeTokenMeta>,
+  pairs: { name: string; address: string }[]
+): void {
+  for (const pair of pairs) {
+    const addr = pair.address.toLowerCase()
+    if (map[addr]) continue
+    const symbol = symbolFromPairName(pair.name)
+    map[addr] = {
+      symbol,
+      decimals: DECIMAL_OVERRIDES[addr] ?? 18,
+      name: symbol,
+    }
+  }
+}
+
 function buildKnownTradeTokens(): Record<string, KnownTradeTokenMeta> {
   const map: Record<string, KnownTradeTokenMeta> = {
     [WETH_ADDRESS]: {
       symbol: 'WETH',
       decimals: 18,
       name: 'Wrapped Ether',
+    },
+    [DAI_ADDRESS]: {
+      symbol: 'DAI',
+      decimals: 18,
+      name: 'Dai Stablecoin',
     },
   }
 
@@ -81,16 +114,11 @@ function buildKnownTradeTokens(): Record<string, KnownTradeTokenMeta> {
     }
   }
 
-  for (const pair of wethPairsData.pairs) {
-    const addr = pair.address.toLowerCase()
-    if (map[addr]) continue
-    const symbol = symbolFromPairName(pair.name)
-    map[addr] = {
-      symbol,
-      decimals: DECIMAL_OVERRIDES[addr] ?? 18,
-      name: symbol,
-    }
-  }
+  addPairsToMap(map, wethPairsData.pairs)
+  addPairsToMap(map, wbtcPairsData.pairs)
+  addPairsToMap(map, daiPairsData.pairs)
+  addPairsToMap(map, usdcPairsData.pairs)
+  addPairsToMap(map, usdtPairsData.pairs)
 
   for (const [addr, decimals] of Object.entries(DECIMAL_OVERRIDES)) {
     const entry = map[addr]

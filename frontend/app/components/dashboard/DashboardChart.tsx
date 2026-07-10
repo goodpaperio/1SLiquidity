@@ -126,8 +126,12 @@ const DashboardChart = ({
   const [activeArrow, setActiveArrow] = useState<'left' | 'right' | null>(null)
 
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, ethUsd, isLoading: isLoadingTokenList } =
-    useTokenList()
+  const {
+    tokens: tokenList,
+    ethUsd,
+    btcUsd,
+    isLoading: isLoadingTokenList,
+  } = useTokenList()
   const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Calculate the time range based on selected period
@@ -385,7 +389,8 @@ const DashboardChart = ({
         tokenList,
         tokenList,
         ethUsd,
-        settlementPrices
+        settlementPrices,
+        btcUsd
       )
       data.volume += tradeVolume
       data.fees += (tradeVolume * 15) / 10000
@@ -394,7 +399,8 @@ const DashboardChart = ({
         tokenList,
         tokenList,
         ethUsd,
-        settlementPrices
+        settlementPrices,
+        btcUsd
       )
       data.trades++
     })
@@ -418,7 +424,7 @@ const DashboardChart = ({
     )
 
     return dataWithActivity
-  }, [trades, tokenList, ethUsd, timePeriod, getTimeRange, pricesByTradeId])
+  }, [trades, tokenList, ethUsd, btcUsd, timePeriod, getTimeRange, pricesByTradeId])
 
   // Calculate container width based on data length
   const containerWidth = useMemo(() => {

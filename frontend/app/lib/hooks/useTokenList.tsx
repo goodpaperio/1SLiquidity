@@ -1019,7 +1019,7 @@ export const useTokenList = () => {
     retry: false,
   })
 
-  const { prices: livePrices, ethUsd } = useLiveReferencePrices()
+  const { prices: livePrices, ethUsd, btcUsd } = useLiveReferencePrices()
 
   const tokensWithLivePrices = useMemo(() => {
     if (!tokens.length || Object.keys(livePrices).length === 0) return tokens
@@ -1029,6 +1029,7 @@ export const useTokenList = () => {
   return {
     tokens: tokensWithLivePrices,
     ethUsd,
+    btcUsd,
     livePrices,
     isLoading,
     error,

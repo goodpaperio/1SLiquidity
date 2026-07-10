@@ -16,7 +16,7 @@ export const REFERENCE_TOKEN_ADDRESSES = [
   WBTC_ADDRESS,
 ] as const
 
-const ETH_PEGGED_SYMBOLS = new Set([
+export const ETH_PEGGED_SYMBOLS = new Set([
   'wsteth',
   'steth',
   'reth',
@@ -31,8 +31,64 @@ const ETH_PEGGED_SYMBOLS = new Set([
   'eth+',
 ])
 
+/** BTC-denominated / BTC-pegged alts — price as BTC/USD when list price is missing. */
+export const BTC_PEGGED_SYMBOLS = new Set([
+  'tbtc',
+  'cbbtc',
+  'lbtc',
+  'solvbtc',
+  'sbtc',
+  'btcb',
+  'renbtc',
+])
+
+/** Mainnet addresses for BTC-pegged tokens (symbol-independent). */
+export const BTC_PEGGED_ADDRESSES = new Set([
+  '0x18084fba666a33d37592fa2633fd49a74dd93a88', // tBTC
+  '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf', // cbBTC
+  '0x8236a87084f8b84306f72007f36f2618a5634494', // LBTC
+  '0x7a56e1c57c7475ccf742a1832b028f0456652f97', // SolvBTC
+])
+
+export function isBtcPeggedToken(address?: string, symbol?: string): boolean {
+  const addr = address?.toLowerCase()
+  if (addr && (addr === WBTC_ADDRESS || BTC_PEGGED_ADDRESSES.has(addr))) {
+    return true
+  }
+  const sym = symbol?.toLowerCase()
+  return Boolean(
+    sym &&
+      (sym === 'wbtc' || sym === 'btc' || BTC_PEGGED_SYMBOLS.has(sym))
+  )
+}
+
+/** USD-pegged alts — treat as ~$1 when CoinGecko has no entry. */
+export const USD_PEGGED_SYMBOLS = new Set([
+  'usdc',
+  'usdt',
+  'dai',
+  'usde',
+  'susde',
+  'frax',
+  'pyusd',
+  'tusd',
+  'usdp',
+  'gusd',
+  'lusd',
+  'crvusd',
+  'usd0',
+  'fdusd',
+])
+
 const REFERENCE_ADDRESS_SET = new Set([
   WETH_ADDRESS,
+  USDC_ADDRESS,
+  USDT_ADDRESS,
+  DAI_ADDRESS,
+  WBTC_ADDRESS,
+])
+
+const STABLE_ADDRESS_SET = new Set([
   USDC_ADDRESS,
   USDT_ADDRESS,
   DAI_ADDRESS,
@@ -44,6 +100,12 @@ const REFERENCE_ADDRESS_SET = new Set([
  */
 export const ETH_USD_OVERRIDE = 1500
 
+/** Fallback BTC/USD when CoinGecko is unavailable. Override via NEXT_PUBLIC_BTC_USD. */
+export const BTC_USD_OVERRIDE = 95_000
+
+/** Fallback USD for DAI/USDC/USDT when CoinGecko is unavailable. */
+export const STABLE_USD_OVERRIDE = 1
+
 export function resolveLiveEthUsd(_fetchedEthUsd: number): number {
   const env = process.env.NEXT_PUBLIC_ETH_USD
   if (env) {
@@ -51,6 +113,25 @@ export function resolveLiveEthUsd(_fetchedEthUsd: number): number {
     if (Number.isFinite(n) && n > 0) return n
   }
   return ETH_USD_OVERRIDE
+}
+
+export function resolveLiveBtcUsd(fetchedBtcUsd: number): number {
+  const env = process.env.NEXT_PUBLIC_BTC_USD
+  if (env) {
+    const n = Number(env)
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  if (fetchedBtcUsd > 0) return fetchedBtcUsd
+  return BTC_USD_OVERRIDE
+}
+
+export function resolveLiveStableUsd(fetchedStableUsd: number): number {
+  if (fetchedStableUsd > 0) return fetchedStableUsd
+  return STABLE_USD_OVERRIDE
+}
+
+export function isStableTokenAddress(address: string): boolean {
+  return STABLE_ADDRESS_SET.has(address.toLowerCase())
 }
 
 /** Live ETH/USD from CoinGecko — dedicated API call, no cache. */
@@ -69,34 +150,48 @@ export async function fetchEthUsd(): Promise<number> {
   }
 }
 
-/** Always fetch live WETH/stables — bypasses stale 2h localStorage market cache. */
+/** Always fetch live WETH/WBTC/stables — bypasses stale 2h localStorage market cache. */
 export async function fetchLiveReferencePrices(): Promise<
   Record<string, number>
 > {
   try {
     const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,weth,usd-coin,tether,dai&vs_currencies=usd'
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,weth,bitcoin,wrapped-bitcoin,usd-coin,tether,dai&vs_currencies=usd'
     )
     if (!res.ok) {
-      return { [WETH_ADDRESS]: resolveLiveEthUsd(0) }
+      return {
+        [WETH_ADDRESS]: resolveLiveEthUsd(0),
+        [WBTC_ADDRESS]: resolveLiveBtcUsd(0),
+        [USDC_ADDRESS]: STABLE_USD_OVERRIDE,
+        [USDT_ADDRESS]: STABLE_USD_OVERRIDE,
+        [DAI_ADDRESS]: STABLE_USD_OVERRIDE,
+      }
     }
 
     const data = await res.json()
     const ethUsd = Number(data?.weth?.usd ?? data?.ethereum?.usd ?? 0)
+    const btcUsd = Number(
+      data?.['wrapped-bitcoin']?.usd ?? data?.bitcoin?.usd ?? 0
+    )
 
     const prices: Record<string, number> = {}
-    const resolvedEth = resolveLiveEthUsd(ethUsd)
-    prices[WETH_ADDRESS] = resolvedEth
-    const usdc = Number(data?.['usd-coin']?.usd ?? 0)
-    if (usdc > 0) prices[USDC_ADDRESS] = usdc
-    const usdt = Number(data?.tether?.usd ?? 0)
-    if (usdt > 0) prices[USDT_ADDRESS] = usdt
-    const dai = Number(data?.dai?.usd ?? 0)
-    if (dai > 0) prices[DAI_ADDRESS] = dai
+    prices[WETH_ADDRESS] = resolveLiveEthUsd(ethUsd)
+    prices[WBTC_ADDRESS] = resolveLiveBtcUsd(btcUsd)
+    prices[USDC_ADDRESS] = resolveLiveStableUsd(
+      Number(data?.['usd-coin']?.usd ?? 0)
+    )
+    prices[USDT_ADDRESS] = resolveLiveStableUsd(Number(data?.tether?.usd ?? 0))
+    prices[DAI_ADDRESS] = resolveLiveStableUsd(Number(data?.dai?.usd ?? 0))
 
     return prices
   } catch {
-    return { [WETH_ADDRESS]: resolveLiveEthUsd(0) }
+    return {
+      [WETH_ADDRESS]: resolveLiveEthUsd(0),
+      [WBTC_ADDRESS]: resolveLiveBtcUsd(0),
+      [USDC_ADDRESS]: STABLE_USD_OVERRIDE,
+      [USDT_ADDRESS]: STABLE_USD_OVERRIDE,
+      [DAI_ADDRESS]: STABLE_USD_OVERRIDE,
+    }
   }
 }
 
@@ -104,30 +199,61 @@ export function isReferenceTokenAddress(address: string): boolean {
   return REFERENCE_ADDRESS_SET.has(address.toLowerCase())
 }
 
-/** Patch WETH/stables (and ETH-symbol duplicates) with live prices. */
+/** Patch WETH/WBTC/stables and ETH/BTC/USD-pegged symbols with live prices. */
 export function applyLiveReferencePrices(
   tokens: TOKENS_TYPE[],
   livePrices: Record<string, number>
 ): TOKENS_TYPE[] {
-  const ethUsd = livePrices[WETH_ADDRESS.toLowerCase()] ?? livePrices[WETH_ADDRESS]
-  if (!ethUsd || ethUsd <= 0) return tokens
+  const ethUsd =
+    livePrices[WETH_ADDRESS.toLowerCase()] ?? livePrices[WETH_ADDRESS] ?? 0
+  const btcUsd =
+    livePrices[WBTC_ADDRESS.toLowerCase()] ?? livePrices[WBTC_ADDRESS] ?? 0
+  const usdcUsd =
+    livePrices[USDC_ADDRESS.toLowerCase()] ??
+    livePrices[USDC_ADDRESS] ??
+    STABLE_USD_OVERRIDE
+  const usdtUsd =
+    livePrices[USDT_ADDRESS.toLowerCase()] ??
+    livePrices[USDT_ADDRESS] ??
+    STABLE_USD_OVERRIDE
+  const daiUsd =
+    livePrices[DAI_ADDRESS.toLowerCase()] ??
+    livePrices[DAI_ADDRESS] ??
+    STABLE_USD_OVERRIDE
 
   return tokens.map((t) => {
     const addr = t.token_address.toLowerCase()
     const sym = t.symbol?.toLowerCase()
-    const live =
-      livePrices[addr] ??
-      livePrices[t.token_address] ??
-      (addr === WETH_ADDRESS ? ethUsd : 0)
+    let live = livePrices[addr] ?? livePrices[t.token_address] ?? 0
+    if (!live && addr === WETH_ADDRESS) live = ethUsd
+    if (!live && addr === WBTC_ADDRESS) live = btcUsd
+    if (!live && addr === USDC_ADDRESS) live = usdcUsd
+    if (!live && addr === USDT_ADDRESS) live = usdtUsd
+    if (!live && addr === DAI_ADDRESS) live = daiUsd
 
     if (live > 0 && isReferenceTokenAddress(addr)) {
       return { ...t, usd_price: live }
     }
-    if (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth') {
+    if (ethUsd > 0 && (addr === WETH_ADDRESS || sym === 'weth' || sym === 'eth')) {
       return { ...t, usd_price: ethUsd }
     }
-    if (sym && ETH_PEGGED_SYMBOLS.has(sym) && t.usd_price <= 0) {
+    if (btcUsd > 0 && isBtcPeggedToken(addr, sym)) {
+      return { ...t, usd_price: btcUsd }
+    }
+    if (addr === USDC_ADDRESS || sym === 'usdc') {
+      return { ...t, usd_price: usdcUsd }
+    }
+    if (addr === USDT_ADDRESS || sym === 'usdt') {
+      return { ...t, usd_price: usdtUsd }
+    }
+    if (addr === DAI_ADDRESS || sym === 'dai') {
+      return { ...t, usd_price: daiUsd }
+    }
+    if (sym && ETH_PEGGED_SYMBOLS.has(sym) && t.usd_price <= 0 && ethUsd > 0) {
       return { ...t, usd_price: ethUsd }
+    }
+    if (sym && USD_PEGGED_SYMBOLS.has(sym) && t.usd_price <= 0) {
+      return { ...t, usd_price: STABLE_USD_OVERRIDE }
     }
     return t
   })

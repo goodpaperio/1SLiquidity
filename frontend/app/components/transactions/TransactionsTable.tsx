@@ -68,7 +68,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const { trades, isLoading, error } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, priceFeed, ethUsd, isLoading: isLoadingTokens } =
+  const { tokens: tokenList, priceFeed, ethUsd, btcUsd, isLoading: isLoadingTokens } =
     useCustomTokenList()
   const { pricesByTradeId } = useSettlementPricesMap(trades)
 
@@ -108,14 +108,16 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         tokenList,
         undefined,
         priceFeed,
-        ethUsd
+        ethUsd,
+        btcUsd
       )
       const tokenOut = findTokenForTrade(
         trade.tokenOut,
         tokenList,
         undefined,
         priceFeed,
-        ethUsd
+        ethUsd,
+        btcUsd
       )
 
       const amountInWei = BigInt(trade.amountIn || '0')
@@ -137,7 +139,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         tokenList,
         priceFeed,
         ethUsd,
-        trade.id ? pricesByTradeId.get(trade.id) : undefined
+        trade.id ? pricesByTradeId.get(trade.id) : undefined,
+        btcUsd
       )
       const outputLabel = getOutputAmountLabel(trade)
 
@@ -194,6 +197,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     sortDirection,
     priceFeed,
     ethUsd,
+    btcUsd,
     pricesByTradeId,
   ])
 

@@ -116,8 +116,12 @@ const getSubPeriodLabel = (period: TimePeriod): string => {
 
 const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens: tokenList, ethUsd, isLoading: isLoadingTokenList } =
-    useTokenList()
+  const {
+    tokens: tokenList,
+    ethUsd,
+    btcUsd,
+    isLoading: isLoadingTokenList,
+  } = useTokenList()
   const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Calculate stats from trades data based on selected time period
@@ -192,14 +196,16 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
         tokenList,
         tokenList,
         ethUsd,
-        settlementPrices
+        settlementPrices,
+        btcUsd
       )
       const tradeSavings = tradeInstasettleSavingsUsd(
         trade,
         tokenList,
         tokenList,
         ethUsd,
-        settlementPrices
+        settlementPrices,
+        btcUsd
       )
 
       if (tradeVolume > 0) {
@@ -251,7 +257,7 @@ const DashboardStats = ({ timePeriod }: DashboardStatsProps) => {
       subPeriodSavings,
       streamsCount: trades.length,
     }
-  }, [trades, tokenList, ethUsd, timePeriod, pricesByTradeId])
+  }, [trades, tokenList, ethUsd, btcUsd, timePeriod, pricesByTradeId])
 
   const formatCurrency = formatUsdCompact
 

@@ -7,12 +7,20 @@ import {
   WETH_ADDRESS,
 } from '@/app/lib/utils/knownTradeTokens'
 import {
+  BTC_PEGGED_SYMBOLS,
   DAI_ADDRESS,
+  ETH_PEGGED_SYMBOLS,
   ETH_USD_OVERRIDE,
+  isBtcPeggedToken,
   isReferenceTokenAddress,
+  isStableTokenAddress,
+  resolveLiveBtcUsd,
   resolveLiveEthUsd,
+  STABLE_USD_OVERRIDE,
   USDC_ADDRESS,
+  USD_PEGGED_SYMBOLS,
   USDT_ADDRESS,
+  WBTC_ADDRESS,
 } from '@/app/lib/utils/referencePrices'
 import { getTradeStatus } from '@/app/lib/utils/tradeStatus'
 
@@ -52,26 +60,14 @@ export type TradeUsdBreakdown = {
   displayOutputUsd: number
 }
 
-type ReferenceLeg = 'weth' | 'stable' | false
-
-/** LSTs / ETH derivatives — USD ≈ ETH when CoinGecko has no entry for the alt. */
-const ETH_PEGGED_SYMBOLS = new Set([
-  'wsteth',
-  'steth',
-  'reth',
-  'cbeth',
-  'sweth',
-  'ethx',
-  'sfrxeth',
-  'weeth',
-  'lseth',
-  'oseth',
-  'frxeth',
-  'eth+',
-])
+type ReferenceLeg = 'weth' | 'wbtc' | 'stable' | false
 
 function fallbackEthUsd(): number {
   return resolveLiveEthUsd(0)
+}
+
+function fallbackBtcUsd(): number {
+  return resolveLiveBtcUsd(0)
 }
 
 function usdPriceForToken(
@@ -107,12 +103,14 @@ export function mergePricingLists(
 function referenceLeg(address: string): ReferenceLeg {
   const lower = address.toLowerCase()
   if (lower === WETH_ADDRESS) return 'weth'
+  if (lower === WBTC_ADDRESS) return 'wbtc'
   if (STABLE_ADDRESSES.has(lower)) return 'stable'
 
   const known = getKnownTradeToken(lower)
   if (known) {
     const sym = known.symbol.toLowerCase()
     if (sym === 'weth' || sym === 'eth') return 'weth'
+    if (sym === 'wbtc' || sym === 'btc') return 'wbtc'
     if (sym === 'usdc' || sym === 'usdt' || sym === 'dai') return 'stable'
   }
   return false
@@ -152,6 +150,40 @@ export function getEthUsdPrice(
   return fallbackEthUsd()
 }
 
+/** Live BTC/USD — API / feed price wins, then override. */
+export function getBtcUsdPrice(
+  tokenList: TOKENS_TYPE[],
+  priceFeed?: TOKENS_TYPE[],
+  liveBtcUsd?: number
+): number {
+  if (liveBtcUsd && liveBtcUsd > 0) return liveBtcUsd
+
+  const lists = priceFeed?.length ? [priceFeed, tokenList] : [tokenList]
+
+  for (const list of lists) {
+    for (const t of list) {
+      if (t.usd_price <= 0) continue
+      const sym = t.symbol?.toLowerCase()
+      const addr = t.token_address?.toLowerCase()
+      if (addr === WBTC_ADDRESS || sym === 'wbtc' || sym === 'btc') {
+        return t.usd_price
+      }
+    }
+  }
+
+  for (const list of lists) {
+    for (const t of list) {
+      if (t.usd_price <= 0) continue
+      const sym = t.symbol?.toLowerCase()
+      if (sym && BTC_PEGGED_SYMBOLS.has(sym)) {
+        return t.usd_price
+      }
+    }
+  }
+
+  return fallbackBtcUsd()
+}
+
 /** Single notional for volume/stats — avoids max(input, output) inflation. */
 export function resolveCanonicalNotionalUsd(
   inputUsd: number,
@@ -177,6 +209,9 @@ export function resolveCanonicalNotionalUsd(
 
   if (outRef === 'weth' || inRef === 'weth') {
     return outRef === 'weth' ? outputUsd : inputUsd
+  }
+  if (outRef === 'wbtc' || inRef === 'wbtc') {
+    return outRef === 'wbtc' ? outputUsd : inputUsd
   }
   if (outRef === 'stable' || inRef === 'stable') {
     return outRef === 'stable' ? outputUsd : inputUsd
@@ -218,27 +253,30 @@ export type TradePricingOptions = {
   settlementPrices?: Record<string, number>
 }
 
-/** Resolve USD price with WETH/ETH and same-symbol fallbacks when list entry has price 0. */
+/** Resolve USD price with WETH/ETH/WBTC/BTC and same-symbol fallbacks when list entry has price 0. */
 export function resolveTokenUsdPrice(
   token: TOKENS_TYPE | null | undefined,
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
-  liveEthUsd?: number
+  liveEthUsd?: number,
+  liveBtcUsd?: number
 ): number {
   if (!token) return 0
 
   const pricingList = mergePricingLists(tokenList, priceFeed)
   const addr = token.token_address?.toLowerCase()
   const sym = token.symbol?.toLowerCase()
+  const isBtc = isBtcPeggedToken(addr, sym)
   const isReference =
     isReferenceTokenAddress(addr ?? '') ||
+    isBtc ||
     sym === 'weth' ||
     sym === 'eth' ||
     sym === 'usdc' ||
     sym === 'usdt' ||
     sym === 'dai'
 
-  // Reference tokens always re-resolve — never trust stale cached usd_price
+  // Reference / BTC-pegged tokens always re-resolve — never trust stale cached usd_price
   if (!isReference && token.usd_price > 0) return token.usd_price
 
   if (addr === WETH_ADDRESS) {
@@ -247,6 +285,11 @@ export function resolveTokenUsdPrice(
         t.token_address?.toLowerCase() === WETH_ADDRESS && t.usd_price > 0
     )
     if (priced) return priced.usd_price
+  }
+
+  if (isBtc) {
+    const btcUsd = getBtcUsdPrice(pricingList, priceFeed, liveBtcUsd)
+    if (btcUsd > 0) return btcUsd
   }
 
   if (sym) {
@@ -264,6 +307,19 @@ export function resolveTokenUsdPrice(
     if (sym && ETH_PEGGED_SYMBOLS.has(sym)) {
       return ethUsd
     }
+  }
+
+  if (addr && isStableTokenAddress(addr)) {
+    const priced = pricingList.find(
+      (t) => t.token_address?.toLowerCase() === addr && t.usd_price > 0
+    )
+    return priced?.usd_price ?? STABLE_USD_OVERRIDE
+  }
+  if (sym && USD_PEGGED_SYMBOLS.has(sym)) {
+    const priced = pricingList.find(
+      (t) => t.symbol?.toLowerCase() === sym && t.usd_price > 0
+    )
+    return priced?.usd_price ?? STABLE_USD_OVERRIDE
   }
 
   if (token.usd_price > 0) return token.usd_price
@@ -308,7 +364,8 @@ export function findTokenForTrade(
   tokenList: TOKENS_TYPE[],
   selectedToken?: TOKENS_TYPE | null,
   priceFeed?: TOKENS_TYPE[],
-  liveEthUsd?: number
+  liveEthUsd?: number,
+  liveBtcUsd?: number
 ): TOKENS_TYPE | undefined {
   if (!address) return undefined
 
@@ -361,7 +418,8 @@ export function findTokenForTrade(
       merged,
       pricingList,
       priceFeed,
-      liveEthUsd
+      liveEthUsd,
+      liveBtcUsd
     ),
   }
 }
@@ -434,21 +492,24 @@ export function getTradeUsdBreakdown(
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
   liveEthUsd?: number,
-  settlementPrices?: Record<string, number>
+  settlementPrices?: Record<string, number>,
+  liveBtcUsd?: number
 ): TradeUsdBreakdown {
   const tokenIn = findTokenForTrade(
     trade.tokenIn,
     tokenList,
     undefined,
     priceFeed,
-    liveEthUsd
+    liveEthUsd,
+    liveBtcUsd
   )
   const tokenOut = findTokenForTrade(
     trade.tokenOut,
     tokenList,
     undefined,
     priceFeed,
-    liveEthUsd
+    liveEthUsd,
+    liveBtcUsd
   )
 
   const inputUsd = tokenIn
@@ -498,7 +559,8 @@ export function tradeInputVolumeUsd(
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
   liveEthUsd?: number,
-  settlementPrices?: Record<string, number>
+  settlementPrices?: Record<string, number>,
+  liveBtcUsd?: number
 ): number {
   return getTradeUsdBreakdown(
     {
@@ -510,7 +572,8 @@ export function tradeInputVolumeUsd(
     tokenList,
     priceFeed,
     liveEthUsd,
-    settlementPrices
+    settlementPrices,
+    liveBtcUsd
   ).inputUsd
 }
 
@@ -524,14 +587,16 @@ export function tradeNotionalVolumeUsd(
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
   liveEthUsd?: number,
-  settlementPrices?: Record<string, number>
+  settlementPrices?: Record<string, number>,
+  liveBtcUsd?: number
 ): number {
   return getTradeUsdBreakdown(
     trade,
     tokenList,
     priceFeed,
     liveEthUsd,
-    settlementPrices
+    settlementPrices,
+    liveBtcUsd
   ).notionalUsd
 }
 
@@ -545,14 +610,16 @@ export function tradeDisplayNotionalUsd(
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
   liveEthUsd?: number,
-  settlementPrices?: Record<string, number>
+  settlementPrices?: Record<string, number>,
+  liveBtcUsd?: number
 ): number {
   return tradeNotionalVolumeUsd(
     trade,
     tokenList,
     priceFeed,
     liveEthUsd,
-    settlementPrices
+    settlementPrices,
+    liveBtcUsd
   )
 }
 
@@ -567,14 +634,16 @@ export function tradeInstasettleSavingsUsd(
   tokenList: TOKENS_TYPE[],
   priceFeed?: TOKENS_TYPE[],
   liveEthUsd?: number,
-  settlementPrices?: Record<string, number>
+  settlementPrices?: Record<string, number>,
+  liveBtcUsd?: number
 ): number {
   const tokenOut = findTokenForTrade(
     trade.tokenOut,
     tokenList,
     undefined,
     priceFeed,
-    liveEthUsd
+    liveEthUsd,
+    liveBtcUsd
   )
   if (!tokenOut) return 0
 

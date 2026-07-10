@@ -86,7 +86,7 @@ const SwapStream: React.FC<Props> = ({
   isLoading,
   linkToTradePage = false,
 }) => {
-  const { tokens, ethUsd, isLoading: isLoadingTokens } = useTokenList()
+  const { tokens, ethUsd, btcUsd, isLoading: isLoadingTokens } = useTokenList()
   const { settlementPrices } = useTradeSettlementPrices(trade)
   const remainingStreams = calculateRemainingStreams(trade)
   const totalStreams = calculateTotalStreams(trade)
@@ -97,14 +97,16 @@ const SwapStream: React.FC<Props> = ({
     tokens,
     undefined,
     tokens,
-    ethUsd
+    ethUsd,
+    btcUsd
   )
   const tokenOut = findTokenForTrade(
     trade.tokenOut,
     tokens,
     undefined,
     tokens,
-    ethUsd
+    ethUsd,
+    btcUsd
   )
 
   const amountInWei = BigInt(trade.amountIn || '0')
@@ -128,7 +130,8 @@ const SwapStream: React.FC<Props> = ({
     tokens,
     tokens,
     ethUsd,
-    settlementPrices
+    settlementPrices,
+    btcUsd
   )
   const inputUsdValue = usdBreakdown.displayInputUsd
   const outputUsdValue = usdBreakdown.displayOutputUsd

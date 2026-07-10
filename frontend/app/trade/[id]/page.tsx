@@ -55,7 +55,7 @@ export default function TradePage() {
   const tradeId = params.id as string
 
   const { trade, isLoading: isLoadingTrade, refetch } = useTrade({ tradeId })
-  const { tokens, isLoading: isLoadingTokens } = useTokenList()
+  const { tokens, ethUsd, btcUsd, isLoading: isLoadingTokens } = useTokenList()
 
   const {
     getSigner,
@@ -176,8 +176,12 @@ export default function TradePage() {
 
   const isLoading = isLoadingTrade || isLoadingTokens
 
-  const tokenIn = trade ? findTokenForTrade(trade.tokenIn, tokens) : undefined
-  const tokenOut = trade ? findTokenForTrade(trade.tokenOut, tokens) : undefined
+  const tokenIn = trade
+    ? findTokenForTrade(trade.tokenIn, tokens, undefined, tokens, ethUsd, btcUsd)
+    : undefined
+  const tokenOut = trade
+    ? findTokenForTrade(trade.tokenOut, tokens, undefined, tokens, ethUsd, btcUsd)
+    : undefined
 
   const aggregates = trade ? calculateTradeAggregates(trade) : null
 

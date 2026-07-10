@@ -29,7 +29,7 @@ const DashboardTrades = ({
   onClearBarFilter,
 }: DashboardTradesProps) => {
   const { trades, isLoading } = useTrades({ first: 1000, skip: 0 })
-  const { tokens, ethUsd } = useTokenList()
+  const { tokens, ethUsd, btcUsd } = useTokenList()
   const { pricesByTradeId } = useSettlementPricesMap(trades ?? [])
 
   // Filter ongoing and completed trades
@@ -55,7 +55,14 @@ const DashboardTrades = ({
     let volume = 0
     if (tokens && tokens.length > 0) {
       ongoing.forEach((trade) => {
-        volume += tradeDisplayNotionalUsd(trade, tokens, tokens, ethUsd)
+        volume += tradeDisplayNotionalUsd(
+          trade,
+          tokens,
+          tokens,
+          ethUsd,
+          trade.id ? pricesByTradeId.get(trade.id) : undefined,
+          btcUsd
+        )
       })
     }
 
@@ -64,7 +71,7 @@ const DashboardTrades = ({
       latestTrades: completed.slice(0, latestLimit),
       ongoingVolume: volume,
     }
-  }, [trades, tokens, ethUsd, selectedBar, timePeriod])
+  }, [trades, tokens, ethUsd, btcUsd, pricesByTradeId, selectedBar, timePeriod])
 
   const formatVolume = (value: number): string => {
     if (value >= 1000000) {

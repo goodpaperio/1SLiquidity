@@ -14,7 +14,7 @@ export type { TimePeriod } from '@/app/lib/utils/dashboardChartGrouping'
 
 const Dashboard = () => {
   const controls = useAnimation()
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1Y')
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1M')
   const [selectedBar, setSelectedBar] = useState<ChartBarSelection | null>(null)
 
   const handleTimePeriodChange = (period: TimePeriod) => {

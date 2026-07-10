@@ -48,6 +48,7 @@ export const useCustomTokenList = () => {
   const {
     tokens: coingeckoTokens,
     ethUsd,
+    btcUsd,
     livePrices,
     isLoading,
     error,
@@ -108,9 +109,10 @@ export const useCustomTokenList = () => {
 
   return {
     tokens: customTokens,
-    /** Full CoinGecko list — pass to trade USD helpers for WETH/stable pricing. */
+    /** Full CoinGecko list — pass to trade USD helpers for WETH/WBTC/stable pricing. */
     priceFeed: coingeckoTokens,
     ethUsd,
+    btcUsd,
     livePrices,
     isLoading,
     error,

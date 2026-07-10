@@ -68,7 +68,7 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   walletAddress,
   onRefetch,
 }) => {
-  const { tokens, isLoading: isLoadingTokens } = useTokenList()
+  const { tokens, ethUsd, btcUsd, isLoading: isLoadingTokens } = useTokenList()
   const {
     placeTrade,
     loading,
@@ -96,8 +96,22 @@ const StreamDetails: React.FC<StreamDetailsProps> = ({
   const totalStreams = calculateTotalStreams(selectedStream)
   const estimatedTime = useStreamTime(remainingStreams, 5)
 
-  const tokenIn = findTokenForTrade(selectedStream.tokenIn, tokens)
-  const tokenOut = findTokenForTrade(selectedStream.tokenOut, tokens)
+  const tokenIn = findTokenForTrade(
+    selectedStream.tokenIn,
+    tokens,
+    undefined,
+    tokens,
+    ethUsd,
+    btcUsd
+  )
+  const tokenOut = findTokenForTrade(
+    selectedStream.tokenOut,
+    tokens,
+    undefined,
+    tokens,
+    ethUsd,
+    btcUsd
+  )
 
   const amountInWei = BigInt(selectedStream.amountIn)
   const displayOutputWei = getDisplayOutputAmountWei(selectedStream)
