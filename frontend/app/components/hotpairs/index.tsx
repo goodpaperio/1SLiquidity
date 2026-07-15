@@ -27,6 +27,8 @@ const HotPairs = () => {
   const [selectedBaseToken, setSelectedBaseToken] = useState<any>(null)
   const [selectedOtherToken, setSelectedOtherToken] = useState<any>(null)
   const [slippageSavingsUsd, setSlippageSavingsUsd] = useState<number>(0)
+  // Prevent TopPairsCarousel from re-autofilling after the user clears
+  const [hasDismissedAutofill, setHasDismissedAutofill] = useState(false)
 
   const controls = useAnimation()
 
@@ -86,6 +88,7 @@ const HotPairs = () => {
 
   const handleActiveHotPair = (pair: any) => {
     if (!pair) return
+    setHasDismissedAutofill(false)
     setActiveHotPair(pair)
     setVolumeAmount(pair?.reserveAtotaldepth)
     // setVolumeAmount(pair?.reserveAtotaldepthWei)
@@ -166,6 +169,7 @@ const HotPairs = () => {
   }
 
   const clearAllSelectedTokens = () => {
+    setHasDismissedAutofill(true)
     setSelectedBaseToken(null)
     setSelectedOtherToken(null)
     setActiveHotPair(null)
@@ -188,7 +192,7 @@ const HotPairs = () => {
       <div className="relative min-h-screen overflow-hidden">
         <Navbar />
 
-        <HeroBgImage className="absolute -top-28 right-0 w-full h-full object-cover" />
+        <HeroBgImage className="absolute -top-28 right-0 w-full h-full object-cover pointer-events-none" />
         <div
           ref={containerRef}
           className="mt-[60px] mb-10 mx-auto relative z-10 w-full px-4 md:max-w-6xl"
@@ -244,6 +248,7 @@ const HotPairs = () => {
             <TopPairsCarousel
               activeHotPair={activeHotPair}
               setActiveHotPair={handleActiveHotPair}
+              skipAutofill={hasDismissedAutofill}
             />
           </motion.div>
 

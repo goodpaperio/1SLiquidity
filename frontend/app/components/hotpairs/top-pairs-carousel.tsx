@@ -16,9 +16,11 @@ import { formatNumberAdvanced } from '@/lib/utils'
 export default function TopPairsCarousel({
   activeHotPair,
   setActiveHotPair,
+  skipAutofill = false,
 }: {
   activeHotPair: any
   setActiveHotPair: any
+  skipAutofill?: boolean
 }) {
   // State for sorted pairs with slippageSavingsUsd
   const [sortedPairs, setSortedPairs] = useState<any[]>([])
@@ -58,12 +60,12 @@ export default function TopPairsCarousel({
     }
   }, [topTokensData])
 
-  // Auto-select first pair when data loads
+  // Auto-select first pair on initial load only (not after user clears)
   useEffect(() => {
-    if (sortedPairs.length > 0 && !activeHotPair) {
+    if (sortedPairs.length > 0 && !activeHotPair && !skipAutofill) {
       handleSetActiveHotPair(sortedPairs[0])
     }
-  }, [sortedPairs, activeHotPair])
+  }, [sortedPairs, activeHotPair, skipAutofill])
 
   // Enhanced setActiveHotPair that includes slippageSavingsUsd
   const handleSetActiveHotPair = (pair: any) => {
