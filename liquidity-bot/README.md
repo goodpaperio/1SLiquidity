@@ -286,7 +286,7 @@ The bot is designed to probe DecaStream pair quality safely. Key guards:
 | `bots/<id>.trade-ledger.jsonl` | Open / completed / failed / cancelled trades |
 | `bots/<id>.stuck-trade.json` | Stuck-cycle counter for auto-cancel |
 | `bots/<id>.token-issues.jsonl` | Suspect tokens for DecaStream review |
-| `bots/<id>.notify-state.json` | TradeCompleted event cursor for Telegram |
+| `bots/<id>.notify-state.json` | TradeCompleted event cursor for Telegram (floored at Core `deploymentBlock` from the bot's deployment manifest; `eth_getLogs` chunks via `ETH_GETLOGS_MAX_RANGE`, default 10) |
 | `bots/<id>.state.json` | Runner heartbeat |
 
 ---
