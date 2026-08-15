@@ -1,0 +1,28 @@
+# Local-only architecture reference (not pushed)
+ARCHITECTURE.md
+
+# Secrets and runtime
+.env
+.env.local
+secrets/
+bots/*.state.json
+bots/*.cooldowns.json
+bots/*.stuck-trade.json
+bots/*.token-issues.jsonl
+bots/*.trade-history.json
+bots/*.telegram-state.json
+bots/*.wallet.meta.json
+bots/*.withdraw-*.json
+bots/*.hot-pairs.json
+bots/*.dex-mids.json
+bots/*.warm-set.json
+data/
+.run/
+
+# Dependencies and build
+node_modules/
+dist/
+
+# Logs and OS
+*.log
+.DS_Store

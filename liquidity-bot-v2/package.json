@@ -1,0 +1,74 @@
+{
+  "name": "liquidity-bot-v2",
+  "version": "1.0.0",
+  "description": "DecaStream liquidity bot v2 (hot pairs, price-vs-depth)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/cli/start-bot.ts",
+    "stop": "tsx src/cli/stop-bot.ts",
+    "status": "tsx src/cli/status-bot.ts",
+    "test": "vitest run --exclude '**/*.fork.test.ts'",
+    "test:watch": "vitest --exclude '**/*.fork.test.ts'",
+    "verify:v2": "vitest run tests/phase-v2",
+    "verify:0": "vitest run tests/phase-0",
+    "verify:a": "vitest run tests/phase-a",
+    "verify:b": "vitest run tests/phase-b",
+    "verify:c": "vitest run tests/phase-c",
+    "test:integration": "vitest run tests/integration --exclude '**/*.fork.test.ts'",
+    "verify:integration": "vitest run tests/integration --exclude '**/*.fork.test.ts'",
+    "verify:d": "vitest run tests/integration/directSwap.test.ts tests/integration/executionSlippage.test.ts",
+    "verify:e": "vitest run tests/integration/placeTrade.test.ts",
+    "verify:f": "vitest run tests/integration/gasRefuel.test.ts",
+    "verify:fork-gas": "vitest run tests/integration/gasRefuel.fork.test.ts",
+    "verify:all": "npm run build && vitest run --exclude '**/*.fork.test.ts'",
+    "generate": "tsx src/cli/generate-bot.ts",
+    "deploy": "tsx src/cli/deploy-bot.ts",
+    "redeploy": "bash scripts/redeploy.sh",
+    "withdraw": "tsx src/cli/withdraw-bot.ts",
+    "pull": "tsx src/cli/pull-bot.ts",
+    "scan:dry-run": "tsx src/cli/scan-dry-run.ts",
+    "run:once": "tsx src/cli/run-once.ts",
+    "cancel:trade": "tsx src/cli/cancel-trade.ts",
+    "notify:test": "tsx src/cli/notify-test.ts",
+    "notify:daily": "tsx src/cli/notify-daily.ts",
+    "notify:stale-trades": "tsx src/cli/notify-stale-trades.ts",
+    "liquify:sweep": "tsx src/cli/liquify-sweep.ts",
+    "liquify:fork": "tsx liquify-fork.ts",
+    "scan:bps-sweep": "tsx src/cli/scan-bps-sweep.ts",
+    "scan:nominal-sweep": "tsx src/cli/scan-nominal-sweep.ts",
+    "scan:ecosystem": "tsx src/cli/scan-ecosystem.ts",
+    "scan:spread-stats": "tsx src/cli/scan-spread-stats.ts",
+    "scan:pair-matrices": "tsx src/cli/scan-pair-matrices.ts",
+    "postinstall": "node scripts/ensure-rollup-native.mjs",
+    "install:clean": "rm -rf node_modules package-lock.json && npm install --include=optional",
+    "fix:rollup": "node scripts/ensure-rollup-native.mjs"
+  },
+  "keywords": [
+    "decastream",
+    "liquidity",
+    "arbitrage"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ethers": "^6.16.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.22.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.9"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-darwin-arm64": "4.46.3",
+    "@rollup/rollup-darwin-x64": "4.46.3",
+    "@rollup/rollup-linux-x64-gnu": "4.46.3"
+  }
+}

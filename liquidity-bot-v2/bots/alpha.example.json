@@ -1,0 +1,57 @@
+{
+  "id": "alpha",
+  "enabled": false,
+  "address": "0x0000000000000000000000000000000000000000",
+  "privateKeyEnv": "BOT_ALPHA_KEY",
+  "baseTokens": ["WETH"],
+  "scan": {
+    "intervalMs": 1500000,
+    "minSpreadBps": 300,
+    "minCoupledSpreadBps": -100,
+    "selectionMode": "price_vs_depth",
+    "universeMode": "hot_pairs",
+    "hotPairsLimit": 10,
+    "hotPairsMetric": "slippageSavings",
+    "hotPairsCacheTtlMs": 3600000,
+    "requirePriceNeDepth": true,
+    "maxSpreadBps": 2500,
+    "minLiquidityRatio": 2,
+    "dustFloorUsd": 1,
+    "maxSellReserveUsageBps": 1500,
+    "finalistCount": 5,
+    "skipRecentTargetsCount": 10,
+    "excludedTargets": ["ldo"]
+  },
+  "trade": {
+    "nominalTradeUsd": 10,
+    "balanceUsagePct": 45,
+    "maxOpenTrades": 1,
+    "decastreamAmountOutMinBufferBps": 160,
+    "directSwapSlippageBps": 50,
+    "pairCooldownMs": 900000,
+    "minTradesBetweenSamePair": 4,
+    "tradeHistoryMaxEntries": 32,
+    "usePriceBased": false,
+    "leg1UsePriceBased": true,
+    "leg2UsePriceBased": false,
+    "isInstasettlable": false,
+    "instasettleBps": 100,
+    "stuckCancelAfterCycles": 3
+  },
+  "gas": {
+    "minEthWei": "1500000000000000",
+    "targetEthWei": "3000000000000000",
+    "refuelDex": "uniswap-v3-3000"
+  },
+  "liquify": {
+    "enabled": true,
+    "contract": "0xce9f5d7D17C92Ba1bBCe770FfddE8C92Ed5Baf95",
+    "dailySweepHourUtc": 11,
+    "minNativeEthUsd": 10,
+    "slippageBps": 300
+  },
+  "contracts": {
+    "core": "0xD0B6DaD2Dc5dad47bEB7C3D7Dd7980a20CD6a710",
+    "deploymentManifest": "../versions/deployment-addresses-mainnet-2.2.1.json"
+  }
+}
