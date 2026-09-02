@@ -5,7 +5,7 @@ import {
   getWalletTokens,
   TokenData,
   calculateWalletBalance,
-} from '../wallet-details/moralis'
+} from '../wallet-details/infura'
 import { useQuery } from '@tanstack/react-query'
 import { useTransactionListener } from './useTransactionListener'
 

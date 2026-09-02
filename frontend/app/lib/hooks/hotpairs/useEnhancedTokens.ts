@@ -159,7 +159,14 @@ const fetchTokenPairs = async ({
   const response = await fetch(`/api/tokens/${address}/pairs?${params}`)
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch token pairs: ${response.statusText}`)
+    console.warn(
+      `Token pairs API unavailable (${response.status}); returning empty list`
+    )
+    return {
+      success: true,
+      data: [],
+      pagination: { page, limit, total: 0, pages: 0 },
+    }
   }
 
   return response.json()
@@ -177,7 +184,10 @@ const fetchTopTokens = async ({
   const response = await fetch(`/api/tokens/top?${params}`)
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch top tokens: ${response.statusText}`)
+    console.warn(
+      `Hot pairs API unavailable (${response.status}); returning empty list`
+    )
+    return { success: true, data: [], metric, limit: limit ?? 1000 }
   }
 
   return response.json()
