@@ -1,4 +1,4 @@
-import { Contract } from 'ethers'
+import { Contract, providers } from 'ethers'
 import { CONTRACT_ADDRESSES } from './config/contracts'
 import { UniswapV2RouterABI, UniswapV3QuoterABI } from './config/abis'
 import { fetchEthBtcUsd } from '@/app/lib/utils/defiLlamaPrices'

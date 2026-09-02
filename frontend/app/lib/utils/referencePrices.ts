@@ -1,3 +1,5 @@
+import type { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
+import { WETH_ADDRESS } from '@/app/lib/utils/knownTradeTokens'
 import {
   fetchEthBtcUsd,
   fetchEthereumTokenPrices,

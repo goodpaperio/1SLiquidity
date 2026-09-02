@@ -60,21 +60,6 @@ const ETH_PEGGED_SYMBOLS = new Set([
   'weeth',
 ])
 
-const KNOWN_TOKEN_DECIMALS: Record<string, number> = {
-  '0xdac17f958d2ee523a2206206994597c13d831ec7': 6,
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 6,
-  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 8,
-  '0x00f3c42833c3170159af4e92dbb451fb3f708917': 8,
-  '0x467bccd9d29f223bce8043b84e8c8b282827790f': 2,
-  '0x6b175474e89094c44da98b954eedeac495271d0f': 18,
-  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 18,
-  '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': 18,
-  '0x514910771af9ca656af840dff83e8264ecf986ca': 18,
-  '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9': 18,
-  '0x0d8775f648430679a709e98d2b0cb6250d2887ef': 18,
-  '0x4fabb145d64652a948d72533023f6e7a623c7c53': 18,
-}
-
 const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
 
 /** Curated base tokens with icons — prices filled from DefiLlama at runtime. */
