@@ -16,7 +16,7 @@ const LIVE_PRICE_STALE_MS = 5 * 60 * 1000
 
 /**
  * Dedicated live price feed for WETH / WBTC / stables.
- * Always calls CoinGecko — independent of the token-list cache.
+ * Fetches from DefiLlama — independent of the token-list cache.
  */
 export function useLiveReferencePrices() {
   const { data, isLoading, error, refetch, isFetching } = useQuery({

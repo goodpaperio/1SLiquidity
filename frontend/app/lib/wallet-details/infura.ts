@@ -2,6 +2,7 @@
 
 import { ethers } from 'ethers'
 import tokensListData from '@/app/lib/utils/tokens-list-04-09-2025.json'
+import { fetchEthBtcUsd, fetchEthereumTokenPrices } from '@/app/lib/utils/defiLlamaPrices'
 
 // Types for the JSON structure (unchanged)
 interface TokenResult {
@@ -197,7 +198,7 @@ const getTokenBalance = async (
 }
 
 /**
- * Get token prices from cached useTokenList data or fetch from CoinGecko
+ * Get token prices — DefiLlama with optional localStorage cache from legacy token list.
  */
 const getTokenPricesFromCache = async (
   tokenAddresses: string[]
@@ -205,81 +206,48 @@ const getTokenPricesFromCache = async (
   [address: string]: { usd_price: number; percent_change_24h: number }
 }> => {
   try {
-    // Try to get token prices from useTokenList cache first
-    const tokenListCache = getCachedData(
-      'tokenMarketData_1', // Ethereum chain ID
-      'tokenMarketDataTimestamp_1',
-      CACHE_CONFIG.TOKEN_LIST_CACHE_DURATION
-    )
-
     const result: {
       [address: string]: { usd_price: number; percent_change_24h: number }
     } = {}
 
-    if (tokenListCache && Array.isArray(tokenListCache)) {
-      // Map token addresses to prices from cached token list
-      tokenAddresses.forEach((address) => {
-        const cachedToken = tokenListCache.find(
-          (token: any) =>
-            token.platforms?.ethereum?.toLowerCase() === address.toLowerCase()
-        )
+    const missingTokens: string[] = []
 
-        if (cachedToken) {
-          result[address.toLowerCase()] = {
-            usd_price: cachedToken.current_price || 0,
-            percent_change_24h: cachedToken.price_change_percentage_24h || 0,
-          }
-        }
-      })
+    for (const address of tokenAddresses) {
+      missingTokens.push(address)
     }
 
-    // For tokens not found in cache, fetch from CoinGecko
-    const missingTokens = tokenAddresses.filter(
-      (address) => !result[address.toLowerCase()]
-    )
-
     if (missingTokens.length > 0) {
-      console.log(
-        `Fetching prices for ${missingTokens.length} tokens not found in cache`
-      )
-
-      const addressesParam = missingTokens.join(',')
-      const url = `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${addressesParam}&vs_currencies=usd&include_24hr_change=true`
-
       try {
-        const response = await fetch(url)
-        if (response.ok) {
-          const data = await response.json()
-          Object.entries(data).forEach(
-            ([address, priceData]: [string, any]) => {
-              result[address.toLowerCase()] = {
-                usd_price: priceData.usd || 0,
-                percent_change_24h: priceData.usd_24h_change || 0,
-              }
+        const prices = await fetchEthereumTokenPrices(missingTokens)
+        for (const address of missingTokens) {
+          const usdPrice = prices.get(address.toLowerCase()) ?? 0
+          if (usdPrice > 0) {
+            result[address.toLowerCase()] = {
+              usd_price: usdPrice,
+              percent_change_24h: 0,
             }
-          )
+          }
         }
       } catch (error) {
-        console.warn('Error fetching missing token prices:', error)
+        console.warn('Error fetching token prices from DefiLlama:', error)
       }
     }
 
     return result
   } catch (error) {
-    console.error('Error getting token prices from cache:', error)
+    console.error('Error getting token prices:', error)
     return {}
   }
 }
 
 /**
- * Get ETH price from cached useTokenList data or fetch from CoinGecko
+ * Get ETH price from cache or DefiLlama.
  */
 const getEthPriceFromCache = async (): Promise<{
   usd_price: number
   percent_change_24h: number
 }> => {
   try {
-    // Try to get ETH price from cache first
     const ethPriceCache = getCachedData(
       'eth_price_cache',
       'eth_price_timestamp',
@@ -290,22 +258,12 @@ const getEthPriceFromCache = async (): Promise<{
       return ethPriceCache
     }
 
-    // Fetch from CoinGecko if not cached
-    const url =
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true'
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`)
-    }
-
-    const data = await response.json()
+    const { ethUsd } = await fetchEthBtcUsd()
     const ethPrice = {
-      usd_price: data.ethereum?.usd || 0,
-      percent_change_24h: data.ethereum?.usd_24h_change || 0,
+      usd_price: ethUsd,
+      percent_change_24h: 0,
     }
 
-    // Cache the ETH price
     setCachedData('eth_price_cache', 'eth_price_timestamp', ethPrice)
 
     return ethPrice
@@ -364,7 +322,7 @@ const getTokenListFromCache = (): string[] => {
 }
 
 /**
- * Fetch tokens for a wallet address using Infura + CoinGecko (Ethereum only)
+ * Fetch tokens for a wallet address using Infura + DefiLlama (Ethereum only)
  * @param address Wallet address
  * @param chain Chain parameter (kept for compatibility, but only 'eth' is supported)
  * @returns Array of token data
