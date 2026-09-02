@@ -1,7 +1,7 @@
-import { ethers, providers } from 'ethers'
 import { Contract } from 'ethers'
 import { CONTRACT_ADDRESSES } from './config/contracts'
 import { UniswapV2RouterABI, UniswapV3QuoterABI } from './config/abis'
+import { fetchEthBtcUsd } from '@/app/lib/utils/defiLlamaPrices'
 
 interface GasCalculationResult {
   botGasLimit: bigint
@@ -150,14 +150,8 @@ async function getEthPrice(): Promise<bigint> {
   }
 
   try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-    )
-    if (!response.ok) {
-      throw new Error('Failed to fetch ETH price')
-    }
-    const data = await response.json()
-    const price = BigInt(Math.floor(data.ethereum.usd))
+    const { ethUsd } = await fetchEthBtcUsd()
+    const price = BigInt(Math.floor(ethUsd))
     cachedEthPrice = price
     lastEthPriceFetch = now
     return price
@@ -178,7 +172,7 @@ async function calculateGasAllowance(
     throw new Error('Failed to get gas price')
   }
 
-  // Get current ETH price from CoinGecko
+  // Get current ETH price from DefiLlama
   const ETH_PRICE_USD = await getEthPrice()
   const ONE_DOLLAR_IN_WEI = BigInt(10) ** BigInt(18) / ETH_PRICE_USD // Convert $1 to wei
   const gasPriceBigInt = BigInt(gasPrice.gasPrice.toString())
