@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getPackageRoot } from '../config/paths.js';
 import type { PriceHints } from '../config/sizing.js';
+import { fetchEthBtcUsd } from './defiLlamaPrices.js';
 
 const CACHE_PATH = path.join(getPackageRoot(), 'data', 'price-cache.json');
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -33,22 +34,7 @@ function isStale(fetchedAt: string): boolean {
 }
 
 async function fetchSpotPrices(): Promise<{ ethUsd: number; btcUsd: number }> {
-  const url =
-    'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,bitcoin&vs_currencies=usd';
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`CoinGecko price fetch failed: HTTP ${response.status}`);
-  }
-  const data = (await response.json()) as {
-    ethereum?: { usd?: number };
-    bitcoin?: { usd?: number };
-  };
-  const ethUsd = data.ethereum?.usd;
-  const btcUsd = data.bitcoin?.usd;
-  if (!ethUsd || !btcUsd || ethUsd <= 0 || btcUsd <= 0) {
-    throw new Error('CoinGecko returned invalid ETH/BTC prices');
-  }
-  return { ethUsd, btcUsd };
+  return fetchEthBtcUsd();
 }
 
 /** Sync read — returns null if missing or invalid. */
@@ -60,7 +46,7 @@ export function readPriceHints(): PriceHints | null {
 }
 
 /**
- * Return cached prices; refresh from CoinGecko when stale or missing.
+ * Return cached prices; refresh from DefiLlama when stale or missing.
  * Throws if fetch fails and no usable cache exists.
  */
 export async function ensurePriceCache(): Promise<PriceHints> {
