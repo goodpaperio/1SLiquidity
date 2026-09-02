@@ -1,5 +1,7 @@
-import type { TOKENS_TYPE } from '@/app/lib/hooks/useWalletTokens'
-import { WETH_ADDRESS } from '@/app/lib/utils/knownTradeTokens'
+import {
+  fetchEthBtcUsd,
+  fetchEthereumTokenPrices,
+} from '@/app/lib/utils/defiLlamaPrices'
 
 export { WETH_ADDRESS }
 
@@ -62,7 +64,7 @@ export function isBtcPeggedToken(address?: string, symbol?: string): boolean {
   )
 }
 
-/** USD-pegged alts — treat as ~$1 when CoinGecko has no entry. */
+/** USD-pegged alts — treat as ~$1 when price feed has no entry. */
 export const USD_PEGGED_SYMBOLS = new Set([
   'usdc',
   'usdt',
@@ -100,10 +102,10 @@ const STABLE_ADDRESS_SET = new Set([
  */
 export const ETH_USD_OVERRIDE = 1500
 
-/** Fallback BTC/USD when CoinGecko is unavailable. Override via NEXT_PUBLIC_BTC_USD. */
+/** Fallback BTC/USD when DefiLlama is unavailable. Override via NEXT_PUBLIC_BTC_USD. */
 export const BTC_USD_OVERRIDE = 95_000
 
-/** Fallback USD for DAI/USDC/USDT when CoinGecko is unavailable. */
+/** Fallback USD for DAI/USDC/USDT when DefiLlama is unavailable. */
 export const STABLE_USD_OVERRIDE = 1
 
 export function resolveLiveEthUsd(_fetchedEthUsd: number): number {
@@ -134,54 +136,48 @@ export function isStableTokenAddress(address: string): boolean {
   return STABLE_ADDRESS_SET.has(address.toLowerCase())
 }
 
-/** Live ETH/USD from CoinGecko — dedicated API call, no cache. */
+/** Live ETH/USD from DefiLlama — dedicated API call, no cache. */
 export async function fetchEthUsd(): Promise<number> {
   try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,weth&vs_currencies=usd'
-    )
-    if (!res.ok) return 0
-
-    const data = await res.json()
-    const ethUsd = Number(data?.weth?.usd ?? data?.ethereum?.usd ?? 0)
-    return Number.isFinite(ethUsd) && ethUsd > 0 ? ethUsd : 0
+    const { ethUsd } = await fetchEthBtcUsd()
+    return ethUsd
   } catch {
     return 0
   }
 }
 
-/** Always fetch live WETH/WBTC/stables — bypasses stale 2h localStorage market cache. */
+/** Always fetch live WETH/WBTC/stables — bypasses stale token-list cache. */
 export async function fetchLiveReferencePrices(): Promise<
   Record<string, number>
 > {
   try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,weth,bitcoin,wrapped-bitcoin,usd-coin,tether,dai&vs_currencies=usd'
-    )
-    if (!res.ok) {
-      return {
-        [WETH_ADDRESS]: resolveLiveEthUsd(0),
-        [WBTC_ADDRESS]: resolveLiveBtcUsd(0),
-        [USDC_ADDRESS]: STABLE_USD_OVERRIDE,
-        [USDT_ADDRESS]: STABLE_USD_OVERRIDE,
-        [DAI_ADDRESS]: STABLE_USD_OVERRIDE,
-      }
-    }
+    const addresses = [
+      WETH_ADDRESS,
+      WBTC_ADDRESS,
+      USDC_ADDRESS,
+      USDT_ADDRESS,
+      DAI_ADDRESS,
+    ]
+    const [tokenPrices, ethBtc] = await Promise.all([
+      fetchEthereumTokenPrices(addresses),
+      fetchEthBtcUsd().catch(() => ({ ethUsd: 0, btcUsd: 0 })),
+    ])
 
-    const data = await res.json()
-    const ethUsd = Number(data?.weth?.usd ?? data?.ethereum?.usd ?? 0)
-    const btcUsd = Number(
-      data?.['wrapped-bitcoin']?.usd ?? data?.bitcoin?.usd ?? 0
-    )
+    const ethUsd = tokenPrices.get(WETH_ADDRESS) ?? ethBtc.ethUsd
+    const btcUsd = tokenPrices.get(WBTC_ADDRESS) ?? ethBtc.btcUsd
 
     const prices: Record<string, number> = {}
     prices[WETH_ADDRESS] = resolveLiveEthUsd(ethUsd)
     prices[WBTC_ADDRESS] = resolveLiveBtcUsd(btcUsd)
     prices[USDC_ADDRESS] = resolveLiveStableUsd(
-      Number(data?.['usd-coin']?.usd ?? 0)
+      tokenPrices.get(USDC_ADDRESS) ?? 0
     )
-    prices[USDT_ADDRESS] = resolveLiveStableUsd(Number(data?.tether?.usd ?? 0))
-    prices[DAI_ADDRESS] = resolveLiveStableUsd(Number(data?.dai?.usd ?? 0))
+    prices[USDT_ADDRESS] = resolveLiveStableUsd(
+      tokenPrices.get(USDT_ADDRESS) ?? 0
+    )
+    prices[DAI_ADDRESS] = resolveLiveStableUsd(
+      tokenPrices.get(DAI_ADDRESS) ?? 0
+    )
 
     return prices
   } catch {
