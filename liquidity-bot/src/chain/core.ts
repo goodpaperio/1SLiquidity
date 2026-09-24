@@ -6,6 +6,12 @@ import {
   type Signer,
 } from 'ethers';
 import type { BotConfig } from '../config/schema.js';
+import {
+  TX_SEND_TIMEOUT_MS,
+  TX_WAIT_TIMEOUT_MS,
+  waitForTx,
+  withTimeout,
+} from './txTimeout.js';
 
 /** Minimal Core ABI for trade cancel / inspection / settlement. */
 export const CORE_TRADE_ABI = [
@@ -113,8 +119,12 @@ export async function cancelTradeOnCore(
   core: Contract,
   tradeId: bigint | number
 ): Promise<{ txHash: string }> {
-  const tx = await core.cancelTrade(tradeId);
-  const receipt = await tx.wait();
+  const tx = await withTimeout(
+    core.cancelTrade(tradeId),
+    TX_SEND_TIMEOUT_MS,
+    `cancelTrade(${tradeId})`
+  );
+  const receipt = await waitForTx<{ hash: string }>(tx, TX_WAIT_TIMEOUT_MS);
   return { txHash: receipt.hash };
 }
 
@@ -150,11 +160,15 @@ export async function executeTradesOnCore(
   const maxPriorityFeePerGas =
     feeData.maxPriorityFeePerGas ?? maxFeePerGas / 2n;
 
-  const tx = await core.executeTrades(pairId, {
-    gasLimit,
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-  });
-  const receipt = await tx.wait();
+  const tx = await withTimeout(
+    core.executeTrades(pairId, {
+      gasLimit,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+    }),
+    TX_SEND_TIMEOUT_MS,
+    `executeTrades(${pairId.slice(0, 10)}…)`
+  );
+  const receipt = await waitForTx<{ hash: string }>(tx, TX_WAIT_TIMEOUT_MS);
   return { txHash: receipt.hash };
 }

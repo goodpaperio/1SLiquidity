@@ -7,6 +7,12 @@ import {
   UNISWAP_V3_SWAP_ROUTER_ABI,
 } from '../chain/contracts.js';
 import { ensureAllowance } from '../chain/erc20.js';
+import {
+  TX_SEND_TIMEOUT_MS,
+  TX_WAIT_TIMEOUT_MS,
+  waitForTx,
+  withTimeout,
+} from '../chain/txTimeout.js';
 import { feeTierFromDexId } from '../scan/dexQuoteUtils.js';
 import type { StreamDexId } from '../scan/types.js';
 
@@ -49,14 +55,18 @@ export async function swapExactOnCandidateDex(
       UNISWAP_V2_ROUTER_ABI,
       signer
     );
-    const tx = await router.swapExactTokensForTokens(
-      amountIn,
-      amountOutMin,
-      [tokenIn, tokenOut],
-      recipient,
-      deadline
+    const tx = await withTimeout(
+      router.swapExactTokensForTokens(
+        amountIn,
+        amountOutMin,
+        [tokenIn, tokenOut],
+        recipient,
+        deadline
+      ),
+      TX_SEND_TIMEOUT_MS,
+      `swapExactTokensForTokens(${dex})`
     );
-    const receipt = await tx.wait();
+    const receipt = await waitForTx<{ hash: string }>(tx, TX_WAIT_TIMEOUT_MS);
     return { txHash: receipt.hash };
   }
 
@@ -70,16 +80,20 @@ export async function swapExactOnCandidateDex(
     UNISWAP_V3_SWAP_ROUTER_ABI,
     signer
   );
-  const tx = await router.exactInputSingle({
-    tokenIn,
-    tokenOut,
-    fee,
-    recipient,
-    deadline,
-    amountIn,
-    amountOutMinimum: amountOutMin,
-    sqrtPriceLimitX96: 0,
-  });
-  const receipt = await tx.wait();
+  const tx = await withTimeout(
+    router.exactInputSingle({
+      tokenIn,
+      tokenOut,
+      fee,
+      recipient,
+      deadline,
+      amountIn,
+      amountOutMinimum: amountOutMin,
+      sqrtPriceLimitX96: 0,
+    }),
+    TX_SEND_TIMEOUT_MS,
+    `exactInputSingle(${dex})`
+  );
+  const receipt = await waitForTx<{ hash: string }>(tx, TX_WAIT_TIMEOUT_MS);
   return { txHash: receipt.hash };
 }

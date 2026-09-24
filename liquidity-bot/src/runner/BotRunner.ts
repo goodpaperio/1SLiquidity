@@ -8,6 +8,13 @@ import {
 } from '../chain/core.js';
 import { getBotsDir } from '../config/paths.js';
 import { createProvider } from '../chain/provider.js';
+import {
+  CYCLE_WATCHDOG_MAX_MS,
+  RATE_LIMIT_PAUSE_MS,
+  cycleWatchdogMs,
+  errorText,
+  isRpcRateLimitError,
+} from '../chain/txTimeout.js';
 import { TradeExecutor } from '../execution/TradeExecutor.js';
 import { OpportunityCache } from '../scan/OpportunityCache.js';
 import { PairCooldownStore } from '../scan/pairCooldown.js';
@@ -19,6 +26,11 @@ import {
 } from '../scan/QuoteScanner.js';
 import { formatSelectedTradeBlock } from '../selection/selectForExecution.js';
 import { pollTradeCompletions } from '../notify/completionWatcher.js';
+import {
+  loadTelegramConfig,
+  prefixBotMessage,
+  sendTelegram,
+} from '../notify/telegram.js';
 import { maybeCancelStuckTrade } from '../ops/stuckTradeGuard.js';
 import {
   runBotMaintenance,
@@ -41,6 +53,8 @@ export interface BotState {
   lastStaleTradeAlertAt?: string;
   /** ISO timestamp of last /pull self-update request. */
   lastPullAt?: string;
+  /** ISO timestamp until which trading is paused after RPC rate limits. */
+  rateLimitPausedUntil?: string;
 }
 
 export function getStatePath(botId: string): string {
@@ -64,8 +78,11 @@ export function writeBotState(botId: string, state: BotState): void {
 export class BotRunner {
   private stopped = false;
   private cycleInFlight = false;
+  private cycleStartedAtMs: number | null = null;
+  private cycleWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private liquifyInFlight = false;
   private pausedByOperator = false;
+  private rateLimitPausedUntilMs = 0;
   private telegramTimer: ReturnType<typeof setInterval> | null = null;
   private liquifySchedulerStop: (() => void) | null = null;
   private readonly pairCooldown: PairCooldownStore;
@@ -84,10 +101,18 @@ export class BotRunner {
       this.pairCooldown,
       this.tradeHistory
     );
+    const prev = readBotState(config.id);
+    if (prev?.rateLimitPausedUntil) {
+      const until = Date.parse(prev.rateLimitPausedUntil);
+      if (Number.isFinite(until) && until > Date.now()) {
+        this.rateLimitPausedUntilMs = until;
+      }
+    }
   }
 
   stop(): void {
     this.stopped = true;
+    this.clearCycleWatchdog();
     if (this.scanTimer) {
       clearInterval(this.scanTimer);
       this.scanTimer = null;
@@ -105,6 +130,11 @@ export class BotRunner {
   async run(): Promise<void> {
     const id = this.config.id;
     console.log(`[${id}] runner started (address ${this.config.address})`);
+    if (this.rateLimitPausedUntilMs > Date.now()) {
+      console.log(
+        `[${id}] rate-limit cool-down active until ${new Date(this.rateLimitPausedUntilMs).toISOString()}`
+      );
+    }
 
     let scanner: QuoteScanner | null = null;
     try {
@@ -149,11 +179,74 @@ export class BotRunner {
         lastLowEthAlertAt: prev?.lastLowEthAlertAt,
         lastStaleTradeAlertAt: prev?.lastStaleTradeAlertAt,
         lastPullAt: prev?.lastPullAt,
+        rateLimitPausedUntil:
+          this.rateLimitPausedUntilMs > Date.now()
+            ? new Date(this.rateLimitPausedUntilMs).toISOString()
+            : undefined,
       });
       await sleep(this.heartbeatMs);
     }
 
     if (this.scanTimer) clearInterval(this.scanTimer);
+  }
+
+  private clearCycleWatchdog(): void {
+    if (this.cycleWatchdogTimer) {
+      clearTimeout(this.cycleWatchdogTimer);
+      this.cycleWatchdogTimer = null;
+    }
+  }
+
+  private armCycleWatchdog(id: string): void {
+    this.clearCycleWatchdog();
+    const ms = cycleWatchdogMs(this.config.scan.intervalMs);
+    this.cycleWatchdogTimer = setTimeout(() => {
+      if (!this.cycleInFlight) return;
+      const elapsed = this.cycleStartedAtMs
+        ? Date.now() - this.cycleStartedAtMs
+        : ms;
+      console.error(
+        `[${id}] cycle watchdog tripped after ${elapsed}ms (limit ${ms}ms) — exiting for PM2 restart`
+      );
+      void sendTelegram(
+        prefixBotMessage(
+          id,
+          `cycle watchdog tripped after ${Math.round(elapsed / 1000)}s — restarting process`
+        ),
+        loadTelegramConfig()
+      ).catch(() => {});
+      // Hard exit: hung ethers awaits cannot be cancelled reliably.
+      // Delay slightly so the Telegram fire-and-forget can flush.
+      setTimeout(() => process.exit(1), 1_500);
+    }, ms);
+  }
+
+  private beginRateLimitPause(id: string, err: unknown): void {
+    this.rateLimitPausedUntilMs = Date.now() + RATE_LIMIT_PAUSE_MS;
+    const until = new Date(this.rateLimitPausedUntilMs).toISOString();
+    console.warn(
+      `[${id}] RPC rate-limit / overload detected — pausing trades until ${until}`
+    );
+    console.warn(`[${id}] cause: ${errorText(err).slice(0, 300)}`);
+    const prev = readBotState(id);
+    writeBotState(id, {
+      lastUpdatedAt: new Date().toISOString(),
+      lastEthBalanceWei: prev?.lastEthBalanceWei ?? '0',
+      status: 'running',
+      note: prev?.note,
+      lastDustSweepDate: prev?.lastDustSweepDate,
+      lastLowEthAlertAt: prev?.lastLowEthAlertAt,
+      lastStaleTradeAlertAt: prev?.lastStaleTradeAlertAt,
+      lastPullAt: prev?.lastPullAt,
+      rateLimitPausedUntil: until,
+    });
+    void sendTelegram(
+      prefixBotMessage(
+        id,
+        `RPC rate-limit / 503 — pausing trades for 1h (until ${until})`
+      ),
+      loadTelegramConfig()
+    );
   }
 
   private async runCycle(
@@ -165,7 +258,16 @@ export class BotRunner {
       console.log(`[${id}] previous cycle still running; skip this tick.`);
       return;
     }
+    if (Date.now() < this.rateLimitPausedUntilMs) {
+      console.log(
+        `[${id}] rate-limit cool-down — skipping until ${new Date(this.rateLimitPausedUntilMs).toISOString()}`
+      );
+      return;
+    }
+
     this.cycleInFlight = true;
+    this.cycleStartedAtMs = Date.now();
+    this.armCycleWatchdog(id);
     try {
       await runBotMaintenance(this.config, provider);
 
@@ -259,7 +361,12 @@ export class BotRunner {
         `[${id}] cycle failed:`,
         err instanceof Error ? err.message : err
       );
+      if (isRpcRateLimitError(err)) {
+        this.beginRateLimitPause(id, err);
+      }
     } finally {
+      this.clearCycleWatchdog();
+      this.cycleStartedAtMs = null;
       this.cycleInFlight = false;
     }
   }
@@ -275,7 +382,8 @@ export class BotRunner {
       const result = await runDailyLiquifySweep(this.config, provider, {
         force: true,
       });
-      return result.message ?? 'Liquify sweep finished.';
+      if (result.message) return result.message;
+      return result.swept ? 'Liquify sweep completed.' : 'Liquify sweep skipped.';
     } finally {
       this.liquifyInFlight = false;
     }
@@ -285,3 +393,6 @@ export class BotRunner {
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/** Exported for tests. */
+export { CYCLE_WATCHDOG_MAX_MS, RATE_LIMIT_PAUSE_MS };

@@ -1,6 +1,12 @@
-import { AbiCoder, Contract, type Signer } from 'ethers';
+import { AbiCoder, Contract, type Signer, type TransactionReceipt } from 'ethers';
 import { CORE_ABI } from '../chain/contracts.js';
 import { ensureAllowance } from '../chain/erc20.js';
+import {
+  TX_SEND_TIMEOUT_MS,
+  TX_WAIT_TIMEOUT_MS,
+  waitForTx,
+  withTimeout,
+} from '../chain/txTimeout.js';
 import type { BotConfig } from '../config/schema.js';
 import { parseTradeIdFromReceipt } from '../notify/parseTradeEvents.js';
 
@@ -72,8 +78,12 @@ export async function placeTradeOnCore(
   });
 
   const core = new Contract(bot.contracts.core, CORE_ABI, signer);
-  const tx = await core.placeTrade(tradeData);
-  const receipt = await tx.wait();
+  const tx = await withTimeout(
+    core.placeTrade(tradeData),
+    TX_SEND_TIMEOUT_MS,
+    'placeTrade'
+  );
+  const receipt = await waitForTx<TransactionReceipt>(tx, TX_WAIT_TIMEOUT_MS);
   const tradeId = parseTradeIdFromReceipt(receipt, bot.contracts.core);
   if (tradeId == null) {
     throw new Error('placeTrade receipt missing TradeCreated event');
