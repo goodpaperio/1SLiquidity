@@ -99,8 +99,8 @@ const STABLE_ADDRESS_SET = new Set([
 ])
 
 /**
- * Temporary fixed live ETH/USD until settlement pricing is validated end-to-end.
- * Override via NEXT_PUBLIC_ETH_USD; remove when live API is trusted.
+ * Fallback ETH/USD when DefiLlama is unavailable.
+ * Optional override via NEXT_PUBLIC_ETH_USD (takes precedence over live feed).
  */
 export const ETH_USD_OVERRIDE = 1500
 
@@ -110,12 +110,13 @@ export const BTC_USD_OVERRIDE = 95_000
 /** Fallback USD for DAI/USDC/USDT when DefiLlama is unavailable. */
 export const STABLE_USD_OVERRIDE = 1
 
-export function resolveLiveEthUsd(_fetchedEthUsd: number): number {
+export function resolveLiveEthUsd(fetchedEthUsd: number): number {
   const env = process.env.NEXT_PUBLIC_ETH_USD
   if (env) {
     const n = Number(env)
     if (Number.isFinite(n) && n > 0) return n
   }
+  if (fetchedEthUsd > 0) return fetchedEthUsd
   return ETH_USD_OVERRIDE
 }
 
