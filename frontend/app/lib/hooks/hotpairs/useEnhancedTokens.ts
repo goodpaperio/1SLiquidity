@@ -2,6 +2,7 @@
 import { useMemo, useCallback, useRef } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useTokenList } from '../useTokenList'
+import { resolveTokenIcon } from '../../utils/tokenIcon'
 
 // Constants
 export const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7' // Add your USDT address
@@ -53,6 +54,8 @@ export interface TopTokensResponse {
   data: TokenPair[]
   metric: string
   limit: number
+  unavailable?: boolean
+  status?: number
 }
 
 export interface SpecificPairResponse {
@@ -77,6 +80,8 @@ export interface EnhancedTopTokensResponse {
   data: EnhancedTokenPair[]
   metric: string
   limit: number
+  unavailable?: boolean
+  status?: number
 }
 
 export interface EnhancedSpecificPairResponse {
@@ -187,7 +192,14 @@ const fetchTopTokens = async ({
     console.warn(
       `Hot pairs API unavailable (${response.status}); returning empty list`
     )
-    return { success: true, data: [], metric, limit: limit ?? 1000 }
+    return {
+      success: false,
+      data: [],
+      metric,
+      limit: limit ?? 1000,
+      unavailable: true,
+      status: response.status,
+    } as TopTokensResponse & { unavailable?: boolean; status?: number }
   }
 
   return response.json()
@@ -261,8 +273,7 @@ export const useTokenEnhancer = () => {
       const iconBySymbol = tokenMap.get(symbol?.toLowerCase())
       if (iconBySymbol) return iconBySymbol
 
-      // Fallback to local asset
-      return `/tokens/${symbol?.toLowerCase()}.svg`
+      return resolveTokenIcon({ address, symbol })
     }
   }, [coinGeckoTokens])
 

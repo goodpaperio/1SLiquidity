@@ -35,17 +35,35 @@ const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
 ]
 
-// Infura provider for Ethereum mainnet
+// JSON-RPC provider for Ethereum mainnet (Infura preferred, Alchemy fallback)
 let infuraProvider: ethers.providers.JsonRpcProvider | null = null
 
-// Initialize Infura provider for Ethereum mainnet
+function resolveMainnetRpcUrl(): string {
+  const infuraId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID?.trim()
+  if (infuraId && infuraId !== 'undefined') {
+    return `https://mainnet.infura.io/v3/${infuraId}`
+  }
+
+  // Reuse Alchemy key already set for websocket wallet listening
+  const alchemyWs = process.env.NEXT_PUBLIC_ALCHEMY_WS_URL_ETH || ''
+  const alchemyMatch = alchemyWs.match(
+    /alchemy\.com\/v2\/([A-Za-z0-9_-]+)/
+  )
+  if (alchemyMatch?.[1]) {
+    return `https://eth-mainnet.g.alchemy.com/v2/${alchemyMatch[1]}`
+  }
+
+  throw new Error(
+    'No RPC configured: set NEXT_PUBLIC_INFURA_PROJECT_ID or NEXT_PUBLIC_ALCHEMY_WS_URL_ETH'
+  )
+}
+
 export const initInfura = (): ethers.providers.JsonRpcProvider => {
   if (infuraProvider) {
     return infuraProvider
   }
 
-  const providerUrl = `https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}`
-  infuraProvider = new ethers.providers.JsonRpcProvider(providerUrl)
+  infuraProvider = new ethers.providers.JsonRpcProvider(resolveMainnetRpcUrl())
   return infuraProvider
 }
 

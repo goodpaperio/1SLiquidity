@@ -6,6 +6,8 @@ import tokensListData from '../utils/tokens-list-04-09-2025.json'
 import { applyLiveReferencePrices } from '../utils/referencePrices'
 import { fetchEthereumTokenPrices } from '../utils/defiLlamaPrices'
 import { useLiveReferencePrices } from './useLiveReferencePrices'
+import { KNOWN_TRADE_TOKENS } from '../utils/knownTradeTokens'
+import { resolveTokenIcon } from '../utils/tokenIcon'
 
 interface CatalogToken {
   symbol: string
@@ -175,13 +177,43 @@ function jsonToTokenEntry(jsonToken: {
     name:
       jsonToken.tokenName.charAt(0).toUpperCase() + jsonToken.tokenName.slice(1),
     symbol,
-    icon: `/tokens/${jsonToken.tokenName.toLowerCase()}.svg`,
+    icon: resolveTokenIcon({
+      address,
+      symbol,
+      name: jsonToken.tokenName,
+    }),
     popular: POPULAR_SYMBOLS.has(jsonToken.tokenSymbol.toLowerCase()),
     value: 0,
     status: 'increase',
     statusAmount: 0,
     token_address: address,
     decimals: jsonToken.tokenDecimals,
+    balance: '0',
+    possible_spam: false,
+    usd_price: 0,
+    market_cap_rank: 999999,
+    usd_value: 0,
+  }
+}
+
+function knownTradeToTokenEntry(
+  address: string,
+  meta: { symbol: string; decimals: number; name: string }
+): TOKENS_TYPE {
+  return {
+    name: meta.name,
+    symbol: meta.symbol,
+    icon: resolveTokenIcon({
+      address,
+      symbol: meta.symbol,
+      name: meta.name,
+    }),
+    popular: POPULAR_SYMBOLS.has(meta.symbol.toLowerCase()),
+    value: 0,
+    status: 'increase',
+    statusAmount: 0,
+    token_address: address.toLowerCase(),
+    decimals: meta.decimals,
     balance: '0',
     possible_spam: false,
     usd_price: 0,
@@ -201,6 +233,13 @@ function buildStaticTokenList(): TOKENS_TYPE[] {
     const address = jsonToken.tokenAddress.toLowerCase()
     if (!byAddress.has(address)) {
       byAddress.set(address, jsonToTokenEntry(jsonToken))
+    }
+  }
+
+  // Merge bot-universe tokens (tBTC, LBTC, etc.) missing from the static JSON
+  for (const [address, meta] of Object.entries(KNOWN_TRADE_TOKENS)) {
+    if (!byAddress.has(address)) {
+      byAddress.set(address, knownTradeToTokenEntry(address, meta))
     }
   }
 

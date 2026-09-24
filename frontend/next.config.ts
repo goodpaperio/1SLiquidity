@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
       {
         hostname: 'assets.coingecko.com',
       },
+      {
+        hostname: 'raw.githubusercontent.com',
+      },
     ],
   },
   async rewrites() {

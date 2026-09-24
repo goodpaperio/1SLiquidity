@@ -83,6 +83,32 @@ export default function TopPairsCarousel({
       >
         <h1 className="text-3xl font-bold text-white mb-8">Top Savers</h1>
 
+        {!isLoading &&
+          (topTokensData?.unavailable ||
+            (sortedPairs.length === 0 && !isErrorTopTokens)) && (
+            <p className="text-sm text-amber-400/90 mb-6">
+              Hot pairs are temporarily unavailable
+              {topTokensData?.status ? ` (API ${topTokensData.status})` : ''}.
+              Swap still works from the home page.
+            </p>
+          )}
+        {isErrorTopTokens && (
+          <p className="text-sm text-amber-400/90 mb-6">
+            Could not load hot pairs
+            {topTokensError instanceof Error
+              ? `: ${topTokensError.message}`
+              : ''}
+            .{' '}
+            <button
+              type="button"
+              className="underline hover:text-amber-300"
+              onClick={() => refetchTopTokens()}
+            >
+              Retry
+            </button>
+          </p>
+        )}
+
         <Carousel
           opts={{
             align: 'start',

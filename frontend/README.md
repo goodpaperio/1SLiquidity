@@ -14,9 +14,10 @@ cp .env.example .env
 
 2. Copy `deployment.env.example` to `.env.local` and fill in the required values:
    - `NEXT_PUBLIC_PROJECT_ID`: Your Web3 project ID
-   - `NEXT_PUBLIC_BACKEND_URL`: The URL for the backend API
-   - `NEXT_PUBLIC_MORALIS_API_KEY`: Your Moralis API key for fetching blockchain data
-   - `NEXT_PUBLIC_GRAPHQL_URL`: The Graph subgraph endpoint
+   - `NEXT_PUBLIC_BACKEND_URL`: Lambda keeper URL for `/reserves` and `/price`
+   - `KEEPER_API_URL`: Express keeper on EC2 for Hot Pairs (`/api/tokens/*`)
+   - `NEXT_PUBLIC_INFURA_PROJECT_ID`: Infura project ID for wallet balances (or set `NEXT_PUBLIC_ALCHEMY_WS_URL_ETH` as fallback)
+   - `NEXT_PUBLIC_GRAPHQL_URL`: The Graph subgraph endpoint (use **v0.0.9**, not deleted v0.0.3)
 
 ### Mainnet contract addresses (v2.2.1)
 
