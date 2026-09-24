@@ -13,6 +13,10 @@ import { formatWalletAddress } from '@/app/lib/helper'
 import { useWalletTokens } from '@/app/lib/hooks/useWalletTokens'
 import { CheckIcon, ChevronDown, CopyIcon } from 'lucide-react'
 import tokensListData from '@/app/lib/utils/tokens-list-04-09-2025.json'
+import {
+  resolveTokenIcon,
+  tokenIconCandidates,
+} from '@/app/lib/utils/tokenIcon'
 
 // Types for JSON data
 type TokenResult = {
@@ -569,19 +573,31 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
     }
   }
 
-  // Handle image loading errors
+  // Handle image loading errors — cycle through local / CDN candidates
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
-    e.currentTarget.src = '/icons/default-token.svg'
+    const img = e.currentTarget
+    const step = Number(img.dataset.iconStep || '0')
+    const candidates = tokenIconCandidates({
+      address: img.dataset.tokenAddress,
+      symbol: img.dataset.tokenSymbol,
+    })
+    const next = candidates[step + 1]
+    if (next) {
+      img.dataset.iconStep = String(step + 1)
+      img.src = next
+    }
   }
 
   // Get the correct token icon
   const getTokenIcon = (token: TOKENS_TYPE) => {
-    if (token.symbol.toLowerCase() === 'usdt') {
-      return '/tokens/usdt.png'
-    }
-    return token.icon
+    return resolveTokenIcon({
+      address: token.token_address,
+      symbol: token.symbol,
+      name: token.name,
+      preferred: token.icon,
+    })
   }
 
   // Check if a token should be disabled (already selected in the other field)
@@ -706,6 +722,9 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                           }`}
                           width={40}
                           height={40}
+                          data-token-address={token.token_address}
+                          data-token-symbol={token.symbol}
+                          data-icon-step="0"
                           onError={handleImageError}
                         />
                         {disabled && (
@@ -806,6 +825,9 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                             }`}
                             width={24}
                             height={24}
+                            data-token-address={token.token_address}
+                            data-token-symbol={token.symbol}
+                            data-icon-step="0"
                             onError={handleImageError}
                           />
                           {disabled && (
@@ -943,6 +965,9 @@ const SelectTokenModal: React.FC<SelectTokenModalProps> = ({
                             }`}
                             width={40}
                             height={40}
+                            data-token-address={token.token_address}
+                            data-token-symbol={token.symbol}
+                            data-icon-step="0"
                             onError={handleImageError}
                           />
                           <Image

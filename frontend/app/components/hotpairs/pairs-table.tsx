@@ -137,10 +137,15 @@ export default function PairsTable({
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 border-[#827a7a33] z-10 overflow-hidden">
                                   <ImageFallback
                                     src={pair.tokenAIcon}
-                                    alt="eth"
+                                    alt={pair.tokenASymbol}
                                     width={100}
                                     height={100}
                                     className="w-full h-full object-cover"
+                                    token={{
+                                      address: pair.tokenAAddress,
+                                      symbol: pair.tokenASymbol,
+                                      name: pair.tokenAName,
+                                    }}
                                   />
                                 </div>
                                 <div
@@ -150,10 +155,15 @@ export default function PairsTable({
                                 >
                                   <ImageFallback
                                     src={pair.tokenBIcon}
-                                    alt="dai"
+                                    alt={pair.tokenBSymbol}
                                     width={100}
                                     height={100}
                                     className="w-full h-full object-cover"
+                                    token={{
+                                      address: pair.tokenBAddress,
+                                      symbol: pair.tokenBSymbol,
+                                      name: pair.tokenBName,
+                                    }}
                                   />
                                 </div>
                               </div>
