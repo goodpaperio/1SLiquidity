@@ -181,7 +181,7 @@ const DashboardChart = ({
     return { startDate, endDate }
   }, [])
 
-  // Group trades by day/week/month based on time period
+  // Group trades by hour/day/month based on time period
   const chartData = useMemo(() => {
     console.log('[DashboardChart] Processing data:', {
       tradesCount: trades?.length || 0,
@@ -228,6 +228,10 @@ const DashboardChart = ({
         const [year, month] = dateStr.split('-').map(Number)
         return year * 100 + month
       }
+      if (timePeriod === '1D') {
+        const [year, month, day, hour] = dateStr.split('-').map(Number)
+        return year * 1_000_000 + month * 10_000 + day * 100 + hour
+      }
       const [year, month, day] = dateStr.split('-').map(Number)
       return year * 10000 + month * 100 + day
     }
@@ -251,7 +255,11 @@ const DashboardChart = ({
         ]
         return `${monthNames[parseInt(month) - 1]} ${year.slice(2)}`
       }
-      const [year, month, day] = dateStr.split('-')
+      if (timePeriod === '1D') {
+        const [, , , hour] = dateStr.split('-')
+        return `${String(parseInt(hour, 10)).padStart(2, '0')}:00`
+      }
+      const [, month, day] = dateStr.split('-')
       return `${parseInt(day)}/${parseInt(month)}`
     }
 
@@ -273,6 +281,34 @@ const DashboardChart = ({
           'December',
         ]
         return `${monthNames[parseInt(month) - 1]} ${year}`
+      }
+      if (timePeriod === '1D') {
+        const [year, month, day, hour] = dateStr.split('-').map(Number)
+        const date = new Date(year, month - 1, day, hour)
+        const dayNames = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ]
+        const monthNames = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ]
+        return `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${date.getDate()} · ${String(hour).padStart(2, '0')}:00`
       }
       const [year, month, day] = dateStr.split('-')
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
@@ -321,13 +357,17 @@ const DashboardChart = ({
         ]
         return monthNames[parseInt(month) - 1]
       }
+      if (timePeriod === '1D') {
+        const [, , , hour] = dateStr.split('-')
+        return `${String(parseInt(hour, 10)).padStart(2, '0')}h`
+      }
       const [year, month, day] = dateStr.split('-')
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
       const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
       return dayNames[date.getDay()]
     }
 
-    // Aggregate by date; only days with trades appear in the chart
+    // Aggregate by period subunit (hour/day/month); only buckets with trades appear
     const dataMap = new Map<string, DailyData>()
 
     const getOrCreateBucket = (date: Date): DailyData => {
@@ -338,7 +378,12 @@ const DashboardChart = ({
           timePeriod === '1Y' || timePeriod === 'ALL'
             ? date.getFullYear() === today.getFullYear() &&
               date.getMonth() === today.getMonth()
-            : date.toDateString() === today.toDateString()
+            : timePeriod === '1D'
+              ? date.getFullYear() === now.getFullYear() &&
+                date.getMonth() === now.getMonth() &&
+                date.getDate() === now.getDate() &&
+                date.getHours() === now.getHours()
+              : date.toDateString() === today.toDateString()
 
         data = {
           groupKey: key,
