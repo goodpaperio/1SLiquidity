@@ -9,6 +9,9 @@ export function getTradeGroupKey(date: Date, timePeriod: TimePeriod): string {
   if (timePeriod === '1Y' || timePeriod === 'ALL') {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
   }
+  if (timePeriod === '1D') {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}`
+  }
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
