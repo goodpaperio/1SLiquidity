@@ -126,7 +126,9 @@ fi
 cd "$REPO_ROOT/liquidity-bot-v2"
 
 echo "==> npm ci"
-npm ci --include=optional
+# PM2 sets NODE_ENV=production, and npm then skips devDependencies.
+# typescript is a devDependency, so `tsc` is missing and the build fails.
+NODE_ENV=development npm ci --include=optional
 
 echo "==> build"
 if ! npm run build; then
